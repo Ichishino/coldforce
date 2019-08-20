@@ -5,10 +5,9 @@
 #ifdef CO_OS_WIN
 #include <windows.h>
 #pragma comment(lib, "winmm.lib")
-#elif defined(CO_OS_LINUX)
+#else
 #include <math.h>
 #include <time.h>
-#elif defined(CO_OS_MAC)
 #endif
 
 //---------------------------------------------------------------------------//
@@ -22,13 +21,13 @@
 // Private
 //---------------------------------------------------------------------------//
 
-uint64_t CO_GetCurrentTimeInMsecs()
+uint64_t CO_GetCurrentTimeInMsecs(void)
 {
 #ifdef CO_OS_WIN
 
     return timeGetTime();
 
-#elif defined(CO_OS_LINUX)
+#else
 
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
@@ -36,7 +35,6 @@ uint64_t CO_GetCurrentTimeInMsecs()
 
     return (ts.tv_sec * 1000) + ((ms >= 1000) ? 1000 : ms);
 
-#elif defined(CO_OS_MAC)
 #endif
 }
 

@@ -4,10 +4,10 @@
 #include <coldforce/co_std.h>
 
 #ifdef CO_OS_WIN
-#elif defined(CO_OS_MAC)
-#include <dispatch/dispatch.h>
 #elif defined(CO_OS_LINUX)
 #include <semaphore.h>
+#elif defined(CO_OS_MAC)
+#include <dispatch/dispatch.h>
 #endif
 
 //---------------------------------------------------------------------------//
@@ -21,7 +21,7 @@ typedef struct
 #elif defined(CO_OS_LINUX)
     sem_t handle;
 #elif defined(CO_OS_MAC)
-
+    dispatch_semaphore_t handle;
 #endif
 
 } CO_SEM_T;

@@ -68,7 +68,7 @@ CO_API void CO_ThreadStop(CO_THREAD_T* thread);
 CO_API void CO_ThreadWait(CO_THREAD_T* thread);
 CO_API void CO_ThreadDestroy(CO_THREAD_T** thread);
 
-CO_API CO_THREAD_T* CO_ThreadGetCurrent();
+CO_API CO_THREAD_T* CO_ThreadGetCurrent(void);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

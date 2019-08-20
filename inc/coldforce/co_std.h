@@ -67,7 +67,7 @@
         #define CO_API
     #endif
     #define CO_THREAD_LOCAL __declspec(thread)
-#elif defined(CO_OS_LINUX)
+#else
     #define CO_API
     #define CO_THREAD_LOCAL __thread
 #endif

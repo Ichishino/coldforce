@@ -44,9 +44,9 @@ CO_API void CO_AppDestroy(CO_APP_T** app);
 CO_API int CO_AppRun(CO_APP_T* app, CO_APP_PARAM_ST* param);
 
 CO_API int CO_AppStart(const CO_CTX_ST* ctx, CO_APP_PARAM_ST* param);
-CO_API void CO_AppStop();
+CO_API void CO_AppStop(void);
 
-CO_API CO_APP_T* CO_AppGetCurrent();
+CO_API CO_APP_T* CO_AppGetCurrent(void);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

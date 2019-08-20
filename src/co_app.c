@@ -41,7 +41,7 @@ void CO_AppInit(CO_APP_T* app, const CO_CTX_ST* ctx)
 // Public
 //---------------------------------------------------------------------------//
 
-CO_APP_T* CO_AppGetCurrent()
+CO_APP_T* CO_AppGetCurrent(void)
 {
     return gApp;
 }
@@ -118,7 +118,7 @@ int CO_AppStart(const CO_CTX_ST* ctx, CO_APP_PARAM_ST* param)
     return exitCode;
 }
 
-void CO_AppStop()
+void CO_AppStop(void)
 {
     CO_APP_T* app = CO_AppGetCurrent();
     CO_Assert(app != NULL);

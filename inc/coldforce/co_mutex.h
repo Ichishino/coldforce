@@ -5,9 +5,8 @@
 
 #ifdef CO_OS_WIN
 #include <windows.h>
-#elif defined(CO_OS_LINUX)
+#else
 #include <pthread.h>
-#elif defined(CO_OS_MAC)
 #endif
 
 //---------------------------------------------------------------------------//
@@ -21,9 +20,8 @@ typedef struct
 {
 #ifdef CO_OS_WIN
     CRITICAL_SECTION handle;
-#elif defined(CO_OS_LINUX)
+#else
     pthread_mutex_t handle;
-#elif defined(CO_OS_MAC)
 #endif
 
 } CO_MTX_T;
@@ -41,7 +39,7 @@ CO_EXTERN_C_BEGIN
 // Public
 //---------------------------------------------------------------------------//
 
-CO_API CO_MTX_T* CO_MtxCreate();
+CO_API CO_MTX_T* CO_MtxCreate(void);
 CO_API void CO_MtxDestroy(CO_MTX_T** mtx);
 
 CO_API void CO_MtxLock(CO_MTX_T* mtx);

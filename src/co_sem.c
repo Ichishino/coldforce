@@ -122,9 +122,9 @@ void CO_SemPost(CO_SEM_T* sem)
 
 #ifdef CO_OS_WIN
     ReleaseSemaphore(sem->handle, 1, NULL);
-#elif defined(CO_OS_MAC)
-    dispatch_semaphore_signal(sem->handle);
 #elif defined(CO_OS_LINUX)
     sem_post(&sem->handle);
+#elif defined(CO_OS_MAC)
+    dispatch_semaphore_signal(sem->handle);
 #endif
 }

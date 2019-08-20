@@ -126,9 +126,8 @@ void* CO_ThreadMain(void* param)
 
 #ifdef CO_OS_WIN
     return thread->exitCode;
-#elif defined (CO_OS_LINUX)
+#else
     return NULL;
-#elif defined (CO_OS_MAC)
 #endif
 }
 
@@ -136,7 +135,7 @@ void* CO_ThreadMain(void* param)
 // Public
 //---------------------------------------------------------------------------//
 
-CO_THREAD_T* CO_ThreadGetCurrent()
+CO_THREAD_T* CO_ThreadGetCurrent(void)
 {
     return gThread;
 }
