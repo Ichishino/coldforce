@@ -11,85 +11,87 @@
 
 size_t
 co_string_hash(
-	const char* str
+    const char* str
 )
 {
-	// D.J.Bernstein hash
+    // D.J.Bernstein hash
 
-	size_t hash = 5381;
+    size_t hash = 5381;
 
-	while ((*str) != 0)
-	{
-		hash = 33 * hash ^ (unsigned char)*str;
-		++str;
-	}
+    while ((*str) != 0)
+    {
+        hash = 33 * hash ^ (unsigned char)*str;
+        ++str;
+    }
 
-	return hash;
+    return hash;
 }
 
 size_t
 co_string_trim_left(
-	char* str,
-	size_t length
+    char* str,
+    size_t length
 )
 {
-	if ((length == 0) || (isspace(str[0]) == 0))
-	{
-		return length;
-	}
+    if ((length == 0) || (isspace(str[0]) == 0))
+    {
+        return length;
+    }
 
-	size_t new_length = 0;
+    size_t new_length = 0;
 
-	for (size_t index = 1; index < length; ++index)
-	{
-		if (isspace(str[index]) == 0)
-		{
-			new_length = length - index;
-			memcpy(&str[0], &str[index], new_length);
-			break;
-		}
-	}
+    for (size_t index = 1; index < length; ++index)
+    {
+        if (isspace(str[index]) == 0)
+        {
+            new_length = length - index;
+            memcpy(&str[0], &str[index], new_length);
 
-	str[new_length] = 0x00;
+            break;
+        }
+    }
 
-	return new_length;
+    str[new_length] = 0x00;
+
+    return new_length;
 }
 
 size_t
 co_string_trim_right(
-	char* str,
-	size_t length
+    char* str,
+    size_t length
 )
 {
-	if ((length == 0) || (isspace(str[length - 1]) == 0))
-	{
-		return length;
-	}
+    if ((length == 0) || (isspace(str[length - 1]) == 0))
+    {
+        return length;
+    }
 
-	size_t new_length = 0;
+    size_t new_length = 0;
 
-	for (long index = ((long)length) - 2; index >= 0; --index)
-	{
-		if (isspace(str[index]) == 0)
-		{
-			new_length = ((size_t)index) + 1;
-			break;
-		}
-	}
+    for (long index = ((long)length) - 2; index >= 0; --index)
+    {
+        if (isspace(str[index]) == 0)
+        {
+            new_length = ((size_t)index) + 1;
 
-	str[new_length] = 0x00;
+            break;
+        }
+    }
 
-	return new_length;
+    str[new_length] = 0x00;
+
+    return new_length;
 }
 
 size_t
 co_string_trim(
-	char* str,
-	size_t length
+    char* str,
+    size_t length
 )
 {
-	length = co_string_trim_right(str, length);
-	length = co_string_trim_left(str, length);
+    length = co_string_trim_right(str, length);
+    length = co_string_trim_left(str, length);
 
-	return length;
+    return length;
 }

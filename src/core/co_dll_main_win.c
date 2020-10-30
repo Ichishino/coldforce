@@ -1,4 +1,4 @@
-﻿#include <coldforce/core/co.h>
+#include <coldforce/core/co.h>
 
 #ifdef CO_OS_WIN
 

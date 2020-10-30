@@ -24,22 +24,22 @@ typedef co_map_t            co_ss_map_t;
 typedef co_map_iterator_t   co_ss_map_iterator_t;
 
 #define CO_SS_MAP_DEFAULT_CTX \
-	{ \
-		.hash_length = CO_MAP_DEFAULT_HASH_LENGTH, \
-		.hash_key = (co_hash_fn)co_string_hash, \
-		.free_key = (co_free_fn)co_mem_free, \
-		.free_value = (co_free_fn)co_mem_free, \
-		.duplicate_key = (co_duplicate_fn)strdup, \
-		.duplicate_value = (co_duplicate_fn)strdup, \
-		.compare_keys = (co_compare_fn)strcmp \
-	}
+    { \
+        .hash_length = CO_MAP_DEFAULT_HASH_LENGTH, \
+        .hash_key = (co_hash_fn)co_string_hash, \
+        .free_key = (co_free_fn)co_mem_free, \
+        .free_value = (co_free_fn)co_mem_free, \
+        .duplicate_key = (co_duplicate_fn)strdup, \
+        .duplicate_value = (co_duplicate_fn)strdup, \
+        .compare_keys = (co_compare_fn)strcmp \
+    }
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
 #define co_ss_map_destroy       co_map_destroy
 #define co_ss_map_clear         co_map_clear
-#define co_ss_map_get_size		co_map_get_size
+#define co_ss_map_get_size      co_map_get_size
 
 #define co_ss_map_contains(map, key) \
     co_map_contains(map, (uintptr_t)key)
