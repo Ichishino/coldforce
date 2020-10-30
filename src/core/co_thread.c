@@ -1,0 +1,295 @@
+#include <coldforce/core/co_std.h>
+#include <coldforce/core/co_thread.h>
+
+#ifdef CO_OS_WIN
+#   include <windows.h>
+#   include <process.h>
+#else
+#   include <pthread.h>
+#endif
+
+//---------------------------------------------------------------------------//
+// thread
+//---------------------------------------------------------------------------//
+
+//---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
+
+CO_THREAD_LOCAL co_thread_t* current_thread = NULL;
+
+//---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
+
+co_thread_t*
+co_thread_create(
+    co_ctx_st* ctx
+)
+{
+    size_t size = sizeof(co_thread_t);
+
+    if (ctx != NULL)
+    {
+        size = ctx->object_size;
+    }
+
+    size = co_max(size, sizeof(co_thread_t));
+
+    co_thread_t* thread =
+        (co_thread_t*)co_mem_alloc(size);
+
+    if (thread == NULL)
+    {
+        return NULL;
+    }
+
+    memset(thread, 0x00, size);
+
+    co_thread_setup(thread, ctx);
+
+    return thread;
+}
+
+void
+co_thread_setup(
+    co_thread_t* thread,
+    co_ctx_st* ctx
+)
+{
+    thread->handle = NULL;
+    thread->event_worker = NULL;
+
+    if (ctx != NULL)
+    {
+        thread->on_create = ctx->on_create;
+        thread->on_destroy = ctx->on_destroy;
+
+        if (ctx->event_worker != NULL)
+        {
+            thread->event_worker = ctx->event_worker;
+        }
+    }
+    else
+    {
+        thread->on_create = NULL;
+        thread->on_destroy = NULL;
+    }
+
+    if (thread->event_worker == NULL)
+    {
+        thread->event_worker = co_event_worker_create();
+    }
+
+    co_event_worker_setup(thread->event_worker);
+
+    thread->exit_code = 0;
+}
+
+void
+co_thread_cleanup(
+    co_thread_t* thread
+)
+{
+    thread->exit_code = 0;
+
+    co_event_worker_cleanup(thread->event_worker);
+    co_event_worker_destroy(thread->event_worker);
+    thread->event_worker = NULL;
+
+#ifdef CO_OS_WIN
+    CloseHandle((HANDLE)thread->handle);
+#else
+    co_mem_free(thread->handle);
+#endif
+    thread->handle = NULL;
+}
+
+struct co_thread_param_st
+{
+    co_thread_t* thread;
+    co_semaphore_t* semaphore;
+    uintptr_t param;
+    bool create_result;
+};
+
+#ifdef CO_OS_WIN
+unsigned int WINAPI
+#else
+void*
+#endif
+co_thread_main(
+    void* param
+)
+{
+    struct co_thread_param_st* thread_param =
+        (struct co_thread_param_st*)param;
+    co_thread_t* thread = thread_param->thread;
+
+    co_assert(current_thread == NULL);
+    current_thread = thread;
+
+    bool create_result = true;
+
+    if (thread->on_create != NULL)
+    {
+        create_result =
+            thread->on_create(thread, thread_param->param);
+
+        if (!create_result)
+        {
+            thread->exit_code = -1;
+        }
+    }
+
+    thread_param->create_result = create_result;
+    co_semaphore_post(thread_param->semaphore);
+
+    if (create_result)
+    {
+        thread->event_worker->run(thread->event_worker);
+    }
+
+    if (thread->on_destroy != NULL)
+    {
+        thread->on_destroy(thread);
+    }
+
+#ifdef CO_OS_WIN
+    return thread->exit_code;
+#else
+    return NULL;
+#endif
+}
+
+//---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
+
+co_thread_t*
+co_thread_get_current(
+    void
+)
+{
+    return current_thread;
+}
+
+void
+co_thread_destroy(
+    co_thread_t* thread
+)
+{
+    if (thread != NULL)
+    {
+        co_thread_cleanup(thread);
+        co_mem_free(thread);
+    }
+}
+
+co_thread_t*
+co_thread_start(
+    co_ctx_st* ctx,
+    uintptr_t param
+)
+{
+    co_thread_t* thread = co_thread_create(ctx);
+
+    thread->parent = co_thread_get_current();
+
+    struct co_thread_param_st thread_param;
+    thread_param.thread = thread;
+    thread_param.semaphore = co_semaphore_create(0);
+    thread_param.param = param;
+
+#ifdef CO_OS_WIN
+    thread->handle = (HANDLE)_beginthreadex(
+        NULL, 0, co_thread_main, &thread_param, 0, NULL);
+#else
+    pthread_t* pthread = (pthread_t*)co_mem_alloc(sizeof(pthread_t));
+    pthread_create(pthread, NULL, co_thread_main, &thread_param);
+    thread->handle = (co_thread_handle_t*)pthread;
+#endif
+
+    if (thread->handle == NULL)
+    {
+        co_thread_destroy(thread);
+
+        return NULL;
+    }
+
+    co_semaphore_wait(thread_param.semaphore, CO_INFINITE);
+    co_semaphore_destroy(thread_param.semaphore);
+
+    if (!thread_param.create_result)
+    {
+        co_thread_wait(thread);
+        co_thread_destroy(thread);
+
+        return NULL;
+    }
+
+    return thread;
+}
+
+void
+co_thread_stop(
+    co_thread_t* thread
+)
+{
+    co_assert(thread != NULL);
+
+    co_event_send(thread, CO_EVENT_ID_STOP, 0, 0);
+}
+
+void
+co_thread_wait(
+    co_thread_t* thread
+)
+{
+    co_assert(thread != NULL);
+
+#ifdef CO_OS_WIN
+    WaitForSingleObject((HANDLE)thread->handle, INFINITE);
+#else
+    pthread_join(*((pthread_t*)thread->handle), NULL);
+#endif
+}
+
+void
+co_thread_set_exit_code(
+    int exit_code
+)
+{
+    co_thread_t* thread = co_thread_get_current();
+    co_assert(thread != NULL);
+
+    thread->exit_code = exit_code;
+}
+
+int
+co_thread_get_exit_code(
+    co_thread_t* thread
+)
+{
+    co_assert(thread != NULL);
+
+    return thread->exit_code;
+}
+
+co_thread_t*
+co_thread_get_parent(
+    void
+)
+{
+    co_thread_t* thread = co_thread_get_current();
+    co_assert(thread != NULL);
+
+    return thread->parent;
+}
+
+co_thread_handle_t*
+co_thread_get_handle(
+    co_thread_t* thread
+)
+{
+    co_assert(thread != NULL);
+
+    return thread->handle;
+}

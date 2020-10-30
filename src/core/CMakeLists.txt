@@ -1,0 +1,24 @@
+cmake_minimum_required(VERSION 2.8)
+
+project(co C)
+
+add_library(co SHARED 
+
+    co_app.c
+    co_config.c
+    co_event.c
+    co_event_worker.c
+    co_list.c
+    co_map.c
+    co_mutex.c
+    co_queue.c
+    co_semaphore.c
+    co_string.c
+    co_thread.c
+    co_time.c
+    co_timer.c
+    co_timer_manager.c
+)
+
+target_include_directories(co PUBLIC ../../inc)
+target_compile_options(co PUBLIC -Wall)

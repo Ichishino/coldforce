@@ -1,4 +1,4 @@
 Coldforce
 ========
 
-C Event Driven Application Library
+Event Driven Application Library for C
