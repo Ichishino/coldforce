@@ -66,6 +66,7 @@ CO_API co_list_data_st* co_list_get_tail(co_list_t* list);
 
 CO_API void co_list_remove_head(co_list_t* list);
 CO_API void co_list_remove_tail(co_list_t* list);
+CO_API void co_list_remove(co_list_t* list, uintptr_t value);
 
 CO_API co_list_iterator_t*
     co_list_get_head_iterator(co_list_t* list);
@@ -85,7 +86,7 @@ CO_API bool co_list_insert(
 CO_API bool co_list_insert_after(
     co_list_t* list, co_list_iterator_t* iterator, uintptr_t value);
 
-CO_API void co_list_remove(co_list_t* list, co_list_iterator_t* iterator);
+CO_API void co_list_remove_at(co_list_t* list, co_list_iterator_t* iterator);
 
 CO_API co_list_data_st* co_list_get(
     co_list_t* list, co_list_iterator_t* iterator);

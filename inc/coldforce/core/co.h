@@ -59,7 +59,7 @@
 #   ifdef CO_EXPORTS
 #       define CO_API  __declspec(dllexport)
 #   else
-#       define CO_API
+#       define CO_API  __declspec(dllimport)
 #   endif
 #   define CO_THREAD_LOCAL __declspec(thread)
 #else
@@ -75,21 +75,21 @@
 #   define CO_EXTERN_C_END
 #endif
 
+CO_EXTERN_C_BEGIN
+
 //---------------------------------------------------------------------------//
 // constants, types
 //---------------------------------------------------------------------------//
 
-#define CO_EVENT_ID_STOP    0x7001
-#define CO_EVENT_ID_TIMER   0x7002
+#ifdef CO_OS_WIN
+#ifdef _WIN64
+typedef long ssize_t;
+#else
+typedef int ssize_t;
+#endif
+#endif
 
-#define CO_INFINITE         0xFFFFFFFF
-
-#define co_mem_alloc        malloc
-#define co_mem_realloc      realloc 
-#define co_mem_free         free
-#define co_assert           assert
-
-#define co_max(l, r)        (((l) > (r)) ? (l) : (r))
+#define CO_INFINITE     0xFFFFFFFF
 
 typedef enum
 {
@@ -100,6 +100,9 @@ typedef enum
 
 } co_wait_result_t;
 
+typedef bool(*co_create_fn)(void* self, uintptr_t param);
+typedef void(*co_destroy_fn)(void* self);
+
 typedef size_t(*co_hash_fn)(uintptr_t data);
 typedef void(*co_free_fn)(uintptr_t data);
 typedef uintptr_t(*co_duplicate_fn)(uintptr_t src);
@@ -107,6 +110,22 @@ typedef intptr_t(*co_compare_fn)(uintptr_t data1, uintptr_t data2);
 typedef void(*co_copy_fn)(uintptr_t dest, uintptr_t src);
 
 //---------------------------------------------------------------------------//
+// macros, functions
 //---------------------------------------------------------------------------//
+
+#define co_mem_alloc        malloc
+#define co_mem_realloc      realloc
+#define co_mem_free         free
+#define co_assert           assert
+
+#define co_max(l, r)        (((l) > (r)) ? (l) : (r))
+#define co_min(l, r)        (((l) < (r)) ? (l) : (r))
+
+CO_API void co_mem_free_later(void* mem);
+
+//---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
+
+CO_EXTERN_C_END
 
 #endif // CO_H_INCLUDED

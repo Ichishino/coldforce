@@ -294,6 +294,20 @@ co_list_remove_tail(
 void
 co_list_remove(
     co_list_t* list,
+    uintptr_t value
+)
+{
+    co_list_iterator_t* it = co_list_find(list, value);
+
+    if (it != NULL)
+    {
+        co_list_remove_at(list, it);
+    }
+}
+
+void
+co_list_remove_at(
+    co_list_t* list,
     co_list_iterator_t* iterator
 )
 {

@@ -3,6 +3,10 @@
 
 #include <coldforce/core/co.h>
 
+CO_EXTERN_C_BEGIN
+
+struct co_thread_t;
+
 //---------------------------------------------------------------------------//
 // timer
 //---------------------------------------------------------------------------//
@@ -10,9 +14,11 @@
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-typedef void(*co_timer_fn)(void* self, void* timer);
+struct co_timer_t;
 
-typedef struct
+typedef void(*co_timer_fn)(void* self, struct co_timer_t* timer);
+
+typedef struct co_timer_t
 {
     bool running;
     bool queued;
@@ -64,5 +70,7 @@ CO_API void co_timer_stop(co_timer_t* timer);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
+
+CO_EXTERN_C_END
 
 #endif // CO_TIMER_H_INCLUDED

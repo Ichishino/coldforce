@@ -37,20 +37,20 @@
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -72,19 +72,19 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>../../../build/vs19\$(Configuration)32/</OutDir>
+    <OutDir>../../../build/vs19/$(Configuration)$(PlatformArchitecture)/</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\..\..\build\vs19\$(Configuration)32\</OutDir>
+    <OutDir>../../../build/vs19/$(Configuration)$(PlatformArchitecture)/</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>..\..\..\build\vs19\$(Configuration)64\</OutDir>
+    <OutDir>../../../build/vs19/$(Configuration)$(PlatformArchitecture)/</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\..\..\build\vs19\$(Configuration)64\</OutDir>
+    <OutDir>../../../build/vs19/$(Configuration)$(PlatformArchitecture)/</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -160,8 +160,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\core\co_app.c" />
+    <ClCompile Include="..\..\..\src\core\co_array.c" />
     <ClCompile Include="..\..\..\src\core\co_config.c" />
-    <ClCompile Include="..\..\..\src\core\co_dll_main_win.c" />
+    <ClCompile Include="..\..\..\src\core\co.c" />
     <ClCompile Include="..\..\..\src\core\co_event.c" />
     <ClCompile Include="..\..\..\src\core\co_event_worker.c" />
     <ClCompile Include="..\..\..\src\core\co_list.c" />
@@ -179,6 +180,7 @@
     <ClInclude Include="..\..\..\inc\coldforce\coldforce.h" />
     <ClInclude Include="..\..\..\inc\coldforce\core\co.h" />
     <ClInclude Include="..\..\..\inc\coldforce\core\co_app.h" />
+    <ClInclude Include="..\..\..\inc\coldforce\core\co_array.h" />
     <ClInclude Include="..\..\..\inc\coldforce\core\co_config.h" />
     <ClInclude Include="..\..\..\inc\coldforce\core\co_event.h" />
     <ClInclude Include="..\..\..\inc\coldforce\core\co_event_worker.h" />

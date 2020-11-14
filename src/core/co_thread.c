@@ -42,8 +42,6 @@ co_thread_create(
         return NULL;
     }
 
-    memset(thread, 0x00, size);
-
     co_thread_setup(thread, ctx);
 
     return thread;
@@ -57,6 +55,7 @@ co_thread_setup(
 {
     thread->handle = NULL;
     thread->event_worker = NULL;
+    thread->parent = NULL;
 
     if (ctx != NULL)
     {
@@ -103,6 +102,14 @@ co_thread_cleanup(
     thread->handle = NULL;
 }
 
+void
+co_thread_run(
+    co_thread_t* thread
+)
+{
+    co_event_worker_run(thread->event_worker);
+}
+
 struct co_thread_param_st
 {
     co_thread_t* thread;
@@ -145,7 +152,7 @@ co_thread_main(
 
     if (create_result)
     {
-        thread->event_worker->run(thread->event_worker);
+        co_thread_run(thread);
     }
 
     if (thread->on_destroy != NULL)

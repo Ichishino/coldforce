@@ -76,8 +76,6 @@ co_app_create(
         return NULL;
     }
 
-    memset(app, 0x00, size);
-
     co_app_setup(app, ctx);
 
     return app;
@@ -114,7 +112,7 @@ co_app_run(
 
     if (create_result)
     {
-        app->thread.event_worker->run(app->thread.event_worker);
+        co_thread_run(&app->thread);
     }
 
     if (app->thread.on_destroy != NULL)

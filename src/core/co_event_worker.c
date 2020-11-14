@@ -31,8 +31,9 @@ co_event_worker_create(
     event_worker->timer_manager = NULL;
     event_worker->wait_semaphore = NULL;
 
-    event_worker->run = NULL;
+    event_worker->wait = NULL;
     event_worker->wake_up = NULL;
+    event_worker->dispatch = NULL;
 
     return event_worker;
 }
@@ -60,14 +61,23 @@ co_event_worker_setup(
     event_worker->wait_semaphore = co_semaphore_create(0);
     event_worker->timer_manager = co_timer_manager_create();
 
-    if (event_worker->run == NULL)
+    co_list_ctx_st list_ctx = { 0 };
+    list_ctx.free_value = (co_free_fn)co_mem_free;
+    event_worker->mem_trash = co_list_create(&list_ctx);
+
+    if (event_worker->wait == NULL)
     {
-        event_worker->run = co_event_worker_run;
+        event_worker->wait = co_event_worker_wait;
     }
 
     if (event_worker->wake_up == NULL)
     {
         event_worker->wake_up = co_event_worker_wake_up;
+    }
+
+    if (event_worker->dispatch == NULL)
+    {
+        event_worker->dispatch = co_event_worker_dispatch;
     }
 }
 
@@ -91,8 +101,34 @@ co_event_worker_cleanup(
     co_queue_destroy(event_worker->event_queue);
     event_worker->event_queue = NULL;
 
+    co_list_destroy(event_worker->mem_trash);
+    event_worker->mem_trash = NULL;
+
     event_worker->stop_receiving = true;
     event_worker->running = false;
+}
+
+void
+co_mem_free_later(
+    void* mem
+)
+{
+    if (mem == NULL)
+    {
+        return;
+    }
+
+    co_thread_t* thread = co_thread_get_current();
+
+    if (thread != NULL)
+    {
+        co_list_add_tail(
+            thread->event_worker->mem_trash, (uintptr_t)mem);
+    }
+    else
+    {
+        co_mem_free(mem);
+    }
 }
 
 void
@@ -105,21 +141,36 @@ co_event_worker_run(
         uint32_t msec =
             co_timer_manager_get_next_timeout(event_worker->timer_manager);
 
-        co_wait_result_t result =
-            co_semaphore_wait(event_worker->wait_semaphore, msec);
+        co_wait_result_t result = event_worker->wait(event_worker, msec);
 
         if (result == CO_WAIT_RESULT_ERROR)
         {
             break;
         }
 
-        co_event_t event;
+        co_event_t event = { 0 };
 
-        if (co_event_worker_pump(event_worker, &event))
+        while (co_event_worker_pump(event_worker, &event))
         {
-            co_event_worker_dispatch(event_worker, &event);
+            event_worker->dispatch(event_worker, &event);
+        }
+
+        if ((event.event_id == 0) &&
+            (co_list_get_size(event_worker->mem_trash) > 0))
+        {
+            co_list_clear(event_worker->mem_trash);
         }
     }
+}
+
+co_wait_result_t
+co_event_worker_wait(
+    co_event_worker_t* event_worker,
+    uint32_t msec
+)
+{
+    return co_semaphore_wait(
+        event_worker->wait_semaphore, msec);
 }
 
 void
@@ -262,7 +313,7 @@ co_compare_event(
     return
         ((event1->event_id == event2->event_id) &&
          (event1->param1 == event2->param1) &&
-         (event1->param2 == event2->param2));
+         (event1->param2 == event2->param2)) ? 0 : 1;
 }
 
 void

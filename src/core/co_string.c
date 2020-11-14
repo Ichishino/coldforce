@@ -1,4 +1,5 @@
 #include <coldforce/core/co_std.h>
+#include <coldforce/core/co_string.h>
 
 #include <ctype.h>
 

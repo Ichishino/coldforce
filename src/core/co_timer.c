@@ -41,7 +41,11 @@ co_timer_destroy(
     co_timer_t* timer
 )
 {
-    co_mem_free(timer);
+    if (timer != NULL)
+    {
+        co_timer_stop(timer);
+        co_mem_free(timer);
+    }
 }
 
 bool
@@ -73,7 +77,7 @@ co_timer_stop(
     co_timer_t* timer
 )
 {
-    if (!timer->running)
+    if ((timer == NULL) || !timer->running)
     {
         return;
     }

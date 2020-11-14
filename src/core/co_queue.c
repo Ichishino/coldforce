@@ -181,7 +181,7 @@ co_queue_find(
         return NULL;
     }
 
-    size_t start = queue->head * queue->element_length;
+    size_t start = queue->head;
     size_t end = 0;
 
     if (queue->head >= queue->tail)
@@ -192,8 +192,6 @@ co_queue_find(
     {
         end = queue->tail;
     }
-
-    end *= queue->element_length;
 
     for (size_t index = start; index < end; ++index)
     {
@@ -209,7 +207,7 @@ co_queue_find(
 
     if (queue->head >= queue->tail)
     {
-        end = queue->tail * queue->element_length;
+        end = queue->tail;
 
         for (size_t index = 0; index < end; ++index)
         {

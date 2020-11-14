@@ -106,7 +106,7 @@ co_timer_manager_unregister(
 
         if (((co_timer_item_t*)data->value)->timer == timer)
         {
-            co_list_remove(timer_manager->timers, it);
+            co_list_remove_at(timer_manager->timers, it);
 
             return true;
         }
