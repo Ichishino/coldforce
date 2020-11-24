@@ -22,7 +22,7 @@ co_config_read_file(
         return NULL;
     }
 
-    co_map_ctx_st ctx = CO_SS_MAP_DEFAULT_CTX;
+    co_map_ctx_st ctx = CO_SS_MAP_CTX;
     co_ss_map_t* config_map = co_map_create(&ctx);
 
     char line[CO_CONFIG_LINE_MAX_LENGTH];

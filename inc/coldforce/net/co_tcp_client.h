@@ -9,6 +9,8 @@
 
 #ifdef CO_OS_WIN
 #include <coldforce/net/co_tcp_win.h>
+#else
+#include <coldforce/core/co_queue.h>
 #endif
 
 CO_EXTERN_C_BEGIN
@@ -41,25 +43,32 @@ typedef struct co_tcp_client_t
     co_net_addr_t remote_net_addr;
     bool open_remote;
 
-    co_tcp_send_fn on_send;
-    co_tcp_receive_fn on_receive;
+    co_tcp_connect_fn on_connect_complete;
+    co_tcp_send_fn on_send_complete;
+
+    co_tcp_receive_fn on_receive_ready;
     co_tcp_close_fn on_close;
-    co_tcp_connect_fn on_connect;
 
     co_timer_t* close_timer;
 
 #ifdef CO_OS_WIN
     co_win_tcp_client_extension_t win;
+#else
+    co_queue_t* send_queue;
 #endif
 
 } co_tcp_client_t;
 
+co_tcp_client_t* co_tcp_client_create_with(
+    co_socket_handle_t handle, const co_net_addr_t* remote_net_addr);
 bool co_tcp_client_setup(co_tcp_client_t* client);
 void co_tcp_client_cleanup(co_tcp_client_t* client);
-void co_tcp_client_on_send(co_tcp_client_t* client, size_t data_length);
-void co_tcp_client_on_receive(co_tcp_client_t* client, size_t data_length);
+
+void co_tcp_client_on_connect_complete(co_tcp_client_t* client, int error_code);
+void co_tcp_client_on_send_ready(co_tcp_client_t* client);
+void co_tcp_client_on_send_complete(co_tcp_client_t* client, size_t data_length);
+void co_tcp_client_on_receive_ready(co_tcp_client_t* client, size_t data_length);
 void co_tcp_client_on_close(co_tcp_client_t* client);
-void co_tcp_client_on_connect(co_tcp_client_t* client, int error_code);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
@@ -86,10 +95,12 @@ CO_NET_API ssize_t co_tcp_receive(
 
 CO_NET_API bool co_tcp_is_open(const co_tcp_client_t* client);
 
-CO_NET_API void co_tcp_set_send_handler(
+CO_NET_API void co_tcp_set_send_complete_handler(
     co_tcp_client_t* client, co_tcp_send_fn handler);
+
 CO_NET_API void co_tcp_set_receive_handler(
     co_tcp_client_t* client, co_tcp_receive_fn handler);
+
 CO_NET_API void co_tcp_set_close_handler(
     co_tcp_client_t* client, co_tcp_close_fn handler);
 
@@ -97,7 +108,7 @@ CO_NET_API const co_net_addr_t*
     co_tcp_get_remote_net_addr(const co_tcp_client_t* client);
 
 #ifdef CO_OS_WIN
-CO_NET_API size_t co_win_tcp_get_received_data_length(const co_tcp_client_t* client);
+CO_NET_API size_t co_win_tcp_get_receive_data_length(const co_tcp_client_t* client);
 CO_NET_API void co_win_tcp_set_receive_buffer_length(co_tcp_client_t* client, size_t new_length);
 CO_NET_API size_t co_win_tcp_get_receive_buffer_length(const co_tcp_client_t* client);
 CO_NET_API void* co_win_tcp_get_receive_buffer(co_tcp_client_t* client);

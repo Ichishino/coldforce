@@ -18,26 +18,29 @@ typedef struct
     int argc;
     char** argv;
 
-    uintptr_t param;
-
-} co_app_param_st;
+} co_arg_st;
 
 typedef struct
 {
-    co_thread_t thread;
+    co_thread_t main_thread;
 
 } co_app_t;
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-CO_API co_app_t* co_app_create(co_ctx_st* ctx);
+CO_API void co_app_init(co_app_t* app,
+    co_create_fn create_handler, co_destroy_fn destroy_handler);
 
-CO_API void co_app_destroy(co_app_t* app);
+CO_API void co_app_setup(co_app_t* app,
+    co_create_fn create_handler, co_destroy_fn destroy_handler,
+    co_event_worker_t* event_worker);
 
-CO_API int co_app_run(co_app_t* app, co_app_param_st* param);
+CO_API void co_app_cleanup(co_app_t* app);
 
-CO_API int co_app_start(co_ctx_st* ctx, co_app_param_st* param);
+CO_API int co_app_run(co_app_t* app, co_arg_st* arg);
+
+CO_API int co_app_start(co_app_t* app, int argc, char** argv);
 
 CO_API void co_app_stop(void);
 

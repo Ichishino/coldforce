@@ -7,6 +7,8 @@
 #include <coldforce/net/co_socket_handle.h>
 #include <coldforce/net/co_socket.h>
 
+#ifdef CO_OS_WIN
+
 CO_EXTERN_C_BEGIN
 
 //---------------------------------------------------------------------------//
@@ -16,7 +18,7 @@ CO_EXTERN_C_BEGIN
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-#define CO_WIN_UDP_DEFAULT_RECEIVE_BUFF_LENGTH    65535
+#define CO_WIN_UDP_DEFAULT_RECEIVE_BUFFER_LENGTH    65535
 
 struct co_udp_t;
 
@@ -50,6 +52,8 @@ co_socket_handle_t co_win_udp_socket_create(co_address_family_t family);
 bool co_win_udp_setup(struct co_udp_t* udp, size_t receive_buffer_length);
 void co_win_udp_cleanup(struct co_udp_t* udp);
 
+bool co_win_udp_send(struct co_udp_t* udp,
+    const co_net_addr_t* remote_net_addr, const void* data, size_t data_length);
 bool co_win_udp_send_async(struct co_udp_t* udp,
     const co_net_addr_t* remote_net_addr, const void* data, size_t data_length);
 
@@ -57,11 +61,13 @@ bool co_win_udp_receive_start(struct co_udp_t* udp);
 
 bool co_win_udp_receive(struct co_udp_t* udp,
     co_net_addr_t* remote_net_addr, void* buffer, size_t buffer_length,
-    size_t* received_length);
+    size_t* data_length);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
 CO_EXTERN_C_END
+
+#endif // CO_OS_WIN
 
 #endif // CO_UDP_WIN_H_INCLUDED

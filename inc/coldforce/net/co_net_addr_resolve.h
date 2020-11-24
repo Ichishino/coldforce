@@ -16,9 +16,9 @@ CO_EXTERN_C_BEGIN
 
 typedef struct
 {
-    co_address_family_t family;
-    co_socket_type_t type;
-    co_protocol_t protocol;
+    int family;
+    int type;
+    int protocol;
     int flags;
 
 } co_resolve_hint_st;
@@ -36,5 +36,7 @@ CO_NET_API size_t co_net_addr_resolve_service(
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
+
+CO_EXTERN_C_END
 
 #endif // CO_NET_ADDR_RESOLVE_H_INCLUDED

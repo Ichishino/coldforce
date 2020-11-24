@@ -3,6 +3,7 @@
 
 #include <coldforce/core/co.h>
 #include <coldforce/core/co_map.h>
+#include <coldforce/core/co_string.h>
 
 CO_EXTERN_C_BEGIN
 
@@ -23,14 +24,14 @@ typedef struct
 typedef co_map_t            co_ss_map_t;
 typedef co_map_iterator_t   co_ss_map_iterator_t;
 
-#define CO_SS_MAP_DEFAULT_CTX \
+#define CO_SS_MAP_CTX \
     { \
         .hash_length = CO_MAP_DEFAULT_HASH_LENGTH, \
         .hash_key = (co_hash_fn)co_string_hash, \
         .free_key = (co_free_fn)co_mem_free, \
         .free_value = (co_free_fn)co_mem_free, \
-        .duplicate_key = (co_duplicate_fn)strdup, \
-        .duplicate_value = (co_duplicate_fn)strdup, \
+        .duplicate_key = (co_duplicate_fn)co_string_duplicate, \
+        .duplicate_value = (co_duplicate_fn)co_string_duplicate, \
         .compare_keys = (co_compare_fn)strcmp \
     }
 

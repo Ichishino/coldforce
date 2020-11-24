@@ -75,6 +75,10 @@
 #   define CO_EXTERN_C_END
 #endif
 
+#ifndef CO_OS_WIN
+#include <unistd.h>
+#endif
+
 CO_EXTERN_C_BEGIN
 
 //---------------------------------------------------------------------------//
@@ -108,6 +112,13 @@ typedef void(*co_free_fn)(uintptr_t data);
 typedef uintptr_t(*co_duplicate_fn)(uintptr_t src);
 typedef intptr_t(*co_compare_fn)(uintptr_t data1, uintptr_t data2);
 typedef void(*co_copy_fn)(uintptr_t dest, uintptr_t src);
+
+typedef struct
+{
+    void* ptr;
+    size_t length;
+
+} co_buffer_t;
 
 //---------------------------------------------------------------------------//
 // macros, functions

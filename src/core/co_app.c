@@ -21,119 +21,95 @@ extern CO_THREAD_LOCAL co_thread_t* current_thread;
 //---------------------------------------------------------------------------//
 
 void
+co_app_init(
+    co_app_t* app,
+    co_create_fn create_handler,
+    co_destroy_fn destroy_handler
+)
+{
+    co_app_setup(
+        app, create_handler, destroy_handler, NULL);
+}
+
+void
 co_app_setup(
     co_app_t* app,
-    co_ctx_st* ctx
+    co_create_fn create_handler,
+    co_destroy_fn destroy_handler,
+    co_event_worker_t* event_worker
 )
 {
     co_assert(current_app == NULL);
     co_assert(current_thread == NULL);
 
-    co_thread_setup(&app->thread, ctx);
+    co_thread_setup(&app->main_thread,
+        create_handler, destroy_handler, event_worker);
 
 #ifdef CO_OS_WIN
-    app->thread.handle =
+    app->main_thread.handle =
         (co_thread_handle_t*)GetCurrentThread();
 #else
     pthread_t* pthread = (pthread_t*)co_mem_alloc(sizeof(pthread_t));
     *pthread = pthread_self();
-    app->thread.handle = (co_thread_handle_t*)pthread;
+    app->main_thread.handle = (co_thread_handle_t*)pthread;
 #endif
 
     current_app = app;
     current_thread = (co_thread_t*)app;
 }
 
-//---------------------------------------------------------------------------//
-//---------------------------------------------------------------------------//
-
-co_app_t*
-co_app_get_current(
-    void
-)
-{
-    return current_app;
-}
-
-co_app_t*
-co_app_create(
-    co_ctx_st* ctx
-)
-{
-    size_t size = sizeof(co_app_t);
-
-    if (ctx != NULL)
-    {
-        size = ctx->object_size;
-    }
-
-    size = co_max(size, sizeof(co_app_t));
-
-    co_app_t* app = (co_app_t*)co_mem_alloc(size);
-
-    if (app == NULL)
-    {
-        return NULL;
-    }
-
-    co_app_setup(app, ctx);
-
-    return app;
-}
-
 void
-co_app_destroy(
+co_app_cleanup(
     co_app_t* app
 )
 {
     if (app != NULL)
     {
-        co_thread_cleanup(&app->thread);
-        co_mem_free(app);
+        co_thread_cleanup(&app->main_thread);
     }
-    
-    current_thread = NULL;
-    current_app = NULL;
 }
 
 int
 co_app_run(
     co_app_t* app,
-    co_app_param_st* app_param
+    co_arg_st* arg
 )
 {
     bool create_result = true;
 
-    if (app->thread.on_create != NULL)
+    if (app->main_thread.on_create != NULL)
     {
         create_result =
-            app->thread.on_create(app, (uintptr_t)app_param);
+            app->main_thread.on_create(app, (uintptr_t)arg);
     }
 
     if (create_result)
     {
-        co_thread_run(&app->thread);
+        co_thread_run(&app->main_thread);
     }
 
-    if (app->thread.on_destroy != NULL)
+    if (app->main_thread.on_destroy != NULL)
     {
-        app->thread.on_destroy(app);
+        app->main_thread.on_destroy(app);
     }
 
-    return app->thread.exit_code;
+    return app->main_thread.exit_code;
 }
 
 int
 co_app_start(
-    co_ctx_st* ctx,
-    co_app_param_st* param
+    co_app_t* app,
+    int argc,
+    char** argv
 )
 {
-    co_app_t* app = co_app_create(ctx);
+    co_arg_st arg = { 0 };
+    arg.argc = argc;
+    arg.argv = argv;
 
-    int exit_code = co_app_run(app, param);
+    int exit_code = co_app_run(app, &arg);
 
-    co_app_destroy(app);
+    co_app_cleanup(app);
 
     return exit_code;
 }
@@ -145,5 +121,16 @@ co_app_stop(
 {
     co_app_t* app = co_app_get_current();
 
-    co_thread_stop(&app->thread);
+    if (app != NULL)
+    {
+        co_thread_stop(&app->main_thread);
+    }
+}
+
+co_app_t*
+co_app_get_current(
+    void
+)
+{
+    return current_app;
 }

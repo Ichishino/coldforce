@@ -3,6 +3,7 @@
 
 #include <coldforce/core/co.h>
 #include <coldforce/core/co_list.h>
+#include <coldforce/core/co_string.h>
 
 CO_EXTERN_C_BEGIN
 
@@ -22,10 +23,10 @@ typedef struct
 typedef co_list_t            co_str_list_t;
 typedef co_list_iterator_t   co_str_list_iterator_t;
 
-#define CO_STR_LIST_DEFAULT_CTX \
+#define CO_STR_LIST_CTX \
 	{ \
 		.free_value = (co_free_fn)co_mem_free, \
-		.duplicate_value = (co_duplicate_fn)strdup, \
+		.duplicate_value = (co_duplicate_fn)co_string_duplicate, \
 		.compare_values = (co_compare_fn)strcmp \
 	}
 

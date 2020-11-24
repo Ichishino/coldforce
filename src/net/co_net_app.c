@@ -12,51 +12,56 @@
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-co_app_t*
-co_net_app_create(
-    co_ctx_st* ctx
+bool
+co_net_app_init(
+    co_app_t* app,
+    co_create_fn create_handler,
+    co_destroy_fn destroy_handler
 )
 {
     if (!co_net_setup())
     {
-        return NULL;
+        return false;
     }
 
-    ctx->event_worker =
-        (co_event_worker_t*)co_net_worker_create();
+    co_net_worker_t* net_worker = co_net_worker_create();
 
-    return co_app_create(ctx);
+    co_app_setup(app,
+        create_handler, destroy_handler,
+        (co_event_worker_t*)net_worker);
+
+    return true;
 }
 
 void
-co_net_app_destroy(
+co_net_app_cleanup(
     co_app_t* app
 )
 {
-    co_net_worker_cleanup(
-        (co_net_worker_t*)app->thread.event_worker);
+    if (app != NULL)
+    {
+        co_net_worker_cleanup(
+            (co_net_worker_t*)app->main_thread.event_worker);
 
-    co_app_destroy(app);
-
-    co_net_cleanup();
+        co_app_cleanup(app);
+        co_net_cleanup();
+    }
 }
 
 int
 co_net_app_start(
-    co_ctx_st* ctx,
-    co_app_param_st* param
+    co_app_t* app,
+    int argc,
+    char** argv
 )
 {
-    co_app_t* app = co_net_app_create(ctx);
+    co_arg_st arg = { 0 };
+    arg.argc = argc;
+    arg.argv = argv;
 
-    if (app == NULL)
-    {
-        return -1;
-    }
+    int exit_code = co_app_run(app, &arg);
 
-    int exit_code = co_app_run(app, param);
-
-    co_net_app_destroy(app);
+    co_net_app_cleanup(app);
 
     return exit_code;
 }

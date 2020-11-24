@@ -96,3 +96,20 @@ co_string_trim(
 
     return length;
 }
+
+char*
+co_string_duplicate(
+    const char* src
+)
+{
+    size_t length = strlen(src) + 1;
+
+    char* dest = (char*)co_mem_alloc(length);
+
+    if (dest != NULL)
+    {
+        strcpy(dest, src);
+    }
+
+    return dest;
+}

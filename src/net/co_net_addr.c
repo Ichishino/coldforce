@@ -2,6 +2,10 @@
 
 #include <coldforce/net/co_net_addr.h>
 
+#ifndef CO_OS_WIN
+#include <arpa/inet.h>
+#endif
+
 //---------------------------------------------------------------------------//
 // net address
 //---------------------------------------------------------------------------//
@@ -43,7 +47,7 @@ co_net_addr_set_family(
     }
 }
 
-co_address_family_t 
+co_address_family_t
 co_net_addr_get_family(
     const co_net_addr_t* net_addr
 )
@@ -151,7 +155,7 @@ co_net_addr_set_unix_path(
 )
 {
     net_addr->sa.any.ss_family = AF_UNIX;
- 
+
     strcpy(net_addr->sa.un.sun_path, path);
 }
 

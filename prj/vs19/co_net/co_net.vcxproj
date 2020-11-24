@@ -168,6 +168,7 @@
     <ClInclude Include="..\..\..\inc\coldforce\net\co_net_selector.h" />
     <ClInclude Include="..\..\..\inc\coldforce\net\co_net_selector_win.h" />
     <ClInclude Include="..\..\..\inc\coldforce\net\co_net_thread.h" />
+    <ClInclude Include="..\..\..\inc\coldforce\net\co_net_win.h" />
     <ClInclude Include="..\..\..\inc\coldforce\net\co_net_worker.h" />
     <ClInclude Include="..\..\..\inc\coldforce\net\co_socket.h" />
     <ClInclude Include="..\..\..\inc\coldforce\net\co_socket_handle.h" />
@@ -190,6 +191,7 @@
     <ClCompile Include="..\..\..\src\net\co_net_app.c" />
     <ClCompile Include="..\..\..\src\net\co_net_selector_win.c" />
     <ClCompile Include="..\..\..\src\net\co_net_thread.c" />
+    <ClCompile Include="..\..\..\src\net\co_net_win.c" />
     <ClCompile Include="..\..\..\src\net\co_net_worker.c" />
     <ClCompile Include="..\..\..\src\net\co_socket.c" />
     <ClCompile Include="..\..\..\src\net\co_socket_handle.c" />

@@ -56,3 +56,35 @@ co_event_send(
 
     return co_event_worker_add(thread->event_worker, &event);
 }
+
+bool
+co_event_send_task(
+    co_thread_t* thread,
+    co_task_fn handler,
+    uintptr_t param1,
+    uintptr_t param2
+)
+{
+    co_task_t* task =
+        (co_task_t*)co_mem_alloc(sizeof(co_task_t));
+
+    if (task == NULL)
+    {
+        return false;
+    }
+
+    task->handler = handler;
+    task->param1 = param1;
+    task->param2 = param2;
+
+    co_event_t event = { CO_EVENT_ID_TASK, (uintptr_t)task, 0 };
+
+    if (!co_event_worker_add(thread->event_worker, &event))
+    {
+        co_mem_free(task);
+
+        return false;
+    }
+
+    return true;
+}

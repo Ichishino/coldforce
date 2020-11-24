@@ -9,6 +9,8 @@
 #include <coldforce/net/co_socket_handle.h>
 #include <coldforce/net/co_socket.h>
 
+#ifdef CO_OS_WIN
+
 CO_EXTERN_C_BEGIN
 
 //---------------------------------------------------------------------------//
@@ -18,7 +20,7 @@ CO_EXTERN_C_BEGIN
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-#define CO_WIN_TCP_DEFAULT_RECEIVE_BUFF_LENGTH  8192
+#define CO_WIN_TCP_DEFAULT_RECEIVE_BUFFER_LENGTH  8192
 
 struct co_tcp_server_t;
 struct co_tcp_client_t;
@@ -83,7 +85,7 @@ bool co_win_tcp_client_send_async(struct co_tcp_client_t* client,
 bool co_win_tcp_client_receive_start(struct co_tcp_client_t* client);
 
 bool co_win_tcp_client_receive(struct co_tcp_client_t* client,
-    void* buffer, size_t buffer_length, size_t* received_length);
+    void* buffer, size_t buffer_length, size_t* data_length);
 
 bool co_win_tcp_client_connect_start(struct co_tcp_client_t* client);
 
@@ -91,10 +93,14 @@ bool co_win_socket_option_update_connect_context(
     co_socket_t* sock);
 bool co_win_socket_option_update_accept_context(
     co_socket_t* sock, co_socket_t* server_sock);
+bool co_win_socket_option_get_connect_time(
+    co_socket_t* sock, int* seconds);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
 CO_EXTERN_C_END
+
+#endif // CO_OS_WIN
 
 #endif // CO_TCP_WIN_H_INCLUDED

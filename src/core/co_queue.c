@@ -170,6 +170,19 @@ co_queue_pop(
 }
 
 void*
+co_queue_peek_head(
+    co_queue_t* queue
+)
+{
+    if (queue->size == 0)
+    {
+        return NULL;
+    }
+
+    return &queue->buffer[queue->head * queue->element_length];
+}
+
+void*
 co_queue_find(
     co_queue_t* queue,
     const void* value_address,

@@ -85,6 +85,7 @@ co_array_set_size(
             return false;
         }
 
+        arr->capacity = new_capacity;
         arr->buffer = (uint8_t*)new_buffer;
     }
 

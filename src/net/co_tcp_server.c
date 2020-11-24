@@ -12,63 +12,78 @@
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-bool
-co_tcp_server_on_accept(
+void
+co_tcp_server_on_accept_ready(
     co_tcp_server_t* server
 )
 {
-    co_tcp_client_t* client =
-        (co_tcp_client_t*)co_mem_alloc(sizeof(co_tcp_client_t));
-
-    if (client == NULL)
-    {
-        return false;
-    }
-
-    if (!co_tcp_client_setup(client))
-    {
-        co_mem_free(client);
-
-        return false;
-    }
-
-    client->sock.open_local = true;
-    client->open_remote = true;
-
 #ifdef CO_OS_WIN
 
-    client->sock.handle = server->win.accept_handle;
+    co_win_socket_option_update_accept_context(
+        (co_socket_t*)&server->win.accept_handle, &server->sock);
+
+    co_tcp_client_t* win_client =
+        co_tcp_client_create_with(server->win.accept_handle, NULL);
+
+    if (win_client == NULL)
+    {
+        co_socket_handle_close(server->win.accept_handle);
+        server->win.accept_handle = CO_SOCKET_INVALID_HANDLE;
+
+        return;
+    }
+
     server->win.accept_handle = CO_SOCKET_INVALID_HANDLE;
 
-    co_win_socket_option_update_accept_context(
-        &client->sock, &server->sock);
-
-    if (!co_win_tcp_server_accept_start(server))
+    if ((co_net_addr_get_family(
+            &win_client->remote_net_addr) == AF_UNSPEC) ||
+        (server->on_accept_ready == NULL) ||
+        !server->on_accept_ready(
+            server->sock.owner_thread, server, win_client))
     {
-        co_tcp_client_destroy(client);
-
-        return false;
+        co_tcp_client_destroy(win_client);
     }
 
-#else
-    client->sock = CO_SocketAccept();
 #endif
 
-    co_socket_handle_get_local_net_addr(
-        client->sock.handle, &client->sock.local_net_addr);
-
-    co_socket_handle_get_remote_net_addr(
-        client->sock.handle, &client->remote_net_addr);
-
-    co_assert(server->on_accept != NULL);
-
-    if (!server->on_accept(
-        server->sock.owner_thread, server, client))
+    for (;;)
     {
-        co_tcp_client_destroy(client);
+        if (!server->sock.open_local)
+        {
+            return;
+        }
+
+        co_net_addr_t remote_net_addr;
+
+        co_socket_handle_t handle =
+            co_socket_handle_accept(server->sock.handle, &remote_net_addr);
+
+        if (handle == CO_SOCKET_INVALID_HANDLE)
+        {
+            break;
+        }
+
+        co_tcp_client_t* client =
+            co_tcp_client_create_with(handle, &remote_net_addr);
+
+        if (client == NULL)
+        {
+            co_socket_handle_close(handle);
+
+            return;
+        }
+
+        if ((server->on_accept_ready == NULL) ||
+            !server->on_accept_ready(
+                server->sock.owner_thread, server, client))
+        {
+            co_tcp_client_destroy(client);
+        }
     }
 
-    return true;
+#ifdef CO_OS_WIN
+    co_win_tcp_server_accept_start(server);
+#endif
 }
 
 //---------------------------------------------------------------------------//
@@ -87,9 +102,10 @@ co_tcp_server_create(
         return NULL;
     }
 
+    server->sock.type = CO_SOCKET_TYPE_TCP_SERVER;
     server->sock.owner_thread = co_thread_get_current();
     server->sock.open_local = true;
-    server->on_accept = NULL;
+    server->on_accept_ready = NULL;
 
     memcpy(&server->sock.local_net_addr,
         local_net_addr, sizeof(co_net_addr_t));
@@ -103,7 +119,7 @@ co_tcp_server_create(
     }
 #else
     server->sock.handle = co_socket_handle_create(
-        local_net_addr->sa.any.ss_family, CO_SOCKET_TYPE_TCP, 0);
+        local_net_addr->sa.any.ss_family, SOCK_STREAM, IPPROTO_TCP);
 #endif
 
     return server;
@@ -145,7 +161,7 @@ co_tcp_server_start(
     }
 
     if (!co_net_worker_register_tcp_server(
-        (co_net_worker_t*)server->sock.owner_thread->event_worker, server))
+        co_socket_get_net_worker(&server->sock), server))
     {
         return false;
     }
@@ -153,11 +169,11 @@ co_tcp_server_start(
     co_socket_handle_get_local_net_addr(
         server->sock.handle, &server->sock.local_net_addr);
 
+    server->on_accept_ready = handler;
+
 #ifdef CO_OS_WIN
     co_win_tcp_server_accept_start(server);
 #endif
-
-    server->on_accept = handler;
 
     return true;
 }
@@ -177,15 +193,12 @@ co_tcp_server_close (
         return;
     }
 
-#ifdef CO_OS_WIN
-    co_win_tcp_server_accept_stop(server);
-#endif
-
     co_net_worker_unregister_tcp_server(
-        (co_net_worker_t*)server->sock.owner_thread->event_worker,
+        co_socket_get_net_worker(&server->sock),
         server);
 
 #ifdef CO_OS_WIN
+    co_win_tcp_server_accept_stop(server);
     co_win_tcp_server_cleanup(server);
 #else
     co_socket_handle_close(server->sock.handle);
@@ -193,6 +206,7 @@ co_tcp_server_close (
 #endif
 
     server->sock.open_local = false;
+    server->on_accept_ready = NULL;
 }
 
 //---------------------------------------------------------------------------//

@@ -6,6 +6,12 @@
 #include <coldforce/net/co_net_worker.h>
 #endif
 
+#ifndef CO_OS_WIN
+#include <unistd.h>
+#include <errno.h>
+#include <fcntl.h>
+#endif
+
 //---------------------------------------------------------------------------//
 // socket handle
 //---------------------------------------------------------------------------//
@@ -27,24 +33,21 @@ co_socket_get_error(
 
 co_socket_handle_t
 co_socket_handle_create(
-    co_address_family_t family,
-    co_socket_type_t type,
-    co_protocol_t protocol
+    int family,
+    int type,
+    int protocol
 )
 {
-#ifdef CO_DEBUG
-    co_thread_t* thread = co_thread_get_current();
-    ((co_net_worker_t*)thread->event_worker)->sock_counter++;
-#endif
-
     co_socket_handle_t handle = socket(family, type, protocol);
 
-#ifdef CO_OS_MAC
-    if (handle != CO_SOCKET_HANDLE_INVALID)
+    if (handle != CO_SOCKET_INVALID_HANDLE)
     {
+        CO_DEBUG_SOCKET_COUNTER_INC();
+
+#ifdef CO_OS_MAC
         co_socket_option_set_sigpipe(handle, false);
-    }
 #endif
+    }
 
     return handle;
 }
@@ -56,10 +59,7 @@ co_socket_handle_close(
 {
     if (handle != CO_SOCKET_INVALID_HANDLE)
     {
-#ifdef CO_DEBUG
-        co_thread_t* thread = co_thread_get_current();
-        ((co_net_worker_t*)thread->event_worker)->sock_counter--;
-#endif
+        CO_DEBUG_SOCKET_COUNTER_DEC();
 
 #ifdef CO_OS_WIN
         closesocket(handle);
@@ -72,7 +72,7 @@ co_socket_handle_close(
 bool
 co_socket_handle_shutdown(
     co_socket_handle_t handle,
-    co_socket_shutdown_how_t how
+    int how
 )
 {
     int result = shutdown(handle, how);
@@ -116,6 +116,8 @@ co_socket_handle_accept(
 
     if (remote_handle != CO_SOCKET_INVALID_HANDLE)
     {
+        CO_DEBUG_SOCKET_COUNTER_INC();
+
 #ifdef CO_OS_MAC
         co_socket_option_set_sigpipe(new_sock, false);
 #endif
@@ -144,6 +146,9 @@ co_socket_handle_send(
     int flags
 )
 {
+#ifdef CO_OS_LINUX
+    flags |= MSG_NOSIGNAL;
+#endif
     ssize_t result = send(handle, data, (int)length, flags);
 
     return result;
@@ -216,7 +221,7 @@ co_socket_handle_get_option(
     void* buffer,
     size_t* length
 )
-{    
+{
     int result = getsockopt(
         handle, level, name, buffer, (socklen_t*)length);
 
@@ -257,9 +262,26 @@ co_socket_handle_set_blocking(
     bool enable
 )
 {
+#ifdef CO_OS_WIN
+
     u_long value = (enable ? 0 : 1);
 
-    int result = ioctlsocket(handle, FIONBIO, &value);
+    return (ioctlsocket(handle, FIONBIO, &value) == 0);
 
-    return (result == 0);
+#else
+
+    int flag = fcntl(handle, F_GETFL, 0);
+
+    if (enable)
+    {
+        flag &= ~O_NONBLOCK;
+    }
+    else
+    {
+        flag |= O_NONBLOCK;
+    }
+
+    return (fcntl(handle, F_SETFL, flag) != -1);
+
+#endif
 }

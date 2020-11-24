@@ -4,6 +4,8 @@
 #include <coldforce/net/co_udp.h>
 #include <coldforce/net/co_net_worker.h>
 
+#ifdef CO_OS_WIN
+
 //---------------------------------------------------------------------------//
 // udp (windows)
 //---------------------------------------------------------------------------//
@@ -16,14 +18,25 @@ co_win_udp_socket_create(
     co_address_family_t family
 )
 {
-#ifdef CO_DEBUG
-    co_thread_t* thread = co_thread_get_current();
-    ((co_net_worker_t*)thread->event_worker)->sock_counter++;
-#endif
-
-    return WSASocketW(
-        family, CO_SOCKET_TYPE_UDP, CO_PROTOCOL_UDP,
+    SOCKET sock = WSASocketW(
+        family, SOCK_DGRAM, IPPROTO_UDP,
         NULL, 0, WSA_FLAG_OVERLAPPED);
+
+    if (sock != CO_SOCKET_INVALID_HANDLE)
+    {
+        CO_DEBUG_SOCKET_COUNTER_INC();
+
+        BOOL new_value = FALSE;
+        DWORD return_bytes = 0;
+        
+        WSAIoctl(sock,
+            _WSAIOW(IOC_VENDOR, 12),
+            &new_value, sizeof(new_value),
+            NULL, 0, &return_bytes,
+            NULL, NULL);
+    }
+
+    return sock;
 }
 
 bool
@@ -42,7 +55,7 @@ co_win_udp_setup(
     }
 
     co_list_ctx_st list_ctx = { 0 };
-    list_ctx.free_value = (co_free_fn)co_win_free_net_io_ctx;
+    list_ctx.free_value = (co_free_fn)co_win_free_io_ctx;
     udp->win.io_send_ctxs = co_list_create(&list_ctx);
 
     if (udp->win.io_send_ctxs == NULL)
@@ -51,7 +64,7 @@ co_win_udp_setup(
 
         return false;
     }
-   
+
     udp->win.receive.io_ctx =
         (co_win_net_io_ctx_t*)co_mem_alloc(sizeof(co_win_net_io_ctx_t));
 
@@ -65,7 +78,6 @@ co_win_udp_setup(
         return false;
     }
 
-    udp->win.receive.io_ctx->valid = true;
     udp->win.receive.io_ctx->id = CO_WIN_NET_IO_ID_UDP_RECEIVE;
     udp->win.receive.io_ctx->sock = &udp->sock;
 
@@ -101,11 +113,10 @@ co_win_udp_cleanup(
 {
     if (udp != NULL)
     {
-        co_mem_free_later(udp->win.receive.buffer.buf);
+        co_mem_free(udp->win.receive.buffer.buf);
         udp->win.receive.buffer.buf = NULL;
 
-        udp->win.receive.io_ctx->valid = false;
-        co_mem_free_later(udp->win.receive.io_ctx);
+        co_win_free_io_ctx(udp->win.receive.io_ctx);
         udp->win.receive.io_ctx = NULL;
 
         if (udp->win.io_send_ctxs != NULL)
@@ -117,6 +128,30 @@ co_win_udp_cleanup(
         co_socket_handle_close(udp->sock.handle);
         udp->sock.handle = CO_SOCKET_INVALID_HANDLE;
     }
+}
+
+bool
+co_win_udp_send(
+    co_udp_t* udp,
+    const co_net_addr_t* remote_net_addr,
+    const void* data,
+    size_t data_length
+)
+{
+    WSABUF buf;
+    buf.buf = (CHAR*)data;
+    buf.len = (ULONG)data_length;
+
+    DWORD sent_length = 0;
+
+    int result = WSASendTo(
+        udp->sock.handle, &buf, 1,
+        &sent_length, 0,
+        (const struct sockaddr*)remote_net_addr,
+        sizeof(co_net_addr_t),
+        NULL, NULL);
+
+    return (result == 0);
 }
 
 bool
@@ -137,7 +172,6 @@ co_win_udp_send_async(
 
     memset(&io_ctx->ol, 0x00, sizeof(WSAOVERLAPPED));
 
-    io_ctx->valid = true;
     io_ctx->id = CO_WIN_NET_IO_ID_UDP_SEND;
     io_ctx->sock = &udp->sock;
 
@@ -198,13 +232,13 @@ co_win_udp_receive_start(
     }
 
     DWORD flags = 0;
-    DWORD received_length = 0;
+    DWORD data_length = 0;
     INT sender_net_addr_length = sizeof(co_net_addr_t);
 
     int result = WSARecvFrom(
         udp->sock.handle,
         &udp->win.receive.buffer, 1,
-        &received_length,
+        &data_length,
         &flags,
         (struct sockaddr*)&udp->win.receive.remote_net_addr,
         &sender_net_addr_length,
@@ -230,25 +264,35 @@ co_win_udp_receive(
     co_net_addr_t* remote_net_addr,
     void* buffer,
     size_t buffer_length,
-    size_t* received_length
+    size_t* data_length
 )
 {
     if (udp->win.receive.length == 0)
     {
+        ssize_t received = co_socket_handle_receive_from(
+            udp->sock.handle, remote_net_addr, buffer, buffer_length, 0);
+
+        if (received > 0)
+        {
+            *data_length = (size_t)received;
+
+            return true;
+        }
+
         return false;
     }
 
     memcpy(remote_net_addr,
         &udp->win.receive.remote_net_addr, sizeof(co_net_addr_t));
 
-    *received_length = co_min(udp->win.receive.length, buffer_length);
+    *data_length = co_min(udp->win.receive.length, buffer_length);
 
     memcpy(buffer,
         &udp->win.receive.buffer.buf[udp->win.receive.index],
-        *received_length);
+        *data_length);
 
-    udp->win.receive.index += *received_length;
-    udp->win.receive.length -= *received_length;
+    udp->win.receive.index += *data_length;
+    udp->win.receive.length -= *data_length;
 
     return true;
 }
@@ -257,7 +301,7 @@ co_win_udp_receive(
 //---------------------------------------------------------------------------//
 
 size_t
-co_win_udp_get_received_data_length(
+co_win_udp_get_receive_data_length(
     const co_udp_t* udp
 )
 {
@@ -299,5 +343,4 @@ co_win_udp_clear_receive_buffer(
     udp->win.receive.length = 0;
 }
 
-//---------------------------------------------------------------------------//
-//---------------------------------------------------------------------------//
+#endif // CO_OS_WIN

@@ -2,6 +2,10 @@
 
 #include <coldforce/net/co_socket_option.h>
 
+#ifndef CO_OS_WIN
+#include <netinet/tcp.h>
+#endif
+
 //---------------------------------------------------------------------------//
 // socket option
 //---------------------------------------------------------------------------//
@@ -62,10 +66,10 @@ co_socket_option_get_reuse_addr(
 )
 {
     int value = 0;
-    size_t length = sizeof(value);
+    size_t value_length = sizeof(value);
 
     if (!co_socket_option_get(
-        sock, SOL_SOCKET, SO_REUSEADDR, &value, &length))
+        sock, SOL_SOCKET, SO_REUSEADDR, &value, &value_length))
     {
         return false;
     }
@@ -98,10 +102,10 @@ co_socket_option_get_keep_alive(
 )
 {
     int value = 0;
-    size_t length = sizeof(value);
+    size_t value_length = sizeof(value);
 
     if (!co_socket_option_get(
-        sock, SOL_SOCKET, SO_KEEPALIVE, &value, &length))
+        sock, SOL_SOCKET, SO_KEEPALIVE, &value, &value_length))
     {
         return false;
     }
@@ -116,33 +120,33 @@ co_socket_option_get_keep_alive(
 //---------------------------------------------------------------------------//
 
 bool
-co_socket_option_set_send_buff_size(
+co_socket_option_set_send_buffer(
     co_socket_t* sock,
-    size_t size
+    size_t length
 )
 {
-    int value = (int)size;
+    int value = (int)length;
 
     return co_socket_option_set(
         sock, SOL_SOCKET, SO_SNDBUF, &value, sizeof(value));
 }
 
 bool
-co_socket_option_get_send_buff_size(
+co_socket_option_get_send_buffer(
     const co_socket_t* sock,
-    size_t* size
+    size_t* length
 )
 {
     int value = 0;
-    size_t length = sizeof(value);
+    size_t value_length = sizeof(value);
 
     if (!co_socket_option_get(
-        sock, SOL_SOCKET, SO_SNDBUF, &value, &length))
+        sock, SOL_SOCKET, SO_SNDBUF, &value, &value_length))
     {
         return false;
     }
 
-    *size = (size_t)value;
+    *length = (size_t)value;
 
     return true;
 }
@@ -152,33 +156,54 @@ co_socket_option_get_send_buff_size(
 //---------------------------------------------------------------------------//
 
 bool
-co_socket_option_set_receive_buff_size(
+co_socket_option_set_receive_buffer(
     co_socket_t* sock,
-    size_t size
+    size_t length
 )
 {
-    int value = (int)size;
+    int value = (int)length;
 
     return co_socket_option_set(
         sock, SOL_SOCKET, SO_RCVBUF, &value, sizeof(value));
 }
 
 bool
-co_socket_option_get_receive_buff_size(
+co_socket_option_get_receive_buffer(
     const co_socket_t* sock,
-    size_t* size
+    size_t* length
 )
 {
     int value = 0;
-    size_t length = sizeof(value);
+    size_t value_length = sizeof(value);
 
     if (!co_socket_option_get(
-        sock, SOL_SOCKET, SO_RCVBUF, &value, &length))
+        sock, SOL_SOCKET, SO_RCVBUF, &value, &value_length))
     {
         return false;
     }
 
-    *size = (size_t)value;
+    *length = (size_t)value;
+
+    return true;
+}
+
+//---------------------------------------------------------------------------//
+// SO_ERROR
+//---------------------------------------------------------------------------//
+
+bool
+co_socket_option_get_error(
+    const co_socket_t* sock,
+    int* error_code
+)
+{
+    size_t value_length = sizeof(int);
+
+    if (!co_socket_option_get(
+        sock, SOL_SOCKET, SO_ERROR, error_code, &value_length))
+    {
+        return false;
+    }
 
     return true;
 }
@@ -203,10 +228,10 @@ co_socket_option_get_linger(
     struct linger* linger
 )
 {
-    size_t length = sizeof(struct linger);
+    size_t value_length = sizeof(struct linger);
 
     if (!co_socket_option_get(
-        sock, SOL_SOCKET, SO_LINGER, linger, &length))
+        sock, SOL_SOCKET, SO_LINGER, linger, &value_length))
     {
         return false;
     }
@@ -237,10 +262,10 @@ co_socket_option_get_tcp_no_delay(
 )
 {
     int value = 0;
-    size_t length = sizeof(value);
+    size_t value_length = sizeof(value);
 
     if (!co_socket_option_get(
-        sock, IPPROTO_TCP, TCP_NODELAY, &value, &length))
+        sock, IPPROTO_TCP, TCP_NODELAY, &value, &value_length))
     {
         return false;
     }

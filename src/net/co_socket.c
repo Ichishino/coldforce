@@ -1,6 +1,7 @@
 #include <coldforce/core/co_std.h>
 
 #include <coldforce/net/co_socket.h>
+#include <coldforce/net/co_net_worker.h>
 
 //---------------------------------------------------------------------------//
 // socket
@@ -8,6 +9,14 @@
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
+
+co_net_worker_t*
+co_socket_get_net_worker(
+    co_socket_t* sock
+)
+{
+    return (co_net_worker_t*)sock->owner_thread->event_worker;
+}
 
 co_socket_handle_t
 co_socket_get_handle(

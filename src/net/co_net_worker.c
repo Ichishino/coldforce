@@ -26,6 +26,7 @@ co_net_worker_create(
     net_worker->event_worker.wait = (co_event_wait_fn)co_net_worker_wait;
     net_worker->event_worker.dispatch = (co_event_dispatch_fn)co_net_worker_dispatch;
     net_worker->event_worker.wake_up = (co_event_wake_up_fn)co_net_worker_wake_up;
+    net_worker->event_worker.on_idle = (co_event_idle_fn)co_net_worker_on_idle;
 
     net_worker->net_selector = co_net_selector_create();
     net_worker->tcp_servers = NULL;
@@ -121,27 +122,33 @@ co_net_worker_dispatch(
 {
     switch (event->event_id)
     {
-    case CO_NET_EVENT_ID_TCP_ACCEPT:
+    case CO_NET_EVENT_ID_TCP_ACCEPT_READY:
     {
-        co_tcp_server_on_accept(
+        co_tcp_server_on_accept_ready(
             (co_tcp_server_t*)event->param1);
         break;
     }
-    case CO_NET_EVENT_ID_TCP_CONNECT:
+    case CO_NET_EVENT_ID_TCP_CONNECT_COMPLETE:
     {
-        co_tcp_client_on_connect(
+        co_tcp_client_on_connect_complete(
             (co_tcp_client_t*)event->param1, (int)event->param2);
         break;
     }
-    case CO_NET_EVENT_ID_TCP_SEND:
+    case CO_NET_EVENT_ID_TCP_SEND_READY:
     {
-        co_tcp_client_on_send(
+        co_tcp_client_on_send_ready(
+            (co_tcp_client_t*)event->param1);
+        break;
+    }
+    case CO_NET_EVENT_ID_TCP_SEND_COMPLETE:
+    {
+        co_tcp_client_on_send_complete(
             (co_tcp_client_t*)event->param1, (size_t)event->param2);
         break;
     }
-    case CO_NET_EVENT_ID_TCP_RECEIVE:
+    case CO_NET_EVENT_ID_TCP_RECEIVE_READY:
     {
-        co_tcp_client_on_receive(
+        co_tcp_client_on_receive_ready(
             (co_tcp_client_t*)event->param1, (size_t)event->param2);
         break;
     }
@@ -160,25 +167,41 @@ co_net_worker_dispatch(
 
         break;
     }
-    case CO_NET_EVENT_ID_UDP_SEND:
+    case CO_NET_EVENT_ID_UDP_SEND_READY:
     {
-        co_udp_on_send(
-            (co_udp_t*)event->param1, (size_t)event->param2);
-
+        co_udp_on_send_ready(
+            (co_udp_t*)event->param1);
         break;
     }
-    case CO_NET_EVENT_ID_UDP_RECEIVE:
+    case CO_NET_EVENT_ID_UDP_SEND_COMPLETE:
     {
-        co_udp_on_receive(
+        co_udp_on_send_complete(
             (co_udp_t*)event->param1, (size_t)event->param2);
-
+        break;
+    }
+    case CO_NET_EVENT_ID_UDP_RECEIVE_READY:
+    {
+        co_udp_on_receive_ready(
+            (co_udp_t*)event->param1, (size_t)event->param2);
         break;
     }
     default:
-        return co_event_worker_dispatch(&net_worker->event_worker, event);
+        return co_event_worker_dispatch(
+            &net_worker->event_worker, event);
     }
 
     return true;
+}
+
+void
+co_net_worker_on_idle(
+    co_net_worker_t* net_worker
+)
+{
+#ifdef CO_OS_WIN
+    co_win_try_clear_io_ctx_trash(net_worker->net_selector);
+#endif
+    co_event_worker_on_idle(&net_worker->event_worker);
 }
 
 bool
@@ -188,7 +211,8 @@ co_net_worker_register_tcp_server(
 )
 {
     if (!co_net_selector_register(
-        net_worker->net_selector, &server->sock))
+        net_worker->net_selector,
+        &server->sock, CO_SOCKET_EVENT_ACCEPT))
     {
         return false;
     }
@@ -247,7 +271,8 @@ co_net_worker_register_tcp_connector(
     }
 
     if (!co_net_selector_register(
-        net_worker->net_selector, &client->sock))
+        net_worker->net_selector,
+        &client->sock, CO_SOCKET_EVENT_CONNECT))
     {
         return false;
     }
@@ -301,7 +326,8 @@ co_net_worker_register_tcp_connection(
     }
 
     if (!co_net_selector_register(
-        net_worker->net_selector, &client->sock))
+        net_worker->net_selector, &client->sock,
+        (CO_SOCKET_EVENT_RECEIVE | CO_SOCKET_EVENT_CLOSE)))
     {
         return false;
     }
@@ -342,6 +368,30 @@ co_net_worker_unregister_tcp_connection(
     client->sock.handle = CO_SOCKET_INVALID_HANDLE;
 }
 
+bool
+co_net_worker_set_tcp_send(
+    co_net_worker_t* net_worker,
+    co_tcp_client_t* client,
+    bool enable
+)
+{
+    uint32_t flags =
+        (CO_SOCKET_EVENT_RECEIVE | CO_SOCKET_EVENT_CLOSE);
+
+    if (enable)
+    {
+        flags |= CO_SOCKET_EVENT_SEND;
+    }
+
+    if (!co_net_selector_update(
+        net_worker->net_selector, &client->sock, flags))
+    {
+        return false;
+    }
+
+    return true;
+}
+
 void
 co_net_worker_tcp_client_close_timer(
     co_thread_t* thread,
@@ -375,12 +425,18 @@ co_net_worker_close_tcp_client_local(
     if (client->open_remote)
     {
         co_socket_handle_shutdown(
-            client->sock.handle, CO_SOCKET_SHUTDOWN_SEND);
+            client->sock.handle,
+#ifdef CO_OS_WIN
+             SD_SEND
+#else
+             SHUT_WR
+#endif
+        );
 
-        client->close_timer = co_timer_create(3000,
+        client->close_timer = co_timer_create((3 * 1000),
             (co_timer_fn)co_net_worker_tcp_client_close_timer,
             false, (uintptr_t)client);
-        
+
         co_timer_start(client->close_timer);
     }
     else
@@ -389,20 +445,28 @@ co_net_worker_close_tcp_client_local(
     }
 }
 
-void
+bool
 co_net_worker_close_tcp_client_remote(
     co_net_worker_t* net_worker,
     co_tcp_client_t* client
 )
 {
+    if (!co_list_contains(
+        net_worker->tcp_clients, (uintptr_t)client))
+    {
+        return false;
+    }
+
     if (!client->open_remote)
     {
-        return;
+        return true;
     }
 
     client->open_remote = false;
 
     co_net_worker_unregister_tcp_connection(net_worker, client);
+
+    return true;
 }
 
 bool
@@ -411,15 +475,15 @@ co_net_worker_register_udp(
     co_udp_t* udp
 )
 {
-    if (!co_net_selector_register(
-        net_worker->net_selector, &udp->sock))
-    {
-        return false;
-    }
-
     if (net_worker->udps == NULL)
     {
         net_worker->udps = co_list_create(NULL);
+    }
+
+    if (!co_net_selector_register(
+        net_worker->net_selector, &udp->sock, udp->sock_event_flags))
+    {
+        return false;
     }
 
     co_list_add_tail(
@@ -453,3 +517,20 @@ co_net_worker_unregister_udp(
         net_worker->net_selector, &udp->sock);
 }
 
+bool
+co_net_worker_update_udp(
+    co_net_worker_t* net_worker,
+    co_udp_t* udp
+)
+{
+    if (net_worker->udps != NULL)
+    {
+        if (co_list_contains(net_worker->udps, (uintptr_t)udp))
+        {
+            return co_net_selector_update(
+                net_worker->net_selector, &udp->sock, udp->sock_event_flags);
+        }
+    }
+
+    return co_net_worker_register_udp(net_worker, udp);
+}

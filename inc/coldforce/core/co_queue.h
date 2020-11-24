@@ -47,6 +47,8 @@ CO_API size_t co_queue_get_size(const co_queue_t* queue);
 CO_API bool co_queue_push(co_queue_t* queue, const void* value_address);
 CO_API bool co_queue_pop(co_queue_t* queue, void* value_address);
 
+CO_API void* co_queue_peek_head(co_queue_t* queue);
+
 CO_API void* co_queue_find(
     co_queue_t* queue, const void* value_address, co_compare_fn compare);
 

@@ -4,6 +4,8 @@
 #include <coldforce/net/co_net_worker.h>
 #include <coldforce/net/co_net_event.h>
 
+#ifdef CO_OS_WIN
+
 #include <mswsock.h>
 
 //---------------------------------------------------------------------------//
@@ -70,14 +72,18 @@ co_win_tcp_socket_create(
     co_address_family_t family
 )
 {
+    SOCKET sock = WSASocketW(
+        family, SOCK_STREAM, IPPROTO_TCP,
+        NULL, 0, WSA_FLAG_OVERLAPPED);
+
 #ifdef CO_DEBUG
-    co_thread_t* thread = co_thread_get_current();
-    ((co_net_worker_t*)thread->event_worker)->sock_counter++;
+    if (sock != CO_SOCKET_INVALID_HANDLE)
+    {
+        CO_DEBUG_SOCKET_COUNTER_INC();
+    }
 #endif
 
-    return WSASocketW(
-        family, CO_SOCKET_TYPE_TCP, CO_PROTOCOL_TCP,
-        NULL, 0, WSA_FLAG_OVERLAPPED);
+    return sock;
 }
 
 //---------------------------------------------------------------------------//
@@ -110,7 +116,6 @@ co_win_tcp_server_setup(
 
     server->sock.handle = handle;
 
-    server->win.accept_io_ctx->valid = true;
     server->win.accept_io_ctx->id = CO_WIN_NET_IO_ID_TCP_ACCEPT;
     server->win.accept_io_ctx->sock = &server->sock;
 
@@ -122,7 +127,7 @@ co_win_tcp_server_cleanup(
     co_tcp_server_t* server
 )
 {
-    co_win_free_net_io_ctx(server->win.accept_io_ctx);
+    co_win_free_io_ctx(server->win.accept_io_ctx);
     server->win.accept_io_ctx = NULL;
 
     co_socket_handle_close(server->sock.handle);
@@ -148,7 +153,7 @@ co_win_tcp_server_accept_start(
     memset(&server->win.accept_io_ctx->ol, 0x00, sizeof(WSAOVERLAPPED));
 
     DWORD addr_storage_length = sizeof(SOCKADDR_STORAGE) + 16;
-    DWORD received_length = 0;
+    DWORD data_length = 0;
 
     BOOL result = co_win_accept_ex(
         server->sock.handle,
@@ -156,7 +161,7 @@ co_win_tcp_server_accept_start(
         server->win.buffer,
         0,
         addr_storage_length, addr_storage_length,
-        &received_length,
+        &data_length,
         (LPOVERLAPPED)server->win.accept_io_ctx);
 
     if (!result)
@@ -201,7 +206,6 @@ co_win_tcp_client_setup(
         return false;
     }
 
-    client->win.receive.io_ctx->valid = true;
     client->win.receive.io_ctx->id = CO_WIN_NET_IO_ID_TCP_RECEIVE;
     client->win.receive.io_ctx->sock = &client->sock;
 
@@ -230,14 +234,14 @@ co_win_tcp_client_cleanup(
 )
 {
     if (client->win.receive.io_ctx != NULL)
-    {
-        co_win_free_net_io_ctx(client->win.receive.io_ctx);
+    {   
+        co_win_free_io_ctx(client->win.receive.io_ctx);
         client->win.receive.io_ctx = NULL;
     }
 
     if (client->win.receive.buffer.buf != NULL)
     {
-        co_mem_free(client->win.receive.buffer.buf);
+        co_mem_free_later(client->win.receive.buffer.buf);
         client->win.receive.buffer.buf = NULL;
     }
 
@@ -274,7 +278,6 @@ co_win_tcp_client_connector_setup(
         return false;
     }
 
-    client->win.io_connect_ctx->valid = true;
     client->win.io_connect_ctx->id = CO_WIN_NET_IO_ID_TCP_CONNECT;
     client->win.io_connect_ctx->sock = &client->sock;
 
@@ -288,7 +291,7 @@ co_win_tcp_client_connector_cleanup(
 {
     if (client->win.io_connect_ctx != NULL)
     {
-        co_mem_free_later(client->win.io_connect_ctx);
+        co_win_free_io_ctx(client->win.io_connect_ctx);
         client->win.io_connect_ctx = NULL;
     }
 }
@@ -321,16 +324,21 @@ co_win_tcp_client_send_async(
     size_t data_length
 )
 {
+    if (!client->open_remote)
+    {
+        return false;
+    }
+
     if (client->win.io_send_ctxs == NULL)
     {
         co_list_ctx_st list_ctx = { 0 };
-        list_ctx.free_value = (co_free_fn)co_win_free_net_io_ctx;
+        list_ctx.free_value = (co_free_fn)co_win_free_io_ctx;
         client->win.io_send_ctxs = co_list_create(&list_ctx);
     }
 
     co_win_net_io_ctx_t* io_ctx =
         (co_win_net_io_ctx_t*)co_mem_alloc(sizeof(co_win_net_io_ctx_t));
-    
+
     if (io_ctx == NULL)
     {
         return false;
@@ -338,7 +346,6 @@ co_win_tcp_client_send_async(
 
     memset(&io_ctx->ol, 0x00, sizeof(WSAOVERLAPPED));
 
-    io_ctx->valid = true;
     io_ctx->id = CO_WIN_NET_IO_ID_TCP_SEND;
     io_ctx->sock = &client->sock;
 
@@ -379,6 +386,11 @@ co_win_tcp_client_receive_start(
         return false;
     }
 
+    if (!client->open_remote)
+    {
+        return false;
+    }
+
     memset(&client->win.receive.io_ctx->ol,
         0x00, sizeof(WSAOVERLAPPED));
 
@@ -403,12 +415,12 @@ co_win_tcp_client_receive_start(
     }
 
     DWORD flags = 0;
-    DWORD received_size = 0;
+    DWORD data_length = 0;
 
     int result = WSARecv(
         client->sock.handle,
         &client->win.receive.buffer, 1,
-        &received_size,
+        &data_length,
         &flags,
         (LPWSAOVERLAPPED)client->win.receive.io_ctx,
         NULL);
@@ -436,23 +448,33 @@ co_win_tcp_client_receive(
     co_tcp_client_t* client,
     void* buffer,
     size_t buffer_length,
-    size_t* received_length
+    size_t* data_length
 )
 {
     if (client->win.receive.length == 0)
     {
+        ssize_t received = co_socket_handle_receive(
+            client->sock.handle, buffer, buffer_length, 0);
+
+        if (received > 0)
+        {
+            *data_length = (size_t)received;
+
+            return true;
+        }
+
         return false;
     }
 
-    *received_length =
+    *data_length =
         co_min(client->win.receive.length, buffer_length);
 
     memcpy(buffer,
         &client->win.receive.buffer.buf[client->win.receive.index],
-        *received_length);
+        *data_length);
 
-    client->win.receive.index += *received_length;
-    client->win.receive.length -= *received_length;
+    client->win.receive.index += *data_length;
+    client->win.receive.length -= *data_length;
 
     return true;
 }
@@ -489,7 +511,7 @@ co_win_tcp_client_connect_start(
 //---------------------------------------------------------------------------//
 
 size_t
-co_win_tcp_get_received_data_length(
+co_win_tcp_get_receive_data_length(
     const co_tcp_client_t* client
 )
 {
@@ -553,3 +575,18 @@ co_win_socket_option_update_accept_context(
         SOL_SOCKET, SO_UPDATE_ACCEPT_CONTEXT,
         &server_sock->handle, sizeof(co_socket_handle_t));
 }
+
+bool
+co_win_socket_option_get_connect_time(
+    co_socket_t* sock,
+    int* seconds
+)
+{
+    size_t value_length = sizeof(int);
+
+    return co_socket_handle_get_option(sock->handle,
+        SOL_SOCKET, SO_CONNECT_TIME,
+        seconds, &value_length);
+}
+
+#endif // CO_OS_WIN

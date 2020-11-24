@@ -32,7 +32,7 @@ typedef struct co_tcp_server_t
 {
     co_socket_t sock;
 
-    co_tcp_accept_fn on_accept;
+    co_tcp_accept_fn on_accept_ready;
 
 #ifdef CO_OS_WIN
     co_win_tcp_server_extention_t win;
@@ -40,7 +40,7 @@ typedef struct co_tcp_server_t
 
 } co_tcp_server_t;
 
-bool co_tcp_server_on_accept(co_tcp_server_t* server);
+void co_tcp_server_on_accept_ready(co_tcp_server_t* server);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

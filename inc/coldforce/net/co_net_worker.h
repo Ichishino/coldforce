@@ -19,9 +19,9 @@ CO_EXTERN_C_BEGIN
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-struct co_net_selector_t* net_selector;
+struct co_net_selector_t;
 
-typedef struct
+typedef struct co_net_worker_t
 {
     co_event_worker_t event_worker;
 
@@ -39,6 +39,16 @@ typedef struct
 
 } co_net_worker_t;
 
+#ifdef CO_DEBUG
+#define CO_DEBUG_SOCKET_COUNTER_INC() \
+    (((co_net_worker_t*)co_thread_get_current()->event_worker)->sock_counter++)
+#define CO_DEBUG_SOCKET_COUNTER_DEC() \
+    (((co_net_worker_t*)co_thread_get_current()->event_worker)->sock_counter--)
+#else
+#define CO_DEBUG_SOCKET_COUNTER_INC()
+#define CO_DEBUG_SOCKET_COUNTER_DEC()
+#endif
+
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
@@ -49,6 +59,7 @@ co_wait_result_t co_net_worker_wait(
     co_net_worker_t* net_worker, uint32_t msec);
 void co_net_worker_wake_up(co_net_worker_t* net_worker);
 bool co_net_worker_dispatch(co_net_worker_t* net_worker, co_event_t* event);
+void co_net_worker_on_idle(co_net_worker_t* net_worker);
 
 bool co_net_worker_register_tcp_server(
     co_net_worker_t* net_worker, co_tcp_server_t* server);
@@ -65,14 +76,19 @@ bool co_net_worker_register_tcp_connection(
 void co_net_worker_unregister_tcp_connection(
     co_net_worker_t* net_worker, co_tcp_client_t* client);
 
+bool co_net_worker_set_tcp_send(
+    co_net_worker_t* net_worker, co_tcp_client_t* client, bool enable);
+
 void co_net_worker_close_tcp_client_local(
     co_net_worker_t* net_worker, co_tcp_client_t* client);
-void co_net_worker_close_tcp_client_remote(
+bool co_net_worker_close_tcp_client_remote(
     co_net_worker_t* net_worker, co_tcp_client_t* client);
 
 bool co_net_worker_register_udp(
     co_net_worker_t* net_worker, co_udp_t* udp);
 void co_net_worker_unregister_udp(
+    co_net_worker_t* net_worker, co_udp_t* udp);
+bool co_net_worker_update_udp(
     co_net_worker_t* net_worker, co_udp_t* udp);
 
 //---------------------------------------------------------------------------//

@@ -14,8 +14,12 @@ CO_EXTERN_C_BEGIN
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-CO_NET_API co_thread_t* co_net_thread_start(co_ctx_st* ctx, uintptr_t param);
-CO_NET_API void co_net_thread_destroy(co_thread_t* thread);
+CO_NET_API void co_net_thread_init(co_thread_t* thread,
+    co_create_fn create_handler, co_destroy_fn destroy_handler);
+
+CO_NET_API void co_net_thread_cleanup(co_thread_t* thread);
+
+CO_NET_API bool co_net_thread_start(co_thread_t* thread, uintptr_t param);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

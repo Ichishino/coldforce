@@ -34,6 +34,7 @@ co_event_worker_create(
     event_worker->wait = NULL;
     event_worker->wake_up = NULL;
     event_worker->dispatch = NULL;
+    event_worker->on_idle = NULL;
 
     return event_worker;
 }
@@ -78,6 +79,11 @@ co_event_worker_setup(
     if (event_worker->dispatch == NULL)
     {
         event_worker->dispatch = co_event_worker_dispatch;
+    }
+
+    if (event_worker->on_idle == NULL)
+    {
+        event_worker->on_idle = co_event_worker_on_idle;
     }
 }
 
@@ -148,19 +154,40 @@ co_event_worker_run(
             break;
         }
 
+        co_event_worker_check_timer(event_worker);
+        
+        size_t event_size =
+            co_event_worker_get_event_size(event_worker);
+
         co_event_t event = { 0 };
 
-        while (co_event_worker_pump(event_worker, &event))
+        while ((event_size > 0) &&
+            co_event_worker_pump(event_worker, &event))
         {
             event_worker->dispatch(event_worker, &event);
+
+            --event_size;
         }
 
-        if ((event.event_id == 0) &&
-            (co_list_get_size(event_worker->mem_trash) > 0))
+        if (event.event_id == 0)
         {
-            co_list_clear(event_worker->mem_trash);
+            event_worker->on_idle(event_worker);
         }
     }
+}
+
+size_t
+co_event_worker_get_event_size(
+    co_event_worker_t* event_worker
+)
+{
+    co_mutex_lock(event_worker->event_queue_mutex);
+
+    size_t size = co_queue_get_size(event_worker->event_queue);
+
+    co_mutex_unlock(event_worker->event_queue_mutex);
+
+    return size;
 }
 
 co_wait_result_t
@@ -187,7 +214,9 @@ co_event_worker_dispatch(
     co_event_t* event
 )
 {
-    if (event->event_id == CO_EVENT_ID_TIMER)
+    switch (event->event_id)
+    {
+    case CO_EVENT_ID_TIMER:
     {
         if (event->param2)
         {
@@ -205,15 +234,29 @@ co_event_worker_dispatch(
 
             handler(co_thread_get_current(), timer);
         }
+
+        break;
     }
-    else if (event->event_id == CO_EVENT_ID_STOP)
+    case CO_EVENT_ID_STOP:
     {
         event_worker->running = false;
+
+        break;
     }
-    else
+    case CO_EVENT_ID_TASK:
     {
-        const co_map_data_st* data =
-            co_map_get(event_worker->event_handler_map, event->event_id);
+        co_task_t* task = (co_task_t*)event->param1;
+
+        task->handler(task->param1, task->param2);
+
+        co_mem_free(task);
+
+        break;
+    }
+    default:
+    {
+        const co_map_data_st* data = co_map_get(
+            event_worker->event_handler_map, event->event_id);
 
         if (data == NULL)
         {
@@ -223,9 +266,23 @@ co_event_worker_dispatch(
         co_event_fn handler = (co_event_fn)data->value;
 
         handler(co_thread_get_current(), event);
+
+        break;
+    }
     }
 
     return true;
+}
+
+void
+co_event_worker_on_idle(
+    co_event_worker_t* event_worker
+)
+{
+    if (co_list_get_size(event_worker->mem_trash) > 0)
+    {
+        co_list_clear(event_worker->mem_trash);
+    }
 }
 
 bool
@@ -263,28 +320,9 @@ co_event_worker_pump(
     co_event_t* event
 )
 {
+    co_event_worker_check_timer(event_worker);
+
     co_mutex_lock(event_worker->event_queue_mutex);
-
-    uint32_t msec =
-        co_timer_manager_get_next_timeout(event_worker->timer_manager);
-
-    while (msec == 0)
-    {
-        co_timer_t* timer =
-            co_timer_manager_remove_head_timer(event_worker->timer_manager);
-
-        co_event_t timer_event =
-            { CO_EVENT_ID_TIMER, (uintptr_t)timer, true };
-
-        timer->queued = true;
-
-        co_queue_push(
-            event_worker->event_queue, &timer_event);
-
-        event_worker->wake_up(event_worker);
-
-        msec = co_timer_manager_get_next_timeout(event_worker->timer_manager);
-    }
 
     bool result =
         co_queue_pop(event_worker->event_queue, event);
@@ -324,8 +362,8 @@ co_event_worker_unregister_timer(
 {
     if (timer->queued)
     {
-        co_event_t timer_event =
-            { CO_EVENT_ID_TIMER, (uintptr_t)timer, true };
+        co_event_t timer_event = {
+            CO_EVENT_ID_TIMER, (uintptr_t)timer, true };
 
         co_event_t* queued_event = (co_event_t*)
             co_queue_find(event_worker->event_queue,
@@ -340,5 +378,30 @@ co_event_worker_unregister_timer(
     {
         co_timer_manager_unregister(
             event_worker->timer_manager, timer);
+    }
+}
+
+void
+co_event_worker_check_timer(
+    co_event_worker_t* event_worker
+)
+{
+    uint32_t msec =
+        co_timer_manager_get_next_timeout(event_worker->timer_manager);
+
+    while (msec == 0)
+    {
+        co_timer_t* timer =
+            co_timer_manager_remove_head_timer(event_worker->timer_manager);
+
+        co_event_t timer_event = {
+            CO_EVENT_ID_TIMER, (uintptr_t)timer, true };
+
+        if (co_event_worker_add(event_worker, &timer_event))
+        {
+            timer->queued = true;
+        }
+
+        msec = co_timer_manager_get_next_timeout(event_worker->timer_manager);
     }
 }

@@ -3,6 +3,14 @@
 
 #include <coldforce/net/co_net.h>
 
+#ifdef CO_OS_WIN
+#include <afunix.h>
+#else
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <netinet/in.h>
+#endif
+
 CO_EXTERN_C_BEGIN
 
 //---------------------------------------------------------------------------//
@@ -57,6 +65,12 @@ CO_NET_API bool co_net_addr_set_scope_id(co_net_addr_t* net_addr, uint32_t scope
 CO_NET_API bool co_net_addr_get_scope_id(const co_net_addr_t* net_addr, uint32_t* scope_id);
 
 CO_NET_API bool co_net_addr_get_as_string(const co_net_addr_t* net_addr, char* buffer);
+
+#define co_get_local_net_addr_as_string(sock, buff) \
+    co_net_addr_get_as_string(co_socket_get_local_net_addr( \
+        (co_socket_t*)sock), buff)
+#define co_get_remote_net_addr_as_string(tcp_client, buff) \
+    co_net_addr_get_as_string(co_tcp_get_remote_net_addr(tcp_client), buff)
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

@@ -9,12 +9,23 @@
 
 CO_EXTERN_C_BEGIN
 
+struct co_net_worker_t;
+
 //---------------------------------------------------------------------------//
 // socket
 //---------------------------------------------------------------------------//
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
+
+typedef enum
+{
+    CO_SOCKET_TYPE_TCP_SERVER           = 1,
+    CO_SOCKET_TYPE_TCP_CONNECTOR,
+    CO_SOCKET_TYPE_TCP_CONNECTION,
+    CO_SOCKET_TYPE_UDP
+
+} co_socket_type_t;
 
 typedef struct
 {
@@ -23,7 +34,11 @@ typedef struct
     co_net_addr_t local_net_addr;
     bool open_local;
 
+    co_socket_type_t type;
+
 } co_socket_t;
+
+struct co_net_worker_t* co_socket_get_net_worker(co_socket_t* sock);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

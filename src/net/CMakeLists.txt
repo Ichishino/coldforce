@@ -1,25 +1,22 @@
 cmake_minimum_required(VERSION 2.8)
 
-project(co C)
+project(co_net C)
 
 add_library(${PROJECT_NAME} STATIC
 
-    co.c
-    co_app.c
-    co_array.c    
-    co_config.c
-    co_event.c
-    co_event_worker.c
-    co_list.c
-    co_map.c
-    co_mutex.c
-    co_queue.c
-    co_semaphore.c
-    co_string.c
-    co_thread.c
-    co_time.c
-    co_timer.c
-    co_timer_manager.c
+    co_net.c
+    co_net_addr.c
+    co_net_addr_resolve.c
+    co_net_app.c
+    co_net_selector_linux.c
+    co_net_thread.c
+    co_net_worker.c
+    co_socket.c
+    co_socket_handle.c
+    co_socket_option.c
+    co_tcp_client.c
+    co_tcp_server.c
+    co_udp.c
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC ../../inc)
@@ -31,4 +28,3 @@ add_custom_command(
         ${CMAKE_CURRENT_BINARY_DIR}/lib*.*
         ${CMAKE_BINARY_DIR}/
 )
-

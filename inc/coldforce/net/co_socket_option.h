@@ -28,16 +28,19 @@ CO_NET_API bool co_socket_option_set_keep_alive(co_socket_t* sock, bool enable);
 CO_NET_API bool co_socket_option_get_keep_alive(const co_socket_t* sock, bool* enable);
 
 // SO_SNDBUF
-CO_NET_API bool co_socket_option_set_send_buff_size(co_socket_t* sock, size_t size);
-CO_NET_API bool co_socket_option_get_send_buff_size(const co_socket_t* sock, size_t* size);
+CO_NET_API bool co_socket_option_set_send_buffer(co_socket_t* sock, size_t length);
+CO_NET_API bool co_socket_option_get_send_buffer(const co_socket_t* sock, size_t* length);
 
 // SO_RCVBUF
-CO_NET_API bool co_socket_option_set_receive_buff_size(co_socket_t* sock, size_t size);
-CO_NET_API bool co_socket_option_get_receive_buff_size(const co_socket_t* sock, size_t* size);
+CO_NET_API bool co_socket_option_set_receive_buffer(co_socket_t* sock, size_t length);
+CO_NET_API bool co_socket_option_get_receive_buffer(const co_socket_t* sock, size_t* length);
 
 // SO_LINGER
 CO_NET_API bool co_socket_option_set_linger(co_socket_t* sock, const struct linger* linger);
 CO_NET_API bool co_socket_option_get_linger(const co_socket_t* sock, struct linger* linger);
+
+// SO_ERROR
+CO_NET_API bool co_socket_option_get_error(const co_socket_t* sock, int* error_code);
 
 // TCP_NODELAY
 CO_NET_API bool co_socket_option_set_tcp_no_delay(co_socket_t* sock, bool enable);
