@@ -156,8 +156,8 @@ co_event_worker_run(
 
         co_event_worker_check_timer(event_worker);
         
-        size_t event_size =
-            co_event_worker_get_event_size(event_worker);
+        long event_size =
+            (long)co_event_worker_get_event_size(event_worker);
 
         co_event_t event = { 0 };
 
