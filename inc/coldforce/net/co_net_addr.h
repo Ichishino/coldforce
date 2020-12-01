@@ -53,7 +53,7 @@ CO_NET_API void co_net_addr_set_family(co_net_addr_t* net_addr, co_address_famil
 CO_NET_API co_address_family_t co_net_addr_get_family(const co_net_addr_t* net_addr);
 
 CO_NET_API bool co_net_addr_set_address(co_net_addr_t* new_addr, const char* address);
-CO_NET_API bool co_net_addr_get_address(const co_net_addr_t* net_addr, char* address, size_t length);
+CO_NET_API bool co_net_addr_get_address(const co_net_addr_t* net_addr, char* buffer, size_t size);
 
 CO_NET_API bool co_net_addr_set_port(co_net_addr_t* net_addr, uint16_t port);
 CO_NET_API bool co_net_addr_get_port(const co_net_addr_t* net_addr, uint16_t* port);

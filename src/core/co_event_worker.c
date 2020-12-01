@@ -156,17 +156,17 @@ co_event_worker_run(
 
         co_event_worker_check_timer(event_worker);
         
-        long event_size =
-            (long)co_event_worker_get_event_size(event_worker);
+        long event_count =
+            (long)co_event_worker_get_event_count(event_worker);
 
         co_event_t event = { 0 };
 
-        while ((event_size > 0) &&
+        while ((event_count > 0) &&
             co_event_worker_pump(event_worker, &event))
         {
             event_worker->dispatch(event_worker, &event);
 
-            --event_size;
+            --event_count;
         }
 
         if (event.event_id == 0)
@@ -177,17 +177,17 @@ co_event_worker_run(
 }
 
 size_t
-co_event_worker_get_event_size(
+co_event_worker_get_event_count(
     co_event_worker_t* event_worker
 )
 {
     co_mutex_lock(event_worker->event_queue_mutex);
 
-    size_t size = co_queue_get_size(event_worker->event_queue);
+    size_t count = co_queue_get_count(event_worker->event_queue);
 
     co_mutex_unlock(event_worker->event_queue_mutex);
 
-    return size;
+    return count;
 }
 
 co_wait_result_t

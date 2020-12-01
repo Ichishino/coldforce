@@ -42,7 +42,7 @@ co_win_udp_socket_create(
 bool
 co_win_udp_setup(
     co_udp_t* udp,
-    size_t receive_buffer_length
+    size_t receive_buffer_size
 )
 {
     co_socket_handle_t handle =
@@ -81,10 +81,10 @@ co_win_udp_setup(
     udp->win.receive.io_ctx->id = CO_WIN_NET_IO_ID_UDP_RECEIVE;
     udp->win.receive.io_ctx->sock = &udp->sock;
 
-    udp->win.receive.length = 0;
+    udp->win.receive.size = 0;
     udp->win.receive.index = 0;
-    udp->win.receive.new_length = 0;
-    udp->win.receive.buffer.len = (ULONG)receive_buffer_length;
+    udp->win.receive.new_size = 0;
+    udp->win.receive.buffer.len = (ULONG)receive_buffer_size;
     udp->win.receive.buffer.buf =
         co_mem_alloc(udp->win.receive.buffer.len);
 
@@ -135,18 +135,18 @@ co_win_udp_send(
     co_udp_t* udp,
     const co_net_addr_t* remote_net_addr,
     const void* data,
-    size_t data_length
+    size_t data_size
 )
 {
     WSABUF buf;
     buf.buf = (CHAR*)data;
-    buf.len = (ULONG)data_length;
+    buf.len = (ULONG)data_size;
 
-    DWORD sent_length = 0;
+    DWORD sent_size = 0;
 
     int result = WSASendTo(
         udp->sock.handle, &buf, 1,
-        &sent_length, 0,
+        &sent_size, 0,
         (const struct sockaddr*)remote_net_addr,
         sizeof(co_net_addr_t),
         NULL, NULL);
@@ -159,7 +159,7 @@ co_win_udp_send_async(
     co_udp_t* udp,
     const co_net_addr_t* remote_net_addr,
     const void* data,
-    size_t data_length
+    size_t data_size
 )
 {
     co_win_net_io_ctx_t* io_ctx =
@@ -177,13 +177,13 @@ co_win_udp_send_async(
 
     WSABUF buf;
     buf.buf = (CHAR*)data;
-    buf.len = (ULONG)data_length;
+    buf.len = (ULONG)data_size;
 
-    DWORD sent_length = 0;
+    DWORD sent_size = 0;
 
     int result = WSASendTo(
         udp->sock.handle, &buf, 1,
-        &sent_length, 0,
+        &sent_size, 0,
         (const struct sockaddr*)remote_net_addr,
         sizeof(co_net_addr_t),
         (LPWSAOVERLAPPED)io_ctx, NULL);
@@ -211,13 +211,13 @@ co_win_udp_receive_start(
 {
     memset(&udp->win.receive.io_ctx->ol, 0x00, sizeof(WSAOVERLAPPED));
 
-    udp->win.receive.length = 0;
+    udp->win.receive.size = 0;
     udp->win.receive.index = 0;
 
-    if (udp->win.receive.new_length > 0)
+    if (udp->win.receive.new_size > 0)
     {
         void* new_buffer =
-            co_mem_alloc(udp->win.receive.new_length);
+            co_mem_alloc(udp->win.receive.new_size);
 
         if (new_buffer != NULL)
         {
@@ -225,23 +225,23 @@ co_win_udp_receive_start(
             udp->win.receive.buffer.buf = new_buffer;
 
             udp->win.receive.buffer.len =
-                (ULONG)udp->win.receive.new_length;
+                (ULONG)udp->win.receive.new_size;
         }
 
-        udp->win.receive.new_length = 0;
+        udp->win.receive.new_size = 0;
     }
 
     DWORD flags = 0;
-    DWORD data_length = 0;
-    INT sender_net_addr_length = sizeof(co_net_addr_t);
+    DWORD data_size = 0;
+    INT sender_net_addr_size = sizeof(co_net_addr_t);
 
     int result = WSARecvFrom(
         udp->sock.handle,
         &udp->win.receive.buffer, 1,
-        &data_length,
+        &data_size,
         &flags,
         (struct sockaddr*)&udp->win.receive.remote_net_addr,
-        &sender_net_addr_length,
+        &sender_net_addr_size,
         (LPWSAOVERLAPPED)udp->win.receive.io_ctx,
         NULL);
 
@@ -263,18 +263,18 @@ co_win_udp_receive(
     co_udp_t* udp,
     co_net_addr_t* remote_net_addr,
     void* buffer,
-    size_t buffer_length,
-    size_t* data_length
+    size_t buffer_size,
+    size_t* data_size
 )
 {
-    if (udp->win.receive.length == 0)
+    if (udp->win.receive.size == 0)
     {
         ssize_t received = co_socket_handle_receive_from(
-            udp->sock.handle, remote_net_addr, buffer, buffer_length, 0);
+            udp->sock.handle, remote_net_addr, buffer, buffer_size, 0);
 
         if (received > 0)
         {
-            *data_length = (size_t)received;
+            *data_size = (size_t)received;
 
             return true;
         }
@@ -285,14 +285,14 @@ co_win_udp_receive(
     memcpy(remote_net_addr,
         &udp->win.receive.remote_net_addr, sizeof(co_net_addr_t));
 
-    *data_length = co_min(udp->win.receive.length, buffer_length);
+    *data_size = co_min(udp->win.receive.size, buffer_size);
 
     memcpy(buffer,
         &udp->win.receive.buffer.buf[udp->win.receive.index],
-        *data_length);
+        *data_size);
 
-    udp->win.receive.index += *data_length;
-    udp->win.receive.length -= *data_length;
+    udp->win.receive.index += *data_size;
+    udp->win.receive.size -= *data_size;
 
     return true;
 }
@@ -301,24 +301,24 @@ co_win_udp_receive(
 //---------------------------------------------------------------------------//
 
 size_t
-co_win_udp_get_receive_data_length(
+co_win_udp_get_receive_data_size(
     const co_udp_t* udp
 )
 {
-    return udp->win.receive.length;
+    return udp->win.receive.size;
 }
 
 void
-co_win_udp_set_receive_buffer_length(
+co_win_udp_set_receive_buffer_size(
     co_udp_t* udp,
-    size_t new_length
+    size_t new_size
 )
 {
-    udp->win.receive.new_length = new_length;
+    udp->win.receive.new_size = new_size;
 }
 
 size_t
-co_win_udp_get_receive_buffer_length(
+co_win_udp_get_receive_buffer_size(
     const co_udp_t* udp
 )
 {
@@ -340,7 +340,7 @@ co_win_udp_clear_receive_buffer(
 )
 {
     udp->win.receive.index = 0;
-    udp->win.receive.length = 0;
+    udp->win.receive.size = 0;
 }
 
 #endif // CO_OS_WIN

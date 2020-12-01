@@ -95,7 +95,6 @@ co_net_selector_create(
 
     net_selector->e_entries =
         co_array_create(sizeof(struct epoll_event), NULL);
-    co_array_set_size(net_selector->e_entries, 1);
 
     return net_selector;
 }
@@ -199,15 +198,15 @@ co_net_selector_wait(
 {
     co_wait_result_t result = CO_WAIT_RESULT_SUCCESS;
 
-    co_array_set_size(net_selector->e_entries, net_selector->sock_count + 1);
+    co_array_set_count(net_selector->e_entries, net_selector->sock_count + 1);
     co_array_zero_clear(net_selector->e_entries);
 
     struct epoll_event* events =
-        (struct epoll_event*)co_array_get(net_selector->e_entries, 0);
+        (struct epoll_event*)co_array_get_ptr(net_selector->e_entries, 0);
 
-    int length = (int)co_array_get_size(net_selector->e_entries);
+    int e_count = (int)co_array_get_count(net_selector->e_entries);
 
-    int count = epoll_wait(net_selector->e_fd, events, length, (int)msec);
+    int count = epoll_wait(net_selector->e_fd, events, e_count, (int)msec);
 
     if (count > 0)
     {
@@ -233,13 +232,16 @@ co_net_selector_wait(
 
                 if ((e->events & EPOLLRDHUP) || (e->events & EPOLLHUP))
                 {
-                    if (!co_event_send(sock->owner_thread,
-                        CO_NET_EVENT_ID_TCP_CLOSE, (uintptr_t)sock, error_code))
+                    if (sock->type == CO_SOCKET_TYPE_TCP_CONNECTION)
                     {
-                        co_tcp_client_on_close((co_tcp_client_t*)sock);
-                    }
+                        if (!co_event_send(sock->owner_thread,
+                            CO_NET_EVENT_ID_TCP_CLOSE, (uintptr_t)sock, error_code))
+                        {
+                            co_tcp_client_on_close((co_tcp_client_t*)sock);
+                        }
 
-                    continue;
+                        continue;
+                    }
                 }
 
                 if (e->events & EPOLLIN)

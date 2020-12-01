@@ -116,9 +116,9 @@ typedef void(*co_copy_fn)(uintptr_t dest, uintptr_t src);
 typedef struct
 {
     void* ptr;
-    size_t length;
+    size_t size;
 
-} co_buffer_t;
+} co_buffer_st;
 
 //---------------------------------------------------------------------------//
 // macros, functions

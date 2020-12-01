@@ -38,6 +38,8 @@ typedef struct co_tcp_server_t
     co_win_tcp_server_extention_t win;
 #endif
 
+    void* tls;
+
 } co_tcp_server_t;
 
 void co_tcp_server_on_accept_ready(co_tcp_server_t* server);

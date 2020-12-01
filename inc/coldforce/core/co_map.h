@@ -12,11 +12,11 @@ CO_EXTERN_C_BEGIN
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-#define CO_MAP_DEFAULT_HASH_LENGTH    256
+#define CO_MAP_DEFAULT_HASH_SIZE    256
 
 typedef struct
 {
-    size_t hash_length;
+    size_t hash_size;
 
     co_hash_fn hash_key;
     co_free_fn free_key;
@@ -44,9 +44,9 @@ typedef struct co_map_item_t
 
 typedef struct
 {
-    size_t size;
+    size_t count;
 
-    size_t hash_length;
+    size_t hash_size;
     co_map_item_t** items;
 
     co_hash_fn hash_key;
@@ -74,7 +74,7 @@ CO_API co_map_t* co_map_create(const co_map_ctx_st* ctx);
 CO_API void co_map_destroy(co_map_t* map);
 
 CO_API void co_map_clear(co_map_t* map);
-CO_API size_t co_map_get_size(const co_map_t* map);
+CO_API size_t co_map_get_count(const co_map_t* map);
 CO_API bool co_map_contains(const co_map_t* map, uintptr_t key);
 
 CO_API bool co_map_set(co_map_t* map, uintptr_t key, uintptr_t value);

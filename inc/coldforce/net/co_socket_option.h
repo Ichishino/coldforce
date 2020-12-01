@@ -15,9 +15,9 @@ CO_EXTERN_C_BEGIN
 
 // any
 CO_NET_API bool co_socket_option_set(
-    co_socket_t* sock, int level, int name, const void* data, size_t length);
+    co_socket_t* sock, int level, int name, const void* data, size_t data_size);
 CO_NET_API bool co_socket_option_get(
-    const co_socket_t* sock, int level, int name, void* buffer, size_t* length);
+    const co_socket_t* sock, int level, int name, void* buffer, size_t* buffer_size);
 
 // SO_REUSEADDR
 CO_NET_API bool co_socket_option_set_reuse_addr(co_socket_t* sock, bool enable);
@@ -28,12 +28,12 @@ CO_NET_API bool co_socket_option_set_keep_alive(co_socket_t* sock, bool enable);
 CO_NET_API bool co_socket_option_get_keep_alive(const co_socket_t* sock, bool* enable);
 
 // SO_SNDBUF
-CO_NET_API bool co_socket_option_set_send_buffer(co_socket_t* sock, size_t length);
-CO_NET_API bool co_socket_option_get_send_buffer(const co_socket_t* sock, size_t* length);
+CO_NET_API bool co_socket_option_set_send_buffer(co_socket_t* sock, size_t buffer_size);
+CO_NET_API bool co_socket_option_get_send_buffer(const co_socket_t* sock, size_t* buffer_size);
 
 // SO_RCVBUF
-CO_NET_API bool co_socket_option_set_receive_buffer(co_socket_t* sock, size_t length);
-CO_NET_API bool co_socket_option_get_receive_buffer(const co_socket_t* sock, size_t* length);
+CO_NET_API bool co_socket_option_set_receive_buffer(co_socket_t* sock, size_t buffer_size);
+CO_NET_API bool co_socket_option_get_receive_buffer(const co_socket_t* sock, size_t* buffer_size);
 
 // SO_LINGER
 CO_NET_API bool co_socket_option_set_linger(co_socket_t* sock, const struct linger* linger);

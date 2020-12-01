@@ -56,11 +56,11 @@ co_map_create(
         return NULL;
     }
 
-    map->size = 0;
+    map->count = 0;
 
     if (ctx != NULL)
     {
-        map->hash_length = ctx->hash_length;
+        map->hash_size = ctx->hash_size;
         map->hash_key = ctx->hash_key;
         map->free_key = ctx->free_key;
         map->free_value = ctx->free_value;
@@ -70,7 +70,7 @@ co_map_create(
     }
     else
     {
-        map->hash_length = 0;
+        map->hash_size = 0;
         map->hash_key = NULL;
         map->free_key = NULL;
         map->free_value = NULL;
@@ -79,9 +79,9 @@ co_map_create(
         map->compare_keys = NULL;
     }
 
-    if (map->hash_length == 0)
+    if (map->hash_size == 0)
     {
-        map->hash_length = CO_MAP_DEFAULT_HASH_LENGTH;
+        map->hash_size = CO_MAP_DEFAULT_HASH_SIZE;
     }
 
     if (map->hash_key == NULL)
@@ -115,7 +115,7 @@ co_map_create(
     }
 
     map->items = (co_map_item_t**)
-        co_mem_alloc(sizeof(co_map_item_t*) * map->hash_length);
+        co_mem_alloc(sizeof(co_map_item_t*) * map->hash_size);
 
     if (map->items == NULL)
     {
@@ -124,7 +124,7 @@ co_map_create(
         return NULL;
     }
 
-    for (size_t index = 0; index < map->hash_length; ++index)
+    for (size_t index = 0; index < map->hash_size; ++index)
     {
         map->items[index] = NULL;
     }
@@ -150,7 +150,7 @@ co_map_clear(
     co_map_t* map
 )
 {
-    for (size_t index = 0; index < map->hash_length; ++index)
+    for (size_t index = 0; index < map->hash_size; ++index)
     {
         if (map->items[index] != NULL)
         {
@@ -171,15 +171,15 @@ co_map_clear(
         }
     }
 
-    map->size = 0;
+    map->count = 0;
 }
 
 size_t
-co_map_get_size(
+co_map_get_count(
     const co_map_t* map
 )
 {
-    return map->size;
+    return map->count;
 }
 
 bool
@@ -188,7 +188,7 @@ co_map_contains(
     uintptr_t key
 )
 {
-    size_t index = map->hash_key(key) % map->hash_length;
+    size_t index = map->hash_key(key) % map->hash_size;
 
     const co_map_item_t* item = map->items[index];
 
@@ -212,7 +212,7 @@ co_map_set(
     uintptr_t value
 )
 {
-    size_t index = map->hash_key(key) % map->hash_length;
+    size_t index = map->hash_key(key) % map->hash_size;
 
     co_map_item_t** item = &map->items[index];
 
@@ -241,7 +241,7 @@ co_map_set(
     (*item)->data.value = map->duplicate_value(value);
     (*item)->next = NULL;
 
-    ++map->size;
+    ++map->count;
 
     return true;
 }
@@ -252,7 +252,7 @@ co_map_get(
     uintptr_t key
 )
 {
-    size_t index = map->hash_key(key) % map->hash_length;
+    size_t index = map->hash_key(key) % map->hash_size;
 
     co_map_item_t* item = map->items[index];
 
@@ -275,7 +275,7 @@ co_map_remove(
     uintptr_t key
 )
 {
-    size_t index = map->hash_key(key) % map->hash_length;
+    size_t index = map->hash_key(key) % map->hash_size;
 
     co_map_item_t* item = map->items[index];
     co_map_item_t* prev = NULL;
@@ -298,7 +298,7 @@ co_map_remove(
 
             co_mem_free(item);
 
-            --map->size;
+            --map->count;
 
             break;
         }
@@ -316,7 +316,7 @@ co_map_iterator_init(
 {
     iterator->map = map;
 
-    for (size_t index = 0; index < map->hash_length; ++index)
+    for (size_t index = 0; index < map->hash_size; ++index)
     {
         if (map->items[index] != NULL)
         {
@@ -347,7 +347,7 @@ co_map_iterator_get_next(
     else
     {
         for (size_t index = iterator->index + 1;
-            index < iterator->map->hash_length;
+            index < iterator->map->hash_size;
             ++index)
         {
             if (iterator->map->items[index] != NULL)
@@ -372,5 +372,5 @@ co_map_iterator_has_next(
 )
 {
     return (iterator->item != NULL) &&
-        (iterator->map->hash_length > iterator->index);
+        (iterator->map->hash_size > iterator->index);
 }

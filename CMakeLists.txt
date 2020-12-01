@@ -4,3 +4,4 @@ project(coldforce)
 
 add_subdirectory(src/core)
 add_subdirectory(src/net)
+add_subdirectory(src/tls)

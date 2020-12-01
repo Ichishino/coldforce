@@ -17,15 +17,19 @@ typedef struct
 
 void on_my_send_timer(my_app* self, co_timer_t* timer)
 {
+    const char* ip_address = "127.0.0.1";
+    uint16_t port = 9001;
+
     // remote address
     co_net_addr_t remote_net_addr = CO_NET_ADDR_INIT;
-    co_net_addr_set_address(&remote_net_addr, "127.0.0.1");
-    co_net_addr_set_port(&remote_net_addr, 9001);
+    co_net_addr_set_address(&remote_net_addr, ip_address);
+    co_net_addr_set_port(&remote_net_addr, port);
 
     // send
-    co_udp_send_string(self->udp, &remote_net_addr, "hello");
+    const char* data = "hello";
+    co_udp_send(self->udp, &remote_net_addr, data, strlen(data));
 
-    char remote_str[256];
+    char remote_str[64];
     co_net_addr_get_as_string(&remote_net_addr, remote_str);
     printf("send to %s\n", remote_str);
 

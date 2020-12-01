@@ -1,10 +1,7 @@
 #include <coldforce/core/co_std.h>
 
 #include <coldforce/net/co_socket_handle.h>
-
-#ifdef CO_DEBUG
 #include <coldforce/net/co_net_worker.h>
-#endif
 
 #ifndef CO_OS_WIN
 #include <unistd.h>
@@ -109,10 +106,10 @@ co_socket_handle_accept(
     co_net_addr_t* net_addr
 )
 {
-    socklen_t net_addr_length = sizeof(co_net_addr_t);
+    socklen_t net_addr_size = sizeof(co_net_addr_t);
 
     co_socket_handle_t remote_handle = accept(
-        handle, (struct sockaddr*)net_addr, &net_addr_length);
+        handle, (struct sockaddr*)net_addr, &net_addr_size);
 
     if (remote_handle != CO_SOCKET_INVALID_HANDLE)
     {
@@ -142,14 +139,14 @@ ssize_t
 co_socket_handle_send(
     co_socket_handle_t handle,
     const void* data,
-    size_t length,
+    size_t data_size,
     int flags
 )
 {
 #ifdef CO_OS_LINUX
     flags |= MSG_NOSIGNAL;
 #endif
-    ssize_t result = send(handle, data, (int)length, flags);
+    ssize_t result = send(handle, data, (int)data_size, flags);
 
     return result;
 }
@@ -158,11 +155,11 @@ ssize_t
 co_socket_handle_receive(
     co_socket_handle_t handle,
     void* buffer,
-    size_t length,
+    size_t buffer_size,
     int flags
 )
 {
-    ssize_t result = recv(handle, buffer, (int)length, flags);
+    ssize_t result = recv(handle, buffer, (int)buffer_size, flags);
 
     return result;
 }
@@ -172,11 +169,11 @@ co_socket_handle_send_to(
     co_socket_handle_t handle,
     const co_net_addr_t* net_addr,
     const void* data,
-    size_t length,
+    size_t data_size,
     int flags
 )
 {
-    ssize_t result = sendto(handle, data, (int)length, flags,
+    ssize_t result = sendto(handle, data, (int)data_size, flags,
         (const struct sockaddr*)net_addr, sizeof(co_net_addr_t));
 
     return result;
@@ -187,14 +184,14 @@ co_socket_handle_receive_from(
     co_socket_handle_t handle,
     co_net_addr_t* net_addr,
     void* buffer,
-    size_t length,
+    size_t buffer_size,
     int flags
 )
 {
-    socklen_t net_addr_length = sizeof(co_net_addr_t);
+    socklen_t net_addr_size = sizeof(co_net_addr_t);
 
-    ssize_t result = recvfrom(handle, buffer, (int)length, flags,
-        (struct sockaddr*)net_addr, &net_addr_length);
+    ssize_t result = recvfrom(handle, buffer, (int)buffer_size, flags,
+        (struct sockaddr*)net_addr, &net_addr_size);
 
     return result;
 }
@@ -205,10 +202,10 @@ co_socket_handle_set_option(
     int level,
     int name,
     const void* data,
-    size_t length)
+    size_t data_size)
 {
     int result = setsockopt(
-        handle, level, name, data, (socklen_t)length);
+        handle, level, name, data, (socklen_t)data_size);
 
     return (result == 0);
 }
@@ -219,11 +216,11 @@ co_socket_handle_get_option(
     int level,
     int name,
     void* buffer,
-    size_t* length
+    size_t* buffer_size
 )
 {
     int result = getsockopt(
-        handle, level, name, buffer, (socklen_t*)length);
+        handle, level, name, buffer, (socklen_t*)buffer_size);
 
     return (result == 0);
 }
@@ -234,10 +231,10 @@ co_socket_handle_get_local_net_addr(
     co_net_addr_t* net_addr
 )
 {
-    socklen_t net_add_length = sizeof(co_net_addr_t);
+    socklen_t net_addr_size = sizeof(co_net_addr_t);
 
     int result = getsockname(
-        handle, (struct sockaddr*)net_addr, &net_add_length);
+        handle, (struct sockaddr*)net_addr, &net_addr_size);
 
     return (result == 0);
 }
@@ -248,10 +245,10 @@ co_socket_handle_get_remote_net_addr(
     co_net_addr_t* net_addr
 )
 {
-    socklen_t net_add_length = sizeof(co_net_addr_t);
+    socklen_t net_addr_size = sizeof(co_net_addr_t);
 
     int result = getpeername(
-        handle, (struct sockaddr*)net_addr, &net_add_length);
+        handle, (struct sockaddr*)net_addr, &net_addr_size);
 
     return (result == 0);
 }

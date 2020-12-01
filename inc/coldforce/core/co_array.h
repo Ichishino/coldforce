@@ -23,8 +23,8 @@ typedef struct
 typedef struct {
 
     size_t capacity;
-    size_t size;
-    size_t element_length;
+    size_t count;
+    size_t element_size;
 
     uint8_t* buffer;
 
@@ -34,14 +34,22 @@ typedef struct {
 //---------------------------------------------------------------------------//
 
 CO_API co_array_t* co_array_create(
-    size_t element_length, co_array_ctx_t* ctx);
+    size_t element_size, co_array_ctx_t* ctx);
 
 CO_API void co_array_destroy(co_array_t* arr);
 
-CO_API bool co_array_set_size(co_array_t* arr, size_t size);
-CO_API size_t co_array_get_size(const co_array_t* arr);
+CO_API bool co_array_set_count(co_array_t* arr, size_t count);
+CO_API size_t co_array_get_count(const co_array_t* arr);
 
-CO_API void* co_array_get(co_array_t* arr, size_t index);
+CO_API void* co_array_get_ptr(co_array_t* arr, size_t index);
+
+CO_API void co_array_set(co_array_t* arr,
+    size_t index, void* data, size_t count);
+CO_API size_t co_array_get(const co_array_t* arr,
+    size_t index, void* buffer, size_t count);
+
+CO_API void co_array_add(co_array_t* arr,
+    void* data, size_t count);
 
 CO_API void co_array_zero_clear(co_array_t* arr);
 

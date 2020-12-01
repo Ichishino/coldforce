@@ -47,7 +47,7 @@ co_net_selector_create(
         co_array_create(sizeof(OVERLAPPED_ENTRY), NULL);
 
     net_selector->sock_count = 0;
-    co_array_set_size(net_selector->ol_entries, 1);
+    co_array_set_count(net_selector->ol_entries, 1);
 
     co_list_ctx_st list_ctx = { 0 };
     list_ctx.free_value = (co_free_fn)co_mem_free;
@@ -129,18 +129,18 @@ co_net_selector_wait(
     uint32_t msec
 )
 {
-    co_array_set_size(
+    co_array_set_count(
         net_selector->ol_entries, net_selector->sock_count + 1);
     co_array_zero_clear(net_selector->ol_entries);
 
     LPOVERLAPPED_ENTRY entries =
-        (LPOVERLAPPED_ENTRY)co_array_get(net_selector->ol_entries, 0);
+        (LPOVERLAPPED_ENTRY)co_array_get_ptr(net_selector->ol_entries, 0);
 
-    ULONG size = (ULONG)co_array_get_size(net_selector->ol_entries);
+    ULONG count = (ULONG)co_array_get_count(net_selector->ol_entries);
     ULONG removed = 0;
 
     if (GetQueuedCompletionStatusEx(
-        net_selector->iocp, entries, size, &removed, msec, FALSE))
+        net_selector->iocp, entries, count, &removed, msec, FALSE))
     {
         for (ULONG index = 0; index < removed; ++index)
         {

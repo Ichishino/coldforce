@@ -34,19 +34,19 @@ typedef struct co_net_worker_t
     co_tcp_handover_fn on_tcp_handover;
 
 #ifdef CO_DEBUG
-    uint32_t sock_counter;
+    uint32_t sock_count;
 #endif
 
 } co_net_worker_t;
 
 #ifdef CO_DEBUG
 #define CO_DEBUG_SOCKET_COUNTER_INC() \
-    (((co_net_worker_t*)co_thread_get_current()->event_worker)->sock_counter++)
+    (((co_net_worker_t*)co_thread_get_current()->event_worker)->sock_count++)
 #define CO_DEBUG_SOCKET_COUNTER_DEC() \
-    (((co_net_worker_t*)co_thread_get_current()->event_worker)->sock_counter--)
+    (((co_net_worker_t*)co_thread_get_current()->event_worker)->sock_count--)
 #else
-#define CO_DEBUG_SOCKET_COUNTER_INC()
-#define CO_DEBUG_SOCKET_COUNTER_DEC()
+#define CO_DEBUG_SOCKET_COUNTER_INC()   ((void)0)
+#define CO_DEBUG_SOCKET_COUNTER_DEC()   ((void)0)
 #endif
 
 //---------------------------------------------------------------------------//

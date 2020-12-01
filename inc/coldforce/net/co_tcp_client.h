@@ -2,6 +2,7 @@
 #define CO_TCP_CLIENT_H_INCLUDED
 
 #include <coldforce/core/co_timer.h>
+#include <coldforce/core/co_byte_array.h>
 
 #include <coldforce/net/co_net.h>
 #include <coldforce/net/co_net_addr.h>
@@ -57,6 +58,8 @@ typedef struct co_tcp_client_t
     co_queue_t* send_queue;
 #endif
 
+    void* tls;
+
 } co_tcp_client_t;
 
 co_tcp_client_t* co_tcp_client_create_with(
@@ -66,8 +69,8 @@ void co_tcp_client_cleanup(co_tcp_client_t* client);
 
 void co_tcp_client_on_connect_complete(co_tcp_client_t* client, int error_code);
 void co_tcp_client_on_send_ready(co_tcp_client_t* client);
-void co_tcp_client_on_send_complete(co_tcp_client_t* client, size_t data_length);
-void co_tcp_client_on_receive_ready(co_tcp_client_t* client, size_t data_length);
+void co_tcp_client_on_send_complete(co_tcp_client_t* client, size_t data_size);
+void co_tcp_client_on_receive_ready(co_tcp_client_t* client, size_t data_size);
 void co_tcp_client_on_close(co_tcp_client_t* client);
 
 //---------------------------------------------------------------------------//
@@ -84,14 +87,14 @@ CO_NET_API bool co_tcp_connect_async(
     co_tcp_client_t* client, co_tcp_connect_fn handler);
 
 CO_NET_API bool co_tcp_send(
-    co_tcp_client_t* client, const void* data, size_t data_length);
-CO_NET_API bool co_tcp_send_string(
-    co_tcp_client_t* client, const char* data);
+    co_tcp_client_t* client, const void* data, size_t data_size);
 CO_NET_API bool co_tcp_send_async(
-    co_tcp_client_t* client, const void* data, size_t data_length);
+    co_tcp_client_t* client, const void* data, size_t data_size);
 
 CO_NET_API ssize_t co_tcp_receive(
-    co_tcp_client_t* client, void* buffer, size_t buffer_length);
+    co_tcp_client_t* client, void* buffer, size_t buffer_size);
+CO_NET_API ssize_t co_tcp_receive_all(
+    co_tcp_client_t* client, co_byte_array_t* byte_array);
 
 CO_NET_API bool co_tcp_is_open(const co_tcp_client_t* client);
 
@@ -108,9 +111,9 @@ CO_NET_API const co_net_addr_t*
     co_tcp_get_remote_net_addr(const co_tcp_client_t* client);
 
 #ifdef CO_OS_WIN
-CO_NET_API size_t co_win_tcp_get_receive_data_length(const co_tcp_client_t* client);
-CO_NET_API void co_win_tcp_set_receive_buffer_length(co_tcp_client_t* client, size_t new_length);
-CO_NET_API size_t co_win_tcp_get_receive_buffer_length(const co_tcp_client_t* client);
+CO_NET_API size_t co_win_tcp_get_receive_data_size(const co_tcp_client_t* client);
+CO_NET_API void co_win_tcp_set_receive_buffer_size(co_tcp_client_t* client, size_t size);
+CO_NET_API size_t co_win_tcp_get_receive_buffer_size(const co_tcp_client_t* client);
 CO_NET_API void* co_win_tcp_get_receive_buffer(co_tcp_client_t* client);
 CO_NET_API void co_win_tcp_clear_receive_buffer(co_tcp_client_t* client);
 #endif

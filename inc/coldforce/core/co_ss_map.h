@@ -26,7 +26,7 @@ typedef co_map_iterator_t   co_ss_map_iterator_t;
 
 #define CO_SS_MAP_CTX \
     { \
-        .hash_length = CO_MAP_DEFAULT_HASH_LENGTH, \
+        .hash_size = CO_MAP_DEFAULT_HASH_SIZE, \
         .hash_key = (co_hash_fn)co_string_hash, \
         .free_key = (co_free_fn)co_mem_free, \
         .free_value = (co_free_fn)co_mem_free, \

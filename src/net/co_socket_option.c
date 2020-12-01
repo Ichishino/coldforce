@@ -23,11 +23,11 @@ co_socket_option_set(
     int level,
     int name,
     const void* data,
-    size_t length
+    size_t data_size
 )
 {
     return co_socket_handle_set_option(
-        sock->handle, level, name, data, length);
+        sock->handle, level, name, data, data_size);
 }
 
 bool
@@ -36,11 +36,11 @@ co_socket_option_get(
     int level,
     int name,
     void* buffer,
-    size_t* length
+    size_t* buffer_size
 )
 {
     return co_socket_handle_get_option(
-        sock->handle, level, name, buffer, length);
+        sock->handle, level, name, buffer, buffer_size);
 }
 
 //---------------------------------------------------------------------------//
@@ -66,10 +66,10 @@ co_socket_option_get_reuse_addr(
 )
 {
     int value = 0;
-    size_t value_length = sizeof(value);
+    size_t value_size = sizeof(value);
 
     if (!co_socket_option_get(
-        sock, SOL_SOCKET, SO_REUSEADDR, &value, &value_length))
+        sock, SOL_SOCKET, SO_REUSEADDR, &value, &value_size))
     {
         return false;
     }
@@ -102,10 +102,10 @@ co_socket_option_get_keep_alive(
 )
 {
     int value = 0;
-    size_t value_length = sizeof(value);
+    size_t value_size = sizeof(value);
 
     if (!co_socket_option_get(
-        sock, SOL_SOCKET, SO_KEEPALIVE, &value, &value_length))
+        sock, SOL_SOCKET, SO_KEEPALIVE, &value, &value_size))
     {
         return false;
     }
@@ -122,10 +122,10 @@ co_socket_option_get_keep_alive(
 bool
 co_socket_option_set_send_buffer(
     co_socket_t* sock,
-    size_t length
+    size_t buffer_size
 )
 {
-    int value = (int)length;
+    int value = (int)buffer_size;
 
     return co_socket_option_set(
         sock, SOL_SOCKET, SO_SNDBUF, &value, sizeof(value));
@@ -134,19 +134,19 @@ co_socket_option_set_send_buffer(
 bool
 co_socket_option_get_send_buffer(
     const co_socket_t* sock,
-    size_t* length
+    size_t* buffer_size
 )
 {
     int value = 0;
-    size_t value_length = sizeof(value);
+    size_t value_size = sizeof(value);
 
     if (!co_socket_option_get(
-        sock, SOL_SOCKET, SO_SNDBUF, &value, &value_length))
+        sock, SOL_SOCKET, SO_SNDBUF, &value, &value_size))
     {
         return false;
     }
 
-    *length = (size_t)value;
+    *buffer_size = (size_t)value;
 
     return true;
 }
@@ -158,10 +158,10 @@ co_socket_option_get_send_buffer(
 bool
 co_socket_option_set_receive_buffer(
     co_socket_t* sock,
-    size_t length
+    size_t buffer_size
 )
 {
-    int value = (int)length;
+    int value = (int)buffer_size;
 
     return co_socket_option_set(
         sock, SOL_SOCKET, SO_RCVBUF, &value, sizeof(value));
@@ -170,19 +170,19 @@ co_socket_option_set_receive_buffer(
 bool
 co_socket_option_get_receive_buffer(
     const co_socket_t* sock,
-    size_t* length
+    size_t* buffer_size
 )
 {
     int value = 0;
-    size_t value_length = sizeof(value);
+    size_t value_size = sizeof(value);
 
     if (!co_socket_option_get(
-        sock, SOL_SOCKET, SO_RCVBUF, &value, &value_length))
+        sock, SOL_SOCKET, SO_RCVBUF, &value, &value_size))
     {
         return false;
     }
 
-    *length = (size_t)value;
+    *buffer_size = (size_t)value;
 
     return true;
 }
@@ -197,10 +197,10 @@ co_socket_option_get_error(
     int* error_code
 )
 {
-    size_t value_length = sizeof(int);
+    size_t value_size = sizeof(int);
 
     if (!co_socket_option_get(
-        sock, SOL_SOCKET, SO_ERROR, error_code, &value_length))
+        sock, SOL_SOCKET, SO_ERROR, error_code, &value_size))
     {
         return false;
     }
@@ -228,10 +228,10 @@ co_socket_option_get_linger(
     struct linger* linger
 )
 {
-    size_t value_length = sizeof(struct linger);
+    size_t value_size = sizeof(struct linger);
 
     if (!co_socket_option_get(
-        sock, SOL_SOCKET, SO_LINGER, linger, &value_length))
+        sock, SOL_SOCKET, SO_LINGER, linger, &value_size))
     {
         return false;
     }
@@ -262,10 +262,10 @@ co_socket_option_get_tcp_no_delay(
 )
 {
     int value = 0;
-    size_t value_length = sizeof(value);
+    size_t value_size = sizeof(value);
 
     if (!co_socket_option_get(
-        sock, IPPROTO_TCP, TCP_NODELAY, &value, &value_length))
+        sock, IPPROTO_TCP, TCP_NODELAY, &value, &value_size))
     {
         return false;
     }

@@ -20,7 +20,7 @@ CO_EXTERN_C_BEGIN
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-#define CO_WIN_TCP_DEFAULT_RECEIVE_BUFFER_LENGTH  8192
+#define CO_WIN_TCP_DEFAULT_RECEIVE_BUFFER_SIZE  8192
 
 struct co_tcp_server_t;
 struct co_tcp_client_t;
@@ -43,12 +43,10 @@ typedef struct
         co_win_net_io_ctx_t* io_ctx;
 
         WSABUF buffer;
-        size_t length;
+        size_t size;
         size_t index;
 
-        size_t new_length;
-
-        bool error;
+        size_t new_size;
 
     } receive;
 
@@ -68,7 +66,7 @@ bool co_win_tcp_server_accept_start(struct co_tcp_server_t* server);
 void co_win_tcp_server_accept_stop(struct co_tcp_server_t* server);
 
 bool co_win_tcp_client_setup(
-    struct co_tcp_client_t* client, size_t receive_buffer_length);
+    struct co_tcp_client_t* client, size_t receive_buffer_size);
 void co_win_tcp_client_cleanup(
     struct co_tcp_client_t* client);
 
@@ -78,14 +76,14 @@ void co_win_tcp_client_connector_cleanup(
     struct co_tcp_client_t* client);
 
 bool co_win_tcp_client_send(struct co_tcp_client_t* client,
-    const void* data, size_t data_length);
+    const void* data, size_t data_size);
 bool co_win_tcp_client_send_async(struct co_tcp_client_t* client,
-    const void* data, size_t data_length);
+    const void* data, size_t data_size);
 
 bool co_win_tcp_client_receive_start(struct co_tcp_client_t* client);
 
 bool co_win_tcp_client_receive(struct co_tcp_client_t* client,
-    void* buffer, size_t buffer_length, size_t* data_length);
+    void* buffer, size_t buffer_size, size_t* data_size);
 
 bool co_win_tcp_client_connect_start(struct co_tcp_client_t* client);
 

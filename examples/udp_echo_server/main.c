@@ -23,20 +23,20 @@ void on_my_udp_receive(my_app* self, co_udp_t* udp)
         char buffer[1024];
 
         // receive
-        ssize_t length = co_udp_receive(
+        ssize_t size = co_udp_receive(
             udp, &remote_net_addr, &buffer, sizeof(buffer));
 
-        if (length <= 0)
+        if (size <= 0)
         {
             break;
         }
 
         char remote_str[64];
         co_net_addr_get_as_string(&remote_net_addr, remote_str);
-        printf("receive %zd bytes from %s\n", (size_t)length, remote_str);
+        printf("receive %zd bytes from %s\n", (size_t)size, remote_str);
 
         // send (echo)
-        co_udp_send(udp, &remote_net_addr, buffer, length);
+        co_udp_send(udp, &remote_net_addr, buffer, size);
     }
 }
 
@@ -44,17 +44,19 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
 {
     (void)arg;
 
-    // local port
+    uint16_t port = 9001;
+
+    // local address
     co_net_addr_t local_net_addr = CO_NET_ADDR_INIT;
     co_net_addr_set_family(&local_net_addr, CO_ADDRESS_FAMILY_IPV4);
-    co_net_addr_set_port(&local_net_addr, 9001);
+    co_net_addr_set_port(&local_net_addr, port);
 
     self->udp = co_udp_create(&local_net_addr);
 
     // socket option
     co_socket_option_set_reuse_addr((co_socket_t*)self->udp, true);
 #ifdef _WIN32
-    co_win_udp_set_receive_buffer_length(self->udp, 10000);
+    co_win_udp_set_receive_buffer_size(self->udp, 10000);
 #else
     co_socket_option_set_receive_buffer((co_socket_t*)self->udp, 10000);
 #endif

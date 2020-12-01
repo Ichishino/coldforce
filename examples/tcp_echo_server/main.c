@@ -21,14 +21,14 @@ void on_my_tcp_receive(my_app* self, co_tcp_client_t* client)
     char buffer[1024];
 
     // receive
-    ssize_t length = co_tcp_receive(client, buffer, sizeof(buffer));
+    ssize_t size = co_tcp_receive(client, buffer, sizeof(buffer));
 
     char remote_str[64];
     co_get_remote_net_addr_as_string(client, remote_str);
-    printf("receive %zd bytes from %s\n", (size_t)length, remote_str);
+    printf("receive %zd bytes from %s\n", (size_t)size, remote_str);
 
     // send
-    co_tcp_send(client, buffer, (size_t)length);
+    co_tcp_send(client, buffer, (size_t)size);
 }
 
 void on_my_tcp_close(my_app* self, co_tcp_client_t* client)
@@ -44,6 +44,7 @@ bool on_my_tcp_accept(my_app* self, co_tcp_server_t* server, co_tcp_client_t* cl
 {
     (void)server;
 
+    // accept
     co_tcp_accept((co_thread_t*)self, client);
 
     co_tcp_set_receive_handler(client, (co_tcp_receive_fn)on_my_tcp_receive);
@@ -64,13 +65,15 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
 
     // client list
     co_list_ctx_st list_ctx = { 0 };
-    list_ctx.free_value = (co_free_fn)co_tcp_client_destroy;
+    list_ctx.free_value = (co_free_fn)co_tcp_client_destroy; // auto destroy
     self->client_list = co_list_create(&list_ctx);
 
-    // local port
+    uint16_t port = 9000;
+
+    // local address
     co_net_addr_t local_net_addr = CO_NET_ADDR_INIT;
     co_net_addr_set_family(&local_net_addr, CO_ADDRESS_FAMILY_IPV4);
-    co_net_addr_set_port(&local_net_addr, 9000);
+    co_net_addr_set_port(&local_net_addr, port);
 
     self->server = co_tcp_server_create(&local_net_addr);
 

@@ -68,7 +68,7 @@ void co_event_worker_unregister_timer(
 void co_event_worker_check_timer(
     co_event_worker_t* event_worker);
 
-size_t co_event_worker_get_event_size(
+size_t co_event_worker_get_event_count(
     co_event_worker_t* event_worker);
 
 CO_API co_wait_result_t co_event_worker_wait(

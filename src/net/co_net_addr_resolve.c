@@ -22,7 +22,7 @@ co_net_addr_resolve_service(
     const char* service,
     const co_resolve_hint_st* hint,
     co_net_addr_t* net_addr,
-    size_t length
+    size_t count
 )
 {
     struct addrinfo in = { 0 };
@@ -47,19 +47,19 @@ co_net_addr_resolve_service(
         return 0;
     }
 
-    size_t count = 0;
+    size_t data_count = 0;
 
     for (struct addrinfo* ai = out;
-        (ai != NULL) && (count < length);
+        (ai != NULL) && (data_count < count);
         ai = ai->ai_next)
     {
-        memcpy(&net_addr[count], ai->ai_addr, ai->ai_addrlen);
-        count++;
+        memcpy(&net_addr[data_count], ai->ai_addr, ai->ai_addrlen);
+        data_count++;
     }
 
     freeaddrinfo(out);
 
-    return count;
+    return data_count;
 }
 
 size_t
@@ -68,7 +68,7 @@ co_net_addr_resolve_name(
     uint16_t port,
     const co_resolve_hint_st* hint,
     co_net_addr_t* net_addr,
-    size_t length
+    size_t count
 )
 {
     char service[8];
@@ -78,5 +78,5 @@ co_net_addr_resolve_name(
     name_hint.flags |= AI_NUMERICSERV;
 
     return co_net_addr_resolve_service(
-        node, service, &name_hint, net_addr, length);
+        node, service, &name_hint, net_addr, count);
 }

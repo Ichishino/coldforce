@@ -80,14 +80,14 @@ co_net_addr_set_address(
 bool
 co_net_addr_get_address(
     const co_net_addr_t* net_addr,
-    char* address,
-    size_t length
+    char* buffer,
+    size_t size
 )
 {
     if (co_net_is_ipv4(net_addr))
     {
         if (inet_ntop(
-            AF_INET, &net_addr->sa.v4.sin_addr, address, length) != NULL)
+            AF_INET, &net_addr->sa.v4.sin_addr, buffer, size) != NULL)
         {
             return true;
         }
@@ -95,7 +95,7 @@ co_net_addr_get_address(
     else if (co_net_is_ipv6(net_addr))
     {
         if (inet_ntop(
-            AF_INET6, &net_addr->sa.v6.sin6_addr, address, length) != NULL)
+            AF_INET6, &net_addr->sa.v6.sin6_addr, buffer, size) != NULL)
         {
             return true;
         }

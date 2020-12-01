@@ -5,6 +5,8 @@
 // headers
 //---------------------------------------------------------------------------//
 
+#include <coldforce/core/co_array.h>
+#include <coldforce/core/co_byte_array.h>
 #include <coldforce/core/co_list.h>
 #include <coldforce/core/co_string_list.h>
 #include <coldforce/core/co_map.h>
@@ -16,6 +18,7 @@
 #include <coldforce/core/co_timer.h>
 #include <coldforce/core/co_thread.h>
 #include <coldforce/core/co_app.h>
+#include <coldforce/core/co_debug.h>
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

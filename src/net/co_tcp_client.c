@@ -79,11 +79,12 @@ co_tcp_client_setup(
     client->on_close = NULL;
 
     client->close_timer = NULL;
+    client->tls = NULL;
 
 #ifdef CO_OS_WIN
 
     if (!co_win_tcp_client_setup(
-        client, CO_WIN_TCP_DEFAULT_RECEIVE_BUFFER_LENGTH))
+        client, CO_WIN_TCP_DEFAULT_RECEIVE_BUFFER_SIZE))
     {
         return false;
     }
@@ -107,7 +108,7 @@ co_tcp_client_cleanup(
 
     if (client->send_queue != NULL)
     {
-        co_buffer_t data;
+        co_buffer_st data;
 
         while (co_queue_pop(client->send_queue, &data))
         {
@@ -176,8 +177,8 @@ co_tcp_client_on_send_ready(
     (void)client;
 #else
 
-    co_buffer_t* send_data =
-        (co_buffer_t*)co_queue_peek_head(client->send_queue);
+    co_buffer_st* send_data =
+        (co_buffer_st*)co_queue_peek_head(client->send_queue);
 
     if (send_data == NULL)
     {
@@ -188,19 +189,19 @@ co_tcp_client_on_send_ready(
         return;
     }
 
-    ssize_t sent_length = co_socket_handle_send(
-        client->sock.handle, send_data->ptr, send_data->length, 0);
+    ssize_t sent_size = co_socket_handle_send(
+        client->sock.handle, send_data->ptr, send_data->size, 0);
 
-    if (sent_length == send_data->length)
+    if (sent_size == send_data->size)
     {
-        co_buffer_t used_data;
+        co_buffer_st used_data;
         co_queue_pop(client->send_queue, &used_data);
 
         co_mem_free(used_data.ptr);
 
         co_event_send(client->sock.owner_thread,
             CO_NET_EVENT_ID_TCP_SEND_COMPLETE,
-            (uintptr_t)client, (uintptr_t)sent_length);
+            (uintptr_t)client, (uintptr_t)sent_size);
 
         co_tcp_client_on_send_ready(client);
     }
@@ -211,7 +212,7 @@ co_tcp_client_on_send_ready(
 void
 co_tcp_client_on_send_complete(
     co_tcp_client_t* client,
-    size_t data_length
+    size_t data_size
 )
 {
 #ifdef CO_OS_WIN
@@ -221,18 +222,21 @@ co_tcp_client_on_send_complete(
     if (client->on_send_complete != NULL)
     {
         client->on_send_complete(
-            client->sock.owner_thread, client, (data_length > 0));
+            client->sock.owner_thread, client, (data_size > 0));
     }
 }
 
 void
 co_tcp_client_on_receive_ready(
     co_tcp_client_t* client,
-    size_t data_length
+    size_t data_size
 )
 {
 #ifdef CO_OS_WIN
-    client->win.receive.length = data_length;
+    if (data_size > 0)
+    {
+        client->win.receive.size = data_size;
+    }
 #endif
 
     if ((client->on_receive_ready != NULL) && client->sock.open_local)
@@ -244,10 +248,10 @@ co_tcp_client_on_receive_ready(
     else
     {
         client->win.receive.index = 0;
-        client->win.receive.length = 0;
+        client->win.receive.size = 0;
     }
 
-    if (client->win.receive.length == 0)
+    if (client->win.receive.size == 0)
     {
         co_win_tcp_client_receive_start(client);
     }
@@ -255,8 +259,7 @@ co_tcp_client_on_receive_ready(
     {
         co_event_send(client->sock.owner_thread,
             CO_NET_EVENT_ID_TCP_RECEIVE_READY,
-            (uintptr_t)client,
-            (uintptr_t)client->win.receive.length);
+            (uintptr_t)client, 0);
     }
 #endif
 }
@@ -453,47 +456,38 @@ bool
 co_tcp_send(
     co_tcp_client_t* client,
     const void* data,
-    size_t data_length
+    size_t data_size
 )
 {
 #ifdef CO_OS_WIN
 
-    return co_win_tcp_client_send(client, data, data_length);
+    return co_win_tcp_client_send(client, data, data_size);
 
 #else
 
     co_socket_handle_set_blocking(client->sock.handle, true);
 
-    ssize_t sent_length =
+    ssize_t sent_size =
         co_socket_handle_send(
-            client->sock.handle, data, data_length, 0);
+            client->sock.handle, data, data_size, 0);
 
     co_socket_handle_set_blocking(client->sock.handle, false);
 
-    return (data_length == (size_t)sent_length);
+    return (data_size == (size_t)sent_size);
 
 #endif
-}
-
-bool
-co_tcp_send_string(
-    co_tcp_client_t* client,
-    const char* data
-)
-{
-    return co_tcp_send(client, data, strlen(data) + 1);
 }
 
 bool
 co_tcp_send_async(
     co_tcp_client_t* client,
     const void* data,
-    size_t data_length
+    size_t data_size
 )
 {
 #ifdef CO_OS_WIN
 
-    return co_win_tcp_client_send_async(client, data, data_length);
+    return co_win_tcp_client_send_async(client, data, data_size);
 
 #else
 
@@ -503,12 +497,12 @@ co_tcp_send_async(
     co_net_worker_set_tcp_send(net_worker, client, true);
 
     if (co_socket_handle_send(
-        client->sock.handle, data, data_length, 0) == (ssize_t)data_length)
+        client->sock.handle, data, data_size, 0) == (ssize_t)data_size)
     {
         co_net_worker_set_tcp_send(net_worker, client, false);
 
         co_event_send(client->sock.owner_thread,
-            CO_NET_EVENT_ID_TCP_SEND_COMPLETE, (uintptr_t)client, (uintptr_t)data_length);
+            CO_NET_EVENT_ID_TCP_SEND_COMPLETE, (uintptr_t)client, (uintptr_t)data_size);
 
         return true;
     }
@@ -520,13 +514,13 @@ co_tcp_send_async(
         {
             if (client->send_queue == NULL)
             {
-                client->send_queue = co_queue_create(sizeof(co_buffer_t), NULL);
+                client->send_queue = co_queue_create(sizeof(co_buffer_st), NULL);
             }
 
-            co_buffer_t buffer;
+            co_buffer_st buffer;
 
-            buffer.length = data_length;
-            buffer.ptr = co_mem_alloc(buffer.length);
+            buffer.size = data_size;
+            buffer.ptr = co_mem_alloc(buffer.size);
 
             if (buffer.ptr == NULL)
             {
@@ -535,7 +529,7 @@ co_tcp_send_async(
                 return false;
             }
 
-            memcpy(buffer.ptr, data, buffer.length);
+            memcpy(buffer.ptr, data, buffer.size);
 
             co_queue_push(client->send_queue, &buffer);
         }
@@ -556,17 +550,17 @@ ssize_t
 co_tcp_receive(
     co_tcp_client_t* client,
     void* buffer,
-    size_t buffer_length
+    size_t buffer_size
 )
 {
 #ifdef CO_OS_WIN
 
-    size_t data_length = 0;
+    size_t data_size = 0;
 
     if (co_win_tcp_client_receive(
-        client, buffer, buffer_length, &data_length))
+        client, buffer, buffer_size, &data_size))
     {
-        return (ssize_t)data_length;
+        return (ssize_t)data_size;
     }
     else
     {
@@ -575,13 +569,42 @@ co_tcp_receive(
 
 #else
 
-    ssize_t data_length =
+    ssize_t data_size =
         co_socket_handle_receive(
-            client->sock.handle, buffer, buffer_length, 0);
+            client->sock.handle, buffer, buffer_size, 0);
 
-    return data_length;
+    return data_size;
 
 #endif
+}
+
+ssize_t
+co_tcp_receive_all(
+    co_tcp_client_t* client,
+    co_byte_array_t* byte_array
+)
+{
+    co_byte_array_set_size(byte_array, 0);
+
+    ssize_t index = 0;
+
+    for (;;)
+    {
+        char buffer[8192];
+
+        ssize_t size = co_tcp_receive(client, buffer, sizeof(buffer));
+
+        if (size <= 0)
+        {
+            break;
+        }
+
+        co_byte_array_set(byte_array, index, buffer, size);
+
+        index += size;
+    }
+
+    return index;
 }
 
 void

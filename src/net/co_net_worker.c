@@ -36,7 +36,7 @@ co_net_worker_create(
     net_worker->on_tcp_handover = NULL;
 
 #ifdef CO_DEBUG
-    net_worker->sock_counter = 0;
+    net_worker->sock_count = 0;
 #endif
 
     return net_worker;
@@ -94,7 +94,7 @@ co_net_worker_cleanup(
     co_net_selector_destroy(net_worker->net_selector);
     net_worker->net_selector = NULL;
 
-    co_assert(net_worker->sock_counter == 0);
+    co_assert(net_worker->sock_count == 0);
 }
 
 co_wait_result_t

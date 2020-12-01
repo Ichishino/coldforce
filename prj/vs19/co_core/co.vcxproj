@@ -185,7 +185,9 @@
     <ClInclude Include="..\..\..\inc\coldforce\core\co.h" />
     <ClInclude Include="..\..\..\inc\coldforce\core\co_app.h" />
     <ClInclude Include="..\..\..\inc\coldforce\core\co_array.h" />
+    <ClInclude Include="..\..\..\inc\coldforce\core\co_byte_array.h" />
     <ClInclude Include="..\..\..\inc\coldforce\core\co_config.h" />
+    <ClInclude Include="..\..\..\inc\coldforce\core\co_debug.h" />
     <ClInclude Include="..\..\..\inc\coldforce\core\co_event.h" />
     <ClInclude Include="..\..\..\inc\coldforce\core\co_event_worker.h" />
     <ClInclude Include="..\..\..\inc\coldforce\core\co_list.h" />

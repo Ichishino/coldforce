@@ -38,13 +38,13 @@ co_udp_on_send_ready(
         return;
     }
 
-    ssize_t sent_length =
+    ssize_t sent_size =
         co_socket_handle_send_to(
             udp->sock.handle,
             &send_data->remote_net_addr,
-            send_data->buffer.ptr, send_data->buffer.length, 0);
+            send_data->buffer.ptr, send_data->buffer.size, 0);
 
-    if (sent_length == send_data->buffer.length)
+    if (sent_size == send_data->buffer.size)
     {
         co_udp_send_data_t used_data;
         co_queue_pop(udp->send_queue, &used_data);
@@ -53,7 +53,7 @@ co_udp_on_send_ready(
 
         co_event_send(udp->sock.owner_thread,
             CO_NET_EVENT_ID_UDP_SEND_COMPLETE,
-            (uintptr_t)udp, (uintptr_t)sent_length);
+            (uintptr_t)udp, (uintptr_t)sent_size);
 
         co_udp_on_send_ready(udp);
     }
@@ -64,7 +64,7 @@ co_udp_on_send_ready(
 void
 co_udp_on_send_complete(
     co_udp_t* udp,
-    size_t data_length
+    size_t data_size
 )
 {
 #ifdef CO_OS_WIN
@@ -74,18 +74,18 @@ co_udp_on_send_complete(
     if (udp->on_send_complete != NULL)
     {
         udp->on_send_complete(
-            udp->sock.owner_thread, udp, (data_length > 0));
+            udp->sock.owner_thread, udp, (data_size > 0));
     }
 }
 
 void
 co_udp_on_receive_ready(
     co_udp_t* udp,
-    size_t data_length
+    size_t data_size
 )
 {
 #ifdef CO_OS_WIN
-    udp->win.receive.length = data_length;
+    udp->win.receive.size = data_size;
 #endif
 
     if (udp->on_receive_ready != NULL)
@@ -130,7 +130,7 @@ co_udp_create(
 #ifdef CO_OS_WIN
 
     if (!co_win_udp_setup(
-        udp, CO_WIN_UDP_DEFAULT_RECEIVE_BUFFER_LENGTH))
+        udp, CO_WIN_UDP_DEFAULT_RECEIVE_BUFFER_SIZE))
     {
         co_mem_free(udp);
 
@@ -177,11 +177,11 @@ co_udp_destroy(
 #else
         if (udp->send_queue != NULL)
         {
-            co_buffer_t data;
+            co_udp_send_data_t send_data;
 
-            while (co_queue_pop(udp->send_queue, &data))
+            while (co_queue_pop(udp->send_queue, &send_data))
             {
-                co_mem_free(data.ptr);
+                co_mem_free(send_data.buffer.ptr);
             }
 
             co_queue_destroy(udp->send_queue);
@@ -242,37 +242,26 @@ co_udp_send(
     co_udp_t* udp,
     const co_net_addr_t* remote_net_addr,
     const void* data,
-    size_t data_length
+    size_t data_size
 )
 {
 #ifdef CO_OS_WIN
 
-    return co_win_udp_send(udp, remote_net_addr, data, data_length);
+    return co_win_udp_send(udp, remote_net_addr, data, data_size);
 
 #else
 
     co_socket_handle_set_blocking(udp->sock.handle, true);
 
-    ssize_t sent_length =
+    ssize_t sent_size =
         co_socket_handle_send_to(
-            udp->sock.handle, remote_net_addr, data, data_length, 0);
+            udp->sock.handle, remote_net_addr, data, data_size, 0);
 
     co_socket_handle_set_blocking(udp->sock.handle, false);
 
-    return (data_length == (size_t)sent_length);
+    return (data_size == (size_t)sent_size);
 
 #endif
-}
-
-bool
-co_udp_send_string(
-    co_udp_t* udp,
-    const co_net_addr_t* remote_net_addr,
-    const char* data
-)
-{
-    return co_udp_send(
-        udp, remote_net_addr, data, strlen(data) + 1);
 }
 
 bool
@@ -280,13 +269,13 @@ co_udp_send_async(
     co_udp_t* udp,
     const co_net_addr_t* remote_net_addr,
     const void* data,
-    size_t data_length
+    size_t data_size
 )
 {
 #ifdef CO_OS_WIN
 
     return co_win_udp_send_async(
-        udp, remote_net_addr, data, data_length);
+        udp, remote_net_addr, data, data_size);
 
 #else
 
@@ -297,14 +286,14 @@ co_udp_send_async(
     co_net_worker_update_udp(net_worker, udp);
 
     if (co_socket_handle_send_to(udp->sock.handle,
-        remote_net_addr, data, data_length, 0) == (ssize_t)data_length)
+        remote_net_addr, data, data_size, 0) == (ssize_t)data_size)
     {
 
         udp->sock_event_flags &= ~CO_SOCKET_EVENT_SEND;
         co_net_worker_update_udp(net_worker, udp);
 
         co_event_send(udp->sock.owner_thread,
-            CO_NET_EVENT_ID_UDP_SEND_COMPLETE, (uintptr_t)udp, data_length);
+            CO_NET_EVENT_ID_UDP_SEND_COMPLETE, (uintptr_t)udp, data_size);
 
         return true;
     }
@@ -325,12 +314,12 @@ co_udp_send_async(
             memcpy(&send_data.remote_net_addr,
                 remote_net_addr, sizeof(co_net_addr_t));
 
-            send_data.buffer.length = data_length;
-            send_data.buffer.ptr = co_mem_alloc(send_data.buffer.length);
+            send_data.buffer.size = data_size;
+            send_data.buffer.ptr = co_mem_alloc(send_data.buffer.size);
 
             if (send_data.buffer.ptr != NULL)
             {
-                memcpy(send_data.buffer.ptr, data, send_data.buffer.length);
+                memcpy(send_data.buffer.ptr, data, send_data.buffer.size);
                 co_queue_push(udp->send_queue, &send_data);
 
                 return true;
@@ -390,28 +379,28 @@ co_udp_receive(
     co_udp_t* udp,
     co_net_addr_t* remote_net_addr,
     void* buffer,
-    size_t buffer_length
+    size_t buffer_size
 )
 {
 #ifdef CO_OS_WIN
 
-    size_t data_length = 0;
+    size_t data_size = 0;
 
     if (!co_win_udp_receive(
         udp, remote_net_addr,
-        buffer, buffer_length, &data_length))
+        buffer, buffer_size, &data_size))
     {
         return (ssize_t)-1;
     }
     else
     {
-        return (ssize_t)data_length;
+        return (ssize_t)data_size;
     }
 
 #else
 
     return co_socket_handle_receive_from(
-        udp->sock.handle, remote_net_addr, buffer, buffer_length, 0);
+        udp->sock.handle, remote_net_addr, buffer, buffer_size, 0);
 
 #endif
 }

@@ -166,6 +166,7 @@
     <ClInclude Include="..\..\..\inc\coldforce\net\co_net_app.h" />
     <ClInclude Include="..\..\..\inc\coldforce\net\co_net_event.h" />
     <ClInclude Include="..\..\..\inc\coldforce\net\co_net_selector.h" />
+    <ClInclude Include="..\..\..\inc\coldforce\net\co_net_selector_linux.h" />
     <ClInclude Include="..\..\..\inc\coldforce\net\co_net_selector_win.h" />
     <ClInclude Include="..\..\..\inc\coldforce\net\co_net_thread.h" />
     <ClInclude Include="..\..\..\inc\coldforce\net\co_net_win.h" />
@@ -189,6 +190,7 @@
     <ClCompile Include="..\..\..\src\net\co_net_addr.c" />
     <ClCompile Include="..\..\..\src\net\co_net_addr_resolve.c" />
     <ClCompile Include="..\..\..\src\net\co_net_app.c" />
+    <ClCompile Include="..\..\..\src\net\co_net_selector_linux.c" />
     <ClCompile Include="..\..\..\src\net\co_net_selector_win.c" />
     <ClCompile Include="..\..\..\src\net\co_net_thread.c" />
     <ClCompile Include="..\..\..\src\net\co_net_win.c" />

@@ -152,16 +152,16 @@ co_win_tcp_server_accept_start(
 
     memset(&server->win.accept_io_ctx->ol, 0x00, sizeof(WSAOVERLAPPED));
 
-    DWORD addr_storage_length = sizeof(SOCKADDR_STORAGE) + 16;
-    DWORD data_length = 0;
+    DWORD addr_storage_size = sizeof(SOCKADDR_STORAGE) + 16;
+    DWORD data_size = 0;
 
     BOOL result = co_win_accept_ex(
         server->sock.handle,
         server->win.accept_handle,
         server->win.buffer,
         0,
-        addr_storage_length, addr_storage_length,
-        &data_length,
+        addr_storage_size, addr_storage_size,
+        &data_size,
         (LPOVERLAPPED)server->win.accept_io_ctx);
 
     if (!result)
@@ -192,7 +192,7 @@ co_win_tcp_server_accept_stop(
 bool
 co_win_tcp_client_setup(
     co_tcp_client_t* client,
-    size_t receive_buffer_length
+    size_t receive_buffer_size
 )
 {
     client->win.io_connect_ctx = NULL;
@@ -209,11 +209,10 @@ co_win_tcp_client_setup(
     client->win.receive.io_ctx->id = CO_WIN_NET_IO_ID_TCP_RECEIVE;
     client->win.receive.io_ctx->sock = &client->sock;
 
-    client->win.receive.length = 0;
+    client->win.receive.size = 0;
     client->win.receive.index = 0;
-    client->win.receive.new_length = 0;
-    client->win.receive.error = false;
-    client->win.receive.buffer.len = (ULONG)receive_buffer_length;
+    client->win.receive.new_size = 0;
+    client->win.receive.buffer.len = (ULONG)receive_buffer_size;
     client->win.receive.buffer.buf =
         co_mem_alloc(client->win.receive.buffer.len);
 
@@ -300,18 +299,18 @@ bool
 co_win_tcp_client_send(
     co_tcp_client_t* client,
     const void* data,
-    size_t data_length
+    size_t data_size
 )
 {
     WSABUF buf;
     buf.buf = (CHAR*)data;
-    buf.len = (ULONG)data_length;
+    buf.len = (ULONG)data_size;
 
-    DWORD sent_length = 0;
+    DWORD sent_size = 0;
 
     int result = WSASend(
         client->sock.handle, &buf, 1,
-        &sent_length, 0,
+        &sent_size, 0,
         NULL, NULL);
 
     return (result == 0);
@@ -321,7 +320,7 @@ bool
 co_win_tcp_client_send_async(
     co_tcp_client_t* client,
     const void* data,
-    size_t data_length
+    size_t data_size
 )
 {
     if (!client->open_remote)
@@ -351,13 +350,13 @@ co_win_tcp_client_send_async(
 
     WSABUF buf;
     buf.buf = (CHAR*)data;
-    buf.len = (ULONG)data_length;
+    buf.len = (ULONG)data_size;
 
-    DWORD sent_length = 0;
+    DWORD sent_size = 0;
 
     int result = WSASend(
         client->sock.handle, &buf, 1,
-        &sent_length, 0,
+        &sent_size, 0,
         (LPWSAOVERLAPPED)io_ctx, NULL);
 
     if (result != 0)
@@ -381,11 +380,6 @@ co_win_tcp_client_receive_start(
     co_tcp_client_t* client
 )
 {
-    if (client->win.receive.error)
-    {
-        return false;
-    }
-
     if (!client->open_remote)
     {
         return false;
@@ -394,13 +388,13 @@ co_win_tcp_client_receive_start(
     memset(&client->win.receive.io_ctx->ol,
         0x00, sizeof(WSAOVERLAPPED));
 
-    client->win.receive.length = 0;
+    client->win.receive.size = 0;
     client->win.receive.index = 0;
 
-    if (client->win.receive.new_length > 0)
+    if (client->win.receive.new_size > 0)
     {
         void* new_buffer =
-            co_mem_alloc(client->win.receive.new_length);
+            co_mem_alloc(client->win.receive.new_size);
 
         if (new_buffer != NULL)
         {
@@ -408,19 +402,19 @@ co_win_tcp_client_receive_start(
             client->win.receive.buffer.buf = new_buffer;
 
             client->win.receive.buffer.len =
-                (ULONG)client->win.receive.new_length;
+                (ULONG)client->win.receive.new_size;
         }
 
-        client->win.receive.new_length = 0;
+        client->win.receive.new_size = 0;
     }
 
     DWORD flags = 0;
-    DWORD data_length = 0;
+    DWORD data_size = 0;
 
     int result = WSARecv(
         client->sock.handle,
         &client->win.receive.buffer, 1,
-        &data_length,
+        &data_size,
         &flags,
         (LPWSAOVERLAPPED)client->win.receive.io_ctx,
         NULL);
@@ -431,8 +425,6 @@ co_win_tcp_client_receive_start(
 
         if (error != ERROR_IO_PENDING)
         {
-            client->win.receive.error = true;
-
             co_event_send(client->sock.owner_thread,
                 CO_NET_EVENT_ID_TCP_CLOSE, (uintptr_t)client, 0);
 
@@ -447,18 +439,18 @@ bool
 co_win_tcp_client_receive(
     co_tcp_client_t* client,
     void* buffer,
-    size_t buffer_length,
-    size_t* data_length
+    size_t buffer_size,
+    size_t* data_size
 )
 {
-    if (client->win.receive.length == 0)
+    if (client->win.receive.size == 0)
     {
         ssize_t received = co_socket_handle_receive(
-            client->sock.handle, buffer, buffer_length, 0);
+            client->sock.handle, buffer, buffer_size, 0);
 
         if (received > 0)
         {
-            *data_length = (size_t)received;
+            *data_size = (size_t)received;
 
             return true;
         }
@@ -466,15 +458,15 @@ co_win_tcp_client_receive(
         return false;
     }
 
-    *data_length =
-        co_min(client->win.receive.length, buffer_length);
+    *data_size =
+        co_min(client->win.receive.size, buffer_size);
 
     memcpy(buffer,
         &client->win.receive.buffer.buf[client->win.receive.index],
-        *data_length);
+        *data_size);
 
-    client->win.receive.index += *data_length;
-    client->win.receive.length -= *data_length;
+    client->win.receive.index += *data_size;
+    client->win.receive.size -= *data_size;
 
     return true;
 }
@@ -487,11 +479,13 @@ co_win_tcp_client_connect_start(
     memset(&client->win.io_connect_ctx->ol,
         0x00, sizeof(WSAOVERLAPPED));
 
+    DWORD sent_size = 0;
+
     BOOL result = co_win_connect_ex(
         client->sock.handle,
         (const struct sockaddr*)&client->remote_net_addr,
         sizeof(co_net_addr_t),
-        NULL, 0, NULL,
+        NULL, 0, &sent_size,
         (LPOVERLAPPED)client->win.io_connect_ctx);
 
     if (!result)
@@ -511,24 +505,24 @@ co_win_tcp_client_connect_start(
 //---------------------------------------------------------------------------//
 
 size_t
-co_win_tcp_get_receive_data_length(
+co_win_tcp_get_receive_data_size(
     const co_tcp_client_t* client
 )
 {
-    return client->win.receive.length;
+    return client->win.receive.size;
 }
 
 void
-co_win_tcp_set_receive_buffer_length(
+co_win_tcp_set_receive_buffer_size(
     co_tcp_client_t* client,
-    size_t new_length
+    size_t new_size
 )
 {
-    client->win.receive.new_length = new_length;
+    client->win.receive.new_size = new_size;
 }
 
 size_t
-co_win_tcp_get_receive_buffer_length(
+co_win_tcp_get_receive_buffer_size(
     const co_tcp_client_t* client
 )
 {
@@ -550,7 +544,7 @@ co_win_tcp_clear_receive_buffer(
 )
 {
     client->win.receive.index = 0;
-    client->win.receive.length = 0;
+    client->win.receive.size = 0;
 }
 
 //---------------------------------------------------------------------------//
@@ -582,11 +576,11 @@ co_win_socket_option_get_connect_time(
     int* seconds
 )
 {
-    size_t value_length = sizeof(int);
+    size_t value_size = sizeof(int);
 
     return co_socket_handle_get_option(sock->handle,
         SOL_SOCKET, SO_CONNECT_TIME,
-        seconds, &value_length);
+        seconds, &value_size);
 }
 
 #endif // CO_OS_WIN
