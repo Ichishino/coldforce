@@ -31,7 +31,8 @@ typedef struct co_net_worker_t
     co_list_t* tcp_clients;
     co_list_t* udps;
 
-    co_tcp_handover_fn on_tcp_handover;
+    co_tcp_transfer_fn on_tcp_transfer;
+    co_destroy_fn on_destroy;
 
 #ifdef CO_DEBUG
     uint32_t sock_count;
@@ -55,11 +56,16 @@ typedef struct co_net_worker_t
 co_net_worker_t* co_net_worker_create(void);
 void co_net_worker_cleanup(co_net_worker_t* net_worker);
 
+void co_net_worker_on_destroy(co_thread_t* thread);
+
 co_wait_result_t co_net_worker_wait(
     co_net_worker_t* net_worker, uint32_t msec);
 void co_net_worker_wake_up(co_net_worker_t* net_worker);
 bool co_net_worker_dispatch(co_net_worker_t* net_worker, co_event_t* event);
 void co_net_worker_on_idle(co_net_worker_t* net_worker);
+
+void co_net_worker_on_tcp_transfer(
+    co_net_worker_t* net_worker, co_tcp_client_t* client);
 
 bool co_net_worker_register_tcp_server(
     co_net_worker_t* net_worker, co_tcp_server_t* server);

@@ -39,7 +39,7 @@ void on_my_send_timer(my_app* self, co_timer_t* timer)
     if (self->send_counter == 10)
     {
         co_timer_stop(timer);
-        co_app_stop();
+        co_net_app_stop();
     }
 }
 

@@ -40,7 +40,7 @@ void on_my_tcp_close(my_app* self, co_tcp_client_t* client)
     co_list_remove(self->client_list, (uintptr_t)client);
 }
 
-bool on_my_tcp_accept(my_app* self, co_tcp_server_t* server, co_tcp_client_t* client)
+void on_my_tcp_accept(my_app* self, co_tcp_server_t* server, co_tcp_client_t* client)
 {
     (void)server;
 
@@ -55,8 +55,6 @@ bool on_my_tcp_accept(my_app* self, co_tcp_server_t* server, co_tcp_client_t* cl
     char remote_str[64];
     co_get_remote_net_addr_as_string(client, remote_str);
     printf("accept %s\n", remote_str);
-
-    return true;
 }
 
 bool on_my_app_create(my_app* self, const co_arg_st* arg)

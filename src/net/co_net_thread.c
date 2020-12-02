@@ -20,8 +20,10 @@ co_net_thread_init(
 {
     co_net_worker_t* net_worker = co_net_worker_create();
 
+    net_worker->on_destroy = destroy_handler;
+
     co_thread_setup(thread,
-        create_handler, destroy_handler,
+        create_handler, co_net_worker_on_destroy,
         (co_event_worker_t*)net_worker);
 }
 
@@ -43,4 +45,20 @@ co_net_thread_start(
 )
 {
     return co_thread_start(thread, param);
+}
+
+void
+co_net_thread_stop(
+    co_thread_t* thread
+)
+{
+    co_thread_stop(thread);
+}
+
+void
+co_net_thread_wait(
+    co_thread_t* thread
+)
+{
+    co_thread_wait(thread);
 }

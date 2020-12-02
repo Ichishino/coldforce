@@ -279,7 +279,7 @@ co_event_worker_on_idle(
     co_event_worker_t* event_worker
 )
 {
-    if (co_list_get_size(event_worker->mem_trash) > 0)
+    if (co_list_get_count(event_worker->mem_trash) > 0)
     {
         co_list_clear(event_worker->mem_trash);
     }

@@ -37,7 +37,7 @@ typedef struct co_list_item_t
 
 typedef struct
 {
-    size_t size;
+    size_t count;
 
     co_list_item_t* head;
     co_list_item_t* tail;
@@ -55,7 +55,7 @@ CO_API co_list_t* co_list_create(const co_list_ctx_st* ctx);
 CO_API void co_list_destroy(co_list_t* list);
 
 CO_API void co_list_clear(co_list_t* list);
-CO_API size_t co_list_get_size(const co_list_t* list);
+CO_API size_t co_list_get_count(const co_list_t* list);
 CO_API bool co_list_contains(const co_list_t* list, uintptr_t value);
 
 CO_API bool co_list_add_head(co_list_t* list, uintptr_t value);

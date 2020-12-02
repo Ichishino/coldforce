@@ -400,15 +400,6 @@ co_tls_tcp_send(
 }
 
 bool
-co_tls_tcp_send_string(
-    co_tcp_client_t* client,
-    const char* data
-)
-{
-    return co_tls_tcp_send(client, data, strlen(data));
-}
-
-bool
 co_tls_tcp_send_async(
     co_tcp_client_t* client,
     const void* data,

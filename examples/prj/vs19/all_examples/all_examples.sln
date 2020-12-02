@@ -21,6 +21,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tls_tcp_client", "..\..\..\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tls_tcp_echo_server", "..\..\..\tls_tcp_echo_server\prj\vs19\tls_tcp_echo_server.vcxproj", "{6B8F4D2F-26D8-412F-A521-933200033419}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tcp_server_multi_thread", "..\..\..\tcp_server_multi_thread\prj\vs19\tcp_server_multi_thread.vcxproj", "{7E014DD6-AB4C-46CD-B381-1E3A66EAE7E8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -101,6 +103,14 @@ Global
 		{6B8F4D2F-26D8-412F-A521-933200033419}.Release|x64.Build.0 = Release|x64
 		{6B8F4D2F-26D8-412F-A521-933200033419}.Release|x86.ActiveCfg = Release|Win32
 		{6B8F4D2F-26D8-412F-A521-933200033419}.Release|x86.Build.0 = Release|Win32
+		{7E014DD6-AB4C-46CD-B381-1E3A66EAE7E8}.Debug|x64.ActiveCfg = Debug|x64
+		{7E014DD6-AB4C-46CD-B381-1E3A66EAE7E8}.Debug|x64.Build.0 = Debug|x64
+		{7E014DD6-AB4C-46CD-B381-1E3A66EAE7E8}.Debug|x86.ActiveCfg = Debug|Win32
+		{7E014DD6-AB4C-46CD-B381-1E3A66EAE7E8}.Debug|x86.Build.0 = Debug|Win32
+		{7E014DD6-AB4C-46CD-B381-1E3A66EAE7E8}.Release|x64.ActiveCfg = Release|x64
+		{7E014DD6-AB4C-46CD-B381-1E3A66EAE7E8}.Release|x64.Build.0 = Release|x64
+		{7E014DD6-AB4C-46CD-B381-1E3A66EAE7E8}.Release|x86.ActiveCfg = Release|Win32
+		{7E014DD6-AB4C-46CD-B381-1E3A66EAE7E8}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

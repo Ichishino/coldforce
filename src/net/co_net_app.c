@@ -26,8 +26,10 @@ co_net_app_init(
 
     co_net_worker_t* net_worker = co_net_worker_create();
 
+    net_worker->on_destroy = destroy_handler;
+
     co_app_setup(app,
-        create_handler, destroy_handler,
+        create_handler, co_net_worker_on_destroy,
         (co_event_worker_t*)net_worker);
 
     return true;
@@ -64,4 +66,12 @@ co_net_app_start(
     co_net_app_cleanup(app);
 
     return exit_code;
+}
+
+void
+co_net_app_stop(
+    void
+)
+{
+    co_app_stop();
 }

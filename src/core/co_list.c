@@ -49,7 +49,7 @@ co_list_create(
         return NULL;
     }
 
-    list->size = 0;
+    list->count = 0;
     list->head = NULL;
     list->tail = NULL;
 
@@ -113,17 +113,17 @@ co_list_clear(
         co_mem_free(temp);
     }
 
-    list->size = 0;
+    list->count = 0;
     list->head = NULL;
     list->tail = NULL;
 }
 
 size_t
-co_list_get_size(
+co_list_get_count(
     const co_list_t* list
 )
 {
-    return list->size;
+    return list->count;
 }
 
 bool
@@ -177,7 +177,7 @@ co_list_add_head(
 
     list->head = new_item;
 
-    ++list->size;
+    ++list->count;
 
     return false;
 }
@@ -212,7 +212,7 @@ co_list_add_tail(
 
     list->tail = new_item;
 
-    ++list->size;
+    ++list->count;
 
     return true;
 }
@@ -252,9 +252,9 @@ co_list_remove_head(
 
         co_mem_free(item);
 
-        --list->size;
+        --list->count;
 
-        if (list->size == 0)
+        if (list->count == 0)
         {
             list->head = NULL;
             list->tail = NULL;
@@ -281,9 +281,9 @@ co_list_remove_tail(
 
         co_mem_free(item);
 
-        --list->size;
+        --list->count;
 
-        if (list->size == 0)
+        if (list->count == 0)
         {
             list->head = NULL;
             list->tail = NULL;
@@ -328,7 +328,7 @@ co_list_remove_at(
 
         co_mem_free(iterator);
 
-        --list->size;
+        --list->count;
     }
 }
 
@@ -400,7 +400,7 @@ co_list_insert(
         list->head = new_item;
     }
 
-    ++list->size;
+    ++list->count;
 
     return true;
 }
@@ -435,7 +435,7 @@ co_list_insert_after(
         list->tail = new_item;
     }
 
-    ++list->size;
+    ++list->count;
 
     return true;
 }

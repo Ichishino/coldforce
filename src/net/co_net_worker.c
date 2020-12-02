@@ -33,7 +33,8 @@ co_net_worker_create(
     net_worker->tcp_clients = NULL;
     net_worker->udps = NULL;
 
-    net_worker->on_tcp_handover = NULL;
+    net_worker->on_tcp_transfer = NULL;
+    net_worker->on_destroy = NULL;
 
 #ifdef CO_DEBUG
     net_worker->sock_count = 0;
@@ -55,32 +56,6 @@ co_net_worker_cleanup(
 
     if (net_worker->tcp_clients != NULL)
     {
-        if (co_list_get_size(net_worker->tcp_clients) > 0)
-        {
-            for (int counter = 0; counter < 3; ++counter)
-            {
-                while (net_worker->event_worker.wait(
-                    &net_worker->event_worker, 1000) != CO_WAIT_RESULT_TIMEOUT)
-                {
-                    ;
-                }
-
-                if (co_list_get_size(
-                    net_worker->tcp_clients) == 0)
-                {
-                    break;
-                }
-            }
-
-            while (co_list_get_size(net_worker->tcp_clients) > 0)
-            {
-                co_list_data_st* data =
-                    co_list_get_head(net_worker->tcp_clients);
-
-                co_tcp_client_on_close((co_tcp_client_t*)data->value);
-            }
-        }
-
         co_list_destroy(net_worker->tcp_clients);
         net_worker->tcp_clients = NULL;
     }
@@ -95,6 +70,49 @@ co_net_worker_cleanup(
     net_worker->net_selector = NULL;
 
     co_assert(net_worker->sock_count == 0);
+}
+
+void
+co_net_worker_on_destroy(
+    co_thread_t* thread
+)
+{
+    co_net_worker_t* net_worker =
+        (co_net_worker_t*)thread->event_worker;
+
+    if (net_worker->on_destroy != NULL)
+    {
+        net_worker->on_destroy(thread);
+    }
+
+    if (net_worker->tcp_clients != NULL)
+    {
+        if (co_list_get_count(net_worker->tcp_clients) > 0)
+        {
+            for (int counter = 0; counter < 3; ++counter)
+            {
+                while (net_worker->event_worker.wait(
+                    &net_worker->event_worker, 1000) != CO_WAIT_RESULT_TIMEOUT)
+                {
+                    ;
+                }
+
+                if (co_list_get_count(
+                    net_worker->tcp_clients) == 0)
+                {
+                    break;
+                }
+            }
+
+            while (co_list_get_count(net_worker->tcp_clients) > 0)
+            {
+                co_list_data_st* data =
+                    co_list_get_head(net_worker->tcp_clients);
+
+                co_tcp_client_on_close((co_tcp_client_t*)data->value);
+            }
+        }
+    }
 }
 
 co_wait_result_t
@@ -158,13 +176,10 @@ co_net_worker_dispatch(
             (co_tcp_client_t*)event->param1);
         break;
     }
-    case CO_NET_EVENT_ID_TCP_HANDOVER:
+    case CO_NET_EVENT_ID_TCP_TRANSFER:
     {
-        co_thread_t* thread = co_thread_get_current();
-        co_tcp_client_t* client = (co_tcp_client_t*)event->param1;
-
-        net_worker->on_tcp_handover(thread, client);
-
+        co_net_worker_on_tcp_transfer(
+            net_worker, (co_tcp_client_t*)event->param1);
         break;
     }
     case CO_NET_EVENT_ID_UDP_SEND_READY:
@@ -202,6 +217,22 @@ co_net_worker_on_idle(
     co_win_try_clear_io_ctx_trash(net_worker->net_selector);
 #endif
     co_event_worker_on_idle(&net_worker->event_worker);
+}
+
+void
+co_net_worker_on_tcp_transfer(
+    co_net_worker_t* net_worker,
+    co_tcp_client_t* client
+)
+{
+    co_thread_t* thread = co_thread_get_current();
+
+    if (net_worker->on_tcp_transfer != NULL)
+    {
+        CO_DEBUG_SOCKET_COUNTER_INC();
+
+        net_worker->on_tcp_transfer(thread, client);
+    }
 }
 
 bool
@@ -433,7 +464,7 @@ co_net_worker_close_tcp_client_local(
 #endif
         );
 
-        client->close_timer = co_timer_create((3 * 1000),
+        client->close_timer = co_timer_create((30 * 1000),
             (co_timer_fn)co_net_worker_tcp_client_close_timer,
             false, (uintptr_t)client);
 

@@ -122,7 +122,7 @@ co_timer_manager_get_next_timeout(
     co_timer_manager_t* timer_manager
 )
 {
-    if (co_list_get_size(timer_manager->timers) == 0)
+    if (co_list_get_count(timer_manager->timers) == 0)
     {
         return CO_INFINITE;
     }

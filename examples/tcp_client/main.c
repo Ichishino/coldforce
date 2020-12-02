@@ -38,7 +38,7 @@ void on_my_tcp_close(my_app* self, co_tcp_client_t* client)
     self->client = NULL;
 
     // quit app
-    co_app_stop();
+    co_net_app_stop();
 }
 
 void on_my_tcp_connect(my_app* self, co_tcp_client_t* client, int error_code)

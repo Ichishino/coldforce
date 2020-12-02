@@ -38,7 +38,7 @@ co_tls_tcp_server_cleanup(
     }
 }
 
-bool
+void
 co_tls_tcp_server_on_accept_ready(
     co_thread_t* thread,
     co_tcp_server_t* server,
@@ -50,7 +50,7 @@ co_tls_tcp_server_on_accept_ready(
 
     if (client_tls == NULL)
     {
-        return false;
+        return;
     }
 
     client->tls = client_tls;
@@ -64,10 +64,8 @@ co_tls_tcp_server_on_accept_ready(
 
     if (server_tls->on_accept_ready != NULL)
     {
-        return server_tls->on_accept_ready(thread, server, client);
+        server_tls->on_accept_ready(thread, server, client);
     }
-
-    return false;
 }
 
 //---------------------------------------------------------------------------//

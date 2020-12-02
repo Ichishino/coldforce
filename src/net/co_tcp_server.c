@@ -36,12 +36,11 @@ co_tcp_server_on_accept_ready(
     server->win.accept_handle = CO_SOCKET_INVALID_HANDLE;
 
     if ((co_net_addr_get_family(
-            &win_client->remote_net_addr) == AF_UNSPEC) ||
-        (server->on_accept_ready == NULL) ||
-        !server->on_accept_ready(
-            server->sock.owner_thread, server, win_client))
+            &win_client->remote_net_addr) != AF_UNSPEC) &&
+        (server->on_accept_ready != NULL))
     {
-        co_tcp_client_destroy(win_client);
+        server->on_accept_ready(
+            server->sock.owner_thread, server, win_client);
     }
 
 #endif
@@ -73,11 +72,10 @@ co_tcp_server_on_accept_ready(
             return;
         }
 
-        if ((server->on_accept_ready == NULL) ||
-            !server->on_accept_ready(
-                server->sock.owner_thread, server, client))
+        if (server->on_accept_ready != NULL)
         {
-            co_tcp_client_destroy(client);
+            server->on_accept_ready(
+                server->sock.owner_thread, server, client);
         }
     }
 
@@ -222,8 +220,10 @@ co_tcp_accept(
 {
     if (co_thread_get_current() != owner_thread)
     {
+        CO_DEBUG_SOCKET_COUNTER_DEC();
+
         return co_event_send(owner_thread,
-            CO_NET_EVENT_ID_TCP_HANDOVER, (uintptr_t)client, 0);
+            CO_NET_EVENT_ID_TCP_TRANSFER, (uintptr_t)client, 0);
     }
 
     client->sock.owner_thread = owner_thread;
@@ -242,10 +242,10 @@ co_tcp_accept(
 }
 
 void
-co_tcp_set_handover_handler(
+co_tcp_set_transfer_handler(
     co_thread_t* thread,
-    co_tcp_handover_fn handler
+    co_tcp_transfer_fn handler
 )
 {
-    ((co_net_worker_t*)thread->event_worker)->on_tcp_handover = handler;
+    ((co_net_worker_t*)thread->event_worker)->on_tcp_transfer = handler;
 }

@@ -21,6 +21,9 @@ CO_NET_API void co_net_thread_cleanup(co_thread_t* thread);
 
 CO_NET_API bool co_net_thread_start(co_thread_t* thread, uintptr_t param);
 
+CO_NET_API void co_net_thread_stop(co_thread_t* thread);
+CO_NET_API void co_net_thread_wait(co_thread_t* thread);
+
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 

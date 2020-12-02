@@ -20,6 +20,7 @@ CO_NET_API bool co_net_app_init(co_app_t* app,
 CO_NET_API void co_net_app_cleanup(co_app_t* app);
 
 CO_NET_API int co_net_app_start(co_app_t* app, int argc, char** argv);
+CO_NET_API void co_net_app_stop(void);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

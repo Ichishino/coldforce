@@ -22,10 +22,10 @@ CO_EXTERN_C_BEGIN
 
 struct co_tcp_server_t;
 
-typedef bool(*co_tcp_accept_fn)(
+typedef void(*co_tcp_accept_fn)(
     void* self, struct co_tcp_server_t* server, co_tcp_client_t* client);
 
-typedef void(*co_tcp_handover_fn)(
+typedef void(*co_tcp_transfer_fn)(
     void* self, co_tcp_client_t* client);
 
 typedef struct co_tcp_server_t
@@ -58,8 +58,8 @@ CO_NET_API bool co_tcp_server_start(
 CO_NET_API bool co_tcp_accept(
     co_thread_t* owner_thread, co_tcp_client_t* client);
 
-CO_NET_API void co_tcp_set_handover_handler(
-    co_thread_t* thread, co_tcp_handover_fn handler);
+CO_NET_API void co_tcp_set_transfer_handler(
+    co_thread_t* thread, co_tcp_transfer_fn handler);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
