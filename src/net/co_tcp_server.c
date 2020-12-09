@@ -104,12 +104,12 @@ co_tcp_server_create(
     server->sock.owner_thread = co_thread_get_current();
     server->sock.open_local = true;
     server->sock.sub_class = NULL;
+    server->sock.tls = NULL;
 
     memcpy(&server->sock.local_net_addr,
         local_net_addr, sizeof(co_net_addr_t));
 
     server->on_accept_ready = NULL;
-    server->tls = NULL;
 
 #ifdef CO_OS_WIN
     if (!co_win_tcp_server_setup(server))

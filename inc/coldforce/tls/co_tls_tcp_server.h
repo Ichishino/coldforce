@@ -23,7 +23,7 @@ typedef struct
 } co_tls_tcp_server_t;
 
 #define co_tcp_server_get_tls(server) \
-    ((co_tls_tcp_server_t*)server->tls)
+    ((co_tls_tcp_server_t*)server->sock.tls)
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

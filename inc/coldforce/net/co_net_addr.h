@@ -44,22 +44,6 @@ typedef struct
 
 #define CO_NET_ADDR_INIT  { 0 }
 
-#define CO_NET_ADDR_INIT_IPV4 \
-    { \
-        .sa.v4.sin_family = CO_ADDRESS_FAMILY_IPV4, \
-        .sa.v4.sin_addr = { 0 }, \
-        .sa.v4.sin_port = 0 \
-    }
-
-#define CO_NET_ADDR_INIT_IPV6 \
-    { \
-        .sa.v6.sin6_family = CO_ADDRESS_FAMILY_IPV6, \
-        .sa.v6.sin6_addr = { 0 }, \
-        .sa.v6.sin6_port = 0 \
-        .sa.v6.sin6_flowinfo = 0, \
-        .sa.v6.sin6_scope_id = 0 \
-    }
-
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 

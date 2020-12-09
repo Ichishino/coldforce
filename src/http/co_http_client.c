@@ -227,15 +227,18 @@ co_http_client_receive(
                     return;
                 }
 
-                if (!client->on_progress(
-                    client->tcp_client->sock.owner_thread,
-                    client, request, client->response,
-                    client->content_receiver.receive_size))
+                if (client->on_progress != NULL)
                 {
-                    co_http_client_resopnse(
-                        client, CO_HTTP_ERROR_CANCEL);
+                    if (!client->on_progress(
+                        client->tcp_client->sock.owner_thread,
+                        client, request, client->response,
+                        client->content_receiver.receive_size))
+                    {
+                        co_http_client_resopnse(
+                            client, CO_HTTP_ERROR_CANCEL);
 
-                    return;
+                        return;
+                    }
                 }
             }
             else if (result == CO_HTTP_PARSE_MORE_DATA)
@@ -335,7 +338,7 @@ co_http_client_on_connect(
 
     if (error_code == 0)
     {
-        if (tcp_client->tls != NULL)
+        if (tcp_client->sock.tls != NULL)
         {
             co_tls_tcp_start_handshake_async(tcp_client,
                 (co_tls_tcp_handshake_fn)co_http_client_on_tls_handshake);

@@ -40,20 +40,17 @@ typedef struct co_udp_t
 {
     co_socket_t sock;
 
-    co_udp_receive_fn on_receive_ready;
-
     bool bound_local_net_addr;
     uint32_t sock_event_flags;
 
     co_udp_send_fn on_send_complete;
+    co_udp_receive_fn on_receive_ready;
 
 #ifdef CO_OS_WIN
     co_win_udp_extension_t win;
 #else
     co_queue_t* send_queue;
 #endif
-
-    void* tls;
 
 } co_udp_t;
 

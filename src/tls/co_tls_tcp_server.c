@@ -53,7 +53,7 @@ co_tls_tcp_server_on_accept_ready(
         return;
     }
 
-    client->tls = client_tls;
+    client->sock.tls = client_tls;
 
     co_tls_tcp_server_t* server_tls = co_tcp_server_get_tls(server);
 
@@ -96,7 +96,7 @@ co_tls_tcp_server_create(
 
     co_tls_tcp_server_setup(tls, tls_ctx);
 
-    server->tls = tls;
+    server->sock.tls = tls;
 
     return server;
 }
@@ -108,8 +108,8 @@ co_tls_tcp_server_destroy(
 {
     if (server != NULL)
     {
-        co_tls_tcp_server_cleanup(server->tls);
-        co_mem_free(server->tls);
+        co_tls_tcp_server_cleanup(server->sock.tls);
+        co_mem_free(server->sock.tls);
 
         co_tcp_server_destroy(server);
     }

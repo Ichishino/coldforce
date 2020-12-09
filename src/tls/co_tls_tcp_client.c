@@ -298,8 +298,8 @@ co_tls_tcp_client_destroy(
 {
     if (client != NULL)
     {
-        co_tls_tcp_client_cleanup(client->tls);
-        co_mem_free(client->tls);
+        co_tls_tcp_client_cleanup(client->sock.tls);
+        co_mem_free(client->sock.tls);
 
         co_tcp_client_destroy(client);
     }
@@ -333,7 +333,7 @@ co_tls_tcp_client_install(
     co_tls_tcp_client_setup(tls, tls_ctx);
     SSL_set_connect_state(tls->ssl);
 
-    client->tls = tls;
+    client->sock.tls = tls;
 
     return true;
 }

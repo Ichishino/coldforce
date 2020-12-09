@@ -147,6 +147,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\main.c" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\..\..\..\prj\vs19\co_core\co.vcxproj">
       <Project>{35f9bc66-c08b-46c0-bfde-c9b42dedae15}</Project>
     </ProjectReference>
@@ -159,9 +162,6 @@
     <ProjectReference Include="..\..\..\..\prj\vs19\co_tls\co_tls.vcxproj">
       <Project>{325fd737-e9f2-4528-b106-e009d03b0788}</Project>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\main.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

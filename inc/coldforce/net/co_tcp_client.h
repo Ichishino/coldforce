@@ -46,7 +46,6 @@ typedef struct co_tcp_client_t
 
     co_tcp_connect_fn on_connect_complete;
     co_tcp_send_fn on_send_complete;
-
     co_tcp_receive_fn on_receive_ready;
     co_tcp_close_fn on_close;
 
@@ -57,8 +56,6 @@ typedef struct co_tcp_client_t
 #else
     co_queue_t* send_queue;
 #endif
-
-    void* tls;
 
 } co_tcp_client_t;
 

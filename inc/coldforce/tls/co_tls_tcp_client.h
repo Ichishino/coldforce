@@ -32,7 +32,7 @@ typedef struct
 } co_tls_tcp_client_t;
 
 #define co_tcp_client_get_tls(client) \
-    ((co_tls_tcp_client_t*)client->tls)
+    ((co_tls_tcp_client_t*)client->sock.tls)
 
 void co_tls_tcp_client_setup(co_tls_tcp_client_t* tls, co_tls_ctx_st* tls_ctx);
 void co_tls_tcp_client_cleanup(co_tls_tcp_client_t* tls);

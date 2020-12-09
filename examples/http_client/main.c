@@ -45,14 +45,16 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     (void)arg;
 
     const char* base_url = "https://example.com";
+    const char* file_path = "/index.html";
 
-    co_net_addr_t local_net_addr = CO_NET_ADDR_INIT_IPV4;
+    co_net_addr_t local_net_addr = CO_NET_ADDR_INIT;
+    co_net_addr_set_family(&local_net_addr, CO_ADDRESS_FAMILY_IPV4);
 
     self->client = co_http_client_create(base_url, &local_net_addr, NULL);
 
     co_http_set_response_handler(self->client, (co_http_response_fn)on_my_response);
 
-    co_http_request_t* request = co_http_request_create("GET", "/index.html");
+    co_http_request_t* request = co_http_request_create("GET", file_path);
 
     // http request
     co_http_request_async(self->client, request);

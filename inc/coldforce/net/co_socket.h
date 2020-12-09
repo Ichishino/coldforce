@@ -37,6 +37,7 @@ typedef struct
 
     bool open_local;
     void* sub_class;
+    void* tls;
 
 } co_socket_t;
 

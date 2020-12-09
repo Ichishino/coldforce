@@ -76,7 +76,8 @@ void my_connect(my_app* self)
     uint16_t port = 9000;
 
     // local address
-    co_net_addr_t local_net_addr = CO_NET_ADDR_INIT_IPV4;
+    co_net_addr_t local_net_addr = CO_NET_ADDR_INIT;
+    co_net_addr_set_family(&local_net_addr, CO_ADDRESS_FAMILY_IPV4);
 
     self->client = co_tcp_client_create(&local_net_addr);
 

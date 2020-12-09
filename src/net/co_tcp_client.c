@@ -39,7 +39,6 @@ co_tcp_client_create_with(
     client->sock.handle = handle;
     client->sock.type = CO_SOCKET_TYPE_TCP_CONNECTION;
     client->sock.open_local = true;
-    client->sock.sub_class = NULL;
     client->open_remote = true;
 
     co_socket_handle_get_local_net_addr(
@@ -70,8 +69,10 @@ co_tcp_client_setup(
     client->sock.type = 0;
     client->sock.owner_thread = NULL;
     client->sock.handle = CO_SOCKET_INVALID_HANDLE;
-
     client->sock.open_local = false;
+    client->sock.sub_class = NULL;
+    client->sock.tls = NULL;
+
     client->open_remote = false;
 
     client->on_connect_complete = NULL;
@@ -80,7 +81,6 @@ co_tcp_client_setup(
     client->on_close = NULL;
 
     client->close_timer = NULL;
-    client->tls = NULL;
 
 #ifdef CO_OS_WIN
 
@@ -319,7 +319,6 @@ co_tcp_client_create(
 
     client->sock.type = CO_SOCKET_TYPE_TCP_CONNECTOR;
     client->sock.owner_thread = co_thread_get_current();
-    client->sock.sub_class = NULL;
     client->sock.open_local = true;
 
     memcpy(&client->sock.local_net_addr,
