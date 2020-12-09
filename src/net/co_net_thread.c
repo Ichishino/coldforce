@@ -23,7 +23,7 @@ co_net_thread_init(
     net_worker->on_destroy = destroy_handler;
 
     co_thread_setup(thread,
-        create_handler, co_net_worker_on_destroy,
+        create_handler, (co_destroy_fn)co_net_worker_on_destroy,
         (co_event_worker_t*)net_worker);
 }
 

@@ -30,11 +30,13 @@ typedef enum
 typedef struct
 {
     co_socket_handle_t handle;
+
     co_thread_t* owner_thread;
     co_net_addr_t local_net_addr;
-    bool open_local;
-
     co_socket_type_t type;
+
+    bool open_local;
+    void* sub_class;
 
 } co_socket_t;
 

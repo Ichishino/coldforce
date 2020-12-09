@@ -117,6 +117,7 @@ co_udp_create(
     udp->sock.type = CO_SOCKET_TYPE_UDP;
     udp->sock.owner_thread = co_thread_get_current();
     udp->sock.open_local = true;
+    udp->sock.sub_class = NULL;
 
     memcpy(&udp->sock.local_net_addr,
         local_net_addr, sizeof(co_net_addr_t));
@@ -124,8 +125,8 @@ co_udp_create(
     udp->on_receive_ready = NULL;
     udp->bound_local_net_addr = false;
     udp->sock_event_flags = 0;
-
     udp->on_send_complete = NULL;
+    udp->tls = NULL;
 
 #ifdef CO_OS_WIN
 

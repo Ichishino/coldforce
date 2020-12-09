@@ -103,6 +103,7 @@ co_tcp_server_create(
     server->sock.type = CO_SOCKET_TYPE_TCP_SERVER;
     server->sock.owner_thread = co_thread_get_current();
     server->sock.open_local = true;
+    server->sock.sub_class = NULL;
 
     memcpy(&server->sock.local_net_addr,
         local_net_addr, sizeof(co_net_addr_t));

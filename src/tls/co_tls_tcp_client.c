@@ -195,8 +195,8 @@ co_tls_tcp_encrypt_data(
 
         if (pending_size > 0)
         {
-            co_byte_array_set_size(enc_data,
-                co_byte_array_get_size(enc_data) + pending_size);
+            co_byte_array_set_count(enc_data,
+                co_byte_array_get_count(enc_data) + pending_size);
         }
         else
         {
@@ -214,9 +214,6 @@ co_tls_tcp_encrypt_data(
 
     return true;
 }
-
-//---------------------------------------------------------------------------//
-//---------------------------------------------------------------------------//
 
 void
 co_tls_tcp_on_receive_handshake(
@@ -273,33 +270,23 @@ co_tls_tcp_on_receive_handshake(
 
 co_tcp_client_t*
 co_tls_tcp_client_create(
-    const co_net_addr_t* remote_net_addr,
     const co_net_addr_t* local_net_addr,
     co_tls_ctx_st* tls_ctx
 )
 {
-    co_tcp_client_t* client =
-        co_tcp_client_create(remote_net_addr, local_net_addr);
+    co_tcp_client_t* client = co_tcp_client_create(local_net_addr);
 
     if (client == NULL)
     {
         return NULL;
     }
 
-    co_tls_tcp_client_t* tls =
-        (co_tls_tcp_client_t*)co_mem_alloc(sizeof(co_tls_tcp_client_t));
-
-    if (tls == NULL)
+    if (!co_tls_tcp_client_install(client, tls_ctx))
     {
         co_tcp_client_destroy(client);
 
         return NULL;
     }
-
-    co_tls_tcp_client_setup(tls, tls_ctx);
-    SSL_set_connect_state(tls->ssl);
-
-    client->tls = tls;
 
     return client;
 }
@@ -330,20 +317,45 @@ co_tls_tcp_client_close(
 }
 
 bool
-co_tls_tcp_connect(
-    co_tcp_client_t* client
+co_tls_tcp_client_install(
+    co_tcp_client_t* client,
+    co_tls_ctx_st* tls_ctx
 )
 {
-    return co_tcp_connect(client);
+    co_tls_tcp_client_t* tls =
+        (co_tls_tcp_client_t*)co_mem_alloc(sizeof(co_tls_tcp_client_t));
+
+    if (tls == NULL)
+    {
+        return false;
+    }
+
+    co_tls_tcp_client_setup(tls, tls_ctx);
+    SSL_set_connect_state(tls->ssl);
+
+    client->tls = tls;
+
+    return true;
+}
+
+bool
+co_tls_tcp_connect(
+    co_tcp_client_t* client,
+    const co_net_addr_t* remote_net_addr
+)
+{
+    return co_tcp_connect(client, remote_net_addr);
 }
 
 bool
 co_tls_tcp_connect_async(
     co_tcp_client_t* client,
+    const co_net_addr_t* remote_net_addr,
     co_tcp_connect_fn handler
 )
 {
-    return co_tcp_connect_async(client, handler);
+    return co_tcp_connect_async(
+        client, remote_net_addr, handler);
 }
 
 bool
@@ -391,7 +403,7 @@ co_tls_tcp_send(
     {
         result = co_tcp_send(client,
             co_byte_array_get_ptr(send_data, 0),
-            co_byte_array_get_size(send_data));
+            co_byte_array_get_count(send_data));
     }
     
     co_byte_array_destroy(send_data);
@@ -415,7 +427,7 @@ co_tls_tcp_send_async(
     {
         result = co_tcp_send_async(client,
             co_byte_array_get_ptr(send_data, 0),
-            co_byte_array_get_size(send_data));
+            co_byte_array_get_count(send_data));
     }
 
     co_byte_array_destroy(send_data);

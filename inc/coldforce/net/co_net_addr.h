@@ -44,6 +44,22 @@ typedef struct
 
 #define CO_NET_ADDR_INIT  { 0 }
 
+#define CO_NET_ADDR_INIT_IPV4 \
+    { \
+        .sa.v4.sin_family = CO_ADDRESS_FAMILY_IPV4, \
+        .sa.v4.sin_addr = { 0 }, \
+        .sa.v4.sin_port = 0 \
+    }
+
+#define CO_NET_ADDR_INIT_IPV6 \
+    { \
+        .sa.v6.sin6_family = CO_ADDRESS_FAMILY_IPV6, \
+        .sa.v6.sin6_addr = { 0 }, \
+        .sa.v6.sin6_port = 0 \
+        .sa.v6.sin6_flowinfo = 0, \
+        .sa.v6.sin6_scope_id = 0 \
+    }
+
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
@@ -65,6 +81,9 @@ CO_NET_API bool co_net_addr_set_scope_id(co_net_addr_t* net_addr, uint32_t scope
 CO_NET_API bool co_net_addr_get_scope_id(const co_net_addr_t* net_addr, uint32_t* scope_id);
 
 CO_NET_API bool co_net_addr_get_as_string(const co_net_addr_t* net_addr, char* buffer);
+
+CO_NET_API bool co_net_addr_is_equal(
+    const co_net_addr_t* net_addr1, const co_net_addr_t* net_addr2);
 
 #define co_get_local_net_addr_as_string(sock, buff) \
     co_net_addr_get_as_string(co_socket_get_local_net_addr( \

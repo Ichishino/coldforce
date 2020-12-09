@@ -10,8 +10,7 @@
 
 co_array_t*
 co_array_create(
-    size_t element_size,
-    co_array_ctx_t* ctx)
+    size_t element_size)
 {
     co_array_t* arr =
         (co_array_t*)co_mem_alloc(sizeof(co_array_t));
@@ -21,20 +20,9 @@ co_array_create(
         return NULL;
     }
 
-    size_t capacity = 0;
-
-    if (ctx != NULL)
-    {
-        capacity = ctx->initial_capacity;
-    }
-
-    if (capacity == 0)
-    {
-        capacity = CO_ARRAY_DEFAULT_CAPACITY;
-    }
-
+    arr->capacity = 8;
     arr->buffer =
-        (uint8_t*)co_mem_alloc(element_size * capacity);
+        (uint8_t*)co_mem_alloc(element_size * arr->capacity);
 
     if (arr->buffer == NULL)
     {
@@ -45,7 +33,6 @@ co_array_create(
 
     arr->count = 0;
     arr->element_size = element_size;
-    arr->capacity = capacity;
 
     return arr;
 }
@@ -60,6 +47,21 @@ co_array_destroy(
         co_mem_free(arr->buffer);
         co_mem_free(arr);
     }
+}
+
+void*
+co_array_detach(
+    co_array_t* arr
+)
+{
+    void* ptr = arr->buffer;
+
+    arr->capacity = 8;
+    arr->buffer =
+        (uint8_t*)co_mem_alloc(arr->element_size * arr->capacity);
+    arr->count = 0;
+
+    return ptr;
 }
 
 bool
@@ -117,7 +119,7 @@ void
 co_array_set(
     co_array_t* arr,
     size_t index,
-    void* data,
+    const void* data,
     size_t count
 )
 {
@@ -150,7 +152,7 @@ co_array_get(
 void
 co_array_add(
     co_array_t* arr,
-    void* data,
+    const void* data,
     size_t count
 )
 {

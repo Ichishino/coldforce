@@ -53,6 +53,8 @@ typedef struct co_udp_t
     co_queue_t* send_queue;
 #endif
 
+    void* tls;
+
 } co_udp_t;
 
 void co_udp_on_send_ready(co_udp_t* udp);

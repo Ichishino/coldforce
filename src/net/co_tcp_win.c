@@ -254,12 +254,12 @@ co_win_tcp_client_cleanup(
 bool
 co_win_tcp_client_connector_setup(
     co_tcp_client_t* client,
-    const co_net_addr_t* remote_net_addr
+    const co_net_addr_t* local_net_addr
 )
 {
     client->sock.handle =
         co_win_tcp_socket_create(
-            remote_net_addr->sa.any.ss_family);
+            local_net_addr->sa.any.ss_family);
 
     if (client->sock.handle == CO_SOCKET_INVALID_HANDLE)
     {
@@ -473,7 +473,8 @@ co_win_tcp_client_receive(
 
 bool
 co_win_tcp_client_connect_start(
-    co_tcp_client_t* client
+    co_tcp_client_t* client,
+    const co_net_addr_t* remote_net_addr
 )
 {
     memset(&client->win.io_connect_ctx->ol,
@@ -483,7 +484,7 @@ co_win_tcp_client_connect_start(
 
     BOOL result = co_win_connect_ex(
         client->sock.handle,
-        (const struct sockaddr*)&client->remote_net_addr,
+        (const struct sockaddr*)remote_net_addr,
         sizeof(co_net_addr_t),
         NULL, 0, &sent_size,
         (LPOVERLAPPED)client->win.io_connect_ctx);

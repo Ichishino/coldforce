@@ -115,6 +115,17 @@ co_tls_tcp_server_destroy(
     }
 }
 
+void
+co_tls_tcp_server_close(
+    co_tcp_server_t* server
+)
+{
+    if (server != NULL)
+    {
+        co_tcp_server_close(server);
+    }
+}
+
 bool
 co_tls_tcp_server_start(
     co_tcp_server_t* server,

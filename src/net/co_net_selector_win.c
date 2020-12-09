@@ -44,7 +44,7 @@ co_net_selector_create(
     }
 
     net_selector->ol_entries =
-        co_array_create(sizeof(OVERLAPPED_ENTRY), NULL);
+        co_array_create(sizeof(OVERLAPPED_ENTRY));
 
     net_selector->sock_count = 0;
     co_array_set_count(net_selector->ol_entries, 1);

@@ -77,14 +77,16 @@ void co_tcp_client_on_close(co_tcp_client_t* client);
 //---------------------------------------------------------------------------//
 
 CO_NET_API co_tcp_client_t* co_tcp_client_create(
-    const co_net_addr_t* remote_net_addr, const co_net_addr_t* local_net_addr);
+    const co_net_addr_t* local_net_addr);
 
 CO_NET_API void co_tcp_client_destroy(co_tcp_client_t* client);
 CO_NET_API void co_tcp_client_close(co_tcp_client_t* client);
 
-CO_NET_API int co_tcp_connect(co_tcp_client_t* client);
+CO_NET_API int co_tcp_connect(
+    co_tcp_client_t* client, const co_net_addr_t* remote_net_addr);
 CO_NET_API bool co_tcp_connect_async(
-    co_tcp_client_t* client, co_tcp_connect_fn handler);
+    co_tcp_client_t* client, const co_net_addr_t* remote_net_addr,
+    co_tcp_connect_fn handler);
 
 CO_NET_API bool co_tcp_send(
     co_tcp_client_t* client, const void* data, size_t data_size);

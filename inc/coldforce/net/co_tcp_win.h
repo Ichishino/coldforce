@@ -71,7 +71,7 @@ void co_win_tcp_client_cleanup(
     struct co_tcp_client_t* client);
 
 bool co_win_tcp_client_connector_setup(
-    struct co_tcp_client_t* client, const co_net_addr_t* remote_net_addr);
+    struct co_tcp_client_t* client, const co_net_addr_t* local_net_addr);
 void co_win_tcp_client_connector_cleanup(
     struct co_tcp_client_t* client);
 
@@ -85,7 +85,8 @@ bool co_win_tcp_client_receive_start(struct co_tcp_client_t* client);
 bool co_win_tcp_client_receive(struct co_tcp_client_t* client,
     void* buffer, size_t buffer_size, size_t* data_size);
 
-bool co_win_tcp_client_connect_start(struct co_tcp_client_t* client);
+bool co_win_tcp_client_connect_start(
+    struct co_tcp_client_t* client, const co_net_addr_t* remote_net_addr);
 
 bool co_win_socket_option_update_connect_context(
     co_socket_t* sock);

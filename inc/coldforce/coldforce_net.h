@@ -5,6 +5,8 @@
 // headers
 //---------------------------------------------------------------------------//
 
+#include <coldforce/coldforce.h>
+
 #include <coldforce/net/co_net_addr.h>
 #include <coldforce/net/co_net_addr_resolve.h>
 #include <coldforce/net/co_net_thread.h>

@@ -249,3 +249,39 @@ co_net_addr_get_as_string(
 
     return true;
 }
+
+bool
+co_net_addr_is_equal(
+    const co_net_addr_t* net_addr1,
+    const co_net_addr_t* net_addr2
+)
+{
+    if (net_addr1->sa.any.ss_family != net_addr2->sa.any.ss_family)
+    {
+        return false;
+    }
+
+    char address1[256] = { 0 };
+    char address2[256] = { 0 };
+
+    co_net_addr_get_address(net_addr1, address1, sizeof(address1));
+    co_net_addr_get_address(net_addr2, address2, sizeof(address2));
+
+    if (strcmp(address1, address2) != 0)
+    {
+        return false;
+    }
+
+    uint16_t port1 = 0;
+    uint16_t port2 = 0;
+
+    co_net_addr_get_port(net_addr1, &port1);
+    co_net_addr_get_port(net_addr2, &port2);
+
+    if (port1 != port2)
+    {
+        return false;
+    }
+
+    return true;
+}

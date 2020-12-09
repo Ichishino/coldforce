@@ -1,4 +1,3 @@
-#include <coldforce/coldforce.h>
 #include <coldforce/coldforce_net.h>
 
 #include <stdio.h>
@@ -14,7 +13,7 @@ typedef struct
 
 } my_app;
 
-co_tcp_client_t* create_my_tcp_client();
+void my_connect(my_app* self);
 
 void on_my_tcp_receive(my_app* self, co_tcp_client_t* client)
 {
@@ -67,32 +66,35 @@ void on_my_retry_timer(my_app* self, co_timer_t* timer)
 {
     (void)timer;
 
-    // recreate
-    self->client = create_my_tcp_client();
-
     // connect retry
-    co_tcp_connect_async(
-        self->client, (co_tcp_connect_fn)on_my_tcp_connect);
-
-    printf("retry connect\n");
+    my_connect(self);
 }
 
-co_tcp_client_t* create_my_tcp_client()
+void my_connect(my_app* self)
 {
     const char* ip_address = "127.0.0.1";
     uint16_t port = 9000;
+
+    // local address
+    co_net_addr_t local_net_addr = CO_NET_ADDR_INIT_IPV4;
+
+    self->client = co_tcp_client_create(&local_net_addr);
+
+    co_tcp_set_receive_handler(self->client, (co_tcp_receive_fn)on_my_tcp_receive);
+    co_tcp_set_close_handler(self->client, (co_tcp_close_fn)on_my_tcp_close);
 
     // remote address
     co_net_addr_t remote_net_addr = CO_NET_ADDR_INIT;
     co_net_addr_set_address(&remote_net_addr, ip_address);
     co_net_addr_set_port(&remote_net_addr, port);
 
-    co_tcp_client_t* client = co_tcp_client_create(&remote_net_addr, NULL);
+    // connect async
+    co_tcp_connect_async(
+        self->client, &remote_net_addr, (co_tcp_connect_fn)on_my_tcp_connect);
 
-    co_tcp_set_receive_handler(client, (co_tcp_receive_fn)on_my_tcp_receive);
-    co_tcp_set_close_handler(client, (co_tcp_close_fn)on_my_tcp_close);
-
-    return client;
+    char remote_str[64];
+    co_net_addr_get_as_string(&remote_net_addr, remote_str);
+    printf("connect to %s\n", remote_str);
 }
 
 bool on_my_app_create(my_app* self, const co_arg_st* arg)
@@ -103,16 +105,8 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     self->retry_timer = co_timer_create(
         5000, (co_timer_fn)on_my_retry_timer, false, 0);
 
-    // create my tcp client
-    self->client = create_my_tcp_client();
-
-    // connect async
-    co_tcp_connect_async(
-        self->client, (co_tcp_connect_fn)on_my_tcp_connect);
-
-    char remote_str[64];
-    co_get_remote_net_addr_as_string(self->client, remote_str);
-    printf("connect to %s\n", remote_str);
+    // connect
+    my_connect(self);
 
     return true;
 }

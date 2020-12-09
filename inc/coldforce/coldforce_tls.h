@@ -5,6 +5,9 @@
 // headers
 //---------------------------------------------------------------------------//
 
+#include <coldforce/coldforce.h>
+#include <coldforce/coldforce_net.h>
+
 #include <coldforce/tls/co_tls.h>
 #include <coldforce/tls/co_tls_tcp_client.h>
 #include <coldforce/tls/co_tls_tcp_server.h>

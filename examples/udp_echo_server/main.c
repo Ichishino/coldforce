@@ -1,4 +1,3 @@
-#include <coldforce/coldforce.h>
 #include <coldforce/coldforce_net.h>
 
 #include <stdio.h>
@@ -47,8 +46,7 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     uint16_t port = 9001;
 
     // local address
-    co_net_addr_t local_net_addr = CO_NET_ADDR_INIT;
-    co_net_addr_set_family(&local_net_addr, CO_ADDRESS_FAMILY_IPV4);
+    co_net_addr_t local_net_addr = CO_NET_ADDR_INIT_IPV4;
     co_net_addr_set_port(&local_net_addr, port);
 
     self->udp = co_udp_create(&local_net_addr);

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <coldforce/coldforce.h>
 #include <coldforce/coldforce_net.h>
 
 // my client thread object

@@ -94,7 +94,7 @@ co_net_selector_create(
     net_selector->sock_count = 0;
 
     net_selector->e_entries =
-        co_array_create(sizeof(struct epoll_event), NULL);
+        co_array_create(sizeof(struct epoll_event));
 
     return net_selector;
 }

@@ -39,6 +39,7 @@ co_tcp_client_create_with(
     client->sock.handle = handle;
     client->sock.type = CO_SOCKET_TYPE_TCP_CONNECTION;
     client->sock.open_local = true;
+    client->sock.sub_class = NULL;
     client->open_remote = true;
 
     co_socket_handle_get_local_net_addr(
@@ -159,6 +160,9 @@ co_tcp_client_on_connect_complete(
             co_socket_get_net_worker(&client->sock),
             client);
 #endif
+
+        co_socket_handle_get_remote_net_addr(
+            client->sock.handle, &client->remote_net_addr);
     }
 
     if (client->on_connect_complete != NULL)
@@ -295,7 +299,6 @@ co_tcp_client_on_close(
 
 co_tcp_client_t*
 co_tcp_client_create(
-    const co_net_addr_t* remote_net_addr,
     const co_net_addr_t* local_net_addr
 )
 {
@@ -316,23 +319,14 @@ co_tcp_client_create(
 
     client->sock.type = CO_SOCKET_TYPE_TCP_CONNECTOR;
     client->sock.owner_thread = co_thread_get_current();
+    client->sock.sub_class = NULL;
+    client->sock.open_local = true;
 
-    memcpy(&client->remote_net_addr,
-        remote_net_addr, sizeof(co_net_addr_t));
-
-    if (local_net_addr != NULL)
-    {
-        memcpy(&client->sock.local_net_addr,
-            local_net_addr, sizeof(co_net_addr_t));
-    }
-    else
-    {
-        client->sock.local_net_addr.sa.any.ss_family =
-            client->remote_net_addr.sa.any.ss_family;
-    }
+    memcpy(&client->sock.local_net_addr,
+        local_net_addr, sizeof(co_net_addr_t));
 
 #ifdef CO_OS_WIN
-    co_win_tcp_client_connector_setup(client, &client->remote_net_addr);
+    co_win_tcp_client_connector_setup(client, &client->sock.local_net_addr);
 #else
     client->sock.handle = co_socket_handle_create(
         client->sock.local_net_addr.sa.any.ss_family, SOCK_STREAM, IPPROTO_TCP);
@@ -358,10 +352,8 @@ co_tcp_client_create(
         co_tcp_client_cleanup(client);
         co_mem_free(client);
 
-        return false;
+        return NULL;
     }
-
-    client->sock.open_local = true;
 
     return client;
 }
@@ -387,16 +379,20 @@ co_tcp_client_destroy(
 
 int
 co_tcp_connect(
-    co_tcp_client_t* client
+    co_tcp_client_t* client,
+    const co_net_addr_t* remote_net_addr
 )
 {
     co_socket_handle_set_blocking(client->sock.handle, true);
 
     if (!co_socket_handle_connect(
-        client->sock.handle, &client->remote_net_addr))
+        client->sock.handle, remote_net_addr))
     {
         return co_socket_get_error();
     }
+
+    co_socket_handle_get_remote_net_addr(
+        client->sock.handle, &client->remote_net_addr);
 
     co_net_worker_register_tcp_connection(
         co_socket_get_net_worker(&client->sock),
@@ -413,6 +409,7 @@ co_tcp_connect(
 bool
 co_tcp_connect_async(
     co_tcp_client_t* client,
+    const co_net_addr_t* remote_net_addr,
     co_tcp_connect_fn handler
 )
 {
@@ -424,7 +421,7 @@ co_tcp_connect_async(
 
 #ifdef CO_OS_WIN
 
-    if (!co_win_tcp_client_connect_start(client))
+    if (!co_win_tcp_client_connect_start(client, remote_net_addr))
     {
         return false;
     }
@@ -432,7 +429,7 @@ co_tcp_connect_async(
 #else
 
     if (co_socket_handle_connect(
-        client->sock.handle, &client->remote_net_addr))
+        client->sock.handle, remote_net_addr))
     {
         co_event_send(client->sock.owner_thread,
             CO_NET_EVENT_ID_TCP_CONNECT_COMPLETE, (uintptr_t)client, 0);
@@ -584,8 +581,6 @@ co_tcp_receive_all(
     co_byte_array_t* byte_array
 )
 {
-    co_byte_array_set_size(byte_array, 0);
-
     ssize_t index = 0;
 
     for (;;)
@@ -599,7 +594,7 @@ co_tcp_receive_all(
             break;
         }
 
-        co_byte_array_set(byte_array, index, buffer, size);
+        co_byte_array_add(byte_array, buffer, size);
 
         index += size;
     }

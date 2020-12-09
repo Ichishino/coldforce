@@ -75,8 +75,12 @@
 #   define CO_EXTERN_C_END
 #endif
 
-#ifndef CO_OS_WIN
-#include <unistd.h>
+#ifdef CO_OS_WIN
+#   ifdef CO_DEBUG
+#       include <coldforce/core/co_debug.h>
+#   endif
+#else
+#   include <unistd.h>
 #endif
 
 CO_EXTERN_C_BEGIN
@@ -86,11 +90,11 @@ CO_EXTERN_C_BEGIN
 //---------------------------------------------------------------------------//
 
 #ifdef CO_OS_WIN
-#ifdef _WIN64
-typedef long ssize_t;
-#else
-typedef int ssize_t;
-#endif
+#   ifdef _WIN64
+        typedef long ssize_t;
+#   else
+        typedef int ssize_t;
+#   endif
 #endif
 
 #define CO_INFINITE     0xFFFFFFFF
