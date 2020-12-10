@@ -115,20 +115,21 @@ co_http_response_deserialize(
 
 void
 co_http_response_print_header(
-    const co_http_response_t* response,
-    FILE* fp
+    const co_http_response_t* response
 )
 {
     if (response != NULL)
     {
-        fprintf(fp, "HTTP/%s %d %s\n",
+        printf("--------\n");
+
+        printf("HTTP/%s %d %s\n",
             co_http_response_get_version(response),
             co_http_response_get_status_code(response),
             co_http_response_get_reason_phrase(response));
 
-        co_http_header_print(&response->message.header, fp);
+        co_http_header_print(&response->message.header);
 
-        fflush(fp);
+        printf("--------\n");
     }
 }
 

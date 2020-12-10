@@ -531,6 +531,12 @@ co_http_client_create(
         return NULL;
     }
 
+    if (secure)
+    {
+        co_tls_tcp_client_set_host_name(
+            client->tcp_client, client->base_url->host);
+    }
+
     client->tcp_client->sock.sub_class = client;
 
     client->connecting = false;

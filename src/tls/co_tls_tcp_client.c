@@ -12,6 +12,22 @@
 //---------------------------------------------------------------------------//
 
 void
+co_tls_tcp_on_info(
+    const SSL* ssl,
+    int type,
+    int value
+)
+{
+    printf("0x%08X-%s %s (%d)\n",
+        type, SSL_alert_type_string(value), SSL_state_string_long(ssl), value);
+
+    if (type == SSL_CB_HANDSHAKE_DONE)
+    {
+        printf("%s %s\n", SSL_get_version(ssl), SSL_get_cipher_name(ssl));
+    }
+}
+
+void
 co_tls_tcp_client_setup(
     co_tls_tcp_client_t* tls,
     co_tls_ctx_st* tls_ctx
@@ -30,7 +46,12 @@ co_tls_tcp_client_setup(
 
     tls->ctx.ssl_ctx = ssl_ctx;
     tls->ssl = SSL_new(tls->ctx.ssl_ctx);
-
+/*
+    if (SSL_CTX_get_info_callback(ssl_ctx) == NULL)
+    {
+        SSL_CTX_set_info_callback(ssl_ctx, co_tls_tcp_on_info);
+    }
+*/
     BIO* internal_bio = NULL;
 
     BIO_new_bio_pair(&internal_bio, 0, &tls->network_bio, 0);
@@ -336,6 +357,16 @@ co_tls_tcp_client_install(
     client->sock.tls = tls;
 
     return true;
+}
+
+void
+co_tls_tcp_client_set_host_name(
+    co_tcp_client_t* client,
+    const char* host_name
+)
+{
+    SSL_set_tlsext_host_name(
+        co_tcp_client_get_tls(client)->ssl, host_name);
 }
 
 bool

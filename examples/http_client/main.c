@@ -16,19 +16,26 @@ void on_my_response(my_app* self, co_http_client_t* client,
 {
     (void)self;
     (void)client;
-
-    printf("%s%s\n",
-        co_http_client_get_base_url(client),
-        co_http_request_get_url(request));
+    (void)request;
 
     if (error_code == 0)
     {
         uint16_t status_code = co_http_response_get_status_code(response);
-        const void* content = co_http_response_get_content(response);
         size_t content_size = co_http_response_get_content_size(response);
 
         printf("status code: %d\n", status_code);
-        printf("content size: %zu\n\n", content_size);
+        printf("content size: %zu\n", content_size);
+
+        const co_http_header_t* header = co_http_response_get_const_header(response);
+        const char* content_type = co_http_header_get_item(header, "Content-Type");
+
+        if (content_type != NULL)
+        {
+            printf("content type: %s\n", content_type);
+        }
+
+        const void* content = co_http_response_get_content(response);
+
         printf("%s\n", (const char*)content);
     }
     else
@@ -45,7 +52,7 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     (void)arg;
 
     const char* base_url = "https://example.com";
-    const char* file_path = "/index.html";
+    const char* file_path = "/";
 
     co_net_addr_t local_net_addr = CO_NET_ADDR_INIT;
     co_net_addr_set_family(&local_net_addr, CO_ADDRESS_FAMILY_IPV4);
@@ -56,7 +63,11 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
 
     co_http_request_t* request = co_http_request_create("GET", file_path);
 
-    // http request
+    // set header
+    co_http_header_t* header = co_http_request_get_header(request);
+    co_http_header_add_item(header, "Accept", "text/html");
+
+    // send request
     co_http_request_async(self->client, request);
 
     return true;

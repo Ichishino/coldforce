@@ -105,20 +105,21 @@ co_http_request_deserialize(
 
 void
 co_http_request_print_header(
-    const co_http_request_t* request,
-    FILE* fp
+    const co_http_request_t* request
 )
 {
     if (request != NULL)
     {
-        fprintf(fp, "%s %s HTTP/%s\n",
+        printf("--------\n");
+
+        printf("%s %s HTTP/%s\n",
             co_http_request_get_method(request),
             co_http_request_get_url(request),
             co_http_request_get_version(request));
 
-        co_http_header_print(&request->message.header, fp);
+        co_http_header_print(&request->message.header);
 
-        fflush(fp);
+        printf("--------\n");
     }
 }
 

@@ -50,6 +50,9 @@ CO_TLS_API void co_tls_tcp_client_close(co_tcp_client_t* client);
 CO_TLS_API bool co_tls_tcp_client_install(
     co_tcp_client_t* client, co_tls_ctx_st* tls_ctx);
 
+CO_TLS_API void co_tls_tcp_client_set_host_name(
+    co_tcp_client_t* client, const char* host_name);
+
 CO_TLS_API bool co_tls_tcp_connect(co_tcp_client_t* client,
     const co_net_addr_t* remote_net_addr);
 CO_TLS_API bool co_tls_tcp_connect_async(co_tcp_client_t* client,

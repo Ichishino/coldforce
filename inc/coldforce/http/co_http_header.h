@@ -13,12 +13,6 @@ CO_EXTERN_C_BEGIN
 // http header
 //---------------------------------------------------------------------------//
 
-#define CO_HTTP_HEADER_CONTENT_LENGTH               "Content-Length"
-#define CO_HTTP_HEADER_HOST                         "Host"
-#define CO_HTTP_HEADER_TRANSFER_ENCODING            "Transfer-Encoding"
-#define CO_HTTP_HEADER_SET_COOKIE                   "Set-Cookie"
-#define CO_HTTP_HEADER_COOKIE                       "Cookie"
-
 typedef struct
 {
     char* name;
@@ -40,7 +34,7 @@ void co_http_header_serialize(
 int co_http_header_deserialize(
     const co_byte_array_t* data, size_t* index, co_http_header_t* header);
 
-void co_http_header_print(const co_http_header_t* header, FILE* fp);
+void co_http_header_print(const co_http_header_t* header);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

@@ -180,8 +180,7 @@ co_http_header_deserialize(
 
 void
 co_http_header_print(
-    const co_http_header_t* header,
-    FILE* fp
+    const co_http_header_t* header
 )
 {
     co_list_iterator_t* it =
@@ -194,7 +193,7 @@ co_http_header_print(
         const co_http_header_item_t* item =
             (const co_http_header_item_t*)data->value;
 
-        fprintf(fp, "%s: %s\n", item->name, item->value);
+        printf("%s: %s\n", item->name, item->value);
     }
 }
 

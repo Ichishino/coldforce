@@ -52,6 +52,12 @@ CO_EXTERN_C_BEGIN
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
+#define CO_HTTP_HEADER_CONTENT_LENGTH       "Content-Length"
+#define CO_HTTP_HEADER_HOST                 "Host"
+#define CO_HTTP_HEADER_TRANSFER_ENCODING    "Transfer-Encoding"
+#define CO_HTTP_HEADER_SET_COOKIE           "Set-Cookie"
+#define CO_HTTP_HEADER_COOKIE               "Cookie"
+
 CO_EXTERN_C_END
 
 #endif // CO_HTTP_H_INCLUDED
