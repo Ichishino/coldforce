@@ -16,7 +16,6 @@ co_http_response_serialize(
     co_byte_array_t* buffer
 )
 {
-    co_byte_array_add_string(buffer, "HTTP/");
     co_byte_array_add_string(buffer, response->version);
     co_byte_array_add_string(buffer, CO_HTTP_SP);
 
@@ -52,12 +51,7 @@ co_http_response_deserialize(
 
     size_t length = (new_line - data_ptr);
     size_t item_length = 0;
-    size_t temp_index = 5;
-
-    if (co_string_case_compare_n(data_ptr, "HTTP/", temp_index) != 0)
-    {
-        return CO_HTTP_PARSE_ERROR;
-    }
+    size_t temp_index = 0;
 
     length -= temp_index;
 
@@ -122,7 +116,7 @@ co_http_response_print_header(
     {
         printf("--------\n");
 
-        printf("HTTP/%s %d %s\n",
+        printf("%s %d %s\n",
             co_http_response_get_version(response),
             co_http_response_get_status_code(response),
             co_http_response_get_reason_phrase(response));

@@ -114,7 +114,7 @@ void on_my_http_request(my_app* self, co_http_client_t* client, const co_http_re
         if (strcmp(url->path, "/stop") == 0)
         {
             // server stop command
-            // http://127.0.0.1:9443/stop
+            // https://127.0.0.1:9443/stop
 
             on_my_http_stop_app_request(self, client);
         }

@@ -44,7 +44,7 @@ CO_EXTERN_C_BEGIN
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-#define CO_HTTP_VERSION_1_1                 "1.1"
+#define CO_HTTP_VERSION_1_1                 "HTTP/1.1"
 
 #define CO_HTTP_HEADER_CONTENT_LENGTH       "Content-Length"
 #define CO_HTTP_HEADER_HOST                 "Host"

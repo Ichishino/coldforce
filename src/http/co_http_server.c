@@ -442,7 +442,7 @@ co_http_send_response(
         }
     }
 
-    co_http_response_set_version(response, "1.1");
+    co_http_response_set_version(response, CO_HTTP_VERSION_1_1);
 
     co_byte_array_t* buffer = co_byte_array_create();
 

@@ -26,7 +26,6 @@ co_http_request_serialize(
     }
     
     co_byte_array_add_string(buffer, CO_HTTP_SP);
-    co_byte_array_add_string(buffer, "HTTP/");
     co_byte_array_add_string(buffer, request->version);
     co_byte_array_add_string(buffer, CO_HTTP_CRLF);
 
@@ -72,7 +71,7 @@ co_http_request_deserialize(
     length -= (item_length + 1);
     temp_index += (item_length + 1);
 
-    sp = co_string_find_n(&data_ptr[temp_index], " HTTP/", length);
+    sp = co_string_find_n(&data_ptr[temp_index], " ", length);
 
     if (sp == NULL)
     {
@@ -95,8 +94,8 @@ co_http_request_deserialize(
         return CO_HTTP_PARSE_ERROR;
     }
 
-    length -= (item_length + 6);
-    temp_index += (item_length + 6);
+    length -= (item_length + 1);
+    temp_index += (item_length + 1);
 
     item_length = length;
 
@@ -122,7 +121,7 @@ co_http_request_print_header(
     {
         printf("--------\n");
 
-        printf("%s %s HTTP/%s\n",
+        printf("%s %s %s\n",
             co_http_request_get_method(request),
             co_http_request_get_url(request)->src,
             co_http_request_get_version(request));
