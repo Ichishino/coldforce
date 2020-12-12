@@ -10,6 +10,9 @@ CO_EXTERN_C_BEGIN
 // http response
 //---------------------------------------------------------------------------//
 
+//---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
+
 typedef struct
 {
     co_http_message_t message;
@@ -31,6 +34,9 @@ CO_HTTP_API void co_http_response_print_header(const co_http_response_t* respons
 //---------------------------------------------------------------------------//
 
 CO_HTTP_API co_http_response_t* co_http_response_create(void);
+CO_HTTP_API co_http_response_t* co_http_response_create_with(
+    uint16_t status_code, const char* reason_phrase);
+
 CO_HTTP_API void co_http_response_destroy(co_http_response_t* response);
 
 CO_HTTP_API co_http_header_t* co_http_response_get_header(co_http_response_t* response);

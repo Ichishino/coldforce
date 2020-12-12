@@ -158,6 +158,25 @@ co_http_response_create(
     return response;
 }
 
+co_http_response_t*
+co_http_response_create_with(
+    uint16_t status_code,
+    const char* reason_phrase
+)
+{
+    co_http_response_t* response = co_http_response_create();
+
+    if (response == NULL)
+    {
+        return NULL;
+    }
+
+    co_http_response_set_status_code(response, status_code);
+    co_http_response_set_reason_phrase(response, reason_phrase);
+
+    return response;
+}
+
 void
 co_http_response_destroy(
     co_http_response_t* response
@@ -227,7 +246,14 @@ co_http_response_set_version(
 {
     co_mem_free(response->version);
 
-    response->version = co_string_duplicate(version);
+    if (version != NULL)
+    {
+        response->version = co_string_duplicate(version);
+    }
+    else
+    {
+        response->version = NULL;
+    }
 }
 
 const char*
@@ -263,7 +289,14 @@ co_http_response_set_reason_phrase(
 {
     co_mem_free(response->reason_phrase);
 
-    response->reason_phrase = co_string_duplicate(reason_phrase);
+    if (reason_phrase != NULL)
+    {
+        response->reason_phrase = co_string_duplicate(reason_phrase);
+    }
+    else
+    {
+        response->reason_phrase = NULL;
+    }
 }
 
 const char*

@@ -61,7 +61,7 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
 
     co_http_set_response_handler(self->client, (co_http_response_fn)on_my_response);
 
-    co_http_request_t* request = co_http_request_create("GET", file_path);
+    co_http_request_t* request = co_http_request_create_with("GET", file_path);
 
     // set header
     co_http_header_t* header = co_http_request_get_header(request);

@@ -75,7 +75,8 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     self->server = co_tcp_server_create(&local_net_addr);
 
     // socket option
-    co_socket_option_set_reuse_addr((co_socket_t*)self->server, true);
+    co_socket_option_set_reuse_addr(
+        co_tcp_server_get_socket(self->server), true);
 
     // listen start
     co_tcp_server_start(self->server,

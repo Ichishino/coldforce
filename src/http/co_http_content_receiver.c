@@ -2,6 +2,7 @@
 #include <coldforce/core/co_string.h>
 
 #include <coldforce/http/co_http_content_receiver.h>
+#include <coldforce/http/co_http_string_list.h>
 
 //---------------------------------------------------------------------------//
 // http content receiver
@@ -212,12 +213,21 @@ co_http_start_receive_content(
     const char* value = co_http_header_get_item(
         &message->header, CO_HTTP_HEADER_TRANSFER_ENCODING);
 
-    if ((value != NULL) &&
-        (co_string_case_compare(value, "chunked") == 0))
+    if (value != NULL)
     {
-        receiver->chunked = true;
+        co_http_string_item_st items[32];
+        size_t item_count = co_http_string_list_parse(value, items, 32);
+        
+        if (co_http_string_list_contains(items, item_count,
+            CO_HTTP_TRANSFER_ENCODING_CHUNKED))
+        {
+            receiver->chunked = true;
+        }
+
+        co_http_string_list_cleanup(items, item_count);
     }
-    else
+
+    if (!receiver->chunked)
     {
         co_http_header_get_content_length(
             &message->header, &receiver->size);

@@ -53,7 +53,8 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     self->udp = co_udp_create(&local_net_addr);
 
     // socket option
-    co_socket_option_set_send_buffer((co_socket_t*)self->udp, 10000);
+    co_socket_option_set_send_buffer(
+        co_udp_get_socket(self->udp), 10000);
 
     // send timer
     self->send_counter = 0;

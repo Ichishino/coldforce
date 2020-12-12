@@ -59,6 +59,8 @@ CO_NET_API bool co_tcp_accept(
 CO_NET_API void co_tcp_set_transfer_handler(
     co_thread_t* thread, co_tcp_transfer_fn handler);
 
+CO_NET_API co_socket_t* co_tcp_server_get_socket(co_tcp_server_t* server);
+
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 

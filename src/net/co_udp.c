@@ -414,3 +414,11 @@ co_udp_set_send_complete_handler(
 {
     udp->on_send_complete = handler;
 }
+
+co_socket_t*
+co_udp_get_socket(
+    co_udp_t* udp
+)
+{
+    return &udp->sock;
+}

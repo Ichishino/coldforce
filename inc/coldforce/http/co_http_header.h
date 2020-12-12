@@ -13,6 +13,9 @@ CO_EXTERN_C_BEGIN
 // http header
 //---------------------------------------------------------------------------//
 
+//---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
+
 typedef struct
 {
     char* name;
@@ -59,6 +62,9 @@ CO_HTTP_API bool co_http_header_add_item(
 
 CO_HTTP_API void co_http_header_remove_item(co_http_header_t* header, const char* name);
 CO_HTTP_API void co_http_header_remove_all_values(co_http_header_t* header, const char* name);
+
+//---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
 
 CO_HTTP_API void co_http_header_set_content_length(co_http_header_t* header, size_t length);
 CO_HTTP_API bool co_http_header_get_content_length(const co_http_header_t* header, size_t* length);

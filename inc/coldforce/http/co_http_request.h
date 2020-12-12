@@ -13,6 +13,9 @@ CO_EXTERN_C_BEGIN
 // http request
 //---------------------------------------------------------------------------//
 
+//---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
+
 typedef struct
 {
     co_http_message_t message;
@@ -36,7 +39,9 @@ CO_HTTP_API void co_http_request_print_header(const co_http_request_t* request);
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-CO_HTTP_API co_http_request_t* co_http_request_create(const char* method, const char* url_str);
+CO_HTTP_API co_http_request_t* co_http_request_create(void);
+CO_HTTP_API co_http_request_t* co_http_request_create_with(const char* method, const char* url_str);
+
 CO_HTTP_API void co_http_request_destroy(co_http_request_t* request);
 
 CO_HTTP_API co_http_header_t* co_http_request_get_header(co_http_request_t* request);
@@ -49,7 +54,7 @@ CO_HTTP_API const void* co_http_request_get_content(const co_http_request_t* req
 CO_HTTP_API size_t co_http_request_get_content_size(const co_http_request_t* request);
 
 CO_HTTP_API void co_http_request_set_url(co_http_request_t* request, const char* url_str);
-CO_HTTP_API const char* co_http_request_get_url(const co_http_request_t* request);
+CO_HTTP_API const co_http_url_st* co_http_request_get_url(const co_http_request_t* request);
 
 CO_HTTP_API void co_http_request_set_method(co_http_request_t* request, const char* method);
 CO_HTTP_API const char* co_http_request_get_method(const co_http_request_t* request);

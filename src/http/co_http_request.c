@@ -83,7 +83,17 @@ co_http_request_deserialize(
 
     item_length = sp - &data_ptr[temp_index];
 
-    char* url = co_string_duplicate_n(&data_ptr[temp_index], item_length);
+    char* url_str = co_string_duplicate_n(&data_ptr[temp_index], item_length);
+
+    co_http_url_st* url = co_http_url_create(url_str);
+
+    if (url->path == NULL)
+    {
+        co_mem_free(method);
+        co_http_url_destroy(url);
+
+        return CO_HTTP_PARSE_ERROR;
+    }
 
     length -= (item_length + 6);
     temp_index += (item_length + 6);
@@ -93,10 +103,10 @@ co_http_request_deserialize(
     char* version = co_string_duplicate_n(&data_ptr[temp_index], item_length);
 
     request->method = method;
-    request->url = co_http_url_create(url);
+    request->url = url;
     request->version = version;
 
-    co_mem_free(url);
+    co_mem_free(url_str);
 
     (*index) += (new_line - data_ptr) + CO_HTTP_CRLF_LENGTH;
 
@@ -114,7 +124,7 @@ co_http_request_print_header(
 
         printf("%s %s HTTP/%s\n",
             co_http_request_get_method(request),
-            co_http_request_get_url(request),
+            co_http_request_get_url(request)->src,
             co_http_request_get_version(request));
 
         co_http_header_print(&request->message.header);
@@ -128,8 +138,7 @@ co_http_request_print_header(
 
 co_http_request_t*
 co_http_request_create(
-    const char* method,
-    const char* url_str
+void
 )
 {
     co_http_request_t* request =
@@ -147,7 +156,23 @@ co_http_request_create(
     request->version = NULL;
     request->save_file_path = NULL;
 
-    co_http_request_set_method(request, method);
+    return request;
+}
+
+co_http_request_t*
+co_http_request_create_with(
+    const char* method,
+    const char* url_str
+)
+{
+    co_http_request_t* request = co_http_request_create();
+
+    if (request == NULL)
+    {
+        return NULL;
+    }
+
+    co_http_request_set_method(request, method);    
     co_http_request_set_url(request, url_str);
 
     return request;
@@ -223,20 +248,27 @@ co_http_request_set_url(
 {
     co_http_url_destroy(request->url);
 
-    request->url = co_http_url_create(url_str);
-
-    if (request->url->path == NULL)
+    if (url_str != NULL)
     {
-        request->url->path = co_string_duplicate("/");
+        request->url = co_http_url_create(url_str);
+
+        if (request->url->path == NULL)
+        {
+            request->url->path = co_string_duplicate("/");
+        }
+    }
+    else
+    {
+        request->url = NULL;
     }
 }
 
-const char*
+const co_http_url_st*
 co_http_request_get_url(
     const co_http_request_t* request
 )
 {
-    return ((request->url != NULL) ? request->url->src : NULL);
+    return request->url;
 }
 
 void
@@ -247,7 +279,14 @@ co_http_request_set_method(
 {
     co_mem_free(request->method);
 
-    request->method = co_string_duplicate(method);
+    if (method != NULL)
+    {
+        request->method = co_string_duplicate(method);
+    }
+    else
+    {
+        request->method = NULL;
+    }
 }
 
 const char*
@@ -266,7 +305,14 @@ co_http_request_set_version(
 {
     co_mem_free(request->version);
 
-    request->version = co_string_duplicate(version);
+    if (version != NULL)
+    {
+        request->version = co_string_duplicate(version);
+    }
+    else
+    {
+        request->version = NULL;
+    }
 }
 
 const char*
@@ -285,7 +331,14 @@ co_http_request_set_save_file_path(
 {
     co_mem_free(request->save_file_path);
 
-    request->save_file_path = co_string_duplicate(save_file_path);
+    if (save_file_path != NULL)
+    {
+        request->save_file_path = co_string_duplicate(save_file_path);
+    }
+    else
+    {
+        request->save_file_path = NULL;
+    }
 }
 
 const char*

@@ -397,6 +397,11 @@ co_tls_tcp_start_handshake_async(
 {
     co_tls_tcp_client_t* tls = co_tcp_client_get_tls(client);
 
+    if (tls == NULL)
+    {
+        return false;
+    }
+
     tls->on_handshake_complete = handler;
     tls->on_receive_ready = client->on_receive_ready;
     client->on_receive_ready =

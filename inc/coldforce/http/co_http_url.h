@@ -9,6 +9,9 @@ CO_EXTERN_C_BEGIN
 // http url
 //---------------------------------------------------------------------------//
 
+//---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
+
 typedef struct
 {
     char* src;
@@ -28,6 +31,14 @@ typedef struct
 
 CO_HTTP_API co_http_url_st* co_http_url_create(const char* str);
 CO_HTTP_API void co_http_url_destroy(co_http_url_st* url);
+
+//---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
+
+CO_HTTP_API bool co_http_url_component_encode(
+    const char* src, size_t src_length, char** dest, size_t* dest_length);
+CO_HTTP_API bool co_http_url_component_decode(
+    const char* src, size_t src_length, char** dest, size_t* dest_length);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

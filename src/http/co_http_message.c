@@ -44,13 +44,12 @@ co_http_message_serialize(
 
     co_byte_array_add_string(buffer, CO_HTTP_CRLF);
 
-    if (message->content.size > 0)
+    if ((message->content.ptr != NULL) &&
+        (message->content.size > 0))
     {
         co_byte_array_add(
             buffer, message->content.ptr, message->content.size);
     }
-
-    co_byte_array_add_string(buffer, CO_HTTP_CRLF);
 }
 
 int

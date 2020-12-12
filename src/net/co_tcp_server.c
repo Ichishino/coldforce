@@ -250,3 +250,11 @@ co_tcp_set_transfer_handler(
 {
     ((co_net_worker_t*)thread->event_worker)->on_tcp_transfer = handler;
 }
+
+co_socket_t*
+co_tcp_server_get_socket(
+    co_tcp_server_t* server
+)
+{
+    return &server->sock;
+}

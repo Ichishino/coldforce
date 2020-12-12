@@ -53,11 +53,11 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     self->udp = co_udp_create(&local_net_addr);
 
     // socket option
-    co_socket_option_set_reuse_addr((co_socket_t*)self->udp, true);
+    co_socket_option_set_reuse_addr(co_udp_get_socket(self->udp), true);
 #ifdef _WIN32
     co_win_udp_set_receive_buffer_size(self->udp, 10000);
 #else
-    co_socket_option_set_receive_buffer((co_socket_t*)self->udp, 10000);
+    co_socket_option_set_receive_buffer(co_udp_get_socket(self->udp), 10000);
 #endif
 
     // receive start

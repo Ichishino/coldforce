@@ -668,3 +668,11 @@ co_tcp_set_close_handler(
 {
     client->on_close = handler;
 }
+
+co_socket_t*
+co_tcp_client_get_socket(
+    co_tcp_client_t* client
+)
+{
+    return &client->sock;
+}

@@ -81,6 +81,8 @@ CO_NET_API bool co_udp_bind_local_net_addr(co_udp_t* udp);
 CO_NET_API void co_udp_set_send_complete_handler(
     co_udp_t* udp, co_udp_send_fn handler);
 
+CO_NET_API co_socket_t* co_udp_get_socket(co_udp_t* udp);
+
 #ifdef CO_OS_WIN
 CO_NET_API size_t co_win_udp_get_receive_data_size(const co_udp_t* udp);
 CO_NET_API void co_win_udp_set_receive_buffer_size(co_udp_t* udp, size_t new_size);
