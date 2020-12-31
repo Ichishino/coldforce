@@ -193,7 +193,7 @@ co_http_content_receiver_clear(
     receiver->size = 0;
     receiver->receive_size = 0;
     
-    co_byte_array_set_count(receiver->data, 0);
+    co_byte_array_clear(receiver->data);
 
     if (receiver->fp != NULL)
     {
@@ -210,7 +210,7 @@ co_http_start_receive_content(
     const char* file_path
 )
 {
-    const char* value = co_http_header_get_item(
+    const char* value = co_http_header_get_field(
         &message->header, CO_HTTP_HEADER_TRANSFER_ENCODING);
 
     if (value != NULL)
@@ -293,5 +293,5 @@ co_http_content_more_data(
 )
 {
     receiver->index = 0;
-    co_byte_array_set_count(receive_data, 0);
+    co_byte_array_clear(receive_data);
 }

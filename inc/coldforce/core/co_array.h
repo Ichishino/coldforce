@@ -31,10 +31,13 @@ CO_API void co_array_destroy(co_array_t* arr);
 
 CO_API void* co_array_detach(co_array_t* arr);
 
+CO_API void co_array_clear(co_array_t* arr);
+
 CO_API bool co_array_set_count(co_array_t* arr, size_t count);
 CO_API size_t co_array_get_count(const co_array_t* arr);
 
 CO_API void* co_array_get_ptr(co_array_t* arr, size_t index);
+CO_API const void* co_array_get_const_ptr(const co_array_t* arr, size_t index);
 
 CO_API void co_array_set(co_array_t* arr,
     size_t index, const void* data, size_t count);

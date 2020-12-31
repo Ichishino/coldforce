@@ -24,6 +24,7 @@ typedef struct
 
     BIO* network_bio;
 
+    co_tcp_connect_fn on_connect;
     co_tcp_receive_fn on_receive_ready;
     co_tls_tcp_handshake_fn on_handshake_complete;
 
@@ -52,13 +53,17 @@ CO_TLS_API bool co_tls_tcp_client_install(
 
 CO_TLS_API void co_tls_tcp_client_set_host_name(
     co_tcp_client_t* client, const char* host_name);
+CO_TLS_API void co_tls_tcp_client_set_alpn_protocols(
+    co_tcp_client_t* client, const char* protocols[], size_t count);
+CO_TLS_API bool co_tls_tcp_client_get_alpn_selected_protocol(
+    co_tcp_client_t* client, char* buffer, size_t buffer_size);
 
 CO_TLS_API bool co_tls_tcp_connect(co_tcp_client_t* client,
     const co_net_addr_t* remote_net_addr);
 CO_TLS_API bool co_tls_tcp_connect_async(co_tcp_client_t* client,
     const co_net_addr_t* remote_net_addr, co_tcp_connect_fn handler);
 
-CO_TLS_API bool co_tls_tcp_start_handshake_async(
+CO_TLS_API bool co_tls_tcp_start_handshake(
     co_tcp_client_t* client, co_tls_tcp_handshake_fn handler);
 
 CO_TLS_API bool co_tls_tcp_send(

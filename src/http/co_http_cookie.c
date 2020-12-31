@@ -274,11 +274,11 @@ co_http_response_cookie_deserialize(
 
                 printf("Unknown Cookie: [%s]\n", item);
 
-                co_mem_free(item);
-                co_mem_free(value);
+                co_string_destroy(item);
+                co_string_destroy(value);
             }
 
-            co_mem_free(name);
+            co_string_destroy(name);
         }
         else
         {
@@ -299,7 +299,7 @@ co_http_response_cookie_deserialize(
                 printf("Unknown Cookie: [%s]\n", item);
             }
 
-            co_mem_free(item);
+            co_string_destroy(item);
         }
 
         str = sc;
@@ -321,15 +321,15 @@ co_http_cookie_cleanup(
 {
     for (size_t index = 0; index < count; ++index)
     {
-        co_mem_free(cookies[index].name);
-        co_mem_free(cookies[index].value);
-        co_mem_free(cookies[index].attr.expires);
-        co_mem_free(cookies[index].attr.path);
-        co_mem_free(cookies[index].attr.domain);
-        co_mem_free(cookies[index].attr.max_age);
-        co_mem_free(cookies[index].attr.priority);
-        co_mem_free(cookies[index].attr.same_site);
-        co_mem_free(cookies[index].attr.version);
-        co_mem_free(cookies[index].attr.comment);
+        co_string_destroy(cookies[index].name);
+        co_string_destroy(cookies[index].value);
+        co_string_destroy(cookies[index].attr.expires);
+        co_string_destroy(cookies[index].attr.path);
+        co_string_destroy(cookies[index].attr.domain);
+        co_string_destroy(cookies[index].attr.max_age);
+        co_string_destroy(cookies[index].attr.priority);
+        co_string_destroy(cookies[index].attr.same_site);
+        co_string_destroy(cookies[index].attr.version);
+        co_string_destroy(cookies[index].attr.comment);
     }
 }

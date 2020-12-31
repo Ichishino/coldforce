@@ -38,7 +38,7 @@ co_http_response_deserialize(
 )
 {
     const char* data_ptr =
-        (const char*)co_byte_array_get_ptr((co_byte_array_t*)data, *index);
+        (const char*)co_byte_array_get_const_ptr(data, *index);
     const size_t data_size = co_byte_array_get_count(data) - (*index);
 
     const char* new_line =
@@ -75,7 +75,7 @@ co_http_response_deserialize(
 
     if (sp == NULL)
     {
-        co_mem_free(version);
+        co_string_destroy(version);
 
         return CO_HTTP_PARSE_ERROR;
     }
@@ -88,7 +88,7 @@ co_http_response_deserialize(
     size_t status_code =
         co_string_to_size_t(status_code_str, NULL, 10);
 
-    co_mem_free(status_code_str);
+    co_string_destroy(status_code_str);
 
     length -= (item_length + 1);
     temp_index += (item_length + 1);
@@ -104,7 +104,7 @@ co_http_response_deserialize(
 
     (*index) += (new_line - data_ptr) + CO_HTTP_CRLF_LENGTH;
 
-    return co_http_message_deserialize_header(data, index, &response->message);
+    return co_http_message_deserialize_header(&response->message, data, index);
 }
 
 void
@@ -178,8 +178,8 @@ co_http_response_destroy(
 {
     if (response != NULL)
     {
-        co_mem_free(response->version);
-        co_mem_free(response->reason_phrase);
+        co_string_destroy(response->version);
+        co_string_destroy(response->reason_phrase);
 
         co_http_message_cleanup(&response->message);
 
@@ -238,7 +238,7 @@ co_http_response_set_version(
     const char* version
 )
 {
-    co_mem_free(response->version);
+    co_string_destroy(response->version);
 
     if (version != NULL)
     {
@@ -281,7 +281,7 @@ co_http_response_set_reason_phrase(
     const char* reason_phrase
 )
 {
-    co_mem_free(response->reason_phrase);
+    co_string_destroy(response->reason_phrase);
 
     if (reason_phrase != NULL)
     {
@@ -314,7 +314,7 @@ co_http_response_add_cookie(
     co_byte_array_add(buffer, "\0", 1);
     char* str = (char*)co_byte_array_detach(buffer);
 
-    co_http_header_add_item(
+    co_http_header_add_field(
         &response->message.header, CO_HTTP_HEADER_SET_COOKIE, str);
 
     co_mem_free(str);
@@ -331,23 +331,23 @@ co_http_response_get_cookies(
     const co_http_header_t* header = &response->message.header;
 
     co_list_iterator_t* it =
-        co_list_get_head_iterator(header->items);
+        co_list_get_head_iterator(header->field_list);
 
     size_t index = 0;
 
     while ((it != NULL) && (index < count))
     {
         const co_list_data_st* data =
-            co_list_get_next(header->items, &it);
+            co_list_get_next(header->field_list, &it);
 
-        const co_http_header_item_t* item =
-            (const co_http_header_item_t*)data->value;
+        const co_http_header_field_t* field =
+            (const co_http_header_field_t*)data->value;
 
         if (co_string_case_compare(
-            item->name, CO_HTTP_HEADER_SET_COOKIE) == 0)
+            field->name, CO_HTTP_HEADER_SET_COOKIE) == 0)
         {
             if (co_http_response_cookie_deserialize(
-                item->value, &cookies[index]))
+                field->value, &cookies[index]))
             {
                 ++index;
             }
@@ -362,6 +362,6 @@ co_http_response_remove_all_cookies(
     co_http_response_t* response
 )
 {
-    co_http_header_remove_all_values(
+    co_http_header_remove_all_fields(
         &response->message.header, CO_HTTP_HEADER_SET_COOKIE);
 }

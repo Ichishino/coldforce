@@ -57,6 +57,7 @@ co_tls_tcp_client_setup(
     BIO_new_bio_pair(&internal_bio, 0, &tls->network_bio, 0);
     SSL_set_bio(tls->ssl, internal_bio, internal_bio);
 
+    tls->on_connect = NULL;
     tls->on_receive_ready = NULL;
     tls->on_handshake_complete = NULL;
     tls->receive_data_queue = co_queue_create(sizeof(uint8_t), NULL);
@@ -237,6 +238,53 @@ co_tls_tcp_encrypt_data(
 }
 
 void
+co_tls_tcp_on_handshale_complete(
+    co_thread_t* thread,
+    co_tcp_client_t* client,
+    int error_code
+)
+{
+    if (error_code != 0)
+    {
+        co_tls_tcp_client_close(client);
+    }
+
+    co_tls_tcp_client_t* tls = co_tcp_client_get_tls(client);
+
+    if (tls->on_connect != NULL)
+    {
+        co_tcp_connect_fn handler = tls->on_connect;
+
+        handler(thread, client, error_code);
+    }
+}
+
+void
+co_tls_tcp_on_connect(
+    co_thread_t* thread,
+    co_tcp_client_t* client,
+    int error_code
+)
+{
+    if (error_code == 0)
+    {
+        co_tls_tcp_start_handshake(client,
+            (co_tls_tcp_handshake_fn)co_tls_tcp_on_handshale_complete);
+    }
+    else
+    {
+        co_tls_tcp_client_t* tls = co_tcp_client_get_tls(client);
+
+        if (tls->on_connect != NULL)
+        {
+            co_tcp_connect_fn handler = tls->on_connect;
+
+            handler(thread, client, error_code);
+        }
+    }
+}
+
+void
 co_tls_tcp_on_receive_handshake(
     co_thread_t* thread,
     co_tcp_client_t* client
@@ -369,6 +417,60 @@ co_tls_tcp_client_set_host_name(
         co_tcp_client_get_tls(client)->ssl, host_name);
 }
 
+void
+co_tls_tcp_client_set_alpn_protocols(
+    co_tcp_client_t* client,
+    const char* protocols[],
+    size_t count
+)
+{
+    co_byte_array_t* buffer = co_byte_array_create();
+
+    for (size_t index = 0; index < count; ++index)
+    {
+        uint8_t length = (uint8_t)strlen(protocols[index]);
+
+        co_byte_array_add(buffer, &length, 1);
+        co_byte_array_add(buffer, protocols[index], length);
+    }
+
+    SSL_set_alpn_protos(
+        co_tcp_client_get_tls(client)->ssl,
+        co_byte_array_get_ptr(buffer, 0),
+        (unsigned int)co_byte_array_get_count(buffer));
+
+    co_byte_array_destroy(buffer);
+}
+
+bool
+co_tls_tcp_client_get_alpn_selected_protocol(
+    co_tcp_client_t* client,
+    char* buffer,
+    size_t buffer_size
+)
+{
+    const unsigned char* data = NULL;
+    unsigned int length = 0;
+
+    SSL_get0_alpn_selected(
+        co_tcp_client_get_tls(client)->ssl,
+        &data, &length);
+
+    if ((data != NULL) && (length > 0))
+    {
+        length = (unsigned int)co_min(length, (buffer_size - 1));
+
+        memcpy(buffer, data, length);
+        buffer[length] = '\0';
+
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
 bool
 co_tls_tcp_connect(
     co_tcp_client_t* client,
@@ -385,12 +487,17 @@ co_tls_tcp_connect_async(
     co_tcp_connect_fn handler
 )
 {
+    co_tls_tcp_client_t* tls = co_tcp_client_get_tls(client);
+
+    tls->on_connect = handler;
+
     return co_tcp_connect_async(
-        client, remote_net_addr, handler);
+        client, remote_net_addr,
+        (co_tcp_connect_fn)co_tls_tcp_on_connect);
 }
 
 bool
-co_tls_tcp_start_handshake_async(
+co_tls_tcp_start_handshake(
     co_tcp_client_t* client,
     co_tls_tcp_handshake_fn handler
 )

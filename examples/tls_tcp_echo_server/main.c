@@ -77,7 +77,7 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* server, co_tcp_client_t* cl
     co_tls_tcp_set_close_handler(client, (co_tcp_close_fn)on_my_tcp_close);
 
     // TLS handshake
-    co_tls_tcp_start_handshake_async(
+    co_tls_tcp_start_handshake(
         client, (co_tls_tcp_handshake_fn)on_my_tls_handshake);
 
     co_list_add_tail(self->client_list, (uintptr_t)client);
@@ -105,7 +105,7 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     
     // TLS setting (openssl)
     co_tls_ctx_st tls_ctx;
-    tls_ctx.ssl_ctx = SSL_CTX_new(SSLv23_server_method());
+    tls_ctx.ssl_ctx = SSL_CTX_new(TLS_server_method());
     SSL_CTX_use_certificate_file(tls_ctx.ssl_ctx, "server.crt", SSL_FILETYPE_PEM);
     SSL_CTX_use_PrivateKey_file(tls_ctx.ssl_ctx, "server.key", SSL_FILETYPE_PEM);
 

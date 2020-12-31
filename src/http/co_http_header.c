@@ -15,44 +15,44 @@
 //---------------------------------------------------------------------------//
 
 void
-co_http_header_item_destroy(
-    co_http_header_item_t* item
+co_http_header_field_destroy(
+    co_http_header_field_t* field
 )
 {
-    co_mem_free(item->name);
-    co_mem_free(item->value);
-    co_mem_free(item);
+    co_string_destroy(field->name);
+    co_string_destroy(field->value);
+    co_mem_free(field);
 }
 
 intptr_t
-co_http_header_item_compare(
-    const co_http_header_item_t* item1,
-    const co_http_header_item_t* item2
+co_http_header_field_compare(
+    const co_http_header_field_t* field1,
+    const co_http_header_field_t* field2
 )
 {
-    return co_string_case_compare(item1->name, item2->name);
+    return co_string_case_compare(field1->name, field2->name);
 }
 
 bool
-co_http_header_add_raw_item(
+co_http_header_add_field_ptr(
     co_http_header_t* header,
     char* name,
     char* value
 )
 {
-    co_http_header_item_t* item =
-        (co_http_header_item_t*)co_mem_alloc(
-            sizeof(co_http_header_item_t));
+    co_http_header_field_t* field =
+        (co_http_header_field_t*)co_mem_alloc(
+            sizeof(co_http_header_field_t));
 
-    if (item == NULL)
+    if (field == NULL)
     {
         return false;
     }
 
-    item->name = name;
-    item->value = value;
+    field->name = name;
+    field->value = value;
 
-    return co_list_add_tail(header->items, (uintptr_t)item);
+    return co_list_add_tail(header->field_list, (uintptr_t)field);
 }
 
 void
@@ -62,31 +62,31 @@ co_http_header_serialize(
 )
 {
     co_list_iterator_t* it =
-        co_list_get_head_iterator(header->items);
+        co_list_get_head_iterator(header->field_list);
 
     while (it != NULL)
     {
         const co_list_data_st* list_data =
-            co_list_get_next(header->items, &it);
-        const co_http_header_item_t* item =
-            (const co_http_header_item_t*)list_data->value;
+            co_list_get_next(header->field_list, &it);
+        const co_http_header_field_t* field =
+            (const co_http_header_field_t*)list_data->value;
 
-        co_byte_array_add_string(buffer, item->name);
+        co_byte_array_add_string(buffer, field->name);
         co_byte_array_add_string(buffer, CO_HTTP_COLON);
-        co_byte_array_add_string(buffer, item->value);
+        co_byte_array_add_string(buffer, field->value);
         co_byte_array_add_string(buffer, CO_HTTP_CRLF);
     }
 }
 
 int
 co_http_header_deserialize(
+    co_http_header_t* header,
     const co_byte_array_t* data,
-    size_t* index,
-    co_http_header_t* header
+    size_t* index
 )
 {
     const char* data_ptr =
-        (const char*)co_byte_array_get_ptr((co_byte_array_t*)data, 0);
+        (const char*)co_byte_array_get_const_ptr(data, 0);
     const size_t data_size = co_byte_array_get_count(data);
 
     for (;;)
@@ -107,7 +107,7 @@ co_http_header_deserialize(
             (*index) += CO_HTTP_CRLF_LENGTH;
 
             const char* value =
-                co_http_header_get_item(header, CO_HTTP_HEADER_CONTENT_LENGTH);
+                co_http_header_get_field(header, CO_HTTP_HEADER_CONTENT_LENGTH);
             
             if (value != NULL)
             {
@@ -164,7 +164,7 @@ co_http_header_deserialize(
 
         if (value == NULL)
         {
-            co_mem_free(name);
+            co_string_destroy(name);
 
             return CO_HTTP_PARSE_ERROR;
         }
@@ -172,7 +172,7 @@ co_http_header_deserialize(
         co_string_trim(name, strlen(name));
         co_string_trim(value, strlen(value));
 
-        co_http_header_add_raw_item(header, name, value);
+        co_http_header_add_field_ptr(header, name, value);
 
         (*index) += (new_line - temp_data) + CO_HTTP_CRLF_LENGTH;
     }
@@ -184,16 +184,16 @@ co_http_header_print(
 )
 {
     co_list_iterator_t* it =
-        co_list_get_head_iterator(header->items);
+        co_list_get_head_iterator(header->field_list);
 
     while (it != NULL)
     {
         const co_list_data_st* data =
-            co_list_get_next(header->items, &it);
-        const co_http_header_item_t* item =
-            (const co_http_header_item_t*)data->value;
+            co_list_get_next(header->field_list, &it);
+        const co_http_header_field_t* field =
+            (const co_http_header_field_t*)data->value;
 
-        printf("%s: %s\n", item->name, item->value);
+        printf("%s: %s\n", field->name, field->value);
     }
 }
 
@@ -206,10 +206,10 @@ co_http_header_setup(
 )
 {
     co_list_ctx_st list_ctx = { 0 };
-    list_ctx.free_value = (co_free_fn)co_http_header_item_destroy;
-    list_ctx.compare_values = (co_compare_fn)co_http_header_item_compare;
+    list_ctx.free_value = (co_free_fn)co_http_header_field_destroy;
+    list_ctx.compare_values = (co_compare_fn)co_http_header_field_compare;
 
-    header->items = co_list_create(&list_ctx);
+    header->field_list = co_list_create(&list_ctx);
 }
 
 void
@@ -219,8 +219,8 @@ co_http_header_cleanup(
 {
     if (header != NULL)
     {
-        co_list_destroy(header->items);
-        header->items = NULL;
+        co_list_destroy(header->field_list);
+        header->field_list = NULL;
     }
 }
 
@@ -229,15 +229,15 @@ co_http_header_clear(
     co_http_header_t* header
 )
 {
-    co_list_clear(header->items);
+    co_list_clear(header->field_list);
 }
 
 size_t
-co_http_header_get_item_count(
+co_http_header_get_field_count(
     const co_http_header_t* header
 )
 {
-    return co_list_get_count(header->items);
+    return co_list_get_count(header->field_list);
 }
 
 size_t
@@ -249,15 +249,15 @@ co_http_header_get_value_count(
     size_t value_count = 0;
 
     co_list_iterator_t* it =
-        co_list_get_head_iterator(header->items);
+        co_list_get_head_iterator(header->field_list);
     
     while (it != NULL)
     {
         const co_list_data_st* data =
-            co_list_get_next(header->items, &it);
+            co_list_get_next(header->field_list, &it);
 
         if (co_string_case_compare(
-            ((co_http_header_item_t*)data->value)->name, name) == 0)
+            ((co_http_header_field_t*)data->value)->name, name) == 0)
         {
             ++value_count;
         }
@@ -272,65 +272,65 @@ co_http_header_contains(
     const char* name
 )
 {
-    const co_http_header_item_t find_item = { (char*)name, NULL };
+    const co_http_header_field_t find_field = { (char*)name, NULL };
 
     co_list_iterator_t* it =
-        co_list_find(header->items, (uintptr_t)&find_item);
+        co_list_find(header->field_list, (uintptr_t)&find_field);
 
     return (it != NULL);
 }
 
 void
-co_http_header_set_item(
+co_http_header_set_field(
     co_http_header_t* header,
     const char* name,
     const char* value
 )
 {
-    const co_http_header_item_t find_item = { (char*)name, NULL };
+    const co_http_header_field_t find_field = { (char*)name, NULL };
 
     co_list_iterator_t* it =
-        co_list_find(header->items, (uintptr_t)&find_item);
+        co_list_find(header->field_list, (uintptr_t)&find_field);
 
     if (it != NULL)
     {
-        co_http_header_item_t* item =
-            (co_http_header_item_t*)it->data.value;
+        co_http_header_field_t* field =
+            (co_http_header_field_t*)it->data.value;
 
-        co_mem_free(item->value);
-        item->value = co_string_duplicate(value);
+        co_string_destroy(field->value);
+        field->value = co_string_duplicate(value);
     }
     else
     {
-        co_http_header_add_item(header, name, value);
+        co_http_header_add_field(header, name, value);
     }
 }
 
 const char*
-co_http_header_get_item(
+co_http_header_get_field(
     const co_http_header_t* header,
     const char* name
 )
 {
-    const co_http_header_item_t find_item = { (char*)name, NULL };
+    const co_http_header_field_t find_field = { (char*)name, NULL };
 
     co_list_iterator_t* it =
-        co_list_find(header->items, (uintptr_t)&find_item);
+        co_list_find(header->field_list, (uintptr_t)&find_field);
 
     if (it != NULL)
     {
-        const co_http_header_item_t* item =
-            (const co_http_header_item_t*)co_list_get(
-                header->items, it)->value;
+        const co_http_header_field_t* field =
+            (const co_http_header_field_t*)co_list_get(
+                header->field_list, it)->value;
 
-        return item->value;
+        return field->value;
     }
 
     return NULL;
 }
 
 size_t
-co_http_header_get_items(
+co_http_header_get_fields(
     const co_http_header_t* header,
     const char* name,
     const char* value[],
@@ -340,18 +340,18 @@ co_http_header_get_items(
     size_t value_count = 0;
 
     co_list_iterator_t* it =
-        co_list_get_head_iterator(header->items);
+        co_list_get_head_iterator(header->field_list);
 
     while (it != NULL && (value_count < count))
     {
         const co_list_data_st* data =
-            co_list_get_next(header->items, &it);
+            co_list_get_next(header->field_list, &it);
 
         if (co_string_case_compare(
-            ((const co_http_header_item_t*)data->value)->name, name) == 0)
+            ((const co_http_header_field_t*)data->value)->name, name) == 0)
         {
             value[value_count] =
-                ((const co_http_header_item_t*)data->value)->value;
+                ((const co_http_header_field_t*)data->value)->value;
 
             ++value_count;
         }
@@ -361,77 +361,77 @@ co_http_header_get_items(
 }
 
 bool
-co_http_header_add_item(
+co_http_header_add_field(
     co_http_header_t* header,
     const char* name,
     const char* value
 )
 {
-    co_http_header_item_t* item =
-        (co_http_header_item_t*)co_mem_alloc(sizeof(co_http_header_item_t));
+    co_http_header_field_t* field =
+        (co_http_header_field_t*)co_mem_alloc(sizeof(co_http_header_field_t));
 
-    if (item == NULL)
+    if (field == NULL)
     {
         return false;
     }
 
-    item->name = co_string_duplicate(name);
+    field->name = co_string_duplicate(name);
 
-    if (item->name == NULL)
+    if (field->name == NULL)
     {
-        co_mem_free(item);
+        co_mem_free(field);
 
         return false;
     }
 
-    item->value = co_string_duplicate(value);
+    field->value = co_string_duplicate(value);
 
-    if (item->value == NULL)
+    if (field->value == NULL)
     {
-        co_mem_free(item->name);
-        co_mem_free(item);
+        co_string_destroy(field->name);
+        co_mem_free(field);
 
         return false;
     }
 
-    return co_list_add_tail(header->items, (uintptr_t)item);
+    return co_list_add_tail(header->field_list, (uintptr_t)field);
 }
 
 void
-co_http_header_remove_item(
+co_http_header_remove_field(
     co_http_header_t* header,
     const char* name
 )
 {
-    co_http_header_item_t find_item = { (char*)name, NULL };
+    co_http_header_field_t find_field = { (char*)name, NULL };
 
-    co_list_remove(header->items, (uintptr_t)&find_item);
+    co_list_remove(header->field_list, (uintptr_t)&find_field);
 }
 
 void
-co_http_header_remove_all_values(
+co_http_header_remove_all_fields(
     co_http_header_t* header,
     const char* name
 )
 {
     co_list_iterator_t* it =
-        co_list_get_head_iterator(header->items);
+        co_list_get_head_iterator(header->field_list);
 
     while (it != NULL)
     {
-        const co_list_data_st* data = co_list_get(header->items, it);
+        const co_list_data_st* data = co_list_get(header->field_list, it);
 
         if (co_string_case_compare(
-            ((co_http_header_item_t*)data->value)->name, name) == 0)
+            ((co_http_header_field_t*)data->value)->name, name) == 0)
         {
             co_list_iterator_t* temp = it;
-            it = co_list_get_next_iterator(header->items, it);
+            it = co_list_get_next_iterator(header->field_list, it);
 
-            co_list_remove_at(header->items, temp);
+            co_list_remove_at(header->field_list, temp);
         }
         else
         {
-            it = co_list_get_next_iterator(header->items, it);
+            it = co_list_get_next_iterator(header->field_list, it);
         }
     }
 }
@@ -448,7 +448,7 @@ co_http_header_set_content_length(
     char str[32];
     sprintf(str, "%zu", length);
 
-    co_http_header_set_item(header, CO_HTTP_HEADER_CONTENT_LENGTH, str);
+    co_http_header_set_field(header, CO_HTTP_HEADER_CONTENT_LENGTH, str);
 }
 
 bool
@@ -458,7 +458,7 @@ co_http_header_get_content_length(
 )
 {
     const char* str =
-        co_http_header_get_item(header, CO_HTTP_HEADER_CONTENT_LENGTH);
+        co_http_header_get_field(header, CO_HTTP_HEADER_CONTENT_LENGTH);
 
     if (str == NULL)
     {

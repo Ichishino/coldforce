@@ -54,12 +54,12 @@ co_http_message_serialize(
 
 int
 co_http_message_deserialize_header(
+    co_http_message_t* message,
     const co_byte_array_t* data,
-    size_t* index,
-    co_http_message_t* message
+    size_t* index
 )
 {
-    return co_http_header_deserialize(data, index, &message->header);
+    return co_http_header_deserialize(&message->header, data, index);
 }
 
 bool

@@ -117,7 +117,7 @@ co_http_url_create(
         url->host = co_string_duplicate(head);
     }
 
-    co_mem_free(url_str);
+    co_string_destroy(url_str);
 
     return url;
 }
@@ -129,17 +129,91 @@ co_http_url_destroy(
 {
     if (url != NULL)
     {
-        co_mem_free(url->src);
-        co_mem_free(url->scheme);
-        co_mem_free(url->user);
-        co_mem_free(url->password);
-        co_mem_free(url->host);
-        co_mem_free(url->path);
-        co_mem_free(url->query);
-        co_mem_free(url->fragment);
+        co_string_destroy(url->src);
+        co_string_destroy(url->scheme);
+        co_string_destroy(url->user);
+        co_string_destroy(url->password);
+        co_string_destroy(url->host);
+        co_string_destroy(url->path);
+        co_string_destroy(url->query);
+        co_string_destroy(url->fragment);
 
         co_mem_free(url);
     }
+}
+
+//---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
+
+char*
+co_http_url_create_host_and_port(
+    const co_http_url_st* url
+)
+{
+    if (url->host == NULL)
+    {
+        return NULL;
+    }
+    else if (url->port == 0)
+    {
+        return co_string_duplicate(url->host);
+    }
+
+    size_t length = strlen(url->host);
+
+    char* host_and_port = (char*)co_mem_alloc(length + 32);
+
+    sprintf(host_and_port, "%s:%hu", url->host, url->port);
+
+    return host_and_port;
+}
+
+char*
+co_http_url_create_path_and_query(
+    const co_http_url_st* url
+)
+{
+    if (url->path == NULL)
+    {
+        return NULL;
+    }
+    else if (url->query == NULL)
+    {
+        return co_string_duplicate(url->path);
+    }
+
+    size_t length = strlen(url->path) + strlen(url->query);
+
+    char* path_and_query = (char*)co_mem_alloc(length + 2);
+
+    sprintf(path_and_query, "%s?%s", url->path, url->query);
+
+    return path_and_query;
+}
+
+char*
+co_http_url_create_file_name(
+    const co_http_url_st* url
+)
+{
+    if (url->path == NULL)
+    {
+        return NULL;
+    }
+
+    const char* str = strrchr(url->path, '/');
+
+    if (str != NULL)
+    {
+        ++str;
+    }
+    else
+    {
+        str = url->path;
+        ++str;
+    }
+
+    return co_string_duplicate(str);
 }
 
 //---------------------------------------------------------------------------//

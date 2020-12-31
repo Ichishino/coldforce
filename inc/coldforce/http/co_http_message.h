@@ -31,7 +31,7 @@ void co_http_message_cleanup(co_http_message_t* message);
 void co_http_message_serialize(
     const co_http_message_t* message, co_byte_array_t* buffer);
 int co_http_message_deserialize_header(
-    const co_byte_array_t* data, size_t* index, co_http_message_t* message);
+    co_http_message_t* message, const co_byte_array_t* data, size_t* index);
 
 bool co_http_message_set_content(
     co_http_message_t* request, const void* data, size_t data_size);

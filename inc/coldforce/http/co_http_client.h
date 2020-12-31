@@ -22,13 +22,13 @@ CO_EXTERN_C_BEGIN
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-#define CO_HTTP_ERROR_CONNECT_FAILED        -9001
-#define CO_HTTP_ERROR_TLS_HANDSHAKE_FAILED  -9002
-#define CO_HTTP_ERROR_CONNECTION_CLOSED     -9003
-#define CO_HTTP_ERROR_OUT_OF_MEMORY         -9004
-#define CO_HTTP_ERROR_PARSE_HEADER          -9005
-#define CO_HTTP_ERROR_PARSE_CONTENT         -9006
-#define CO_HTTP_ERROR_CANCEL                -9007
+#define CO_HTTP_ERROR_CONNECT_FAILED        -5001
+#define CO_HTTP_ERROR_TLS_HANDSHAKE_FAILED  -5002
+#define CO_HTTP_ERROR_CONNECTION_CLOSED     -5003
+#define CO_HTTP_ERROR_OUT_OF_MEMORY         -5004
+#define CO_HTTP_ERROR_PARSE_HEADER          -5005
+#define CO_HTTP_ERROR_PARSE_CONTENT         -5006
+#define CO_HTTP_ERROR_CANCEL                -5007
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
@@ -104,7 +104,7 @@ CO_HTTP_API co_http_client_t* co_http_client_create(
 
 CO_HTTP_API void co_http_client_destroy(co_http_client_t* client);
 
-CO_HTTP_API bool co_http_request_async(
+CO_HTTP_API bool co_http_send_request(
     co_http_client_t* client, co_http_request_t* request);
 
 CO_HTTP_API bool co_http_send_data(

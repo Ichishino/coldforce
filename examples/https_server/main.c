@@ -37,7 +37,7 @@ void on_my_http_stop_app_request(my_app* self, co_http_client_t* client)
     co_http_response_t* response = co_http_response_create_with(200, "OK");
     co_http_header_t* response_header = co_http_response_get_header(response);
 
-    co_http_header_add_item(response_header, "Content-Type", "text/html");
+    co_http_header_add_field(response_header, "Content-Type", "text/html");
 
     const char* str =
         "<html>"
@@ -66,7 +66,7 @@ void on_my_http_default_request(my_app* self, co_http_client_t* client, const co
     const char* query = (url->query != NULL) ? url->query : "";
 
     const co_http_header_t* request_header = co_http_request_get_const_header(request);
-    const char* host = co_http_header_get_item(request_header, CO_HTTP_HEADER_HOST);
+    const char* host = co_http_header_get_field(request_header, CO_HTTP_HEADER_HOST);
 
     size_t content_length = 0;
     co_http_header_get_content_length(request_header, &content_length);
@@ -76,7 +76,7 @@ void on_my_http_default_request(my_app* self, co_http_client_t* client, const co
     co_http_response_t* response = co_http_response_create_with(200, "OK");
     co_http_header_t* response_header = co_http_response_get_header(response);
 
-    co_http_header_add_item(response_header, "Content-Type", "text/html");
+    co_http_header_add_field(response_header, "Content-Type", "text/html");
 
     char response_content[8192];
     sprintf(response_content,
@@ -170,7 +170,7 @@ void on_my_http_accept(my_app* self, co_http_server_t* server, co_http_client_t*
     co_http_accept(server, (co_thread_t*)self, client);
 
     // TLS handshake
-    co_http_tls_start_handshake_async(
+    co_http_tls_start_handshake(
         client, (co_http_tls_handshake_fn)on_my_http_tls_handshake);
 
     // set callback
@@ -191,7 +191,7 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
 
     // TLS setting (openssl)
     co_tls_ctx_st tls_ctx;
-    tls_ctx.ssl_ctx = SSL_CTX_new(SSLv23_server_method());
+    tls_ctx.ssl_ctx = SSL_CTX_new(TLS_server_method());
     SSL_CTX_use_certificate_file(tls_ctx.ssl_ctx, "server.crt", SSL_FILETYPE_PEM);
     SSL_CTX_use_PrivateKey_file(tls_ctx.ssl_ctx, "server.key", SSL_FILETYPE_PEM);
 

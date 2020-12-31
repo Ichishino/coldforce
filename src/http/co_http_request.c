@@ -40,7 +40,7 @@ co_http_request_deserialize(
 )
 {
     const char* data_ptr =
-        (const char*)co_byte_array_get_ptr((co_byte_array_t*)data, *index);
+        (const char*)co_byte_array_get_const_ptr(data, *index);
     const size_t data_size = co_byte_array_get_count(data) - (*index);
 
     const char* new_line =
@@ -75,7 +75,7 @@ co_http_request_deserialize(
 
     if (sp == NULL)
     {
-        co_mem_free(method);
+        co_string_destroy(method);
 
         return CO_HTTP_PARSE_ERROR;
     }
@@ -88,7 +88,7 @@ co_http_request_deserialize(
 
     if (url->path == NULL)
     {
-        co_mem_free(method);
+        co_string_destroy(method);
         co_http_url_destroy(url);
 
         return CO_HTTP_PARSE_ERROR;
@@ -105,11 +105,11 @@ co_http_request_deserialize(
     request->url = url;
     request->version = version;
 
-    co_mem_free(url_str);
+    co_string_destroy(url_str);
 
     (*index) += (new_line - data_ptr) + CO_HTTP_CRLF_LENGTH;
 
-    return co_http_message_deserialize_header(data, index, &request->message);
+    return co_http_message_deserialize_header(&request->message, data, index);
 }
 
 void
@@ -184,9 +184,9 @@ co_http_request_destroy(
 {
     if (request != NULL)
     {
-        co_mem_free(request->method);
-        co_mem_free(request->version);
-        co_mem_free(request->save_file_path);
+        co_string_destroy(request->method);
+        co_string_destroy(request->version);
+        co_string_destroy(request->save_file_path);
 
         co_http_url_destroy(request->url);
         co_http_message_cleanup(&request->message);
@@ -276,7 +276,7 @@ co_http_request_set_method(
     const char* method
 )
 {
-    co_mem_free(request->method);
+    co_string_destroy(request->method);
 
     if (method != NULL)
     {
@@ -302,7 +302,7 @@ co_http_request_set_version(
     const char* version
 )
 {
-    co_mem_free(request->version);
+    co_string_destroy(request->version);
 
     if (version != NULL)
     {
@@ -328,7 +328,7 @@ co_http_request_set_save_file_path(
     const char* save_file_path
 )
 {
-    co_mem_free(request->save_file_path);
+    co_string_destroy(request->save_file_path);
 
     if (save_file_path != NULL)
     {
@@ -361,7 +361,7 @@ co_http_request_set_cookies(
     co_byte_array_add(buffer, "\0", 1);
     char* str = (char*)co_byte_array_detach(buffer);
 
-    co_http_header_set_item(
+    co_http_header_set_field(
         &request->message.header, CO_HTTP_HEADER_COOKIE, str);
 
     co_mem_free(str);
@@ -374,7 +374,7 @@ co_http_request_add_cookie(
     const co_http_cookie_st* cookie
 )
 {
-    const char* value = co_http_header_get_item(
+    const char* value = co_http_header_get_field(
         &request->message.header, CO_HTTP_HEADER_COOKIE);
 
     if (value != NULL)
@@ -388,7 +388,7 @@ co_http_request_add_cookie(
         co_byte_array_add(buffer, "\0", 1);
         char* str = (char*)co_byte_array_detach(buffer);
 
-        co_http_header_set_item(
+        co_http_header_set_field(
             &request->message.header, CO_HTTP_HEADER_COOKIE, str);
 
         co_mem_free(str);
@@ -410,23 +410,23 @@ co_http_request_get_cookies(
     const co_http_header_t* header = &request->message.header;
 
     co_list_iterator_t* it =
-        co_list_get_head_iterator(header->items);
+        co_list_get_head_iterator(header->field_list);
 
     size_t index = 0;
 
     while ((it != NULL) && (index < count))
     {
         const co_list_data_st* data =
-            co_list_get_next(header->items, &it);
+            co_list_get_next(header->field_list, &it);
 
-        const co_http_header_item_t* item =
-            (const co_http_header_item_t*)data->value;
+        const co_http_header_field_t* field =
+            (const co_http_header_field_t*)data->value;
 
         if (co_string_case_compare(
-            item->name, CO_HTTP_HEADER_COOKIE) == 0)
+            field->name, CO_HTTP_HEADER_COOKIE) == 0)
         {
             size_t result = co_http_request_cookie_deserialize(
-                item->value, cookie, count - index);
+                field->value, cookie, count - index);
 
             if (result == 0)
             {
@@ -445,6 +445,6 @@ co_http_request_remove_all_cookies(
     co_http_request_t* request
 )
 {
-    co_http_header_remove_all_values(
+    co_http_header_remove_all_fields(
         &request->message.header, CO_HTTP_HEADER_COOKIE);
 }

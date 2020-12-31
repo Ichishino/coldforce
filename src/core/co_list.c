@@ -109,7 +109,7 @@ co_list_clear(
         item = item->next;
 
         list->free_value(temp->data.value);
-        
+
         co_mem_free(temp);
     }
 
@@ -179,7 +179,7 @@ co_list_add_head(
 
     ++list->count;
 
-    return false;
+    return true;
 }
 
 bool
@@ -225,9 +225,25 @@ co_list_get_head(
     return ((list->head != NULL) ? &list->head->data : NULL);
 }
 
+const co_list_data_st*
+co_list_get_const_head(
+    const co_list_t* list
+)
+{
+    return ((list->head != NULL) ? &list->head->data : NULL);
+}
+
 co_list_data_st*
 co_list_get_tail(
     co_list_t* list
+)
+{
+    return ((list->tail != NULL) ? &list->tail->data : NULL);
+}
+
+const co_list_data_st*
+co_list_get_const_tail(
+    const co_list_t* list
 )
 {
     return ((list->tail != NULL) ? &list->tail->data : NULL);
@@ -340,9 +356,25 @@ co_list_get_head_iterator(
     return list->head;
 }
 
+const co_list_iterator_t*
+co_list_get_const_head_iterator(
+    const co_list_t* list
+)
+{
+    return list->head;
+}
+
 co_list_iterator_t*
 co_list_get_tail_iterator(
     co_list_t* list
+)
+{
+    return list->tail;
+}
+
+const co_list_iterator_t*
+co_list_get_const_tail_iterator(
+    const co_list_t* list
 )
 {
     return list->tail;
@@ -359,10 +391,32 @@ co_list_get_prev_iterator(
     return iterator->prev;
 }
 
+const co_list_iterator_t*
+co_list_get_const_prev_iterator(
+    const co_list_t* list,
+    const co_list_iterator_t* iterator
+)
+{
+    (void)list;
+
+    return iterator->prev;
+}
+
 co_list_iterator_t*
 co_list_get_next_iterator(
     co_list_t* list,
     co_list_iterator_t* iterator
+)
+{
+    (void)list;
+
+    return iterator->next;
+}
+
+const co_list_iterator_t*
+co_list_get_const_next_iterator(
+    const co_list_t* list,
+    const co_list_iterator_t* iterator
 )
 {
     (void)list;
@@ -451,6 +505,17 @@ co_list_get(
     return &iterator->data;
 }
 
+const co_list_data_st*
+co_list_get_const(
+    const co_list_t* list,
+    const co_list_iterator_t* iterator
+)
+{
+    (void)list;
+
+    return &iterator->data;
+}
+
 co_list_data_st*
 co_list_get_prev(
     co_list_t* list,
@@ -460,6 +525,21 @@ co_list_get_prev(
     (void)list;
 
     co_list_data_st* data = &(*iterator)->data;
+
+    (*iterator) = (*iterator)->prev;
+
+    return data;
+}
+
+const co_list_data_st*
+co_list_get_const_prev(
+    const co_list_t* list,
+    const co_list_iterator_t** iterator
+)
+{
+    (void)list;
+
+    const co_list_data_st* data = &(*iterator)->data;
 
     (*iterator) = (*iterator)->prev;
 
@@ -481,6 +561,21 @@ co_list_get_next(
     return data;
 }
 
+const co_list_data_st*
+co_list_get_const_next(
+    const co_list_t* list,
+    const co_list_iterator_t** iterator
+)
+{
+    (void)list;
+
+    const co_list_data_st* data = &(*iterator)->data;
+
+    (*iterator) = (*iterator)->next;
+
+    return data;
+}
+
 co_list_iterator_t*
 co_list_find(
     co_list_t* list,
@@ -488,6 +583,27 @@ co_list_find(
 )
 {
     co_list_item_t* item = list->head;
+
+    while (item != NULL)
+    {
+        if (list->compare_values(item->data.value, value) == 0)
+        {
+            return item;
+        }
+
+        item = item->next;
+    }
+
+    return NULL;
+}
+
+const co_list_iterator_t*
+co_list_find_const(
+    const co_list_t* list,
+    uintptr_t value
+)
+{
+    const co_list_item_t* item = list->head;
 
     while (item != NULL)
     {

@@ -57,6 +57,29 @@ co_http_client_setup(
 }
 
 void
+co_http_client_cleanup(
+    co_http_client_t* client
+)
+{
+    if (client != NULL)
+    {
+        co_http_content_receiver_cleanup(&client->content_receiver);
+
+        co_list_destroy(client->send_queue);
+        client->send_queue = NULL;
+
+        co_list_destroy(client->receive_queue);
+        client->receive_queue = NULL;
+
+        co_byte_array_destroy(client->receive_data);
+        client->receive_data = NULL;
+
+        co_http_response_destroy(client->response);
+        client->response = NULL;
+    }
+}
+
+void
 co_http_client_clear_request_queue(
     co_http_client_t* client
 )
@@ -87,7 +110,7 @@ co_http_client_clear_request_queue(
 }
 
 void
-co_http_client_send_request(
+co_http_client_send_all_requests(
     co_http_client_t* client
 )
 {
@@ -104,9 +127,13 @@ co_http_client_send_request(
         if (!co_http_header_contains(
             &request->message.header, CO_HTTP_HEADER_HOST))
         {
-            co_http_header_add_item(
+            char* host = co_http_url_create_host_and_port(client->base_url);
+
+            co_http_header_add_field(
                 &request->message.header,
-                CO_HTTP_HEADER_HOST, client->base_url->host);
+                CO_HTTP_HEADER_HOST, host);
+
+            co_http_url_destroy_string(host);
         }
 
         if ((request->message.content.size > 0) &&
@@ -218,7 +245,7 @@ co_http_client_on_resopnse(
 //---------------------------------------------------------------------------//
 
 void
-co_http_client_on_tls_client_handshake(
+co_http_client_on_connect(
     co_thread_t* thread,
     co_tcp_client_t* tcp_client,
     int error_code
@@ -231,45 +258,10 @@ co_http_client_on_tls_client_handshake(
 
     if (error_code == 0)
     {
-        co_http_client_send_request(client);
+        co_http_client_send_all_requests(client);
     }
     else
     {
-        co_http_client_on_resopnse(
-            thread, client, CO_HTTP_ERROR_TLS_HANDSHAKE_FAILED);
-    }
-}
-
-void
-co_http_client_on_connect(
-    co_thread_t* thread,
-    co_tcp_client_t* tcp_client,
-    int error_code
-)
-{
-    co_http_client_t* client =
-        (co_http_client_t*)tcp_client->sock.sub_class;
-
-    if (error_code == 0)
-    {
-        if (tcp_client->sock.tls != NULL)
-        {
-            co_tls_tcp_start_handshake_async(tcp_client,
-                (co_tls_tcp_handshake_fn)co_http_client_on_tls_client_handshake);
-
-            return;
-        }
-        else
-        {
-            client->connecting = false;
-
-            co_http_client_send_request(client);
-        }
-    }
-    else
-    {
-        client->connecting = false;
-
         co_http_client_on_resopnse(
             thread, client, CO_HTTP_ERROR_CONNECT_FAILED);
     }
@@ -284,17 +276,18 @@ co_http_client_on_client_receive_ready(
     co_http_client_t* client =
         (co_http_client_t*)tcp_client->sock.sub_class;
 
-    ssize_t size = client->module.receive_all(
+    ssize_t receive_result = client->module.receive_all(
         client->tcp_client, client->receive_data);
 
-    if (size <= 0)
+    if (receive_result <= 0)
     {
         return;
     }
 
     size_t index = 0;
+    size_t data_size = co_byte_array_get_count(client->receive_data);
 
-    while (((size_t)size) > index)
+    while (data_size > index)
     {
         co_list_data_st* data =
             co_list_get_head(client->receive_queue);
@@ -423,7 +416,7 @@ co_http_client_on_client_receive_ready(
 
     if (co_list_get_count(client->receive_queue) == 0)
     {
-        co_byte_array_set_count(client->receive_data, 0);
+        co_byte_array_clear(client->receive_data);
     }
 }
 
@@ -578,24 +571,12 @@ co_http_client_destroy(
 {
     if (client != NULL)
     {
-        co_http_content_receiver_cleanup(&client->content_receiver);
-
         co_http_client_clear_request_queue(client);
 
-        co_list_destroy(client->send_queue);
-        client->send_queue = NULL;
-
-        co_list_destroy(client->receive_queue);
-        client->receive_queue = NULL;
-
-        co_http_response_destroy(client->response);
-        client->response = NULL;
+        co_http_client_cleanup(client);
 
         co_http_url_destroy(client->base_url);
         client->base_url = NULL;
-
-        co_byte_array_destroy(client->receive_data);
-        client->receive_data = NULL;
 
         if (client->tcp_client != NULL)
         {
@@ -608,7 +589,7 @@ co_http_client_destroy(
 }
 
 bool
-co_http_request_async(
+co_http_send_request(
     co_http_client_t* client,
     co_http_request_t* request
 )
@@ -617,7 +598,7 @@ co_http_request_async(
     {
         co_list_add_tail(client->send_queue, (uintptr_t)request);
 
-        co_http_client_send_request(client);
+        co_http_client_send_all_requests(client);
     }
     else if(client->connecting)
     { 

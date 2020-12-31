@@ -64,6 +64,17 @@ co_array_detach(
     return ptr;
 }
 
+void
+co_array_clear(
+    co_array_t* arr
+)
+{
+    if (arr != NULL)
+    {
+        arr->count = 0;
+    }
+}
+
 bool
 co_array_set_count(
     co_array_t* arr,
@@ -107,6 +118,17 @@ co_array_get_count(
 void*
 co_array_get_ptr(
     co_array_t* arr,
+    size_t index
+)
+{
+    co_assert(index < arr->count);
+
+    return &arr->buffer[index * arr->element_size];
+}
+
+const void*
+co_array_get_const_ptr(
+    const co_array_t* arr,
     size_t index
 )
 {

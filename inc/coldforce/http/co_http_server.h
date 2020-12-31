@@ -61,7 +61,7 @@ CO_HTTP_API co_socket_t* co_http_server_get_socket(co_http_server_t* server);
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-CO_HTTP_API int co_http_tls_start_handshake_async(
+CO_HTTP_API int co_http_tls_start_handshake(
     co_http_client_t* client, co_http_tls_handshake_fn handler);
 
 CO_HTTP_API void co_http_set_request_handler(

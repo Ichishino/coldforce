@@ -47,37 +47,15 @@ void on_my_tls_tcp_close(my_app* self, co_tcp_client_t* client)
     co_net_app_stop();
 }
 
-void on_my_tls_handshake(my_app* self, co_tcp_client_t* client, int error_code)
-{
-    if (error_code == 0)
-    {
-        printf("handshake success\n");
-
-        // send
-        const char* data = "hello";
-        co_tls_tcp_send(client, data, strlen(data));
-    }
-    else
-    {
-        printf("handshake failed\n");
-
-        co_tls_tcp_client_destroy(self->client);
-        self->client = NULL;
-
-        // app quit
-        co_net_app_stop();
-    }
-}
-
 void on_my_tls_tcp_connect(my_app* self, co_tcp_client_t* client, int error_code)
 {
     if (error_code == 0)
     {
         printf("connect success\n");
 
-        // start tls handshake 
-        co_tls_tcp_start_handshake_async(
-            client, (co_tls_tcp_handshake_fn)on_my_tls_handshake);
+        // send
+        const char* data = "hello";
+        co_tls_tcp_send(client, data, strlen(data));
     }
     else
     {
@@ -108,7 +86,7 @@ void my_connect(my_app* self)
     co_net_addr_t local_net_addr = CO_NET_ADDR_INIT;
     co_net_addr_set_family(&local_net_addr, CO_ADDRESS_FAMILY_IPV4);
 
-    self->client = co_tcp_client_create(&local_net_addr);
+    self->client = co_tls_tcp_client_create(&local_net_addr, NULL);
 
     co_tls_tcp_set_receive_handler(self->client, (co_tcp_receive_fn)on_my_tls_tcp_receive);
     co_tls_tcp_set_close_handler(self->client, (co_tcp_close_fn)on_my_tls_tcp_close);

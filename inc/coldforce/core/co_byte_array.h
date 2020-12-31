@@ -27,6 +27,10 @@ typedef co_array_t co_byte_array_t;
 #define co_byte_array_detach(arr) \
     ((uint8_t*)co_array_detach(arr))
 
+// void co_byte_array_clear(co_byte_array_t* arr)
+#define co_byte_array_clear(arr) \
+    co_array_clear(arr)
+
 // bool co_byte_array_set_count(co_byte_array_t* arr, size_t size)
 #define co_byte_array_set_count(arr, size) \
     co_array_set_count(arr, size)
@@ -38,6 +42,10 @@ typedef co_array_t co_byte_array_t;
 // uint8_t* co_byte_array_get_ptr(co_byte_array_t* arr, size_t index)
 #define co_byte_array_get_ptr(arr, index) \
     ((uint8_t*)co_array_get_ptr(arr, index))
+
+// const uint8_t* co_byte_array_get_const_ptr(const co_byte_array_t* arr, size_t index)
+#define co_byte_array_get_const_ptr(arr, index) \
+    ((const uint8_t*)co_array_get_const_ptr(arr, index))
 
 // void co_byte_array_set(
 //     co_byte_array_t* arr, size_t index, const void* data, size_t count)

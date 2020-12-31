@@ -20,6 +20,8 @@ CO_API char* co_string_duplicate_n(const char* str, size_t length);
 
 CO_API char* co_string_find_n(const char* str1, const char* str2, size_t length);
 
+#define co_string_destroy   co_mem_free
+
 #if (SIZE_MAX == UINT64_MAX)
 #   define co_string_to_size_t(str, ep, rad) strtoull(str, ep, rad)
 #elif (SIZE_MAX == UINT32_MAX)

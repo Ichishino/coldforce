@@ -27,7 +27,7 @@ void on_my_response(my_app* self, co_http_client_t* client,
         printf("content size: %zu\n", content_size);
 
         const co_http_header_t* header = co_http_response_get_const_header(response);
-        const char* content_type = co_http_header_get_item(header, "Content-Type");
+        const char* content_type = co_http_header_get_field(header, "Content-Type");
 
         if (content_type != NULL)
         {
@@ -51,8 +51,8 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
 {
     (void)arg;
 
-    const char* base_url = "https://example.com";
-    const char* file_path = "/";
+    const char* base_url = "https://www.example.com";
+    const char* file_path = "/index.html";
 
     co_net_addr_t local_net_addr = CO_NET_ADDR_INIT;
     co_net_addr_set_family(&local_net_addr, CO_ADDRESS_FAMILY_IPV4);
@@ -65,10 +65,10 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
 
     // set header
     co_http_header_t* header = co_http_request_get_header(request);
-    co_http_header_add_item(header, "Accept", "text/html");
+    co_http_header_add_field(header, "Accept", "text/html");
 
     // send request
-    co_http_request_async(self->client, request);
+    co_http_send_request(self->client, request);
 
     return true;
 }

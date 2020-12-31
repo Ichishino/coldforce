@@ -71,10 +71,10 @@ co_http_string_list_cleanup(
 {
     for (size_t index = 0; index < count; ++index)
     {
-        co_mem_free(items[index].first);
+        co_string_destroy(items[index].first);
         items[index].first = NULL;
 
-        co_mem_free(items[index].second);
+        co_string_destroy(items[index].second);
         items[index].second = NULL;
     }
 }
