@@ -2,14 +2,15 @@
 
 #include <coldforce/http/co_base64.h>
 
-#include <math.h>
-
 //---------------------------------------------------------------------------//
 // base64
 //---------------------------------------------------------------------------//
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
+
+#define co_ceil(n) \
+    ((double)((long)((((double)n) < 0.0) ? n : (((double)n) + 0.9))))
 
 void
 co_base64_common_encode(
@@ -21,7 +22,7 @@ co_base64_common_encode(
     bool padding
 )
 {
-    (*dest_length) = (size_t)(ceil((double)((double)src_length) / 3) * 4);
+    (*dest_length) = (size_t)(co_ceil(((double)src_length) / 3) * 4);
     (*dest) = co_mem_alloc((*dest_length) + 1);
 
     size_t dest_index = 0;

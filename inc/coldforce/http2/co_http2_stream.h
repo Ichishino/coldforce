@@ -68,7 +68,6 @@ typedef struct co_http2_stream_t
 
     } header_block_pool;
 
-    co_byte_array_t* send_data_pool;
     co_byte_array_t* receive_data_pool;
 
     uint32_t max_local_window_size;

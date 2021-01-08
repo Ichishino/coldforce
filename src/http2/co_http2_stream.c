@@ -43,7 +43,6 @@ co_http2_stream_create(
     stream->header_block_pool.type = 0;
     stream->header_block_pool.data = NULL;
 
-    stream->send_data_pool = NULL;
     stream->receive_data_pool = NULL;
 
     stream->max_local_window_size =
@@ -74,9 +73,6 @@ co_http2_stream_destroy(
 
         co_byte_array_destroy(stream->header_block_pool.data);
         stream->header_block_pool.data = NULL;
-
-        co_byte_array_destroy(stream->send_data_pool);
-        stream->send_data_pool = NULL;
 
         co_byte_array_destroy(stream->receive_data_pool);
         stream->receive_data_pool = NULL;

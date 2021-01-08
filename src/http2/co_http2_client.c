@@ -549,6 +549,8 @@ co_http2_set_upgrade_settings(
         }
     }
 
+    co_mem_free(settings_data);
+
     return result;
 }
 

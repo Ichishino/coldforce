@@ -20,11 +20,11 @@ typedef struct
 
 } my_app;
 
-#define my_client_log(client, str) \
+#define my_client_log(protocol, client, str) \
     do { \
         char remote_str[64]; \
         co_net_addr_get_as_string( \
-            co_http_get_remote_net_addr(client), remote_str); \
+            co_##protocol##_get_remote_net_addr(client), remote_str); \
         printf("%s: %s\n", str, remote_str); \
     } while(0)
 
@@ -32,22 +32,24 @@ void on_my_http_stop_app_request(my_app* self, co_http_client_t* client)
 {
     (void)self;
 
-    printf("server stop\n");
+    my_client_log(http, client, "=== server stop ===");
 
     co_http_response_t* response = co_http_response_create_with(200, "OK");
     co_http_header_t* response_header = co_http_response_get_header(response);
 
     co_http_header_add_field(response_header, "Content-Type", "text/html");
 
-    const char* str =
-        "<html>"
-        "<head><title>Server Stop</title></head>"
-        "<body>OK</body>"
-        "</html>";
+    const char* response_content =
+        "<html>\n"
+        "<head><title>Server Stop</title></head>\n"
+        "<body>OK</body>\n"
+        "</html>\n";
+    uint32_t response_content_size = (uint32_t)strlen(response_content);
 
-    co_http_response_set_content(response, str, strlen(str));
+    co_http_header_set_content_length(response_header, response_content_size);
 
     co_http_send_response(client, response);
+    co_http_send_data(client, response_content, response_content_size);
 
     // quit app
     co_net_app_stop();
@@ -103,7 +105,7 @@ void on_my_http_default_request(my_app* self, co_http_client_t* client, const co
 
 void on_my_http_request(my_app* self, co_http_client_t* client, const co_http_request_t* request, int error_code)
 {
-    my_client_log(client, "request");
+    my_client_log(http, client, "request");
 
     if (error_code == 0)
     {
@@ -113,7 +115,7 @@ void on_my_http_request(my_app* self, co_http_client_t* client, const co_http_re
 
         if (strcmp(url->path, "/stop") == 0)
         {
-            // server stop command
+            // server stop request
             // https://127.0.0.1:9443/stop
 
             on_my_http_stop_app_request(self, client);
@@ -139,43 +141,50 @@ void on_my_http_close(my_app* self, co_http_client_t* client)
 {
     (void)self;
 
-    my_client_log(client, "close");
+    my_client_log(http, client, "close");
 
     co_http_client_destroy(client);
 }
 
-void on_my_http_tls_handshake(my_app* self, co_http_client_t* client, int error_code)
+void on_my_tls_tcp_handshake(my_app* self, co_tcp_client_t* tcp_client, int error_code)
 {
     (void)self;
 
+    co_http_client_t* client = co_tcp_get_http_client(tcp_client);
+
     if (error_code == 0)
     {
-        my_client_log(client, "handshake success");
+        my_client_log(tcp, tcp_client, "TLS handshake success");
 
         // can send and receive
     }
     else
     {
-        my_client_log(client, "handshake failed");
+        my_client_log(tcp, tcp_client, "TLS handshake failed");
 
         co_http_client_destroy(client);
     }
 }
 
-void on_my_http_accept(my_app* self, co_http_server_t* server, co_http_client_t* client)
+void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t* tcp_client)
 {
-    my_client_log(client, "accept");
+    (void)tcp_server;
+
+    my_client_log(tcp, tcp_client, "accept");
 
     // accept
-    co_http_accept(server, (co_thread_t*)self, client);
+    co_tcp_accept((co_thread_t*)self, tcp_client);
 
-    // TLS handshake
-    co_http_tls_start_handshake(
-        client, (co_http_tls_handshake_fn)on_my_http_tls_handshake);
+    // create http client
+    co_http_client_t* client = co_http_client_create_with(tcp_client);
 
     // set callback
     co_http_set_request_handler(client, (co_http_request_fn)on_my_http_request);
     co_http_set_close_handler(client, (co_http_close_fn)on_my_http_close);
+
+    // TLS handshake
+    co_tls_tcp_start_handshake(
+        tcp_client, (co_tls_tcp_handshake_fn)on_my_tls_tcp_handshake);
 }
 
 bool on_my_app_create(my_app* self, const co_arg_st* arg)
@@ -190,7 +199,7 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     co_net_addr_set_port(&local_net_addr, port);
 
     // TLS setting (openssl)
-    co_tls_ctx_st tls_ctx;
+    co_tls_ctx_st tls_ctx = { 0 };
     tls_ctx.ssl_ctx = SSL_CTX_new(TLS_server_method());
     SSL_CTX_use_certificate_file(tls_ctx.ssl_ctx, "server.crt", SSL_FILETYPE_PEM);
     SSL_CTX_use_PrivateKey_file(tls_ctx.ssl_ctx, "server.key", SSL_FILETYPE_PEM);
@@ -203,7 +212,7 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
 
     // listen start
     co_http_server_start(self->server,
-        (co_http_accept_fn)on_my_http_accept, SOMAXCONN);
+        (co_tcp_accept_fn)on_my_tcp_accept, SOMAXCONN);
 
     char local_str[64];
     co_net_addr_get_as_string(&local_net_addr, local_str);
