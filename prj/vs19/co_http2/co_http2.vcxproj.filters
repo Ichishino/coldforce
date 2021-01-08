@@ -32,10 +32,10 @@
     <ClInclude Include="..\..\..\inc\coldforce\http2\co_http2_huffman.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\inc\coldforce\http2\co_http2_message.h">
+    <ClInclude Include="..\..\..\inc\coldforce\http2\co_http2_header.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\inc\coldforce\http2\co_http2_header.h">
+    <ClInclude Include="..\..\..\inc\coldforce\http2\co_http2_server.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -58,10 +58,10 @@
     <ClCompile Include="..\..\..\src\http2\co_http2_huffman.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\http2\co_http2_message.c">
+    <ClCompile Include="..\..\..\src\http2\co_http2_header.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\http2\co_http2_header.c">
+    <ClCompile Include="..\..\..\src\http2\co_http2_server.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

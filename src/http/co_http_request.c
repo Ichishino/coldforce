@@ -48,7 +48,7 @@ co_http_request_deserialize(
 
     if (new_line == NULL)
     {
-        return CO_HTTP_PARSE_MORE_DATA;
+        return CO_HTTP_PARSE_ERROR;
     }
 
     size_t length = (new_line - data_ptr);
@@ -67,6 +67,22 @@ co_http_request_deserialize(
 
     char* method =
         co_string_duplicate_n(&data_ptr[temp_index], item_length);
+
+    if ((strcmp(method, "GET") != 0) &&
+        (strcmp(method, "POST") != 0) &&
+        (strcmp(method, "PUT") != 0) &&
+        (strcmp(method, "DELETE") != 0) &&
+        (strcmp(method, "PATCH") != 0) &&
+        (strcmp(method, "PRI") != 0) &&
+        (strcmp(method, "HEAD") != 0) &&
+        (strcmp(method, "OPTIONS") != 0) &&
+        (strcmp(method, "CONNECT") != 0) &&
+        (strcmp(method, "TRACE") != 0))
+    {
+        co_string_destroy(method);
+
+        return CO_HTTP_PARSE_ERROR;
+    }
 
     length -= (item_length + 1);
     temp_index += (item_length + 1);
@@ -110,6 +126,38 @@ co_http_request_deserialize(
     (*index) += (new_line - data_ptr) + CO_HTTP_CRLF_LENGTH;
 
     return co_http_message_deserialize_header(&request->message, data, index);
+}
+
+bool
+co_http_request_is_connection_preface(
+    const co_http_request_t* request
+)
+{
+    const char* method = co_http_request_get_method(request);
+
+    if ((method == NULL) ||
+        (co_string_case_compare(method, "PRI") != 0))
+    {
+        return false;
+    }
+
+    const char* path = co_http_request_get_path(request);
+
+    if ((path == NULL) ||
+        (co_string_case_compare(path, "*") != 0))
+    {
+        return false;
+    }
+
+    const char* version = co_http_request_get_version(request);
+
+    if ((version == NULL) ||
+        (co_string_case_compare(version, "HTTP/2.0") != 0))
+    {
+        return false;
+    }
+
+    return true;
 }
 
 void
@@ -161,7 +209,7 @@ void
 co_http_request_t*
 co_http_request_create_with(
     const char* method,
-    const char* url_str
+    const char* path
 )
 {
     co_http_request_t* request = co_http_request_create();
@@ -172,7 +220,7 @@ co_http_request_create_with(
     }
 
     co_http_request_set_method(request, method);    
-    co_http_request_set_url(request, url_str);
+    co_http_request_set_path(request, path);
 
     return request;
 }
@@ -241,15 +289,15 @@ co_http_request_get_content_size(
 }
 
 void
-co_http_request_set_url(
+co_http_request_set_path(
     co_http_request_t* request,
-    const char* url_str)
+    const char* path)
 {
     co_http_url_destroy(request->url);
 
-    if (url_str != NULL)
+    if (path != NULL)
     {
-        request->url = co_http_url_create(url_str);
+        request->url = co_http_url_create(path);
 
         if (request->url->path == NULL)
         {
@@ -260,6 +308,19 @@ co_http_request_set_url(
     {
         request->url = NULL;
     }
+}
+
+const char*
+co_http_request_get_path(
+    const co_http_request_t* request
+)
+{
+    if (request->url == NULL)
+    {
+        return NULL;
+    }
+
+    return request->url->src;
 }
 
 const co_http_url_st*

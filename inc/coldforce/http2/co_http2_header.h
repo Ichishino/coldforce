@@ -16,6 +16,15 @@ CO_EXTERN_C_BEGIN
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
+typedef struct co_http2_data_st
+{
+    uint8_t* ptr;
+    size_t size;
+
+    char* file_path;
+
+} co_http2_data_st;
+
 typedef struct co_http2_pseudo_header_t
 {
     char* authority;
@@ -38,10 +47,10 @@ typedef struct co_http2_header_t
     co_http2_pseudo_header_t pseudo;
     co_list_t* field_list;
 
-} co_http2_header_t;
+    uint32_t stream_dependency;
+    uint8_t weight;
 
-void co_http2_header_setup(co_http2_header_t* header);
-void co_http2_header_cleanup(co_http2_header_t* header);
+} co_http2_header_t;
 
 bool co_http2_header_add_field_ptr(
     co_http2_header_t* header, char* name, char* value);
@@ -50,6 +59,12 @@ CO_HTTP2_API void co_http2_header_print(const co_http2_header_t* header);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
+
+CO_HTTP2_API co_http2_header_t* co_http2_header_create(void);
+CO_HTTP2_API co_http2_header_t* co_http2_header_create_request(const char* method, const char* path);
+CO_HTTP2_API co_http2_header_t* co_http2_header_create_response(uint16_t status_code);
+
+CO_HTTP2_API void co_http2_header_destroy(co_http2_header_t* header);
 
 CO_HTTP2_API void co_http2_header_clear(co_http2_header_t* header);
 
@@ -61,13 +76,19 @@ CO_HTTP2_API const char* co_http2_header_get_method(const co_http2_header_t* hea
 
 CO_HTTP2_API void co_http2_header_set_path(co_http2_header_t* header, const char* path);
 CO_HTTP2_API const char* co_http2_header_get_path(const co_http2_header_t* header);
-CO_HTTP2_API const co_http_url_st* co_http2_header_get_url(const co_http2_header_t* header);
+CO_HTTP2_API const co_http_url_st* co_http2_header_get_path_url(const co_http2_header_t* header);
 
 CO_HTTP2_API void co_http2_header_set_scheme(co_http2_header_t* header, const char* scheme);
 CO_HTTP2_API const char* co_http2_header_get_scheme(const co_http2_header_t* header);
 
 CO_HTTP2_API void co_http2_header_set_status_code(co_http2_header_t* header, uint16_t status_code);
 CO_HTTP2_API uint16_t co_http2_header_get_status_code(const co_http2_header_t* header);
+
+CO_HTTP2_API void co_http2_header_set_stream_dependency(co_http2_header_t* header, uint32_t stream_dependency);
+CO_HTTP2_API uint32_t co_http2_header_get_stream_dependency(const co_http2_header_t* header);
+
+CO_HTTP2_API void co_http2_header_set_weight(co_http2_header_t* header, uint8_t weight);
+CO_HTTP2_API uint8_t co_http2_header_get_weight(const co_http2_header_t* header);
 
 CO_HTTP2_API size_t co_http2_header_get_field_count(const co_http2_header_t* header);
 CO_HTTP2_API size_t co_http2_header_get_value_count(const co_http2_header_t* header, const char* name);

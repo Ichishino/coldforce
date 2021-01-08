@@ -12,10 +12,10 @@ CO_EXTERN_C_BEGIN
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-CO_HTTP2_API void co_http2_huffman_encode(
+void co_http2_huffman_encode(
     const char* str, size_t str_length, uint8_t** dest, size_t* dest_length);
 
-CO_HTTP2_API bool co_http2_huffman_decode(
+bool co_http2_huffman_decode(
     const uint8_t* src, size_t src_length, char** dest, size_t* dest_length);
 
 //---------------------------------------------------------------------------//

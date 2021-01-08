@@ -5,7 +5,6 @@
 #include <coldforce/http2/co_http2_hpack.h>
 #include <coldforce/http2/co_http2_huffman.h>
 #include <coldforce/http2/co_http2_stream.h>
-#include <coldforce/http2/co_http2_message.h>
 #include <coldforce/http2/co_http2_client.h>
 
 //---------------------------------------------------------------------------//
@@ -43,10 +42,50 @@ static const char* hpack_static_value_table[16] =
     "404", "500", NULL, "gzip, deflate"
 };
 
+static const uint8_t hpack_static_hash_name_table[288] =
+{
+    0xff, 0xff, 0xff, 0xff, 0xff, 0x33, 0xff, 0x37,
+    0x15, 0x22, 0xff, 0xff, 0x39, 0xff, 0x2f, 0x2e,
+    0x0f, 0xff, 0x05, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0x1f, 0xff, 0xff, 0x23, 0x1d,
+    0x2d, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0x10, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x3c, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x36,
+    0x13, 0xff, 0xff, 0xff, 0x2b, 0xff, 0xff, 0xff,
+    0xff, 0x11, 0xff, 0xff, 0x12, 0x3a, 0xff, 0xff,
+    0xff, 0x28, 0xff, 0xff, 0xff, 0xff, 0x31, 0x38,
+    0xff, 0xff, 0xff, 0xff, 0x2a, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0x01, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0x3b, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0x27, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0x16, 0xff, 0xff, 0xff, 0x25, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x24, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x03, 0xff,
+    0xff, 0xff, 0xff, 0x19, 0x29, 0x1a, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0x30, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x35,
+    0xff, 0xff, 0xff, 0xff, 0x34, 0xff, 0xff, 0x26,
+    0x32, 0xff, 0xff, 0xff, 0xff, 0xff, 0x2c, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0x0e, 0xff, 0xff,
+    0x14, 0x17, 0xff, 0x1e, 0x1c, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0x18, 0x20, 0x00, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x07,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x1b, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0x21, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+};
+
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-void
+static void
 co_http2_hpack_serialize_int(
     uint8_t bit_max,
     uint8_t flag,
@@ -82,7 +121,7 @@ co_http2_hpack_serialize_int(
     }
 }
 
-bool
+static bool
 co_http2_hpack_deserialize_int(
     uint8_t bit_max,
     const uint8_t* data,
@@ -128,7 +167,8 @@ co_http2_hpack_deserialize_int(
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-void
+#if 0
+static void
 co_http2_hpack_serialize_4bits_int(
     bool flag,
     uint32_t value,
@@ -140,8 +180,10 @@ co_http2_hpack_serialize_4bits_int(
         (flag ? CO_HTTP2_FLAG_4_BITS : 0),
         value, buffer);
 }
+#endif
 
-void
+#if 0
+static void
 co_http2_hpack_serialize_5bits_int(
     bool flag,
     uint32_t value,
@@ -153,8 +195,9 @@ co_http2_hpack_serialize_5bits_int(
         (flag ? CO_HTTP2_FLAG_5_BITS : 0),
         value, buffer);
 }
+#endif
 
-void
+static void
 co_http2_hpack_serialize_6bits_int(
     bool flag,
     uint32_t value,
@@ -167,7 +210,7 @@ co_http2_hpack_serialize_6bits_int(
         value, buffer);
 }
 
-void
+static void
 co_http2_hpack_serialize_7bits_int(
     bool flag,
     uint32_t value,
@@ -183,7 +226,7 @@ co_http2_hpack_serialize_7bits_int(
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-void
+static void
 co_http2_hpack_serialize_string(
     bool encoding,
     const char* str,
@@ -218,7 +261,7 @@ co_http2_hpack_serialize_string(
     }
 }
 
-bool
+static bool
 co_http2_hpack_deserialize_string(
     const uint8_t* data,
     size_t data_size,
@@ -273,7 +316,7 @@ co_http2_hpack_deserialize_string(
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-void
+static void
 co_http2_hpack_dynamic_table_item_free(
     co_http2_hpack_dynamic_table_item_t* item
 )
@@ -309,7 +352,7 @@ co_http2_hpack_dynamic_table_cleanup(
     }
 }
 
-void
+static void
 co_http2_hpack_dynamic_table_resize(
     co_http2_hpack_dynamic_table_t* dynamic_table,
     uint32_t max_size
@@ -339,7 +382,7 @@ co_http2_hpack_dynamic_table_resize(
     }
 }
 
-bool
+static bool
 co_http2_hpack_dynamic_table_add_item(
     co_http2_hpack_dynamic_table_t* dynamic_table,
     const char* name,
@@ -404,7 +447,7 @@ co_http2_hpack_dynamic_table_add_item(
     return true;
 }
 
-bool
+static bool
 co_http2_hpack_dynamic_table_find_item(
     const co_http2_hpack_dynamic_table_t* dynamic_table,
     const char* name,
@@ -436,7 +479,7 @@ co_http2_hpack_dynamic_table_find_item(
     return false;
 }
 
-bool
+static bool
 co_http2_hpack_dynamic_table_find_item_by_index(
     const co_http2_hpack_dynamic_table_t* dynamic_table,
     uint32_t header_index,
@@ -477,21 +520,22 @@ co_http2_hpack_dynamic_table_find_item_by_index(
     return true;
 }
 
-bool
+static bool
 co_http2_hpack_static_table_find_item(
     const char* name,
     uint32_t* header_index
 )
 {
-    for (uint32_t index = 0; index < 61; ++index)
-    {
-        if (co_string_case_compare(
-            hpack_static_name_table[index], name) == 0)
-        {
-            (*header_index) = (index + 1);
+    size_t hash = co_string_hash(name) % 285;
+    uint32_t index = hpack_static_hash_name_table[hash];
 
-            return true;
-        }
+    if ((index != 0xff) &&
+        (co_string_case_compare(
+            hpack_static_name_table[index], name) == 0))
+    {
+        (*header_index) = (index + 1);
+
+        return true;
     }
 
     return false;
@@ -500,7 +544,7 @@ co_http2_hpack_static_table_find_item(
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-void
+static void
 co_http2_hpack_serialize_header_field(
     const char* name,
     const char* value,
@@ -684,7 +728,7 @@ co_http2_hpack_serialize_header(
     }
 }
 
-bool
+static bool
 co_http2_hpack_deserialize_header_field(
     uint8_t bits,
     const uint8_t* data,

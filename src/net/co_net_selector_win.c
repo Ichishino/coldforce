@@ -221,7 +221,7 @@ co_net_selector_wait(
                     break;
                 }
 
-                int error_code = -1;
+                int error_code = CO_NET_ERROR_TCP_CONNECT_FAILED;
                 int seconds = -1;
 
                 if (co_win_socket_option_get_connect_time(

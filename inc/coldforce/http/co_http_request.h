@@ -29,9 +29,11 @@ typedef struct
 
 } co_http_request_t;
 
-void co_http_request_serialize(
+bool co_http_request_is_connection_preface(const co_http_request_t* request);
+
+CO_HTTP_API void co_http_request_serialize(
     const co_http_request_t* request, co_byte_array_t* buffer);
-int co_http_request_deserialize(
+CO_HTTP_API int co_http_request_deserialize(
     co_http_request_t* request, const co_byte_array_t* data, size_t* index);
 
 CO_HTTP_API void co_http_request_print_header(const co_http_request_t* request);
@@ -40,7 +42,7 @@ CO_HTTP_API void co_http_request_print_header(const co_http_request_t* request);
 //---------------------------------------------------------------------------//
 
 CO_HTTP_API co_http_request_t* co_http_request_create(void);
-CO_HTTP_API co_http_request_t* co_http_request_create_with(const char* method, const char* url_str);
+CO_HTTP_API co_http_request_t* co_http_request_create_with(const char* method, const char* path);
 
 CO_HTTP_API void co_http_request_destroy(co_http_request_t* request);
 
@@ -53,7 +55,8 @@ CO_HTTP_API bool co_http_request_set_content(
 CO_HTTP_API const void* co_http_request_get_content(const co_http_request_t* request);
 CO_HTTP_API size_t co_http_request_get_content_size(const co_http_request_t* request);
 
-CO_HTTP_API void co_http_request_set_url(co_http_request_t* request, const char* url_str);
+CO_HTTP_API void co_http_request_set_path(co_http_request_t* request, const char* path);
+CO_HTTP_API const char* co_http_request_get_path(const co_http_request_t* request);
 CO_HTTP_API const co_http_url_st* co_http_request_get_url(const co_http_request_t* request);
 
 CO_HTTP_API void co_http_request_set_method(co_http_request_t* request, const char* method);

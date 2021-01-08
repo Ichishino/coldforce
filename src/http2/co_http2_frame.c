@@ -159,7 +159,7 @@ co_http2_frame_serialize(
     case CO_HTTP2_FRAME_TYPE_PING:
     {
         co_byte_array_add(buffer,
-            frame->payload.ping.opaque_data, 8);
+            &frame->payload.ping.opaque_data, sizeof(uint64_t));
 
         break;
     }
@@ -257,6 +257,8 @@ co_http2_frame_deserialize(
     frame->header.stream_id =
         co_byte_order_32_network_to_host(frame->header.stream_id);
     data_ptr += sizeof(uint32_t);
+
+    frame->header.payload_destroy = true;
 
     switch (frame->header.type)
     {
@@ -385,8 +387,8 @@ co_http2_frame_deserialize(
         if (frame->payload.settings.param_count > 0)
         {
             frame->payload.settings.params =
-                (co_http2_setting_param_t*)
-                    co_mem_alloc(sizeof(co_http2_setting_param_t) *
+                (co_http2_setting_param_st*)
+                    co_mem_alloc(sizeof(co_http2_setting_param_st) *
                         frame->payload.settings.param_count);
         
             uint16_t u16;
@@ -449,7 +451,8 @@ co_http2_frame_deserialize(
     }
     case CO_HTTP2_FRAME_TYPE_PING:
     {
-        memcpy(frame->payload.ping.opaque_data, data_ptr, 8);
+        memcpy(&frame->payload.ping.opaque_data,
+            data_ptr, sizeof(uint64_t));
         data_ptr += sizeof(uint64_t);
 
         break;
@@ -548,67 +551,70 @@ co_http2_frame_destroy(
 {
     if (frame != NULL)
     {
-        switch (frame->header.type)
+        if (frame->header.payload_destroy)
         {
-        case CO_HTTP2_FRAME_TYPE_DATA:
-        {
-            co_mem_free(frame->payload.data.data);
-            co_mem_free(frame->payload.data.padding);
+            switch (frame->header.type)
+            {
+            case CO_HTTP2_FRAME_TYPE_DATA:
+            {
+                co_mem_free(frame->payload.data.data);
+                co_mem_free(frame->payload.data.padding);
 
-            break;
-        }
-        case CO_HTTP2_FRAME_TYPE_HEADERS:
-        {
-            co_mem_free(frame->payload.headers.header_block_fragment);
-            co_mem_free(frame->payload.headers.padding);
+                break;
+            }
+            case CO_HTTP2_FRAME_TYPE_HEADERS:
+            {
+                co_mem_free(frame->payload.headers.header_block_fragment);
+                co_mem_free(frame->payload.headers.padding);
 
-            break;
-        }
-        case CO_HTTP2_FRAME_TYPE_PRIORITY:
-        {
-            break;
-        }
-        case CO_HTTP2_FRAME_TYPE_RST_STREAM:
-        {
-            break;
-        }
-        case CO_HTTP2_FRAME_TYPE_SETTINGS:
-        {
-            co_mem_free(frame->payload.settings.params);
+                break;
+            }
+            case CO_HTTP2_FRAME_TYPE_PRIORITY:
+            {
+                break;
+            }
+            case CO_HTTP2_FRAME_TYPE_RST_STREAM:
+            {
+                break;
+            }
+            case CO_HTTP2_FRAME_TYPE_SETTINGS:
+            {
+                co_mem_free(frame->payload.settings.params);
 
-            break;
-        }
-        case CO_HTTP2_FRAME_TYPE_PUSH_PROMISE:
-        {
-            co_mem_free(frame->payload.push_promise.header_block_fragment);
-            co_mem_free(frame->payload.push_promise.padding);
+                break;
+            }
+            case CO_HTTP2_FRAME_TYPE_PUSH_PROMISE:
+            {
+                co_mem_free(frame->payload.push_promise.header_block_fragment);
+                co_mem_free(frame->payload.push_promise.padding);
 
-            break;
-        }
-        case CO_HTTP2_FRAME_TYPE_PING:
-        {
-            break;
-        }
-        case CO_HTTP2_FRAME_TYPE_GOAWAY:
-        {
-            co_mem_free(frame->payload.goaway.additional_debug_data);
+                break;
+            }
+            case CO_HTTP2_FRAME_TYPE_PING:
+            {
+                break;
+            }
+            case CO_HTTP2_FRAME_TYPE_GOAWAY:
+            {
+                co_mem_free(frame->payload.goaway.additional_debug_data);
 
-            break;
-        }
-        case CO_HTTP2_FRAME_TYPE_WINDOW_UPDATE:
-        {
-            break;
-        }
-        case CO_HTTP2_FRAME_TYPE_CONTINUATION:
-        {
-            co_mem_free(frame->payload.continuation.header_block_fragment);
+                break;
+            }
+            case CO_HTTP2_FRAME_TYPE_WINDOW_UPDATE:
+            {
+                break;
+            }
+            case CO_HTTP2_FRAME_TYPE_CONTINUATION:
+            {
+                co_mem_free(frame->payload.continuation.header_block_fragment);
 
-            break;
-        }
-        default:
-        {
-            break;
-        }
+                break;
+            }
+            default:
+            {
+                break;
+            }
+            }
         }
 
         co_mem_free(frame);
@@ -620,6 +626,7 @@ co_http2_frame_destroy(
 
 co_http2_frame_t*
 co_http2_create_data_frame(
+    bool payload_copy,
     bool end_stream,
     const uint8_t* data,
     uint32_t data_length,
@@ -634,15 +641,32 @@ co_http2_create_data_frame(
     frame->header.flags = 0;
     frame->header.stream_id = 0;
 
+    frame->header.payload_destroy = payload_copy;
+
     if (end_stream)
     {
         frame->header.flags |= CO_HTTP2_FRAME_FLAG_END_STREAM;
     }
 
-    if (data_length > 0)
+    frame->payload.data.data_length = data_length;
+
+    if (frame->payload.data.data_length > 0)
     {
-        frame->payload.data.data = (uint8_t*)co_mem_alloc(data_length);
-        memcpy(frame->payload.data.data, data, data_length);
+        if (payload_copy)
+        {
+            frame->payload.data.data =
+                (uint8_t*)co_mem_alloc(frame->payload.data.data_length);
+            memcpy(frame->payload.data.data,
+                data, frame->payload.data.data_length);
+        }
+        else
+        {
+            frame->payload.data.data = (uint8_t*)data;
+        }
+    }
+    else
+    {
+        frame->payload.data.data = NULL;
     }
 
     frame->payload.data.pad_length = pad_length;
@@ -651,9 +675,16 @@ co_http2_create_data_frame(
     {
         frame->header.flags |= CO_HTTP2_FRAME_FLAG_PADDED;
 
-        frame->payload.data.padding =
-            (uint8_t*)co_mem_alloc(pad_length);
-        memcpy(frame->payload.data.padding, padding, pad_length);
+        if (payload_copy)
+        {
+            frame->payload.data.padding =
+                (uint8_t*)co_mem_alloc(pad_length);
+            memcpy(frame->payload.data.padding, padding, pad_length);
+        }
+        else
+        {
+            frame->payload.data.padding = (uint8_t*)padding;
+        }
 
         frame->header.length += pad_length;
     }
@@ -667,6 +698,7 @@ co_http2_create_data_frame(
 
 co_http2_frame_t*
 co_http2_create_headers_frame(
+    bool payload_copy,
     bool end_stream,
     bool end_headers,
     const uint8_t* header_block_fragment,
@@ -684,6 +716,8 @@ co_http2_create_headers_frame(
     frame->header.flags = 0;
     frame->header.stream_id = 0;
 
+    frame->header.payload_destroy = payload_copy;
+
     if (end_stream)
     {
         frame->header.flags |= CO_HTTP2_FRAME_FLAG_END_STREAM;
@@ -699,10 +733,18 @@ co_http2_create_headers_frame(
 
     if (header_block_fragment_length > 0)
     {
-        frame->payload.headers.header_block_fragment =
-            (uint8_t*)co_mem_alloc(header_block_fragment_length);
-        memcpy(frame->payload.headers.header_block_fragment,
-            header_block_fragment, header_block_fragment_length);
+        if (payload_copy)
+        {
+            frame->payload.headers.header_block_fragment =
+                (uint8_t*)co_mem_alloc(header_block_fragment_length);
+            memcpy(frame->payload.headers.header_block_fragment,
+                header_block_fragment, header_block_fragment_length);
+        }
+        else
+        {
+            frame->payload.headers.header_block_fragment =
+                (uint8_t*)header_block_fragment;
+        }
     }
     else
     {
@@ -724,9 +766,16 @@ co_http2_create_headers_frame(
     {
         frame->header.flags |= CO_HTTP2_FRAME_FLAG_PADDED;
 
-        frame->payload.headers.padding =
-            (uint8_t*)co_mem_alloc(pad_length);
-        memcpy(frame->payload.headers.padding, padding, pad_length);
+        if (payload_copy)
+        {
+            frame->payload.headers.padding =
+                (uint8_t*)co_mem_alloc(pad_length);
+            memcpy(frame->payload.headers.padding, padding, pad_length);
+        }
+        else
+        {
+            frame->payload.headers.padding = (uint8_t*)padding;
+        }
 
         frame->header.length += pad_length;
     }
@@ -778,8 +827,9 @@ co_http2_create_rst_stream_frame(
 
 co_http2_frame_t*
 co_http2_create_settings_frame(
+    bool payload_copy,
     bool ack,
-    const co_http2_setting_param_t* params,
+    const co_http2_setting_param_st* params,
     uint16_t param_count
 )
 {
@@ -787,10 +837,11 @@ co_http2_create_settings_frame(
 
     frame->header.length =
         (sizeof(uint16_t) + sizeof(uint32_t)) * param_count;
-
     frame->header.type = CO_HTTP2_FRAME_TYPE_SETTINGS;
     frame->header.flags = 0;
     frame->header.stream_id = 0;
+
+    frame->header.payload_destroy = payload_copy;
 
     if (ack)
     {
@@ -801,16 +852,24 @@ co_http2_create_settings_frame(
 
     if (param_count > 0)
     {
-        frame->payload.settings.params =
-            (co_http2_setting_param_t*)co_mem_alloc(
-                sizeof(co_http2_setting_param_t) * param_count);
-
-        for (size_t index = 0; index < param_count; ++index)
+        if (payload_copy)
         {
-            frame->payload.settings.params[index].identifier =
-                params[index].identifier;
-            frame->payload.settings.params[index].value =
-                params[index].value;
+            frame->payload.settings.params =
+                (co_http2_setting_param_st*)co_mem_alloc(
+                    sizeof(co_http2_setting_param_st) * param_count);
+
+            for (uint16_t index = 0; index < param_count; ++index)
+            {
+                frame->payload.settings.params[index].identifier =
+                    params[index].identifier;
+                frame->payload.settings.params[index].value =
+                    params[index].value;
+            }
+        }
+        else
+        {
+            frame->payload.settings.params =
+                (co_http2_setting_param_st*)params;
         }
     }
     else
@@ -823,20 +882,23 @@ co_http2_create_settings_frame(
 
 co_http2_frame_t*
 co_http2_create_push_promise_frame(
+    bool payload_copy,
     bool end_headers,
     uint32_t promised_stream_id,
     const uint8_t* header_block_fragment,
     uint32_t header_block_fragment_length,
-    uint8_t* padding,
+    const uint8_t* padding,
     uint8_t pad_length
 )
 {
     co_http2_frame_t* frame = co_http2_frame_create();
 
-    frame->header.length = header_block_fragment_length;
+    frame->header.length = sizeof(uint32_t) + header_block_fragment_length;
     frame->header.type = CO_HTTP2_FRAME_TYPE_PUSH_PROMISE;
     frame->header.flags = 0;
     frame->header.stream_id = 0;
+
+    frame->header.payload_destroy = payload_copy;
 
     if (end_headers)
     {
@@ -850,10 +912,18 @@ co_http2_create_push_promise_frame(
 
     if (header_block_fragment_length > 0)
     {
-        frame->payload.push_promise.header_block_fragment =
-            (uint8_t*)co_mem_alloc(header_block_fragment_length);
-        memcpy(frame->payload.push_promise.header_block_fragment,
-            header_block_fragment, header_block_fragment_length);
+        if (payload_copy)
+        {
+            frame->payload.push_promise.header_block_fragment =
+                (uint8_t*)co_mem_alloc(header_block_fragment_length);
+            memcpy(frame->payload.push_promise.header_block_fragment,
+                header_block_fragment, header_block_fragment_length);
+        }
+        else
+        {
+            frame->payload.push_promise.header_block_fragment =
+                (uint8_t*)header_block_fragment;
+        }
     }
     else
     {
@@ -866,9 +936,16 @@ co_http2_create_push_promise_frame(
     {
         frame->header.flags |= CO_HTTP2_FRAME_FLAG_PADDED;
 
-        frame->payload.push_promise.padding =
-            (uint8_t*)co_mem_alloc(pad_length);
-        memcpy(frame->payload.push_promise.padding, padding, pad_length);
+        if (payload_copy)
+        {
+            frame->payload.push_promise.padding =
+                (uint8_t*)co_mem_alloc(pad_length);
+            memcpy(frame->payload.push_promise.padding, padding, pad_length);
+        }
+        else
+        {
+            frame->payload.push_promise.padding = (uint8_t*)padding;
+        }
 
         frame->header.length += pad_length;
     }
@@ -883,13 +960,12 @@ co_http2_create_push_promise_frame(
 co_http2_frame_t*
 co_http2_create_ping_frame(
     bool ack,
-    const uint8_t* opaque_data,
-    uint8_t opaque_data_length
+    uint64_t opaque_data
 )
 {
     co_http2_frame_t* frame = co_http2_frame_create();
 
-    frame->header.length = 8;
+    frame->header.length = sizeof(uint64_t);
 
     frame->header.type = CO_HTTP2_FRAME_TYPE_PING;
     frame->header.flags = 0;
@@ -900,17 +976,17 @@ co_http2_create_ping_frame(
         frame->header.flags |= CO_HTTP2_FRAME_FLAG_ACK;
     }
 
-    memcpy(frame->payload.ping.opaque_data,
-        opaque_data, co_min(8, opaque_data_length));
+    frame->payload.ping.opaque_data = opaque_data;
 
     return frame;
 }
 
 co_http2_frame_t*
 co_http2_create_goaway_frame(
+    bool payload_copy,
     uint32_t last_stream_id,
     uint32_t error_code,
-    uint8_t* additional_debug_data,
+    const uint8_t* additional_debug_data,
     uint32_t additional_debug_data_length)
 {
     co_http2_frame_t* frame = co_http2_frame_create();
@@ -921,21 +997,36 @@ co_http2_create_goaway_frame(
     frame->header.flags = 0;
     frame->header.stream_id = 0;
 
+    frame->header.payload_destroy = payload_copy;
+
     frame->payload.goaway.last_stream_id = last_stream_id;
     frame->payload.goaway.error_code = error_code;
+
+    frame->payload.goaway.additional_debug_data_length =
+        additional_debug_data_length;
 
     if ((additional_debug_data != NULL) &&
         (additional_debug_data_length > 0))
     {
         frame->header.length += additional_debug_data_length;
 
-        frame->payload.goaway.additional_debug_data_length =
-            additional_debug_data_length;
-        frame->payload.goaway.additional_debug_data =
-            (uint8_t*)co_mem_alloc(additional_debug_data_length);
-        memcpy(frame->payload.goaway.additional_debug_data,
-            additional_debug_data,
-            additional_debug_data_length);
+        if (payload_copy)
+        {
+            frame->payload.goaway.additional_debug_data =
+                (uint8_t*)co_mem_alloc(additional_debug_data_length);
+            memcpy(frame->payload.goaway.additional_debug_data,
+                additional_debug_data,
+                additional_debug_data_length);
+        }
+        else
+        {
+            frame->payload.goaway.additional_debug_data =
+                (uint8_t*)additional_debug_data;
+        }
+    }
+    else
+    {
+        frame->payload.goaway.additional_debug_data = NULL;
     }
 
     return frame;
@@ -961,6 +1052,7 @@ co_http2_create_window_update_frame(
 
 co_http2_frame_t*
 co_http2_create_continuation_frame(
+    bool payload_copy,
     bool end_headers,
     const uint8_t* header_block_fragment,
     uint32_t header_block_fragment_length
@@ -973,6 +1065,8 @@ co_http2_create_continuation_frame(
     frame->header.flags = 0;
     frame->header.stream_id = 0;
 
+    frame->header.payload_destroy = payload_copy;
+
     if (end_headers)
     {
         frame->header.flags |= CO_HTTP2_FRAME_FLAG_END_HEADERS;
@@ -983,10 +1077,22 @@ co_http2_create_continuation_frame(
 
     if (header_block_fragment_length > 0)
     {
-        frame->payload.continuation.header_block_fragment =
-            (uint8_t*)co_mem_alloc(header_block_fragment_length);
-        memcpy(frame->payload.continuation.header_block_fragment,
-            header_block_fragment, header_block_fragment_length);
+        if (payload_copy)
+        {
+            frame->payload.continuation.header_block_fragment =
+                (uint8_t*)co_mem_alloc(header_block_fragment_length);
+            memcpy(frame->payload.continuation.header_block_fragment,
+                header_block_fragment, header_block_fragment_length);
+        }
+        else
+        {
+            frame->payload.continuation.header_block_fragment =
+                (uint8_t*)header_block_fragment;
+        }
+    }
+    else
+    {
+        frame->payload.continuation.header_block_fragment = NULL;
     }
 
     return frame;

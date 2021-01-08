@@ -10,7 +10,7 @@ add_library(${PROJECT_NAME} STATIC
     co_http2_header.c
     co_http2_hpack.c
     co_http2_huffman.c
-    co_http2_message.c
+    co_http2_server.c
     co_http2_stream.c
 )
 

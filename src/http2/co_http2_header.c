@@ -98,11 +98,19 @@ co_http2_header_print(
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-void
-co_http2_header_setup(
-    co_http2_header_t* header
+co_http2_header_t*
+co_http2_header_create(
+    void
 )
 {
+    co_http2_header_t* header =
+        (co_http2_header_t*)co_mem_alloc(sizeof(co_http2_header_t));
+
+    if (header == NULL)
+    {
+        return NULL;
+    }
+
     memset(&header->pseudo, 0x00, sizeof(co_http2_pseudo_header_t));
 
     co_list_ctx_st list_ctx = { 0 };
@@ -110,10 +118,51 @@ co_http2_header_setup(
     list_ctx.compare_values = (co_compare_fn)co_http2_header_field_compare;
 
     header->field_list = co_list_create(&list_ctx);
+
+    header->stream_dependency = 0;
+    header->weight = 0;
+
+    return header;
+}
+
+co_http2_header_t*
+co_http2_header_create_request(
+    const char* method,
+    const char* path
+)
+{
+    co_http2_header_t* header = co_http2_header_create();
+
+    if (header == NULL)
+    {
+        return NULL;
+    }
+
+    co_http2_header_set_method(header, method);
+    co_http2_header_set_path(header, path);
+
+    return header;
+}
+
+co_http2_header_t*
+co_http2_header_create_response(
+    uint16_t status_code
+)
+{
+    co_http2_header_t* header = co_http2_header_create();
+
+    if (header == NULL)
+    {
+        return NULL;
+    }
+
+    co_http2_header_set_status_code(header, status_code);
+
+    return header;
 }
 
 void
-co_http2_header_cleanup(
+co_http2_header_destroy(
     co_http2_header_t* header
 )
 {
@@ -126,6 +175,8 @@ co_http2_header_cleanup(
 
         co_list_destroy(header->field_list);
         header->field_list = NULL;
+
+        co_mem_free(header);
     }
 }
 
@@ -139,9 +190,6 @@ co_http2_header_clear(
         co_list_clear(header->field_list);
     }
 }
-
-//---------------------------------------------------------------------------//
-//---------------------------------------------------------------------------//
 
 void
 co_http2_header_set_authority(
@@ -232,7 +280,7 @@ co_http2_header_get_path(
 }
 
 const co_http_url_st*
-co_http2_header_get_url(
+co_http2_header_get_path_url(
     const co_http2_header_t* header
 )
 {
@@ -280,6 +328,40 @@ co_http2_header_get_status_code(
 )
 {
     return header->pseudo.status_code;
+}
+
+void
+co_http2_header_set_stream_dependency(
+    co_http2_header_t* header,
+    uint32_t stream_dependency
+)
+{
+    header->stream_dependency = stream_dependency;
+}
+
+uint32_t
+co_http2_header_get_stream_dependency(
+    const co_http2_header_t* header
+)
+{
+    return header->stream_dependency;
+}
+
+void
+co_http2_header_set_weight(
+    co_http2_header_t* header,
+    uint8_t weight
+)
+{
+    header->weight = weight;
+}
+
+uint8_t
+co_http2_header_get_weight(
+    const co_http2_header_t* header
+)
+{
+    return header->weight;
 }
 
 //---------------------------------------------------------------------------//
@@ -490,4 +572,3 @@ co_http2_header_remove_all_fields(
         }
     }
 }
-

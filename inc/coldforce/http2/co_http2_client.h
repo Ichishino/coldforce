@@ -8,7 +8,7 @@
 #include <coldforce/http2/co_http2.h>
 #include <coldforce/http2/co_http2_stream.h>
 #include <coldforce/http2/co_http2_hpack.h>
-#include <coldforce/http2/co_http2_message.h>
+#include <coldforce/http2/co_http2_header.h>
 
 CO_EXTERN_C_BEGIN
 
@@ -19,14 +19,10 @@ CO_EXTERN_C_BEGIN
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-#define CO_HTTP2_ERROR_STREAM_CLOSED        -6000
-#define CO_HTTP2_ERROR_FILE_IO              -6101
-#define CO_HTTP2_ERROR_PARSE_ERROR          -6102
-
-//---------------------------------------------------------------------------//
-//---------------------------------------------------------------------------//
-
 struct co_http2_client_t;
+
+typedef void(*co_http2_connect_fn)(
+    void* self, struct co_http2_client_t* client, int error_code);
 
 typedef void(*co_http2_close_fn)(
     void* self, struct co_http2_client_t* client, int error_code);
@@ -35,9 +31,21 @@ typedef void(*co_http2_priority_fn)(
     void* self, struct co_http2_client_t* client, co_http2_stream_t* stream,
     uint32_t stream_dependency, uint8_t weight);
 
+typedef void(*co_http2_window_update_fn)(
+    void* self, struct co_http2_client_t* client, co_http2_stream_t* stream);
+
+typedef void(*co_http2_close_stream_fn)(
+    void* self, struct co_http2_client_t* client, co_http2_stream_t* stream, int error_code);
+
 typedef bool(*co_http2_push_request_fn)(
-    void* self, struct co_http2_client_t* client, const co_http2_stream_t* stream,
-    co_http2_message_t* push_message);
+    void* self, struct co_http2_client_t* client,
+    const co_http2_stream_t* request_stream, co_http2_stream_t* response_stream,
+    co_http2_header_t* request_header);
+
+typedef co_http2_message_fn co_http2_push_response_fn;
+
+typedef void(*co_http2_ping_fn)(
+    void* self, struct co_http2_client_t* client, uint64_t user_data);
 
 typedef struct
 {
@@ -48,47 +56,63 @@ typedef struct
     uint32_t max_frame_size;
     uint32_t max_header_list_size;
 
-} co_http2_settings_t;
+} co_http2_settings_st;
 
 typedef struct co_http2_client_t
 {
     co_tcp_client_t* tcp_client;
     co_tcp_client_module_t module;
 
-    bool connecting;
     co_http_url_st* base_url;
-    co_list_t* request_queue;
+
+    size_t receive_data_index;
     co_byte_array_t* receive_data;
 
     co_http2_stream_t* system_stream;
     co_map_t* stream_map;
+
     uint32_t last_stream_id;
+    uint32_t new_stream_id;
 
+    co_http2_connect_fn on_connect;
     co_http2_close_fn on_close;
-
     co_http2_message_fn on_message;
-    co_http2_priority_fn on_priority;
-
     co_http2_push_request_fn on_push_request;
     co_http2_message_fn on_push_response;
+    co_http2_priority_fn on_priority;
+    co_http2_window_update_fn on_window_update;
+    co_http2_close_stream_fn on_close_stream;
+    co_http2_ping_fn on_ping;
 
-    co_http2_settings_t local_settings;
-    co_http2_settings_t remote_settings;
+    co_http2_settings_st local_settings;
+    co_http2_settings_st remote_settings;
 
     co_http2_hpack_dynamic_table_t local_dynamic_table;
     co_http2_hpack_dynamic_table_t remote_dynamic_table;
 
 } co_http2_client_t;
 
+void co_http2_client_setup(co_http2_client_t* client);
+
+void co_http2_client_on_tcp_close(
+    co_thread_t* thread, co_tcp_client_t* tcp_client);
+
 bool co_http2_send_raw_data(
     co_http2_client_t* client, const void* data, size_t data_size);
-void co_http2_client_send_all_requests(
-    co_http2_client_t* client);
+
 void co_http2_client_on_close(
     co_http2_client_t* client, int error_code);
-void co_http2_client_on_push_promise_message(
+void co_http2_client_on_push_promise(
     co_http2_client_t* client, co_http2_stream_t* stream,
-    uint32_t promised_id, co_http2_message_t* message);
+    uint32_t promised_id, co_http2_header_t* header);
+void co_http2_client_on_receive_system_frame(
+    co_http2_client_t* client, const co_http2_frame_t* frame);
+
+bool co_http2_set_upgrade_settings(
+    const char* b64_settings, size_t b64_settings_length,
+    co_http2_settings_st* settings);
+void co_http2_send_upgrade_response(
+    co_http2_client_t* client, bool result);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
@@ -97,26 +121,64 @@ CO_HTTP2_API co_http2_client_t* co_http2_client_create(
     const char* base_url, const co_net_addr_t* local_net_addr, co_tls_ctx_st* tls_ctx);
 
 CO_HTTP2_API void co_http2_client_destroy(co_http2_client_t* client);
+CO_HTTP2_API void co_http2_client_close(co_http2_client_t* client, int error_code);
 
-CO_HTTP2_API bool co_http2_send_request(co_http2_client_t* client, co_http2_message_t* message);
+CO_HTTP2_API bool co_http2_is_running(const co_http2_client_t* client);
+
+CO_HTTP2_API bool co_http2_connect(
+    co_http2_client_t* client, co_http2_connect_fn handler);
+
+CO_HTTP2_API co_http2_stream_t* co_http2_get_stream(
+    co_http2_client_t* client, uint32_t stream_id);
+CO_HTTP2_API co_http2_stream_t* co_http2_create_stream(
+    co_http2_client_t* client);
 
 CO_HTTP2_API void co_http2_set_message_handler(
     co_http2_client_t* client, co_http2_message_fn handler);
 CO_HTTP2_API void co_http2_set_close_handler(
     co_http2_client_t* client, co_http2_close_fn handler);
-
 CO_HTTP2_API void co_http2_set_server_push_request_handler(
     co_http2_client_t* client, co_http2_push_request_fn handler);
 CO_HTTP2_API void co_http2_set_server_push_response_handler(
     co_http2_client_t* client, co_http2_message_fn handler);
+CO_HTTP2_API void co_http2_set_window_update_handler(
+    co_http2_client_t* client, co_http2_window_update_fn handler);
+CO_HTTP2_API void co_http2_set_close_stream_handler(
+    co_http2_client_t* client, co_http2_close_stream_fn handler);
 
-CO_HTTP2_API bool co_http2_client_is_running(const co_http2_client_t* client);
+CO_HTTP2_API void co_http2_send_initial_settings(co_http2_client_t* client);
+
+CO_HTTP2_API void co_http2_init_settings(
+    co_http2_client_t* client,
+    const co_http2_setting_param_st* params,
+    uint16_t param_count);
+CO_HTTP2_API void co_http2_update_settings(
+    co_http2_client_t* client,
+    const co_http2_setting_param_st* params,
+    uint16_t param_count);
+CO_HTTP2_API const co_http2_settings_st* co_http2_get_local_settings(
+    const co_http2_client_t* client);
+CO_HTTP2_API const co_http2_settings_st* co_http2_get_remote_settings(
+    const co_http2_client_t* client);
+
+//---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
 
 CO_HTTP2_API const co_net_addr_t* co_http2_get_remote_net_addr(const co_http2_client_t* client);
-
 CO_HTTP2_API co_socket_t* co_http2_client_get_socket(co_http2_client_t* client);
 CO_HTTP2_API const char* co_http2_get_base_url(const co_http2_client_t* client);
 CO_HTTP2_API bool co_http2_is_open(const co_http2_client_t* client);
+
+//---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
+
+CO_HTTP2_API bool co_http2_send_upgrade_request(
+    co_http_client_t* client, const char* path,
+    const co_http2_setting_param_st* param, uint16_t param_count,
+    co_http_upgrade_response_fn handler);
+
+CO_HTTP2_API co_http2_client_t* co_http2_client_upgrade(
+    co_http_client_t* client);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

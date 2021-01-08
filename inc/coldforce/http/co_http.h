@@ -45,14 +45,34 @@ CO_EXTERN_C_BEGIN
 //---------------------------------------------------------------------------//
 
 #define CO_HTTP_VERSION_1_1                 "HTTP/1.1"
+#define CO_HTTP_PROTOCOL                    "http/1.1"
 
 #define CO_HTTP_HEADER_CONTENT_LENGTH       "Content-Length"
 #define CO_HTTP_HEADER_HOST                 "Host"
 #define CO_HTTP_HEADER_TRANSFER_ENCODING    "Transfer-Encoding"
 #define CO_HTTP_HEADER_SET_COOKIE           "Set-Cookie"
 #define CO_HTTP_HEADER_COOKIE               "Cookie"
+#define CO_HTTP_HEADER_CONNECTION           "Connection"
+#define CO_HTTP_HEADER_UPGRADE              "Upgrade"
 
 #define CO_HTTP_TRANSFER_ENCODING_CHUNKED   "chunked"
+
+#define CO_HTTP_UPGRADE_CONNECTION_PREFACE  "cp"
+
+//---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
+
+#define CO_HTTP_ERROR_CONNECT_FAILED        -5001
+#define CO_HTTP_ERROR_TLS_HANDSHAKE_FAILED  -5002
+#define CO_HTTP_ERROR_CONNECTION_CLOSED     -5003
+#define CO_HTTP_ERROR_OUT_OF_MEMORY         -5004
+#define CO_HTTP_ERROR_PARSE_HEADER          -5005
+#define CO_HTTP_ERROR_PARSE_CONTENT         -5006
+#define CO_HTTP_ERROR_CANCEL                -5007
+#define CO_HTTP_ERROR_PROTOCOL_ERROR        -5008
+
+//---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
 
 CO_EXTERN_C_END
 

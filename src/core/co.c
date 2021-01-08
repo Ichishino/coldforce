@@ -1,6 +1,7 @@
 #include <coldforce/core/co.h>
 
 #ifdef CO_OS_WIN
+#ifdef _USRDLL
 
 #include <windows.h>
 
@@ -33,4 +34,5 @@ DllMain(
     return TRUE;
 }
 
+#endif // _USRDLL
 #endif // CO_OS_WIN

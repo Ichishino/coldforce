@@ -40,6 +40,8 @@ co_win_net_cleanup(
     WSACleanup();
 }
 
+#ifdef _USRDLL
+
 BOOL APIENTRY
 DllMain(
     HMODULE hModule,
@@ -66,5 +68,7 @@ DllMain(
 
     return TRUE;
 }
+
+#endif // _USRDLL
 
 #endif // CO_OS_WIN

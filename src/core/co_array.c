@@ -121,9 +121,14 @@ co_array_get_ptr(
     size_t index
 )
 {
-    co_assert(index < arr->count);
-
-    return &arr->buffer[index * arr->element_size];
+    if (index < arr->count)
+    {
+        return &arr->buffer[index * arr->element_size];
+    }
+    else
+    {
+        return NULL;
+    }
 }
 
 const void*

@@ -11,7 +11,7 @@
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-int
+static int
 co_http_receive_plain_data(
     co_http_content_receiver_t* receiver,
     co_byte_array_t* receive_data
@@ -56,7 +56,7 @@ co_http_receive_plain_data(
     return CO_HTTP_PARSE_MORE_DATA;
 }
 
-int
+static int
 co_http_receive_chunked_data(
     co_http_content_receiver_t* receiver,
     co_byte_array_t* receive_data

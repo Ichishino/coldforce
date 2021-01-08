@@ -7,14 +7,16 @@
 
 #ifdef CO_OS_WIN
 
-#include <windows.h>
-
 #pragma comment(lib, "libssl.lib")
 #pragma comment(lib, "libcrypto.lib")
+
+#include <windows.h>
 
 //---------------------------------------------------------------------------//
 // tls (windows)
 //---------------------------------------------------------------------------//
+
+#ifdef _USRDLL
 
 BOOL APIENTRY
 DllMain(
@@ -42,6 +44,8 @@ DllMain(
 
     return TRUE;
 }
+
+#endif // _USRDLL
 
 #endif // CO_OS_WIN
 

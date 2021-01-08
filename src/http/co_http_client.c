@@ -16,11 +16,10 @@
 
 void
 co_http_client_setup(
-    co_http_client_t* client,
-    bool secure
+    co_http_client_t* client
 )
 {
-    if (secure)
+    if (client->tcp_client->sock.tls != NULL)
     {
         client->module.destroy = co_tls_tcp_client_destroy;
         client->module.close = co_tls_tcp_client_close;
@@ -42,6 +41,7 @@ co_http_client_setup(
     client->connecting = false;
     client->send_queue = co_list_create(NULL);
     client->receive_queue = co_list_create(NULL);
+    client->receive_data_index = 0;
     client->receive_data = co_byte_array_create();
     client->response = NULL;
 
@@ -53,7 +53,9 @@ co_http_client_setup(
 
     client->request = NULL;
     client->on_request = NULL;
-    client->on_handshake_complete = NULL;
+
+    client->upgrade_ctx = NULL;
+    client->upgrade_map = NULL;
 }
 
 void
@@ -74,12 +76,24 @@ co_http_client_cleanup(
         co_byte_array_destroy(client->receive_data);
         client->receive_data = NULL;
 
+        co_http_request_destroy(client->request);
+        client->request = NULL;
+
         co_http_response_destroy(client->response);
         client->response = NULL;
+
+        if (client->upgrade_ctx != NULL)
+        {
+            co_mem_free(client->upgrade_ctx);
+            client->upgrade_ctx = NULL;
+        }
+
+        co_map_destroy(client->upgrade_map);
+        client->upgrade_map = NULL;
     }
 }
 
-void
+static void
 co_http_client_clear_request_queue(
     co_http_client_t* client
 )
@@ -109,7 +123,7 @@ co_http_client_clear_request_queue(
     co_list_clear(client->receive_queue);
 }
 
-void
+static void
 co_http_client_send_all_requests(
     co_http_client_t* client
 )
@@ -171,7 +185,35 @@ co_http_client_send_all_requests(
     }
 }
 
-void
+static void
+co_http_client_on_upgrade_response(
+    co_thread_t* thread,
+    co_http_client_t* client,
+    co_http_request_t* request,
+    int error_code
+)
+{
+    const co_map_data_st* map_data =
+        co_map_get(client->upgrade_map,
+            (uintptr_t)client->upgrade_ctx->key);
+
+    co_http_upgrade_response_fn handler =
+        (co_http_upgrade_response_fn)map_data->value;
+
+    client->request = request;
+
+    handler(thread, client, error_code);
+
+    client->request = NULL;
+
+    if (client->upgrade_ctx != NULL)
+    {
+        co_mem_free(client->upgrade_ctx);
+        client->upgrade_ctx = NULL;
+    }
+}
+
+static void
 co_http_client_on_resopnse(
     co_thread_t* thread,
     co_http_client_t* client,
@@ -202,6 +244,14 @@ co_http_client_on_resopnse(
     if (request == NULL)
     {
         co_http_client_clear_request_queue(client);
+
+        return;
+    }
+
+    if (client->upgrade_ctx != NULL)
+    {
+        co_http_client_on_upgrade_response(
+            thread, client, request, error_code);
 
         return;
     }
@@ -244,7 +294,7 @@ co_http_client_on_resopnse(
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-void
+static void
 co_http_client_on_connect(
     co_thread_t* thread,
     co_tcp_client_t* tcp_client,
@@ -267,8 +317,8 @@ co_http_client_on_connect(
     }
 }
 
-void
-co_http_client_on_client_receive_ready(
+static void
+co_http_client_on_receive_ready(
     co_thread_t* thread,
     co_tcp_client_t* tcp_client
 )
@@ -284,10 +334,10 @@ co_http_client_on_client_receive_ready(
         return;
     }
 
-    size_t index = 0;
-    size_t data_size = co_byte_array_get_count(client->receive_data);
+    size_t data_size =
+        co_byte_array_get_count(client->receive_data);
 
-    while (data_size > index)
+    while (data_size > client->receive_data_index)
     {
         co_list_data_st* data =
             co_list_get_head(client->receive_queue);
@@ -313,15 +363,28 @@ co_http_client_on_client_receive_ready(
             }
 
             int result = co_http_response_deserialize(
-                client->response, client->receive_data, &index);
+                client->response, client->receive_data,
+                &client->receive_data_index);
 
             if (result == CO_HTTP_PARSE_COMPLETE)
             {
+                if (client->upgrade_ctx != NULL)
+                {
+                    int error_code =
+                        (client->response->status_code == 101) ? 0 : -1;
+
+                    co_http_client_on_resopnse(thread, client, error_code);
+
+                    return;
+                }
+
                 co_http_content_receiver_clear(&client->content_receiver);
 
                 if (!co_http_start_receive_content(
-                    &client->content_receiver, &client->response->message,
-                    index, request->save_file_path))
+                    &client->content_receiver,
+                    &client->response->message,
+                    client->receive_data_index,
+                    request->save_file_path))
                 {
                     return;
                 }
@@ -377,7 +440,8 @@ co_http_client_on_client_receive_ready(
 
             co_http_complete_receive_content(
                 &client->content_receiver,
-                &index, &client->response->message.content);
+                &client->receive_data_index,
+                &client->response->message.content);
 
             co_http_client_on_resopnse(thread, client, 0);
 
@@ -416,12 +480,13 @@ co_http_client_on_client_receive_ready(
 
     if (co_list_get_count(client->receive_queue) == 0)
     {
+        client->receive_data_index = 0;
         co_byte_array_clear(client->receive_data);
     }
 }
 
-void
-co_http_client_on_client_close(
+static void
+co_http_client_on_close(
     co_thread_t* thread,
     co_tcp_client_t* tcp_client
 )
@@ -552,14 +617,14 @@ co_http_client_create(
     memcpy(&client->tcp_client->remote_net_addr,
         &remote_net_addr, sizeof(co_net_addr_t));
 
-    co_http_client_setup(client, secure);
+    co_http_client_setup(client);
 
     co_tcp_set_receive_handler(
         client->tcp_client,
-        (co_tcp_receive_fn)co_http_client_on_client_receive_ready);
+        (co_tcp_receive_fn)co_http_client_on_receive_ready);
     co_tcp_set_close_handler(
         client->tcp_client,
-        (co_tcp_close_fn)co_http_client_on_client_close);
+        (co_tcp_close_fn)co_http_client_on_close);
 
     return client;
 }
@@ -582,9 +647,9 @@ co_http_client_destroy(
         {
             client->module.destroy(client->tcp_client);
             client->tcp_client = NULL;
-
-            co_mem_free_later(client);
         }
+
+        co_mem_free_later(client);
     }
 }
 
@@ -659,6 +724,9 @@ co_http_set_close_handler(
 {
     client->on_close = handler;
 }
+
+//---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
 
 const co_net_addr_t*
 co_http_get_remote_net_addr(

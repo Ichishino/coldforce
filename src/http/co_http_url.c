@@ -114,7 +114,14 @@ co_http_url_create(
     }
     else
     {
-        url->host = co_string_duplicate(head);
+        if (strcmp(head, "*") == 0)
+        {
+            url->path = co_string_duplicate(head);
+        }
+        else
+        {
+            url->host = co_string_duplicate(head);
+        }
     }
 
     co_string_destroy(url_str);

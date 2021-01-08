@@ -1,6 +1,7 @@
 #ifndef CO_HTTP_CLIENT_H_INCLUDED
 #define CO_HTTP_CLIENT_H_INCLUDED
 
+#include <coldforce/core/co_map.h>
 #include <coldforce/core/co_byte_array.h>
 
 #include <coldforce/net/co_tcp_client.h>
@@ -22,21 +23,7 @@ CO_EXTERN_C_BEGIN
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-#define CO_HTTP_ERROR_CONNECT_FAILED        -5001
-#define CO_HTTP_ERROR_TLS_HANDSHAKE_FAILED  -5002
-#define CO_HTTP_ERROR_CONNECTION_CLOSED     -5003
-#define CO_HTTP_ERROR_OUT_OF_MEMORY         -5004
-#define CO_HTTP_ERROR_PARSE_HEADER          -5005
-#define CO_HTTP_ERROR_PARSE_CONTENT         -5006
-#define CO_HTTP_ERROR_CANCEL                -5007
-
-//---------------------------------------------------------------------------//
-//---------------------------------------------------------------------------//
-
 struct co_http_client_t;
-
-typedef void(*co_http_tls_handshake_fn)(
-    void* self, struct co_http_client_t* client, int error_code);
 
 typedef void(*co_http_request_fn)(
     void* self, struct co_http_client_t* client,
@@ -56,6 +43,9 @@ typedef bool(*co_http_progress_fn)(
 typedef void(*co_http_close_fn)(
     void* self, struct co_http_client_t* client);
 
+typedef void(*co_http_upgrade_response_fn)(
+    void* self, struct co_http_client_t* client, int error_code);
+
 typedef struct
 {
     void (*destroy)(co_tcp_client_t*);
@@ -67,6 +57,13 @@ typedef struct
 
 } co_tcp_client_module_t;
 
+typedef struct
+{
+    bool server;
+    const char* key;
+
+} co_http_upgrade_ctx_t;
+
 typedef struct co_http_client_t
 {
     co_tcp_client_t* tcp_client;
@@ -77,7 +74,9 @@ typedef struct co_http_client_t
     co_list_t* send_queue;
     co_list_t* receive_queue;
 
+    size_t receive_data_index;
     co_byte_array_t* receive_data;
+
     co_http_response_t* response;
     co_http_content_receiver_t content_receiver;
 
@@ -87,14 +86,16 @@ typedef struct co_http_client_t
 
     co_http_request_t* request;
     co_http_request_fn on_request;
-    co_http_tls_handshake_fn on_handshake_complete;
+
+    co_map_t* upgrade_map;
+    co_http_upgrade_ctx_t* upgrade_ctx;
 
 } co_http_client_t;
 
-void co_http_client_setup(co_http_client_t* client, bool secure);
+void co_http_client_setup(co_http_client_t* client);
 
-void co_http_client_on_connect(
-    co_thread_t* thread, co_tcp_client_t* tcp_client, int error_code);
+CO_HTTP_API void co_http_set_upgrade_handler(
+    co_http_client_t* client, const char* key, void* handler);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
@@ -117,8 +118,10 @@ CO_HTTP_API void co_http_set_progress_handler(
 CO_HTTP_API void co_http_set_close_handler(
     co_http_client_t* client, co_http_close_fn handler);
 
-CO_HTTP_API const co_net_addr_t* co_http_get_remote_net_addr(const co_http_client_t* client);
+//---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
 
+CO_HTTP_API const co_net_addr_t* co_http_get_remote_net_addr(const co_http_client_t* client);
 CO_HTTP_API co_socket_t* co_http_client_get_socket(co_http_client_t* client);
 CO_HTTP_API const char* co_http_get_base_url(const co_http_client_t* client);
 CO_HTTP_API bool co_http_is_open(const co_http_client_t* client);

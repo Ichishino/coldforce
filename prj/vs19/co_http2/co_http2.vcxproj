@@ -164,9 +164,9 @@
     <ClInclude Include="..\..\..\inc\coldforce\http2\co_http2_client.h" />
     <ClInclude Include="..\..\..\inc\coldforce\http2\co_http2_frame.h" />
     <ClInclude Include="..\..\..\inc\coldforce\http2\co_http2_header.h" />
-    <ClInclude Include="..\..\..\inc\coldforce\http2\co_http2_message.h" />
     <ClInclude Include="..\..\..\inc\coldforce\http2\co_http2_hpack.h" />
     <ClInclude Include="..\..\..\inc\coldforce\http2\co_http2_huffman.h" />
+    <ClInclude Include="..\..\..\inc\coldforce\http2\co_http2_server.h" />
     <ClInclude Include="..\..\..\inc\coldforce\http2\co_http2_stream.h" />
   </ItemGroup>
   <ItemGroup>
@@ -188,9 +188,9 @@
     <ClCompile Include="..\..\..\src\http2\co_http2_client.c" />
     <ClCompile Include="..\..\..\src\http2\co_http2_frame.c" />
     <ClCompile Include="..\..\..\src\http2\co_http2_header.c" />
-    <ClCompile Include="..\..\..\src\http2\co_http2_message.c" />
     <ClCompile Include="..\..\..\src\http2\co_http2_hpack.c" />
     <ClCompile Include="..\..\..\src\http2\co_http2_huffman.c" />
+    <ClCompile Include="..\..\..\src\http2\co_http2_server.c" />
     <ClCompile Include="..\..\..\src\http2\co_http2_stream.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

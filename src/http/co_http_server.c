@@ -1,4 +1,5 @@
 #include <coldforce/core/co_std.h>
+#include <coldforce/core/co_string.h>
 
 #include <coldforce/tls/co_tls_tcp_client.h>
 
@@ -13,8 +14,8 @@
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-void
-co_http_client_on_request(
+static void
+co_http_server_on_request(
     co_thread_t* thread,
     co_http_client_t* client,
     int error_code
@@ -33,33 +34,12 @@ co_http_client_on_request(
     co_http_request_destroy(request);
 }
 
-//---------------------------------------------------------------------------//
-//---------------------------------------------------------------------------//
-
-void
-co_http_client_on_tls_server_handshake(
-    co_thread_t* thread,
-    co_tcp_client_t* tcp_client,
-    int error_code
-)
-{
-    co_http_client_t* client =
-        (co_http_client_t*)tcp_client->sock.sub_class;
-
-    if (client->on_handshake_complete != NULL)
-    {
-        client->on_handshake_complete(thread, client, error_code);
-    }
-}
-
-void
-co_http_server_on_client_receive_ready(
+static void
+co_http_server_on_receive_ready(
     co_thread_t* thread,
     co_tcp_client_t* tcp_client
 )
 {
-    (void)thread;
-
     co_http_client_t* client =
         (co_http_client_t*)tcp_client->sock.sub_class;
 
@@ -71,10 +51,10 @@ co_http_server_on_client_receive_ready(
         return;
     }
 
-    size_t index = 0;
-    size_t data_size = co_byte_array_get_count(client->receive_data);
+    size_t data_size =
+        co_byte_array_get_count(client->receive_data);
 
-    while (data_size > index)
+    while (data_size > client->receive_data_index)
     {
         if (client->request == NULL)
         {
@@ -82,22 +62,117 @@ co_http_server_on_client_receive_ready(
 
             if (client->request == NULL)
             {
-                co_http_client_on_request(
+                co_http_server_on_request(
                     thread, client, CO_HTTP_ERROR_OUT_OF_MEMORY);
 
                 return;
             }
 
             int result = co_http_request_deserialize(
-                client->request, client->receive_data, &index);
+                client->request, client->receive_data,
+                &client->receive_data_index);
 
             if (result == CO_HTTP_PARSE_COMPLETE)
             {
+                if (co_http_request_is_connection_preface(client->request))
+                {
+                    if (data_size < (client->receive_data_index + 6))
+                    {
+                        co_http_server_on_request(
+                            thread, client, CO_HTTP_ERROR_PARSE_HEADER);
+
+                        return;
+                    }
+
+                    client->receive_data_index += 6;
+
+                    if (client->upgrade_map == NULL)
+                    {
+                        co_http_server_on_request(
+                            thread, client, CO_HTTP_ERROR_PROTOCOL_ERROR);
+
+                        return;
+                    }
+
+                    const co_map_data_st* map_data =
+                        co_map_get(client->upgrade_map,
+                            (uintptr_t)CO_HTTP_UPGRADE_CONNECTION_PREFACE);
+
+                    if (map_data == NULL)
+                    {
+                        co_http_server_on_request(
+                            thread, client, CO_HTTP_ERROR_PROTOCOL_ERROR);
+
+                        return;
+                    }
+
+                    co_http_upgrade_request_fn handler =
+                        (co_http_upgrade_request_fn)map_data->value;
+
+                    client->upgrade_ctx =
+                        (co_http_upgrade_ctx_t*)co_mem_alloc(
+                            sizeof(co_http_upgrade_ctx_t));
+                    client->upgrade_ctx->server = true;
+                    client->upgrade_ctx->key = CO_HTTP_UPGRADE_CONNECTION_PREFACE;
+
+                    if (handler(thread, client))
+                    {
+                        tcp_client->on_receive_ready(thread, tcp_client);
+                    }
+
+                    return;
+                }
+                else if (
+                    (client->tcp_client->sock.tls == NULL) &&
+                    (client->upgrade_map != NULL))
+                {
+                    const co_http_header_t* request_header =
+                        co_http_request_get_header(client->request);
+                    const char* upgrade = co_http_header_get_field(
+                        request_header, CO_HTTP_HEADER_UPGRADE);
+
+                    if (upgrade != NULL)
+                    {
+                        co_http_string_item_st items[8];
+                        size_t item_count =
+                            co_http_string_list_parse(upgrade, items, 8);
+
+                        co_map_iterator_t it;
+                        co_map_iterator_init(client->upgrade_map, &it);
+
+                        while (co_map_iterator_has_next(&it))
+                        {
+                            const co_map_data_st* map_data =
+                                co_map_iterator_get_next(&it);
+                            const char* key = (const char*)map_data->key;
+
+                            if (co_http_string_list_contains(items, item_count, key))
+                            {
+                                co_http_upgrade_request_fn handler =
+                                    (co_http_upgrade_request_fn)map_data->value;
+
+                                client->upgrade_ctx =
+                                    (co_http_upgrade_ctx_t*)co_mem_alloc(
+                                        sizeof(co_http_upgrade_ctx_t));
+                                client->upgrade_ctx->server = true;
+                                client->upgrade_ctx->key = key;
+
+                                if (handler(thread, client))
+                                {
+                                    tcp_client->on_receive_ready(thread, tcp_client);
+                                }
+
+                                return;
+                            }
+                        }
+                    }
+                }
+
                 co_http_content_receiver_clear(&client->content_receiver);
 
                 if (!co_http_start_receive_content(
                     &client->content_receiver, &client->request->message,
-                    index, NULL))
+                    client->receive_data_index, NULL))
                 {
                     return;
                 }
@@ -109,7 +184,7 @@ co_http_server_on_client_receive_ready(
                         client, client->request, NULL,
                         client->content_receiver.receive_size))
                     {
-                         co_http_client_on_request(
+                        co_http_server_on_request(
                             thread, client, CO_HTTP_ERROR_CANCEL);
 
                         return;
@@ -125,7 +200,7 @@ co_http_server_on_client_receive_ready(
             }
             else
             {
-                co_http_client_on_request(
+                co_http_server_on_request(
                     thread, client, CO_HTTP_ERROR_PARSE_HEADER);
 
                 return;
@@ -144,7 +219,7 @@ co_http_server_on_client_receive_ready(
                     client, client->request, NULL,
                     client->content_receiver.receive_size))
                 {
-                    co_http_client_on_request(
+                    co_http_server_on_request(
                         thread, client, CO_HTTP_ERROR_CANCEL);
 
                     return;
@@ -153,9 +228,10 @@ co_http_server_on_client_receive_ready(
 
             co_http_complete_receive_content(
                 &client->content_receiver,
-                &index, &client->request->message.content);
+                &client->receive_data_index,
+                &client->request->message.content);
 
-            co_http_client_on_request(thread, client, 0);
+            co_http_server_on_request(thread, client, 0);
 
             if (client->tcp_client == NULL)
             {
@@ -174,7 +250,7 @@ co_http_server_on_client_receive_ready(
                     client, client->request, NULL,
                     client->content_receiver.receive_size))
                 {
-                    co_http_client_on_request(
+                    co_http_server_on_request(
                         thread, client, CO_HTTP_ERROR_CANCEL);
                 }
             }
@@ -183,18 +259,19 @@ co_http_server_on_client_receive_ready(
         }
         else
         {
-            co_http_client_on_request(
+            co_http_server_on_request(
                 thread, client, CO_HTTP_ERROR_PARSE_CONTENT);
 
             return;
         }
     }
 
+    client->receive_data_index = 0;
     co_byte_array_clear(client->receive_data);
 }
 
-void
-co_http_server_on_client_close(
+static void
+co_http_server_on_close(
     co_thread_t* thread,
     co_tcp_client_t* tcp_client
 )
@@ -206,7 +283,7 @@ co_http_server_on_client_close(
 
     if (client->request != NULL)
     {
-        co_http_client_on_request(
+        co_http_server_on_request(
             thread, client, CO_HTTP_ERROR_CONNECTION_CLOSED);
     }
 
@@ -219,10 +296,35 @@ co_http_server_on_client_close(
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
+void
+co_http_set_upgrade_handler(
+    co_http_client_t* client,
+    const char* key,
+    void* handler
+)
+{
+    if (client->upgrade_map == NULL)
+    {
+        co_map_ctx_st ctx = { 0 };
+
+        ctx.hash_key = (co_hash_fn)co_string_hash;
+        ctx.free_key = (co_free_fn)co_string_destroy;
+        ctx.duplicate_key = (co_duplicate_fn)co_string_duplicate;
+        ctx.compare_keys = (co_compare_fn)co_string_case_compare;
+
+        client->upgrade_map = co_map_create(&ctx);
+    }
+
+    co_map_set(client->upgrade_map, (uintptr_t)key, (uintptr_t)handler);
+}
+
+//---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
+
 co_http_client_t*
 co_http_client_create_with(
-    co_tcp_client_t* tcp_client,
-    bool secure)
+    co_tcp_client_t* tcp_client
+)
 {
     co_http_client_t* client =
         (co_http_client_t*)co_mem_alloc(sizeof(co_http_client_t));
@@ -235,37 +337,16 @@ co_http_client_create_with(
     client->base_url = NULL;
     client->tcp_client = tcp_client;
 
-    co_http_client_setup(client, secure);
+    co_http_client_setup(client);
 
     co_tcp_set_receive_handler(
         client->tcp_client,
-        (co_tcp_receive_fn)co_http_server_on_client_receive_ready);
+        (co_tcp_receive_fn)co_http_server_on_receive_ready);
     co_tcp_set_close_handler(
         client->tcp_client,
-        (co_tcp_close_fn)co_http_server_on_client_close);
+        (co_tcp_close_fn)co_http_server_on_close);
 
     return client;
-}
-
-void
-co_http_server_on_accept_ready(
-    co_thread_t* thread,
-    co_tcp_server_t* tcp_server,
-    co_tcp_client_t* tcp_client
-)
-{
-    co_http_server_t* server =
-        (co_http_server_t*)tcp_server->sock.sub_class;
-
-    bool secure = (tcp_client->sock.tls != NULL);
-
-    co_http_client_t* client =
-        co_http_client_create_with(tcp_client, secure);
-
-    if (server->on_accept_ready != NULL)
-    {
-        server->on_accept_ready(thread, server, client);
-    }
 }
 
 //---------------------------------------------------------------------------//
@@ -296,9 +377,6 @@ co_http_server_create(
     server->module.destroy = co_tcp_server_destroy;
     server->module.close = co_tcp_server_close;
     server->module.start = co_tcp_server_start;
-    server->module.accept = co_tcp_accept;
-
-    server->on_accept_ready = NULL;
 
     server->tcp_server->sock.sub_class = server;
 
@@ -332,9 +410,6 @@ co_http_tls_server_create(
     server->module.destroy = co_tls_tcp_server_destroy;
     server->module.close = co_tls_tcp_server_close;
     server->module.start = co_tls_tcp_server_start;
-    server->module.accept = co_tls_tcp_accept;
-
-    server->on_accept_ready = NULL;
 
     server->tcp_server->sock.sub_class = server;
 
@@ -372,25 +447,12 @@ co_http_server_close(
 bool
 co_http_server_start(
     co_http_server_t* server,
-    co_http_accept_fn handler,
+    co_tcp_accept_fn handler,
     int backlog
 )
 {
-    server->on_accept_ready = handler;
-
-    return server->module.start(server->tcp_server,
-        (co_tcp_accept_fn)co_http_server_on_accept_ready, backlog);
-}
-
-bool
-co_http_accept(
-    co_http_server_t* server,
-    co_thread_t* owner_thread,
-    co_http_client_t* client
-)
-{
-    return server->module.accept(
-        owner_thread, client->tcp_client);
+    return server->module.start(
+        server->tcp_server, handler, backlog);
 }
 
 co_socket_t*
@@ -403,18 +465,6 @@ co_http_server_get_socket(
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
-
-int
-co_http_tls_start_handshake(
-    co_http_client_t* client,
-    co_http_tls_handshake_fn handler
-)
-{
-    client->on_handshake_complete = handler;
-
-    return co_tls_tcp_start_handshake(client->tcp_client,
-        (co_tls_tcp_handshake_fn)co_http_client_on_tls_server_handshake);
-}
 
 void
 co_http_set_request_handler(
@@ -560,4 +610,15 @@ co_http_end_chunked_response(
 )
 {
     return co_http_send_chunked_response(client, NULL, 0);
+}
+
+//---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
+
+co_http_client_t*
+co_tcp_get_http_client(
+    co_tcp_client_t* tcp_client
+)
+{
+    return (co_http_client_t*)tcp_client->sock.sub_class;
 }

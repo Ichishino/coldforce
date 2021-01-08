@@ -20,14 +20,6 @@ CO_THREAD_LOCAL co_thread_t* current_thread = NULL;
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-void
-co_thread_run(
-    co_thread_t* thread
-)
-{
-    co_event_worker_run(thread->event_worker);
-}
-
 struct co_thread_param_st
 {
     co_thread_t* thread;
@@ -36,6 +28,7 @@ struct co_thread_param_st
     bool create_result;
 };
 
+static
 #ifdef CO_OS_WIN
 unsigned int WINAPI
 #else
@@ -83,6 +76,14 @@ co_thread_main(
 #else
     return NULL;
 #endif
+}
+
+void
+co_thread_run(
+    co_thread_t* thread
+)
+{
+    co_event_worker_run(thread->event_worker);
 }
 
 //---------------------------------------------------------------------------//

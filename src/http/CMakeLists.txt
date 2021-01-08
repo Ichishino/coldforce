@@ -4,6 +4,7 @@ project(co_http C)
 
 add_library(${PROJECT_NAME} STATIC
 
+    co_base64.c
     co_http.c
     co_http_client.c
     co_http_content_receiver.c

@@ -5,6 +5,10 @@
 
 #include <coldforce/tls/co_tls_tcp_client.h>
 
+#include <coldforce/http/co_base64.h>
+#include <coldforce/http/co_http_client.h>
+#include <coldforce/http/co_http_server.h>
+
 #include <coldforce/http2/co_http2_client.h>
 #include <coldforce/http2/co_http2_stream.h>
 #include <coldforce/http2/co_http2_frame.h>
@@ -16,13 +20,15 @@
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
+void co_http2_server_on_tcp_receive_ready(
+    co_thread_t* thread, co_tcp_client_t* tcp_client);
+
 void
 co_http2_client_setup(
-    co_http2_client_t* client,
-    bool secure
+    co_http2_client_t* client
 )
 {
-    if (secure)
+    if (client->tcp_client->sock.tls != NULL)
     {
         client->module.destroy = co_tls_tcp_client_destroy;
         client->module.close = co_tls_tcp_client_close;
@@ -41,34 +47,51 @@ co_http2_client_setup(
 
     client->tcp_client->sock.sub_class = client;
 
-    client->connecting = false;
-    client->request_queue = co_list_create(NULL);
+    client->receive_data_index = 0;
     client->receive_data = co_byte_array_create();
 
+    client->on_connect = NULL;
     client->on_close = NULL;
     client->on_message = NULL;
     client->on_push_request = NULL;
     client->on_push_response = NULL;
+    client->on_priority = NULL;
+    client->on_window_update = NULL;
+    client->on_close_stream = NULL;
+    client->on_ping = NULL;
 
     co_map_ctx_st map_ctx = { 0 };
     map_ctx.free_value = (co_free_fn)co_http2_stream_destroy;
     client->stream_map = co_map_create(&map_ctx);
 
     client->last_stream_id = 0;
+    client->new_stream_id = 0;
 
-    client->local_settings.header_table_size = 4096;
-    client->local_settings.enable_push = 1;
-    client->local_settings.max_concurrent_streams = INT32_MAX;
-    client->local_settings.initial_window_size = 65535;
-    client->local_settings.max_frame_size = 16384;
-    client->local_settings.max_header_list_size = INT32_MAX;
+    client->local_settings.header_table_size =
+        CO_HTTP2_SETTING_DEFAULT_HEADER_TABLE_SIZE;
+    client->local_settings.enable_push =
+        CO_HTTP2_SETTING_DEFAULT_ENABLE_PUSH;
+    client->local_settings.max_concurrent_streams =
+        CO_HTTP2_SETTING_DEFAULT_MAX_CONCURRENT_STREAMS;
+    client->local_settings.initial_window_size =
+        CO_HTTP2_SETTING_DEFAULT_INITIAL_WINDOW_SIZE;
+    client->local_settings.max_frame_size =
+        CO_HTTP2_SETTING_DEFAULT_MAX_FRAME_SIZE;
+    client->local_settings.max_header_list_size =
+        CO_HTTP2_SETTING_DEFAULT_MAX_HEADER_LIST_SIZE;
 
-    client->remote_settings.header_table_size = 4096;
-    client->remote_settings.enable_push = 1;
-    client->remote_settings.max_concurrent_streams = INT32_MAX;
-    client->remote_settings.initial_window_size = 65535;
-    client->remote_settings.max_frame_size = 16384;
-    client->remote_settings.max_header_list_size = INT32_MAX;
+    client->remote_settings.header_table_size =
+        CO_HTTP2_SETTING_DEFAULT_HEADER_TABLE_SIZE;
+    client->remote_settings.enable_push =
+        CO_HTTP2_SETTING_DEFAULT_ENABLE_PUSH;
+    client->remote_settings.max_concurrent_streams =
+        CO_HTTP2_SETTING_DEFAULT_MAX_CONCURRENT_STREAMS;
+    client->remote_settings.initial_window_size =
+        CO_HTTP2_SETTING_DEFAULT_INITIAL_WINDOW_SIZE;
+    client->remote_settings.max_frame_size =
+        CO_HTTP2_SETTING_DEFAULT_MAX_FRAME_SIZE;
+    client->remote_settings.max_header_list_size =
+        CO_HTTP2_SETTING_DEFAULT_MAX_HEADER_LIST_SIZE;
 
     co_http2_hpack_dynamic_table_setup(
         &client->local_dynamic_table,
@@ -87,19 +110,6 @@ co_http2_client_cleanup(
 {
     if (client != NULL)
     {
-        co_list_iterator_t* req_it =
-            co_list_get_head_iterator(client->request_queue);
-
-        while (req_it != NULL)
-        {
-            co_http2_message_destroy(
-                (co_http2_message_t*)co_list_get_next(
-                    client->request_queue, &req_it)->value);
-        }
-
-        co_list_destroy(client->request_queue);
-        client->request_queue = NULL;
-
         co_byte_array_destroy(client->receive_data);
         client->receive_data = NULL;
 
@@ -114,75 +124,68 @@ co_http2_client_cleanup(
     }
 }
 
-void
-co_http2_client_clear_closed_stream(
-    co_http2_client_t* client
+static void
+co_http2_set_setting_param(
+    co_http2_settings_st* settings,
+    uint16_t identifier,
+    uint32_t value
 )
 {
-    co_map_iterator_t it;
-    co_map_iterator_init(client->stream_map, &it);
-
-    while (co_map_iterator_has_next(&it))
+    switch (identifier)
     {
-        const co_map_data_st* data = &it.item->data;
-        co_http2_stream_t* stream = (co_http2_stream_t*)data->value;
-        co_map_iterator_get_next(&it);
+    case CO_HTTP2_SETTING_ID_HEADER_TABLE_SIZE:
+    {
+        settings->header_table_size = value;
 
-        if (stream->state == CO_HTTP2_STREAM_STATE_CLOSED)
-        {
-            co_map_remove(client->stream_map, (uintptr_t)stream->id);
-        }
+        break;
+    }
+    case CO_HTTP2_SETTING_ID_ENABLE_PUSH:
+    {
+        settings->enable_push = value;
+
+        break;
+    }
+    case CO_HTTP2_SETTING_ID_MAX_CONCURRENT_STREAMS:
+    {
+        settings->max_concurrent_streams = value;
+
+        break;
+    }
+    case CO_HTTP2_SETTING_ID_INITIAL_WINDOW_SIZE:
+    {
+        settings->initial_window_size = value;
+
+        break;
+    }
+    case CO_HTTP2_SETTING_ID_MAX_FRAME_SIZE:
+    {
+        settings->max_frame_size = value;
+
+        break;
+    }
+    case CO_HTTP2_SETTING_ID_MAX_HEADER_LIST_SIZE:
+    {
+        settings->max_header_list_size = value;
+
+        break;
+    }
+    default:
+        break;
     }
 }
 
 co_http2_stream_t*
-co_http2_client_create_request_stream(
+co_http2_create_stream(
     co_http2_client_t* client
 )
 {
-    co_http2_client_clear_closed_stream(client);
+    client->new_stream_id += 2;
 
-    if (client->last_stream_id == 0)
-    {
-        client->last_stream_id = 1;
-    }
-    else
-    {
-        client->last_stream_id += 2;
-    }
-
-    co_http2_stream_t* stream =
-        co_http2_stream_create(
-            client->last_stream_id, client, client->on_message);
+    co_http2_stream_t* stream = co_http2_stream_create(
+        client->new_stream_id, client, client->on_message);
 
     co_map_set(client->stream_map,
-        client->last_stream_id, (uintptr_t)stream);
-
-    return stream;
-}
-
-co_http2_stream_t*
-co_http2_client_get_stream(
-    co_http2_client_t* client,
-    uint32_t stream_id
-)
-{
-    co_http2_stream_t* stream = NULL;
-
-    if (stream_id != 0)
-    {
-        co_map_data_st* data =
-            co_map_get(client->stream_map, (uintptr_t)stream_id);
-
-        if (data != NULL)
-        {
-            stream = (co_http2_stream_t*)data->value;
-        }
-    }
-    else
-    {
-        stream = client->system_stream;
-    }
+        client->new_stream_id, (uintptr_t)stream);
 
     return stream;
 }
@@ -196,74 +199,6 @@ co_http2_send_raw_data(
 {
     return client->module.send(
         client->tcp_client, data, data_size);
-}
-
-void
-co_http2_client_send_initial_settings(
-    co_http2_client_t* client
-)
-{
-    co_http2_send_raw_data(client,
-        CO_HTTP2_CONNECTION_PREFACE,
-        CO_HTTP2_CONNECTION_PREFACE_LENGTH);
-
-    co_http2_setting_param_t params[6];
-
-    params[0].identifier = CO_HTTP2_SETTINGS_HEADER_TABLE_SIZE;
-    params[0].value = client->local_settings.header_table_size;
-
-    params[1].identifier = CO_HTTP2_SETTINGS_ENABLE_PUSH;
-    params[1].value = client->local_settings.enable_push;
-
-    params[2].identifier = CO_HTTP2_SETTINGS_MAX_CONCURRENT_STREAMS;
-    params[2].value = client->local_settings.max_concurrent_streams;
-    
-    params[3].identifier = CO_HTTP2_SETTINGS_INITIAL_WINDOW_SIZE;
-    params[3].value = client->local_settings.initial_window_size;
-
-    params[4].identifier = CO_HTTP2_SETTINGS_MAX_FRAME_SIZE;
-    params[4].value = client->local_settings.max_frame_size;
-
-    params[5].identifier = CO_HTTP2_SETTINGS_MAX_HEADER_LIST_SIZE;
-    params[5].value = client->local_settings.max_header_list_size;
-    
-    co_http2_frame_t* frame =
-        co_http2_create_settings_frame(false, params, 6);
-
-    co_http2_stream_send_frame(
-        client->system_stream, frame);
-}
-
-void
-co_http2_client_send_all_requests(
-    co_http2_client_t* client
-)
-{
-    co_list_iterator_t* it =
-        co_list_get_head_iterator(client->request_queue);
-
-    while (it != NULL)
-    {
-        co_list_data_st* data = co_list_get(client->request_queue, it);
-        co_http2_message_t* message = (co_http2_message_t*)data->value;
-
-        co_http2_stream_t* stream =
-            co_http2_client_create_request_stream(client);
-
-        bool result =
-            co_http2_stream_send_request_message(stream, message);
-
-        if (result)
-        {
-            co_list_iterator_t* temp = it;
-            it = co_list_get_next_iterator(client->request_queue, it);
-            co_list_remove_at(client->request_queue, temp);
-        }
-        else
-        {
-            break;
-        }
-    }
 }
 
 void
@@ -296,7 +231,15 @@ co_http2_client_on_receive_system_frame(
     {
         if (frame->header.flags != 0)
         {
-            co_http2_client_send_all_requests(client);
+            if (client->on_connect != NULL)
+            {
+                co_http2_connect_fn handler = client->on_connect;
+                client->on_connect = NULL;
+
+                handler(
+                    client->tcp_client->sock.owner_thread,
+                    client, 0);
+            }
 
             return;
         }
@@ -305,60 +248,14 @@ co_http2_client_on_receive_system_frame(
             index < frame->payload.settings.param_count;
             ++index)
         {
-            const co_http2_setting_param_t* param =
-                &frame->payload.settings.params[index];
-
-            switch (param->identifier)
-            {
-            case CO_HTTP2_SETTINGS_HEADER_TABLE_SIZE:
-            {
-                client->remote_settings.header_table_size =
-                    param->value;
-
-                break;
-            }
-            case CO_HTTP2_SETTINGS_ENABLE_PUSH:
-            {
-                client->remote_settings.enable_push =
-                    param->value;
-
-                break;
-            }
-            case CO_HTTP2_SETTINGS_MAX_CONCURRENT_STREAMS:
-            {
-                client->remote_settings.max_concurrent_streams =
-                    param->value;
-
-                break;
-            }
-            case CO_HTTP2_SETTINGS_INITIAL_WINDOW_SIZE:
-            {
-                client->remote_settings.initial_window_size =
-                    param->value;
-
-                break;
-            }
-            case CO_HTTP2_SETTINGS_MAX_FRAME_SIZE:
-            {
-                client->remote_settings.max_frame_size =
-                    param->value;
-
-                break;
-            }
-            case CO_HTTP2_SETTINGS_MAX_HEADER_LIST_SIZE:
-            {
-                client->remote_settings.max_header_list_size =
-                    param->value;
-
-                break;
-            }
-            default:
-                break;
-            }
+            co_http2_set_setting_param(
+                &client->remote_settings,
+                frame->payload.settings.params[index].identifier,
+                frame->payload.settings.params[index].value);
         }
 
         co_http2_frame_t* ack_frame =
-            co_http2_create_settings_frame(true, NULL, 0);
+            co_http2_create_settings_frame(false, true, NULL, 0);
 
         co_http2_stream_send_frame(
             client->system_stream, ack_frame);
@@ -367,12 +264,27 @@ co_http2_client_on_receive_system_frame(
     }
     case CO_HTTP2_FRAME_TYPE_PING:
     {
-        co_http2_frame_t* ack_frame =
-            co_http2_create_ping_frame(true,
-                frame->payload.ping.opaque_data, 8);
+        if (frame->header.flags & CO_HTTP2_FRAME_FLAG_ACK)
+        {
+            if (client->on_ping != NULL)
+            {
+                co_http2_ping_fn handler = client->on_ping;
+                client->on_ping = NULL;
 
-        co_http2_stream_send_frame(
-            client->system_stream, ack_frame);
+                handler(
+                    client->tcp_client->sock.owner_thread,
+                    client, frame->payload.ping.opaque_data);
+            }
+        }
+        else
+        {
+            co_http2_frame_t* ack_frame =
+                co_http2_create_ping_frame(true,
+                    frame->payload.ping.opaque_data);
+
+            co_http2_stream_send_frame(
+                client->system_stream, ack_frame);
+        }
 
         break;
     }
@@ -386,68 +298,77 @@ co_http2_client_on_receive_system_frame(
     }
     case CO_HTTP2_FRAME_TYPE_WINDOW_UPDATE:
     {
-        client->system_stream->remote_window_size =
+        if ((client->system_stream->remote_window_size +
+            frame->payload.window_update.window_size_increment) >
+            CO_HTTP2_SETTING_MAX_WINDOW_SIZE)
+        {
+            co_http2_client_close(
+                client, CO_HTTP2_STREAM_ERROR_FLOW_CONTROL_ERROR);
+            co_http2_client_on_close(
+                client, CO_HTTP2_STREAM_ERROR_FLOW_CONTROL_ERROR);
+
+            break;
+        }
+
+        client->system_stream->remote_window_size +=
             frame->payload.window_update.window_size_increment;
+
+        if (client->on_window_update != NULL)
+        {
+            co_http2_window_update_fn handler = client->on_window_update;
+
+            handler(
+                client->tcp_client->sock.owner_thread,
+                client, client->system_stream);
+        }
 
         break;
     }
     default:
     {
-        co_http2_frame_t* goaway_frame =
-            co_http2_create_goaway_frame(
-                client->last_stream_id,
-                CO_HTTP2_STREAM_ERROR_PROTOCOL_ERROR,
-                NULL, 0);
-
-        co_http2_stream_send_frame(
-            client->system_stream, goaway_frame);
-
         break;
     }
     }
 }
 
 void
-co_http2_client_on_push_promise_message(
+co_http2_client_on_push_promise(
     co_http2_client_t* client,
     co_http2_stream_t* stream,
     uint32_t promised_id,
-    co_http2_message_t* message
+    co_http2_header_t* header
 )
 {
-    co_http2_stream_t* promised_stream =
-        co_http2_client_get_stream(client, promised_id);
-
-    if (stream == NULL)
-    {
-        co_http2_message_destroy(message);
-
-        return;
-    }
-
 #ifdef CO_HTTP2_DEBUG
     printf("[CO_HTTP2] <INF> ==== PUSH-PROMISE REQUEST ===\n");
-    co_http2_header_print(&message->header);
+    co_http2_header_print(header);
     printf("[CO_HTTP2] <INF> =============================\n");
 #endif
 
-    promised_stream->send_message = message;
+    co_http2_stream_t* promised_stream =
+        co_http2_stream_create(promised_id,
+            client, client->on_push_response);
+    co_map_set(client->stream_map,
+        promised_id, (uintptr_t)promised_stream);
+
+    if (client->last_stream_id < promised_id)
+    {
+        client->last_stream_id = promised_id;
+    }
+
+    promised_stream->send_header = header;
     promised_stream->state = CO_HTTP2_STREAM_STATE_RESERVED_REMOTE;
 
-    co_http2_push_request_fn handler = client->on_push_request;
-
-    if (handler != NULL)
+    if (client->on_push_request != NULL)
     {
+        co_http2_push_request_fn handler = client->on_push_request;
+
         if (!handler(
             client->tcp_client->sock.owner_thread,
-            client, stream, message))
+            client, stream, promised_stream, header))
         {
-            co_http2_frame_t* frame =
-                co_http2_create_rst_stream_frame(
-                    CO_HTTP2_STREAM_ERROR_CANCEL);
-
-            co_http2_stream_send_frame(
-                client->system_stream, frame);
+            co_http2_stream_send_rst_stream(
+                promised_stream, CO_HTTP2_STREAM_ERROR_CANCEL);
         }
     }
 }
@@ -455,7 +376,7 @@ co_http2_client_on_push_promise_message(
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-void
+static void
 co_http2_client_on_tcp_connect(
     co_thread_t* thread,
     co_tcp_client_t* tcp_client,
@@ -465,26 +386,27 @@ co_http2_client_on_tcp_connect(
     co_http2_client_t* client =
         (co_http2_client_t*)tcp_client->sock.sub_class;
 
-    client->connecting = false;
-
     if (error_code == 0)
     {
-        co_http2_client_send_initial_settings(client);
+        co_http2_send_raw_data(client,
+            CO_HTTP2_CONNECTION_PREFACE,
+            CO_HTTP2_CONNECTION_PREFACE_LENGTH);
+
+        co_http2_send_initial_settings(client);
     }
     else
     {
-        co_http2_message_fn handler = client->on_message;
+        co_http2_connect_fn handler = client->on_connect;
 
         if (handler != NULL)
         {
-            handler(thread, client,
-                NULL, NULL, CO_HTTP_ERROR_CONNECT_FAILED);
+            handler(thread, client, error_code);
         }
     }
 }
 
-void
-co_http2_client_on_client_tcp_receive_ready(
+static void
+co_http2_client_on_tcp_receive_ready(
     co_thread_t* thread,
     co_tcp_client_t* tcp_client
 )
@@ -502,23 +424,23 @@ co_http2_client_on_client_tcp_receive_ready(
         return;
     }
 
-    size_t index = 0;
-    size_t data_size = co_byte_array_get_count(client->receive_data);
+    size_t data_size =
+        co_byte_array_get_count(client->receive_data);
 
-    while (data_size > index)
+    while (data_size > client->receive_data_index)
     {
         co_http2_frame_t* frame = co_http2_frame_create();
 
         int result = co_http2_frame_deserialize(
-            client->receive_data, &index,
+            client->receive_data, &client->receive_data_index,
             client->local_settings.max_frame_size, frame);
 
-        co_assert(data_size >= index);
+        co_assert(data_size >= client->receive_data_index);
 
         if (result == CO_HTTP_PARSE_COMPLETE)
         {
             co_http2_stream_t* stream =
-                co_http2_client_get_stream(client, frame->header.stream_id);
+                co_http2_get_stream(client, frame->header.stream_id);
 
             if ((stream == NULL) ||
                 (stream->state == CO_HTTP2_STREAM_STATE_CLOSED))
@@ -531,28 +453,6 @@ co_http2_client_on_client_tcp_receive_ready(
 #ifdef CO_HTTP2_DEBUG
             co_http2_stream_frame_trace(stream, false, frame);
 #endif
-            if (frame->header.type == CO_HTTP2_FRAME_TYPE_PUSH_PROMISE)
-            {
-                if (co_http2_client_get_stream(
-                    client, frame->payload.push_promise.promised_stream_id) != NULL)
-                {
-                    co_http2_frame_destroy(frame);
-
-                    continue;
-                }
-
-                co_http2_client_clear_closed_stream(client);
-
-                co_http2_stream_t* promised_stream =
-                    co_http2_stream_create(
-                        frame->payload.push_promise.promised_stream_id,
-                        client, client->on_push_response);
-
-                co_map_set(client->stream_map,
-                    frame->payload.push_promise.promised_stream_id,
-                    (uintptr_t)promised_stream);
-            }
-
             if (frame->header.stream_id == 0)
             {
                 co_http2_client_on_receive_system_frame(client, frame);
@@ -581,18 +481,21 @@ co_http2_client_on_client_tcp_receive_ready(
         {
             co_http2_frame_destroy(frame);
 
+            co_http2_client_close(
+                client, CO_HTTP2_STREAM_ERROR_FRAME_SIZE_ERROR);
             co_http2_client_on_close(
-                client, CO_HTTP2_ERROR_PARSE_ERROR);
+                client, CO_HTTP2_STREAM_ERROR_FRAME_SIZE_ERROR);
 
             return;
         }
     }
 
+    client->receive_data_index = 0;
     co_byte_array_clear(client->receive_data);
 }
 
 void
-co_http2_client_on_client_tcp_close(
+co_http2_client_on_tcp_close(
     co_thread_t* thread,
     co_tcp_client_t* tcp_client
 )
@@ -603,6 +506,87 @@ co_http2_client_on_client_tcp_close(
         (co_http2_client_t*)tcp_client->sock.sub_class;
 
     co_http2_client_on_close(client, 0);
+}
+
+//---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
+
+bool
+co_http2_set_upgrade_settings(
+    const char* b64_settings,
+    size_t b64_settings_length,
+    co_http2_settings_st* settings
+)
+{
+    size_t settings_data_size = 0;
+    uint8_t* settings_data = NULL;
+
+    bool result = co_base64url_decode(
+        b64_settings, b64_settings_length,
+        &settings_data, &settings_data_size);
+
+    if (result)
+    {
+        uint16_t param_count =
+            (uint16_t)(settings_data_size /
+                (sizeof(uint16_t) + sizeof(uint32_t)));
+        const uint8_t* temp_data = settings_data;
+
+        for (uint16_t count = 0; count < param_count; ++count)
+        {
+            uint16_t identifier;
+            uint32_t value;
+
+            memcpy(&identifier, temp_data, sizeof(uint16_t));
+            identifier = co_byte_order_16_network_to_host(identifier);
+            temp_data += sizeof(uint16_t);
+
+            memcpy(&value, temp_data, sizeof(uint16_t));
+            value = co_byte_order_32_network_to_host(value);
+            temp_data += sizeof(uint32_t);
+
+            co_http2_set_setting_param(settings, identifier, value);
+        }
+    }
+
+    return result;
+}
+
+void
+co_http2_send_upgrade_response(
+    co_http2_client_t* client,
+    bool result
+)
+{
+    co_http_response_t* response = NULL;
+
+    if (result)
+    {
+        response = co_http_response_create_with(101, "Switching Protocols");
+
+        co_http_header_t* response_header =
+            co_http_response_get_header(response);
+        co_http_header_add_field(response_header,
+            CO_HTTP_HEADER_UPGRADE, CO_HTTP2_UPGRADE);
+        co_http_header_add_field(response_header,
+            CO_HTTP_HEADER_CONNECTION, CO_HTTP_HEADER_UPGRADE);
+    }
+    else
+    {
+        response = co_http_response_create_with(400, "Bad Request");
+    }
+
+    co_http_response_set_version(response, CO_HTTP_VERSION_1_1);
+
+    co_byte_array_t* buffer = co_byte_array_create();
+    co_http_response_serialize(response, buffer);
+
+    co_http2_send_raw_data(client,
+        co_byte_array_get_ptr(buffer, 0),
+        co_byte_array_get_count(buffer));
+
+    co_byte_array_destroy(buffer);
+    co_http_response_destroy(response);
 }
 
 //---------------------------------------------------------------------------//
@@ -697,7 +681,7 @@ co_http2_client_create(
             co_tls_tcp_client_set_host_name(
                 client->tcp_client, client->base_url->host);
 
-            const char* protocol = CO_HTTP2_ALPN_NAME;
+            const char* protocol = CO_HTTP2_PROTOCOL;
 
             co_tls_tcp_client_set_alpn_protocols(
                 client->tcp_client, &protocol, 1);
@@ -720,14 +704,16 @@ co_http2_client_create(
     memcpy(&client->tcp_client->remote_net_addr,
         &remote_net_addr, sizeof(co_net_addr_t));
 
-    co_http2_client_setup(client, secure);
+    co_http2_client_setup(client);
+
+    client->new_stream_id = UINT32_MAX;
 
     co_tcp_set_receive_handler(
         client->tcp_client,
-        (co_tcp_receive_fn)co_http2_client_on_client_tcp_receive_ready);
+        (co_tcp_receive_fn)co_http2_client_on_tcp_receive_ready);
     co_tcp_set_close_handler(
         client->tcp_client,
-        (co_tcp_close_fn)co_http2_client_on_client_tcp_close);
+        (co_tcp_close_fn)co_http2_client_on_tcp_close);
 
     return client;
 }
@@ -739,6 +725,8 @@ co_http2_client_destroy(
 {
     if (client != NULL)
     {
+        co_http2_client_close(client, 0);
+
         co_http2_client_cleanup(client);
 
         co_http_url_destroy(client->base_url);
@@ -754,8 +742,35 @@ co_http2_client_destroy(
     }
 }
 
+void
+co_http2_client_close(
+    co_http2_client_t* client,
+    int error_code
+)
+{
+    if ((client != NULL) &&
+        (client->tcp_client != NULL) &&
+        (co_tcp_is_open(client->tcp_client)))
+    {
+        if ((client->system_stream != NULL) &&
+            (client->system_stream->state !=
+                CO_HTTP2_STREAM_STATE_CLOSED))
+        {
+            co_http2_frame_t* goaway_frame =
+                co_http2_create_goaway_frame(
+                    false, client->last_stream_id, error_code,
+                    NULL, 0);
+
+            co_http2_stream_send_frame(
+                client->system_stream, goaway_frame);
+        }
+
+        client->module.close(client->tcp_client);
+    }
+}
+
 bool
-co_http2_client_is_running(
+co_http2_is_running(
     const co_http2_client_t* client
 )
 {
@@ -779,37 +794,43 @@ co_http2_client_is_running(
 }
 
 bool
-co_http2_send_request(
+co_http2_connect(
     co_http2_client_t* client,
-    co_http2_message_t* message
+    co_http2_connect_fn handler
 )
 {
-    if (co_tcp_is_open(client->tcp_client))
-    {
-        co_list_add_tail(client->request_queue, (uintptr_t)message);
+    client->on_connect = handler;
 
-        co_http2_client_send_all_requests(client);
-    }
-    else if (client->connecting)
+    return client->module.connect_async(
+        client->tcp_client,
+        &client->tcp_client->remote_net_addr,
+        (co_tcp_connect_fn)co_http2_client_on_tcp_connect);
+}
+
+co_http2_stream_t*
+co_http2_get_stream(
+    co_http2_client_t* client,
+    uint32_t stream_id
+)
+{
+    co_http2_stream_t* stream = NULL;
+
+    if (stream_id != 0)
     {
-        co_list_add_tail(client->request_queue, (uintptr_t)message);
+        co_map_data_st* data =
+            co_map_get(client->stream_map, (uintptr_t)stream_id);
+
+        if (data != NULL)
+        {
+            stream = (co_http2_stream_t*)data->value;
+        }
     }
     else
     {
-        if (!client->module.connect_async(
-            client->tcp_client,
-            &client->tcp_client->remote_net_addr,
-            (co_tcp_connect_fn)co_http2_client_on_tcp_connect))
-        {
-            return false;
-        }
-
-        client->connecting = true;
-
-        co_list_add_tail(client->request_queue, (uintptr_t)message);
+        stream = client->system_stream;
     }
 
-    return true;
+    return stream;
 }
 
 void
@@ -848,6 +869,164 @@ co_http2_set_server_push_response_handler(
     client->on_push_response = handler;
 }
 
+void
+co_http2_set_window_update_handler(
+    co_http2_client_t* client,
+    co_http2_window_update_fn handler
+)
+{
+    client->on_window_update = handler;
+}
+
+void
+co_http2_set_close_stream_handler(
+    co_http2_client_t* client,
+    co_http2_close_stream_fn handler
+)
+{
+    client->on_close_stream = handler;
+}
+
+void
+co_http2_send_initial_settings(
+    co_http2_client_t* client
+)
+{
+    uint16_t param_count = 0;
+    co_http2_setting_param_st params[6];
+
+    if (client->local_settings.header_table_size !=
+        CO_HTTP2_SETTING_DEFAULT_HEADER_TABLE_SIZE)
+    {
+        params[param_count].identifier =
+            CO_HTTP2_SETTING_ID_HEADER_TABLE_SIZE;
+        params[param_count].value =
+            client->local_settings.header_table_size;
+        ++param_count;
+    }
+
+    if (client->local_settings.enable_push !=
+        CO_HTTP2_SETTING_DEFAULT_ENABLE_PUSH)
+    {
+        params[param_count].identifier =
+            CO_HTTP2_SETTING_ID_ENABLE_PUSH;
+        params[param_count].value =
+            client->local_settings.enable_push;
+        ++param_count;
+    }
+
+    if (client->local_settings.max_concurrent_streams !=
+        CO_HTTP2_SETTING_DEFAULT_MAX_CONCURRENT_STREAMS)
+    {
+        params[param_count].identifier =
+            CO_HTTP2_SETTING_ID_MAX_CONCURRENT_STREAMS;
+        params[param_count].value =
+            client->local_settings.max_concurrent_streams;
+        ++param_count;
+    }
+
+    if (client->local_settings.initial_window_size !=
+        CO_HTTP2_SETTING_DEFAULT_INITIAL_WINDOW_SIZE)
+    {
+        params[param_count].identifier =
+            CO_HTTP2_SETTING_ID_INITIAL_WINDOW_SIZE;
+        params[param_count].value =
+            client->local_settings.initial_window_size;
+        ++param_count;
+    }
+
+    if (client->local_settings.max_frame_size !=
+        CO_HTTP2_SETTING_DEFAULT_MAX_FRAME_SIZE)
+    {
+        params[param_count].identifier =
+            CO_HTTP2_SETTING_ID_MAX_FRAME_SIZE;
+        params[param_count].value =
+            client->local_settings.max_frame_size;
+        ++param_count;
+    }
+
+    if (client->local_settings.max_header_list_size !=
+        CO_HTTP2_SETTING_DEFAULT_MAX_HEADER_LIST_SIZE)
+    {
+        params[param_count].identifier =
+            CO_HTTP2_SETTING_ID_MAX_HEADER_LIST_SIZE;
+        params[param_count].value =
+            client->local_settings.max_header_list_size;
+        ++param_count;
+    }
+
+    co_http2_frame_t* frame =
+        co_http2_create_settings_frame(
+            false, false, params, param_count);
+
+    co_http2_stream_send_frame(
+        client->system_stream, frame);
+
+    if (client->local_settings.initial_window_size !=
+        CO_HTTP2_SETTING_DEFAULT_INITIAL_WINDOW_SIZE)
+    {
+        co_http2_stream_send_window_update(
+            client->system_stream,
+            client->local_settings.initial_window_size);
+    }
+}
+
+void
+co_http2_init_settings(
+    co_http2_client_t* client,
+    const co_http2_setting_param_st* params,
+    uint16_t param_count
+)
+{
+    for (size_t index = 0; index < param_count; ++index)
+    {
+        co_http2_set_setting_param(
+            &client->local_settings,
+            params[index].identifier, params[index].value);
+    }
+}
+
+void
+co_http2_update_settings(
+    co_http2_client_t* client,
+    const co_http2_setting_param_st* params,
+    uint16_t param_count
+)
+{
+    co_http2_frame_t* settings_frame =
+        co_http2_create_settings_frame(
+            false, false, params, param_count);
+
+    co_http2_stream_send_frame(
+        client->system_stream, settings_frame);
+
+    for (size_t index = 0; index < param_count; ++index)
+    {
+        co_http2_set_setting_param(
+            &client->local_settings,
+            params[index].identifier, params[index].value);
+    }
+}
+
+const co_http2_settings_st*
+co_http2_get_local_settings(
+    const co_http2_client_t* client
+)
+{
+    return &client->local_settings;
+}
+
+const co_http2_settings_st*
+co_http2_get_remote_settings(
+    const co_http2_client_t* client
+)
+{
+    return &client->remote_settings;
+}
+
+//---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
+
 const co_net_addr_t*
 co_http2_get_remote_net_addr(
     const co_http2_client_t* client
@@ -878,4 +1057,168 @@ co_http2_is_open(
 )
 {
     return co_tcp_is_open(client->tcp_client);
+}
+
+//---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
+
+co_http2_client_t*
+co_http2_client_upgrade(
+    co_http_client_t* client
+)
+{
+    co_http2_client_t* new_client =
+        (co_http2_client_t*)co_mem_alloc(sizeof(co_http2_client_t));
+
+    if (new_client == NULL)
+    {
+        return NULL;
+    }
+
+    co_tcp_receive_fn receive_handler;
+    co_http2_settings_st* settings = NULL;
+    uint32_t new_stream_id = 0;
+
+    if (strcmp(client->upgrade_ctx->key,
+        CO_HTTP_UPGRADE_CONNECTION_PREFACE) == 0)
+    {
+        receive_handler =
+            (co_tcp_receive_fn)co_http2_server_on_tcp_receive_ready;
+    }
+    else
+    {
+        if (client->upgrade_ctx->server)
+        {
+            receive_handler =
+                (co_tcp_receive_fn)co_http2_server_on_tcp_receive_ready;
+
+            settings = &new_client->remote_settings;
+        }
+        else
+        {
+            new_stream_id = UINT32_MAX;
+
+            receive_handler =
+                (co_tcp_receive_fn)co_http2_client_on_tcp_receive_ready;
+
+            settings = &new_client->local_settings;
+        }
+    }
+
+    new_client->base_url = client->base_url;
+    client->base_url = NULL;
+
+    new_client->tcp_client = client->tcp_client;
+    client->tcp_client = NULL;
+
+    co_http2_client_setup(new_client);
+
+    co_byte_array_t* receive_data = new_client->receive_data;
+    new_client->receive_data = client->receive_data;
+    new_client->receive_data_index = client->receive_data_index;
+    client->receive_data = receive_data;
+
+    new_client->new_stream_id = new_stream_id;
+
+    if (settings != NULL)
+    {
+        const co_http_header_t* header =
+            co_http_request_get_header(client->request);
+        const char* http2_settings =
+            co_http_header_get_field(
+                header, CO_HTTP2_HEADER_SETTINGS);
+
+        bool result = false;
+
+        if (http2_settings != NULL)
+        {
+            result = co_http2_set_upgrade_settings(
+                http2_settings, strlen(http2_settings), settings);
+        }
+
+        if (client->upgrade_ctx->server)
+        {
+            co_http2_send_upgrade_response(new_client, result);
+        }
+    }
+
+    co_tcp_set_receive_handler(
+        new_client->tcp_client, receive_handler);
+    co_tcp_set_close_handler(
+        new_client->tcp_client,
+        (co_tcp_close_fn)co_http2_client_on_tcp_close);
+
+    co_http_client_destroy(client);
+
+    return new_client;
+}
+
+bool
+co_http2_send_upgrade_request(
+    co_http_client_t* client,
+    const char* path,
+    const co_http2_setting_param_st* param,
+    uint16_t param_count,
+    co_http_upgrade_response_fn handler
+)
+{
+    client->upgrade_ctx =
+        (co_http_upgrade_ctx_t*)co_mem_alloc(
+            sizeof(co_http_upgrade_ctx_t));
+    client->upgrade_ctx->server = false;
+    client->upgrade_ctx->key = CO_HTTP2_UPGRADE;
+
+    char* b64_str = NULL;
+    size_t b64_str_length = 0;
+
+    if (param_count > 0)
+    {
+        co_byte_array_t* settings = co_byte_array_create();
+
+        for (uint16_t param_index = 0;
+            param_index < param_count; ++param_index)
+        {
+            uint16_t u16 =
+                co_byte_order_16_host_to_network(
+                    param[param_index].identifier);
+            co_byte_array_add(
+                settings, &u16, sizeof(uint16_t));
+
+            uint32_t u32 =
+                co_byte_order_32_host_to_network(
+                    param[param_index].value);
+            co_byte_array_add(
+                settings, &u32, sizeof(uint32_t));
+        }
+
+        co_base64url_encode(
+            co_byte_array_get_const_ptr(settings, 0),
+            co_byte_array_get_count(settings),
+            &b64_str, &b64_str_length,
+            false);
+
+        co_byte_array_destroy(settings);
+    }
+
+    co_http_request_t* request =
+        co_http_request_create_with("GET", path);
+    co_http_header_t* header =
+        co_http_request_get_header(request);
+
+    co_http_header_add_field(
+        header, CO_HTTP_HEADER_CONNECTION,
+        CO_HTTP_HEADER_UPGRADE", "CO_HTTP2_HEADER_SETTINGS);
+    co_http_header_add_field(
+        header, CO_HTTP_HEADER_UPGRADE,
+        CO_HTTP2_UPGRADE);
+    co_http_header_add_field(
+        header, CO_HTTP2_HEADER_SETTINGS,
+        ((b64_str != NULL) ? b64_str : ""));
+
+    co_string_destroy(b64_str);
+
+    co_http_set_upgrade_handler(
+        client, CO_HTTP2_UPGRADE, (void*)handler);
+
+    return co_http_send_request(client, request);
 }

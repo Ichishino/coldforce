@@ -28,6 +28,8 @@ CO_EXTERN_C_BEGIN
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
+#define CO_NET_ERROR_TCP_CONNECT_FAILED     -3001
+
 CO_NET_API bool co_net_setup(void);
 CO_NET_API void co_net_cleanup(void);
 

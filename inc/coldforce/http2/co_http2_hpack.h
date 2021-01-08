@@ -48,47 +48,12 @@ typedef struct
 
 } co_http2_hpack_dynamic_table_t;
 
-void co_http2_hpack_serialize_int(
-    uint8_t bit_max, uint8_t flag, uint32_t value, co_byte_array_t* buffer);
-bool co_http2_hpack_deserialize_int(
-    uint8_t bit_max, const uint8_t* data, size_t data_size,
-    uint32_t* value, size_t* index);
-
-void co_http2_hpack_serialize_4bits_int(
-    bool flag, uint32_t value, co_byte_array_t* buffer);
-void co_http2_hpack_serialize_5bits_int(
-    bool flag, uint32_t value, co_byte_array_t* buffer);
-void co_http2_hpack_serialize_6bits_int(
-    bool flag, uint32_t value, co_byte_array_t* buffer);
-void co_http2_hpack_serialize_7bits_int(
-    bool flag, uint32_t value, co_byte_array_t* buffer);
-
-void co_http2_hpack_serialize_string(
-    bool encoding, const char* str, uint32_t str_length,
-    co_byte_array_t* buffer);
-bool co_http2_hpack_deserialize_string(
-    const uint8_t* data, size_t data_size,
-    char** str, uint32_t* str_length,
-    size_t* index);
-
 void co_http2_hpack_dynamic_table_setup(
     co_http2_hpack_dynamic_table_t* dynamic_table,
     uint32_t max_size);
+
 void co_http2_hpack_dynamic_table_cleanup(
     co_http2_hpack_dynamic_table_t* dynamic_table);
-void co_http2_hpack_dynamic_table_resize(
-    co_http2_hpack_dynamic_table_t* dynamic_table,
-    uint32_t max_size);
-bool co_http2_hpack_dynamic_table_add_item(
-    co_http2_hpack_dynamic_table_t* dynamic_table,
-    const char* name, const char* value);
-bool co_http2_hpack_dynamic_table_find_item(
-    const co_http2_hpack_dynamic_table_t* dynamic_table,
-    const char* name, const char* value, uint32_t* header_index);
-bool co_http2_hpack_dynamic_table_find_item_by_index(
-    const co_http2_hpack_dynamic_table_t* dynamic_table,
-    uint32_t header_index,
-    char** name, char** value);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

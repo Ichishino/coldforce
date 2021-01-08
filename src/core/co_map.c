@@ -8,7 +8,7 @@
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-size_t
+static size_t
 co_map_default_hash_key(
     uintptr_t key
 )
@@ -16,7 +16,7 @@ co_map_default_hash_key(
     return (size_t)key;
 }
 
-void
+static void
 co_map_default_free(
     uintptr_t key_or_value
 )
@@ -24,7 +24,7 @@ co_map_default_free(
     (void)key_or_value;
 }
 
-uintptr_t
+static uintptr_t
 co_map_default_duplicate(
     uintptr_t key_or_value
 )
@@ -32,7 +32,7 @@ co_map_default_duplicate(
     return key_or_value;
 }
 
-intptr_t
+static intptr_t
 co_map_default_compare_keys(
     uintptr_t key1,
     uintptr_t key2

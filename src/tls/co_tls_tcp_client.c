@@ -11,21 +11,24 @@
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-void
+#if CO_TLS_DEBUG
+static void
 co_tls_tcp_on_info(
     const SSL* ssl,
     int type,
     int value
 )
 {
-    printf("0x%08X-%s %s (%d)\n",
-        type, SSL_alert_type_string(value), SSL_state_string_long(ssl), value);
+    printf("[CO_TLS] 0x%08X-%s %s (%d) %s\n",
+        type, SSL_alert_type_string(value), SSL_state_string_long(ssl),
+        value, SSL_alert_desc_string_long(value));
 
     if (type == SSL_CB_HANDSHAKE_DONE)
     {
-        printf("%s %s\n", SSL_get_version(ssl), SSL_get_cipher_name(ssl));
+        printf("[CO_TLS] %s %s\n", SSL_get_version(ssl), SSL_get_cipher_name(ssl));
     }
 }
+#endif
 
 void
 co_tls_tcp_client_setup(
@@ -37,7 +40,7 @@ co_tls_tcp_client_setup(
 
     if ((tls_ctx == NULL) || (tls_ctx->ssl_ctx == NULL))
     {
-        ssl_ctx = SSL_CTX_new(SSLv23_client_method());
+        ssl_ctx = SSL_CTX_new(TLS_client_method());
     }
     else
     {
@@ -46,12 +49,13 @@ co_tls_tcp_client_setup(
 
     tls->ctx.ssl_ctx = ssl_ctx;
     tls->ssl = SSL_new(tls->ctx.ssl_ctx);
-/*
+
+#if CO_TLS_DEBUG
     if (SSL_CTX_get_info_callback(ssl_ctx) == NULL)
     {
         SSL_CTX_set_info_callback(ssl_ctx, co_tls_tcp_on_info);
     }
-*/
+#endif
     BIO* internal_bio = NULL;
 
     BIO_new_bio_pair(&internal_bio, 0, &tls->network_bio, 0);
@@ -93,7 +97,7 @@ co_tls_tcp_client_cleanup(
     }
 }
 
-bool
+static bool
 co_tls_tcp_send_handshake(
     co_tcp_client_t* client
 )
@@ -123,7 +127,7 @@ co_tls_tcp_send_handshake(
     return true;
 }
 
-bool
+static bool
 co_tls_tcp_receive_handshake(
     co_tcp_client_t* client
 )
@@ -186,7 +190,7 @@ co_tls_tcp_receive_handshake(
     return true;
 }
 
-bool
+static bool
 co_tls_tcp_encrypt_data(
     co_tcp_client_t* client,
     const void* plain_data,
@@ -237,7 +241,7 @@ co_tls_tcp_encrypt_data(
     return true;
 }
 
-void
+static void
 co_tls_tcp_on_handshale_complete(
     co_thread_t* thread,
     co_tcp_client_t* client,
@@ -259,7 +263,7 @@ co_tls_tcp_on_handshale_complete(
     }
 }
 
-void
+static void
 co_tls_tcp_on_connect(
     co_thread_t* thread,
     co_tcp_client_t* client,
@@ -284,7 +288,7 @@ co_tls_tcp_on_connect(
     }
 }
 
-void
+static void
 co_tls_tcp_on_receive_handshake(
     co_thread_t* thread,
     co_tcp_client_t* client
@@ -312,7 +316,7 @@ co_tls_tcp_on_receive_handshake(
             }
             else
             {
-                error_code = -3;
+                error_code = CO_TLS_ERROR_HANDSHAKE_FAILED;
             }
         }
         else
@@ -322,7 +326,7 @@ co_tls_tcp_on_receive_handshake(
     }
     else
     {
-        error_code = -2;
+        error_code = CO_TLS_ERROR_HANDSHAKE_FAILED;
     }
 
     if (tls->on_handshake_complete != NULL)

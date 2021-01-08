@@ -159,6 +159,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\src\http\co_base64.c" />
     <ClCompile Include="..\..\..\src\http\co_http.c" />
     <ClCompile Include="..\..\..\src\http\co_http_client.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
@@ -199,6 +200,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\inc\coldforce\coldforce_http.h" />
+    <ClInclude Include="..\..\..\inc\coldforce\http\co_base64.h" />
     <ClInclude Include="..\..\..\inc\coldforce\http\co_http.h" />
     <ClInclude Include="..\..\..\inc\coldforce\http\co_http_client.h" />
     <ClInclude Include="..\..\..\inc\coldforce\http\co_http_content_receiver.h" />
