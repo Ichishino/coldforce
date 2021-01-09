@@ -58,7 +58,7 @@ CO_HTTP_API void co_http_response_set_reason_phrase(co_http_response_t* response
 CO_HTTP_API const char* co_http_response_get_reason_phrase(const co_http_response_t* response);
 
 CO_HTTP_API void co_http_response_add_cookie(
-    co_http_response_t* response, co_http_cookie_st* cookie);
+    co_http_response_t* response, const co_http_cookie_st* cookie);
 CO_HTTP_API size_t co_http_response_get_cookies(
     const co_http_response_t* response, co_http_cookie_st* cookies, size_t count);
 CO_HTTP_API void co_http_response_remove_all_cookies(

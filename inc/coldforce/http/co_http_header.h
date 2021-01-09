@@ -32,6 +32,9 @@ typedef struct
 CO_HTTP_API void co_http_header_setup(co_http_header_t* header);
 CO_HTTP_API void co_http_header_cleanup(co_http_header_t* header);
 
+bool co_http_header_add_field_ptr(
+    co_http_header_t* header, char* name, char* value);
+
 void co_http_header_serialize(
     const co_http_header_t* header, co_byte_array_t* buffer);
 int co_http_header_deserialize(

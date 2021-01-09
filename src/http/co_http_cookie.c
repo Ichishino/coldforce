@@ -24,19 +24,22 @@ co_http_request_cookie_serialize(
 
     if (co_byte_array_get_count(buffer) > 0)
     {
-        co_byte_array_add_string(buffer, "; ");
+        co_byte_array_add(buffer, "; ", 2);
     }
 
     for (size_t index = 0; index < count; ++index)
     {
         co_byte_array_add_string(buffer, cookie[index].name);
-        co_byte_array_add_string(buffer, "=");
+        co_byte_array_add(buffer, "=", 1);
         co_byte_array_add_string(buffer, cookie[index].value);
-        co_byte_array_add_string(buffer, "; ");
+        co_byte_array_add(buffer, "; ", 2);
     }
 
     co_byte_array_set_count(
         buffer, co_byte_array_get_count(buffer) - 2);
+    co_byte_array_add(buffer, "\0", 1);
+    co_byte_array_set_count(
+        buffer, co_byte_array_get_count(buffer) - 1);
 }
 
 size_t
@@ -165,6 +168,10 @@ co_http_response_cookie_serialize(
     {
         co_byte_array_add_string(buffer, "; HttpOnly");
     }
+
+    co_byte_array_add(buffer, "\0", 1);
+    co_byte_array_set_count(
+        buffer, co_byte_array_get_count(buffer) - 1);
 }
 
 bool

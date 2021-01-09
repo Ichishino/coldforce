@@ -63,6 +63,9 @@ CO_EXTERN_C_BEGIN
 
 #define CO_HTTP2_HEADER_SETTINGS     "HTTP2-Settings"
 
+#define CO_HTTP2_HEADER_SET_COOKIE    "set-cookie"
+#define CO_HTTP2_HEADER_COOKIE        "cookie"
+
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 

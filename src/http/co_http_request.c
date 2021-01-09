@@ -464,7 +464,7 @@ co_http_request_add_cookie(
 size_t
 co_http_request_get_cookies(
     const co_http_request_t* request,
-    co_http_cookie_st* cookie,
+    co_http_cookie_st* cookies,
     size_t count
 )
 {
@@ -487,7 +487,7 @@ co_http_request_get_cookies(
             field->name, CO_HTTP_HEADER_COOKIE) == 0)
         {
             size_t result = co_http_request_cookie_deserialize(
-                field->value, cookie, count - index);
+                field->value, cookies, count - index);
 
             if (result == 0)
             {

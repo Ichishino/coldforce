@@ -1,7 +1,6 @@
 #ifndef CO_HTTP_COOKIE_H_INCLUDED
 #define CO_HTTP_COOKIE_H_INCLUDED
 
-#include <coldforce/core/co_list.h>
 #include <coldforce/core/co_byte_array.h>
 
 #include <coldforce/http/co_http.h>
@@ -38,14 +37,14 @@ typedef struct
 
 } co_http_cookie_st;
 
-void co_http_response_cookie_serialize(
+CO_HTTP_API void co_http_response_cookie_serialize(
     const co_http_cookie_st* cookie, co_byte_array_t* buffer);
-bool co_http_response_cookie_deserialize(
+CO_HTTP_API bool co_http_response_cookie_deserialize(
     const char* str, co_http_cookie_st* cookie);
 
-void co_http_request_cookie_serialize(
+CO_HTTP_API void co_http_request_cookie_serialize(
     const co_http_cookie_st* cookie, size_t count, co_byte_array_t* buffer);
-size_t co_http_request_cookie_deserialize(
+CO_HTTP_API size_t co_http_request_cookie_deserialize(
     const char* str, co_http_cookie_st* cookie, size_t count);
 
 //---------------------------------------------------------------------------//

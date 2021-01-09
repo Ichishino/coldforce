@@ -572,3 +572,130 @@ co_http2_header_remove_all_fields(
         }
     }
 }
+
+//---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
+
+void
+co_http2_header_add_client_cookie(
+    co_http2_header_t* header,
+    const co_http_cookie_st* cookie
+)
+{
+    co_byte_array_t* buffer = co_byte_array_create();
+
+    co_http_request_cookie_serialize(cookie, 1, buffer);
+
+    co_http2_header_add_field_ptr(header,
+        co_string_duplicate(CO_HTTP2_HEADER_COOKIE),
+        (char*)co_byte_array_detach(buffer));
+
+    co_byte_array_destroy(buffer);
+}
+
+size_t
+co_http2_header_get_client_cookies(
+    const co_http2_header_t* header,
+    co_http_cookie_st* cookies,
+    size_t count
+)
+{
+    const co_list_iterator_t* it =
+        co_list_get_const_head_iterator(header->field_list);
+
+    size_t index = 0;
+
+    while ((it != NULL) && (index < count))
+    {
+        const co_list_data_st* data =
+            co_list_get_const_next(header->field_list, &it);
+
+        const co_http2_header_field_t* field =
+            (const co_http2_header_field_t*)data->value;
+
+        if (co_string_case_compare(
+            field->name, CO_HTTP2_HEADER_COOKIE) == 0)
+        {
+            size_t result = co_http_request_cookie_deserialize(
+                field->value, cookies, count - index);
+
+            if (result == 0)
+            {
+                break;
+            }
+
+            index += result;
+        }
+    }
+
+    return index;
+}
+
+void
+co_http2_header_remove_all_client_cookies(
+    co_http2_header_t* header
+)
+{
+    co_http2_header_remove_all_fields(
+        header, CO_HTTP2_HEADER_COOKIE);
+}
+
+void
+co_http2_header_add_server_cookie(
+    co_http2_header_t* header,
+    const co_http_cookie_st* cookie
+)
+{
+    co_byte_array_t* buffer = co_byte_array_create();
+
+    co_http_response_cookie_serialize(cookie, buffer);
+
+    co_http2_header_add_field_ptr(header,
+        co_string_duplicate(CO_HTTP2_HEADER_SET_COOKIE),
+        (char*)co_byte_array_detach(buffer));
+
+    co_byte_array_destroy(buffer);
+}
+
+size_t
+co_http2_header_get_server_cookies(
+    const co_http2_header_t* header,
+    co_http_cookie_st* cookies,
+    size_t count
+)
+{
+    const co_list_iterator_t* it =
+        co_list_get_const_head_iterator(header->field_list);
+
+    size_t index = 0;
+
+    while ((it != NULL) && (index < count))
+    {
+        const co_list_data_st* data =
+            co_list_get_const_next(header->field_list, &it);
+
+        const co_http2_header_field_t* field =
+            (const co_http2_header_field_t*)data->value;
+
+        if (co_string_case_compare(
+            field->name, CO_HTTP2_HEADER_SET_COOKIE) == 0)
+        {
+            if (co_http_response_cookie_deserialize(
+                field->value, &cookies[index]))
+            {
+                ++index;
+            }
+        }
+    }
+
+    return index;
+}
+
+void
+co_http2_header_remove_all_server_cookies(
+    co_http2_header_t* header
+)
+{
+    co_http2_header_remove_all_fields(
+        header, CO_HTTP2_HEADER_SET_COOKIE);
+}

@@ -4,6 +4,7 @@
 #include <coldforce/core/co_list.h>
 
 #include <coldforce/http/co_http_url.h>
+#include <coldforce/http/co_http_cookie.h>
 
 #include <coldforce/http2/co_http2.h>
 
@@ -106,6 +107,23 @@ CO_HTTP2_API bool co_http2_header_add_field(
 
 CO_HTTP2_API void co_http2_header_remove_field(co_http2_header_t* header, const char* name);
 CO_HTTP2_API void co_http2_header_remove_all_fields(co_http2_header_t* header, const char* name);
+
+//---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
+
+CO_HTTP2_API void co_http2_header_add_client_cookie(
+    co_http2_header_t* header, const co_http_cookie_st* cookie);
+CO_HTTP2_API size_t co_http2_header_get_client_cookies(
+    const co_http2_header_t* header, co_http_cookie_st* cookies, size_t count);
+CO_HTTP2_API void co_http2_header_remove_all_client_cookies(
+    co_http2_header_t* header);
+
+CO_HTTP2_API void co_http2_header_add_server_cookie(
+    co_http2_header_t* header, const co_http_cookie_st* cookie);
+CO_HTTP2_API size_t co_http2_header_get_server_cookies(
+    const co_http2_header_t* header, co_http_cookie_st* cookies, size_t count);
+CO_HTTP2_API void co_http2_header_remove_all_server_cookies(
+    co_http2_header_t* header);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

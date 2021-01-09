@@ -304,20 +304,18 @@ co_http_response_get_reason_phrase(
 void
 co_http_response_add_cookie(
     co_http_response_t* response,
-    co_http_cookie_st* cookie
+    const co_http_cookie_st* cookie
 )
 {
     co_byte_array_t* buffer = co_byte_array_create();
 
     co_http_response_cookie_serialize(cookie, buffer);
 
-    co_byte_array_add(buffer, "\0", 1);
-    char* str = (char*)co_byte_array_detach(buffer);
+    co_http_header_add_field_ptr(
+        &response->message.header,
+        co_string_duplicate(CO_HTTP_HEADER_SET_COOKIE),
+        (char*)co_byte_array_detach(buffer));
 
-    co_http_header_add_field(
-        &response->message.header, CO_HTTP_HEADER_SET_COOKIE, str);
-
-    co_mem_free(str);
     co_byte_array_destroy(buffer);
 }
 
