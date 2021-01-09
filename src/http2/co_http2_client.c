@@ -6,7 +6,6 @@
 #include <coldforce/tls/co_tls_tcp_client.h>
 
 #include <coldforce/http/co_base64.h>
-#include <coldforce/http/co_http_client.h>
 #include <coldforce/http/co_http_server.h>
 
 #include <coldforce/http2/co_http2_client.h>
@@ -50,7 +49,10 @@ co_http2_client_setup(
     client->receive_data_index = 0;
     client->receive_data = co_byte_array_create();
 
+    client->upgrade_request_data = NULL;
+
     client->on_connect = NULL;
+    client->on_upgrade = NULL;
     client->on_close = NULL;
     client->on_message = NULL;
     client->on_push_request = NULL;
@@ -112,6 +114,9 @@ co_http2_client_cleanup(
     {
         co_byte_array_destroy(client->receive_data);
         client->receive_data = NULL;
+
+        co_byte_array_destroy(client->upgrade_request_data);
+        client->upgrade_request_data = NULL;
 
         co_http2_stream_destroy(client->system_stream);
         client->system_stream = NULL;
@@ -373,6 +378,60 @@ co_http2_client_on_push_promise(
     }
 }
 
+static bool
+co_http2_client_on_upgrade_response(
+    co_thread_t* thread,
+    co_http2_client_t* client
+)
+{
+    co_http_response_t* response = co_http_response_create();
+
+    if (!co_http_response_deserialize(
+        response, client->receive_data,
+        &client->receive_data_index) ==
+        CO_HTTP_PARSE_COMPLETE)
+    {
+        co_http_response_destroy(response);
+
+        return false;
+    }
+
+    const co_http_header_t* response_header =
+        co_http_response_get_header(response);
+    const char* upgrade =
+        co_http_header_get_field(
+            response_header, CO_HTTP_HEADER_UPGRADE);
+
+    if ((upgrade == NULL) ||
+        (strcmp(upgrade, CO_HTTP2_UPGRADE) != 0))
+    {
+        co_http_response_destroy(response);
+
+        return false;
+    }
+
+    uint16_t status_code =
+        co_http_response_get_status_code(response);
+
+    if (client->on_upgrade != NULL)
+    {
+        co_http2_upgrade_fn handler = client->on_upgrade;
+        client->on_upgrade = NULL;
+
+        if (status_code == 101)
+        {
+            handler(thread, client, 0);
+        }
+        else
+        {
+            handler(thread, client,
+                CO_HTTP2_ERROR_UPGRADE_FAILED);
+        }
+    }
+
+    return true;
+}
+
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
@@ -396,10 +455,44 @@ co_http2_client_on_tcp_connect(
     }
     else
     {
-        co_http2_connect_fn handler = client->on_connect;
-
-        if (handler != NULL)
+        if (client->on_connect != NULL)
         {
+            co_http2_connect_fn handler = client->on_connect;
+            client->on_connect = NULL;
+
+            handler(thread, client, error_code);
+        }
+    }
+}
+
+static void
+co_http2_client_on_tcp_connect_and_upgrade(
+    co_thread_t* thread,
+    co_tcp_client_t* tcp_client,
+    int error_code
+)
+{
+    co_http2_client_t* client =
+        (co_http2_client_t*)tcp_client->sock.sub_class;
+
+    if (error_code == 0)
+    {
+        co_http2_send_raw_data(client,
+            co_byte_array_get_const_ptr(
+                client->upgrade_request_data, 0),
+            co_byte_array_get_count(
+                client->upgrade_request_data));
+
+        co_byte_array_destroy(client->upgrade_request_data);
+        client->upgrade_request_data = NULL;
+    }
+    else
+    {
+        if (client->on_upgrade != NULL)
+        {
+            co_http2_connect_fn handler = client->on_upgrade;
+            client->on_upgrade = NULL;
+
             handler(thread, client, error_code);
         }
     }
@@ -480,6 +573,11 @@ co_http2_client_on_tcp_receive_ready(
         else
         {
             co_http2_frame_destroy(frame);
+
+            if (co_http2_client_on_upgrade_response(thread, client))
+            {
+                continue;
+            }
 
             co_http2_client_close(
                 client, CO_HTTP2_STREAM_ERROR_FRAME_SIZE_ERROR);
@@ -807,6 +905,82 @@ co_http2_connect(
         client->tcp_client,
         &client->tcp_client->remote_net_addr,
         (co_tcp_connect_fn)co_http2_client_on_tcp_connect);
+}
+
+bool
+co_http2_request_upgrade(
+    co_http2_client_t* client,
+    const char* path,
+    const co_http2_setting_param_st* param,
+    uint16_t param_count,
+    co_http2_upgrade_fn handler
+)
+{
+    client->on_upgrade = handler;
+    client->upgrade_request_data = co_byte_array_create();
+
+    char* b64_str = NULL;
+    size_t b64_str_length = 0;
+
+    if (param_count > 0)
+    {
+        co_byte_array_t* buffer = co_byte_array_create();
+
+        for (uint16_t param_index = 0;
+            param_index < param_count; ++param_index)
+        {
+            uint16_t u16 =
+                co_byte_order_16_host_to_network(
+                    param[param_index].identifier);
+            co_byte_array_add(
+                buffer, &u16, sizeof(uint16_t));
+
+            uint32_t u32 =
+                co_byte_order_32_host_to_network(
+                    param[param_index].value);
+            co_byte_array_add(
+                buffer, &u32, sizeof(uint32_t));
+        }
+
+        co_base64url_encode(
+            co_byte_array_get_const_ptr(buffer, 0),
+            co_byte_array_get_count(buffer),
+            &b64_str, &b64_str_length,
+            false);
+
+        co_byte_array_destroy(buffer);
+    }
+
+    co_http_request_t* request =
+        co_http_request_create_with("GET", path);
+    co_http_header_t* header =
+        co_http_request_get_header(request);
+
+    co_http_request_set_version(request, CO_HTTP_VERSION_1_1);
+
+    char* host_and_port =
+        co_http_url_create_host_and_port(client->base_url);
+
+    co_http_header_add_field_ptr(
+        header, co_string_duplicate(CO_HTTP_HEADER_HOST), host_and_port);
+
+    co_http_header_add_field(
+        header, CO_HTTP_HEADER_CONNECTION,
+        CO_HTTP_HEADER_UPGRADE", "CO_HTTP2_HEADER_SETTINGS);
+    co_http_header_add_field(
+        header, CO_HTTP_HEADER_UPGRADE,
+        CO_HTTP2_UPGRADE);
+    co_http_header_add_field_ptr(
+        header, co_string_duplicate(CO_HTTP2_HEADER_SETTINGS),
+        ((b64_str != NULL) ? b64_str : co_string_duplicate("")));
+
+    co_http_request_serialize(
+        request, client->upgrade_request_data);
+
+    return client->module.connect_async(
+        client->tcp_client,
+        &client->tcp_client->remote_net_addr,
+        (co_tcp_connect_fn)co_http2_client_on_tcp_connect_and_upgrade);
 }
 
 co_http2_stream_t*
@@ -1153,74 +1327,4 @@ co_http2_client_upgrade(
     co_http_client_destroy(client);
 
     return new_client;
-}
-
-bool
-co_http2_send_upgrade_request(
-    co_http_client_t* client,
-    const char* path,
-    const co_http2_setting_param_st* param,
-    uint16_t param_count,
-    co_http_upgrade_response_fn handler
-)
-{
-    client->upgrade_ctx =
-        (co_http_upgrade_ctx_t*)co_mem_alloc(
-            sizeof(co_http_upgrade_ctx_t));
-    client->upgrade_ctx->server = false;
-    client->upgrade_ctx->key = CO_HTTP2_UPGRADE;
-
-    char* b64_str = NULL;
-    size_t b64_str_length = 0;
-
-    if (param_count > 0)
-    {
-        co_byte_array_t* settings = co_byte_array_create();
-
-        for (uint16_t param_index = 0;
-            param_index < param_count; ++param_index)
-        {
-            uint16_t u16 =
-                co_byte_order_16_host_to_network(
-                    param[param_index].identifier);
-            co_byte_array_add(
-                settings, &u16, sizeof(uint16_t));
-
-            uint32_t u32 =
-                co_byte_order_32_host_to_network(
-                    param[param_index].value);
-            co_byte_array_add(
-                settings, &u32, sizeof(uint32_t));
-        }
-
-        co_base64url_encode(
-            co_byte_array_get_const_ptr(settings, 0),
-            co_byte_array_get_count(settings),
-            &b64_str, &b64_str_length,
-            false);
-
-        co_byte_array_destroy(settings);
-    }
-
-    co_http_request_t* request =
-        co_http_request_create_with("GET", path);
-    co_http_header_t* header =
-        co_http_request_get_header(request);
-
-    co_http_header_add_field(
-        header, CO_HTTP_HEADER_CONNECTION,
-        CO_HTTP_HEADER_UPGRADE", "CO_HTTP2_HEADER_SETTINGS);
-    co_http_header_add_field(
-        header, CO_HTTP_HEADER_UPGRADE,
-        CO_HTTP2_UPGRADE);
-    co_http_header_add_field(
-        header, CO_HTTP2_HEADER_SETTINGS,
-        ((b64_str != NULL) ? b64_str : ""));
-
-    co_string_destroy(b64_str);
-
-    co_http_set_upgrade_handler(
-        client, CO_HTTP2_UPGRADE, (void*)handler);
-
-    return co_http_send_request(client, request);
 }

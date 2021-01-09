@@ -3,7 +3,7 @@
 
 #include <coldforce/core/co.h>
 
-// #define CO_HTTP2_DEBUG
+#define CO_HTTP2_DEBUG
 
 //---------------------------------------------------------------------------//
 // platform
@@ -51,6 +51,7 @@ CO_EXTERN_C_BEGIN
 #define CO_HTTP2_ERROR_FILE_IO              -6101
 #define CO_HTTP2_ERROR_PARSE_ERROR          -6102
 #define CO_HTTP2_ERROR_MAX_STREAMS          -6103
+#define CO_HTTP2_ERROR_UPGRADE_FAILED       -6104
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

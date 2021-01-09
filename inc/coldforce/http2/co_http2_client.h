@@ -24,6 +24,9 @@ struct co_http2_client_t;
 typedef void(*co_http2_connect_fn)(
     void* self, struct co_http2_client_t* client, int error_code);
 
+typedef void(*co_http2_upgrade_fn)(
+    void* self, struct co_http2_client_t* client, int error_code);
+
 typedef void(*co_http2_close_fn)(
     void* self, struct co_http2_client_t* client, int error_code);
 
@@ -74,7 +77,10 @@ typedef struct co_http2_client_t
     uint32_t last_stream_id;
     uint32_t new_stream_id;
 
+    co_byte_array_t* upgrade_request_data;
+
     co_http2_connect_fn on_connect;
+    co_http2_upgrade_fn on_upgrade;
     co_http2_close_fn on_close;
     co_http2_message_fn on_message;
     co_http2_push_request_fn on_push_request;
@@ -128,6 +134,11 @@ CO_HTTP2_API bool co_http2_is_running(const co_http2_client_t* client);
 CO_HTTP2_API bool co_http2_connect(
     co_http2_client_t* client, co_http2_connect_fn handler);
 
+CO_HTTP2_API bool co_http2_request_upgrade(
+    co_http2_client_t* client, const char* path,
+    const co_http2_setting_param_st* param, uint16_t param_count,
+    co_http2_upgrade_fn handler);
+
 CO_HTTP2_API co_http2_stream_t* co_http2_get_stream(
     co_http2_client_t* client, uint32_t stream_id);
 CO_HTTP2_API co_http2_stream_t* co_http2_create_stream(
@@ -171,11 +182,6 @@ CO_HTTP2_API bool co_http2_is_open(const co_http2_client_t* client);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
-
-CO_HTTP2_API bool co_http2_send_upgrade_request(
-    co_http_client_t* client, const char* path,
-    const co_http2_setting_param_st* param, uint16_t param_count,
-    co_http_upgrade_response_fn handler);
 
 CO_HTTP2_API co_http2_client_t* co_http2_client_upgrade(
     co_http_client_t* client);
