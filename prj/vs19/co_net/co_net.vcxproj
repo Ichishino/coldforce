@@ -181,11 +181,6 @@
     <ClInclude Include="..\..\..\inc\coldforce\net\co_udp_win.h" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\co_core\co.vcxproj">
-      <Project>{35f9bc66-c08b-46c0-bfde-c9b42dedae15}</Project>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="..\..\..\src\net\co_net.c" />
     <ClCompile Include="..\..\..\src\net\co_net_addr.c" />
     <ClCompile Include="..\..\..\src\net\co_net_addr_resolve.c" />
@@ -203,6 +198,11 @@
     <ClCompile Include="..\..\..\src\net\co_tcp_win.c" />
     <ClCompile Include="..\..\..\src\net\co_udp.c" />
     <ClCompile Include="..\..\..\src\net\co_udp_win.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\co_core\co_core.vcxproj">
+      <Project>{4d32c6c5-283e-4610-aac5-b64943bedbbd}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -3,7 +3,7 @@
 
 #include <coldforce/core/co.h>
 
-#define CO_HTTP2_DEBUG
+//#define CO_HTTP2_DEBUG
 
 //---------------------------------------------------------------------------//
 // platform

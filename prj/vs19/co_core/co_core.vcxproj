@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{35f9bc66-c08b-46c0-bfde-c9b42dedae15}</ProjectGuid>
-    <RootNamespace>co</RootNamespace>
+    <ProjectGuid>{4d32c6c5-283e-4610-aac5-b64943bedbbd}</ProjectGuid>
+    <RootNamespace>cocore</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -30,27 +30,27 @@
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -95,7 +95,6 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>../../../inc/</AdditionalIncludeDirectories>
-      <LanguageStandard_C>Default</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -114,7 +113,6 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>../../../inc/</AdditionalIncludeDirectories>
-      <LanguageStandard_C>Default</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -133,7 +131,6 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>../../../inc/</AdditionalIncludeDirectories>
-      <LanguageStandard_C>Default</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -152,7 +149,6 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>../../../inc/</AdditionalIncludeDirectories>
-      <LanguageStandard_C>Default</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -163,25 +159,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\src\core\co_app.c" />
-    <ClCompile Include="..\..\..\src\core\co_array.c" />
-    <ClCompile Include="..\..\..\src\core\co_config.c" />
-    <ClCompile Include="..\..\..\src\core\co.c" />
-    <ClCompile Include="..\..\..\src\core\co_event.c" />
-    <ClCompile Include="..\..\..\src\core\co_event_worker.c" />
-    <ClCompile Include="..\..\..\src\core\co_list.c" />
-    <ClCompile Include="..\..\..\src\core\co_map.c" />
-    <ClCompile Include="..\..\..\src\core\co_mutex.c" />
-    <ClCompile Include="..\..\..\src\core\co_queue.c" />
-    <ClCompile Include="..\..\..\src\core\co_semaphore.c" />
-    <ClCompile Include="..\..\..\src\core\co_string.c" />
-    <ClCompile Include="..\..\..\src\core\co_thread.c" />
-    <ClCompile Include="..\..\..\src\core\co_time.c" />
-    <ClCompile Include="..\..\..\src\core\co_timer.c" />
-    <ClCompile Include="..\..\..\src\core\co_timer_manager.c" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\..\inc\coldforce\coldforce.h" />
     <ClInclude Include="..\..\..\inc\coldforce\core\co.h" />
     <ClInclude Include="..\..\..\inc\coldforce\core\co_app.h" />
     <ClInclude Include="..\..\..\inc\coldforce\core\co_array.h" />
@@ -203,6 +180,27 @@
     <ClInclude Include="..\..\..\inc\coldforce\core\co_time.h" />
     <ClInclude Include="..\..\..\inc\coldforce\core\co_timer.h" />
     <ClInclude Include="..\..\..\inc\coldforce\core\co_timer_manager.h" />
+    <ClInclude Include="framework.h" />
+    <ClInclude Include="pch.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\core\co.c" />
+    <ClCompile Include="..\..\..\src\core\co_app.c" />
+    <ClCompile Include="..\..\..\src\core\co_array.c" />
+    <ClCompile Include="..\..\..\src\core\co_config.c" />
+    <ClCompile Include="..\..\..\src\core\co_event.c" />
+    <ClCompile Include="..\..\..\src\core\co_event_worker.c" />
+    <ClCompile Include="..\..\..\src\core\co_list.c" />
+    <ClCompile Include="..\..\..\src\core\co_log.c" />
+    <ClCompile Include="..\..\..\src\core\co_map.c" />
+    <ClCompile Include="..\..\..\src\core\co_mutex.c" />
+    <ClCompile Include="..\..\..\src\core\co_queue.c" />
+    <ClCompile Include="..\..\..\src\core\co_semaphore.c" />
+    <ClCompile Include="..\..\..\src\core\co_string.c" />
+    <ClCompile Include="..\..\..\src\core\co_thread.c" />
+    <ClCompile Include="..\..\..\src\core\co_time.c" />
+    <ClCompile Include="..\..\..\src\core\co_timer.c" />
+    <ClCompile Include="..\..\..\src\core\co_timer_manager.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
