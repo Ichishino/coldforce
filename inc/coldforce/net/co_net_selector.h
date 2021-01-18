@@ -8,7 +8,8 @@
 #include <coldforce/net/co_net_selector_win.h>
 #elif defined(CO_OS_LINUX)
 #include <coldforce/net/co_net_selector_linux.h>
-#else
+#elif defined(CO_OS_MAC)
+#include <coldforce/net/co_net_selector_mac.h>
 #endif
 
 CO_EXTERN_C_BEGIN

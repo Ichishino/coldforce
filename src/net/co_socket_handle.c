@@ -42,7 +42,9 @@ co_socket_handle_create(
         CO_DEBUG_SOCKET_COUNTER_INC();
 
 #ifdef CO_OS_MAC
-        co_socket_option_set_sigpipe(handle, false);
+        int value = 1;
+        co_socket_handle_set_option(handle,
+            SOL_SOCKET, SO_NOSIGPIPE, &value, sizeof(value));
 #endif
     }
 
@@ -83,8 +85,11 @@ co_socket_handle_bind(
     const co_net_addr_t* net_addr
 )
 {
+    size_t net_addr_size;
+    co_net_addr_get_size(net_addr, &net_addr_size);
+
     int result = bind(
-        handle, (const struct sockaddr*)net_addr, sizeof(co_net_addr_t));
+        handle, (const struct sockaddr*)net_addr, (socklen_t)net_addr_size);
 
     return (result == 0);
 }
@@ -116,7 +121,9 @@ co_socket_handle_accept(
         CO_DEBUG_SOCKET_COUNTER_INC();
 
 #ifdef CO_OS_MAC
-        co_socket_option_set_sigpipe(new_sock, false);
+        int value = 1;
+        co_socket_handle_set_option(remote_handle,
+            SOL_SOCKET, SO_NOSIGPIPE, &value, sizeof(value));
 #endif
     }
 

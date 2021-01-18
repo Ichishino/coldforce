@@ -69,6 +69,8 @@ CO_NET_API bool co_net_addr_get_as_string(const co_net_addr_t* net_addr, char* b
 CO_NET_API bool co_net_addr_is_equal(
     const co_net_addr_t* net_addr1, const co_net_addr_t* net_addr2);
 
+CO_NET_API bool co_net_addr_get_size(const co_net_addr_t* net_addr, size_t* size);
+
 #define co_get_local_net_addr_as_string(sock, buff) \
     co_net_addr_get_as_string(co_socket_get_local_net_addr( \
         (co_socket_t*)sock), buff)

@@ -87,7 +87,7 @@ co_net_addr_get_address(
     if (co_net_is_ipv4(net_addr))
     {
         if (inet_ntop(
-            AF_INET, &net_addr->sa.v4.sin_addr, buffer, size) != NULL)
+            AF_INET, &net_addr->sa.v4.sin_addr, buffer, (socklen_t)size) != NULL)
         {
             return true;
         }
@@ -95,7 +95,7 @@ co_net_addr_get_address(
     else if (co_net_is_ipv6(net_addr))
     {
         if (inet_ntop(
-            AF_INET6, &net_addr->sa.v6.sin6_addr, buffer, size) != NULL)
+            AF_INET6, &net_addr->sa.v6.sin6_addr, buffer, (socklen_t)size) != NULL)
         {
             return true;
         }
@@ -280,6 +280,34 @@ co_net_addr_is_equal(
 
     if (port1 != port2)
     {
+        return false;
+    }
+
+    return true;
+}
+
+bool
+co_net_addr_get_size(
+    const co_net_addr_t* net_addr,
+    size_t* size
+)
+{
+    if (co_net_is_ipv4(net_addr))
+    {
+        (*size) = sizeof(struct sockaddr_in);
+    }
+    else if (co_net_is_ipv6(net_addr))
+    {
+        (*size) = sizeof(struct sockaddr_in6);
+    }
+    else if (co_net_is_unix(net_addr))
+    {
+        (*size) = sizeof(struct sockaddr_un);
+    }
+    else
+    {
+        (*size) = 0;
+
         return false;
     }
 
