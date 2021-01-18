@@ -386,9 +386,9 @@ co_http2_client_on_upgrade_response(
 {
     co_http_response_t* response = co_http_response_create();
 
-    if (!co_http_response_deserialize(
+    if (co_http_response_deserialize(
         response, client->receive_data,
-        &client->receive_data_index) ==
+        &client->receive_data_index) !=
         CO_HTTP_PARSE_COMPLETE)
     {
         co_http_response_destroy(response);

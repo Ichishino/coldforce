@@ -641,7 +641,7 @@ co_tls_tcp_receive_all(
                 tls->receive_data_queue, buffer, sizeof(buffer));
 
             int bio_result =
-                BIO_write(tls->network_bio, buffer, raw_data_size);
+                BIO_write(tls->network_bio, buffer, (int)raw_data_size);
 
             if (bio_result > 0)
             {
@@ -659,7 +659,7 @@ co_tls_tcp_receive_all(
             if (raw_data_size > 0)
             {
                 int bio_result =
-                    BIO_write(tls->network_bio, buffer, raw_data_size);
+                    BIO_write(tls->network_bio, buffer, (int)raw_data_size);
 
                 if (bio_result >= 0)
                 {

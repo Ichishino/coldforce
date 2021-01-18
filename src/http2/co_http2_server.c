@@ -49,9 +49,9 @@ co_http2_server_on_upgrade_request(
 
     co_http_request_t* request = co_http_request_create();
 
-    if (!co_http_request_deserialize(
+    if (co_http_request_deserialize(
         request, client->receive_data,
-        &client->receive_data_index) ==
+        &client->receive_data_index) !=
         CO_HTTP_PARSE_COMPLETE)
     {
         co_http_request_destroy(request);
