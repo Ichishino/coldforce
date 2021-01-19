@@ -58,9 +58,6 @@ CO_HTTP_API co_socket_t* co_http_server_get_socket(co_http_server_t* server);
 CO_HTTP_API co_http_client_t* co_http_client_create_with(
     co_tcp_client_t* tcp_client);
 
-CO_HTTP_API void co_http_set_request_handler(
-    co_http_client_t* client, co_http_request_fn handler);
-
 CO_HTTP_API bool co_http_send_response(
     co_http_client_t* client, co_http_response_t* response);
 

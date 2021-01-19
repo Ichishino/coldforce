@@ -567,9 +567,7 @@ co_http2_stream_on_receive_message(
 
     if (stream->on_message != NULL)
     {
-        co_http2_message_fn handler = stream->on_message;
-
-        handler(
+        stream->on_message(
             stream->client->tcp_client->sock.owner_thread,
             stream->client, stream,
             stream->receive_header, &stream->receive_data,
@@ -787,9 +785,7 @@ co_http2_stream_on_receive_frame(
     {
         if (stream->client->on_priority != NULL)
         {
-            co_http2_priority_fn handler = stream->client->on_priority;
-
-            handler(
+            stream->client->on_priority(
                 stream->client->tcp_client->sock.owner_thread,
                 stream->client, stream,
                 frame->payload.priority.stream_dependency,
@@ -802,9 +798,7 @@ co_http2_stream_on_receive_frame(
     {
         if (stream->client->on_close_stream != NULL)
         {
-            co_http2_close_stream_fn handler = stream->client->on_close_stream;
-
-            handler(
+            stream->client->on_close_stream(
                 stream->client->tcp_client->sock.owner_thread,
                 stream->client, stream,
                 frame->payload.rst_stream.error_code);
@@ -890,10 +884,7 @@ co_http2_stream_on_receive_frame(
 
         if (stream->client->on_window_update != NULL)
         {
-            co_http2_window_update_fn handler =
-                stream->client->on_window_update;
-
-            handler(
+            stream->client->on_window_update(
                 stream->client->tcp_client->sock.owner_thread,
                 stream->client, stream);
         }

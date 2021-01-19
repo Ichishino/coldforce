@@ -43,16 +43,15 @@ co_http_client_setup(
     client->receive_queue = co_list_create(NULL);
     client->receive_data_index = 0;
     client->receive_data = co_byte_array_create();
+
+    client->request = NULL;
     client->response = NULL;
 
     co_http_content_receiver_setup(&client->content_receiver);
 
-    client->on_response = NULL;
+    client->on_receive = NULL;
     client->on_progress = NULL;
     client->on_close = NULL;
-
-    client->request = NULL;
-    client->on_request = NULL;
 
     client->upgrade_ctx = NULL;
     client->upgrade_map = NULL;
@@ -256,21 +255,23 @@ co_http_client_on_resopnse(
         return;
     }
 
-    co_http_response_fn response_handler = client->on_response;
+    if (client->request != NULL)
+    {
+        co_http_request_destroy(client->request);
+    }
+
+    client->request = request;
 
     if (error_code == 0)
     {
-        co_http_response_t* response = client->response;
-        client->response = NULL;
- 
-        if (response_handler != NULL)
+        if (client->on_receive != NULL)
         {
-            response_handler(
-                thread, client, request, response, error_code);
+            client->on_receive(thread, client,
+                (const co_http_message_t*)client->response, error_code);
         }
 
-        co_http_request_destroy(request);
-        co_http_response_destroy(response);
+        co_http_response_destroy(client->response);
+        client->response = NULL;
     }
     else
     {
@@ -281,14 +282,33 @@ co_http_client_on_resopnse(
 
         co_http_client_clear_request_queue(client);
 
-        if (response_handler != NULL)
+        if (client->on_receive != NULL)
         {
-            response_handler(
-                thread, client, request, NULL, error_code);
+            client->on_receive(thread, client, NULL, error_code);
         }
-
-        co_http_request_destroy(request);
     }
+}
+
+static bool
+co_http_client_on_progress(
+    co_thread_t* thread,
+    co_http_client_t* client
+)
+{
+    if (client->on_progress != NULL)
+    {
+        if (!client->on_progress(thread, client,
+            (const co_http_message_t*)client->response,
+            client->content_receiver.receive_size))
+        {
+            co_http_client_on_resopnse(
+                thread, client, CO_HTTP_ERROR_CANCEL);
+
+            return false;
+        }
+    }
+
+    return true;
 }
 
 //---------------------------------------------------------------------------//
@@ -389,18 +409,9 @@ co_http_client_on_receive_ready(
                     return;
                 }
 
-                if (client->on_progress != NULL)
+                if (!co_http_client_on_progress(thread, client))
                 {
-                    if (!client->on_progress(
-                        client->tcp_client->sock.owner_thread,
-                        client, request, client->response,
-                        client->content_receiver.receive_size))
-                    {
-                        co_http_client_on_resopnse(
-                            thread, client, CO_HTTP_ERROR_CANCEL);
-
-                        return;
-                    }
+                    return;
                 }
             }
             else if (result == CO_HTTP_PARSE_MORE_DATA)
@@ -424,18 +435,9 @@ co_http_client_on_receive_ready(
 
         if (result == CO_HTTP_PARSE_COMPLETE)
         {
-            if (client->on_progress != NULL)
+            if (!co_http_client_on_progress(thread, client))
             {
-                if (!client->on_progress(
-                    client->tcp_client->sock.owner_thread,
-                    client, request, client->response,
-                    client->content_receiver.receive_size))
-                {
-                    co_http_client_on_resopnse(
-                        thread, client, CO_HTTP_ERROR_CANCEL);
-
-                    return;
-                }
+                return;
             }
 
             co_http_complete_receive_content(
@@ -455,17 +457,7 @@ co_http_client_on_receive_ready(
             co_http_content_more_data(
                 &client->content_receiver, client->receive_data);
 
-            if (client->on_progress != NULL)
-            {
-                if (!client->on_progress(
-                    client->tcp_client->sock.owner_thread,
-                    client, request, client->response,
-                    client->content_receiver.receive_size))
-                {
-                    co_http_client_on_resopnse(
-                        thread, client, CO_HTTP_ERROR_CANCEL);
-                }
-            }
+            co_http_client_on_progress(thread, client);
 
             return;
         }
@@ -496,14 +488,12 @@ co_http_client_on_close(
 
     client->module.close(client->tcp_client);
 
-    co_http_close_fn close_handler = client->on_close;
-
     co_http_client_on_resopnse(
         thread, client, CO_HTTP_ERROR_CONNECTION_CLOSED);
 
-    if (close_handler != NULL)
+    if (client->on_close != NULL)
     {
-        close_handler(thread, client);
+        client->on_close(thread, client);
     }
 }
 
@@ -698,13 +688,29 @@ co_http_send_data(
         client->tcp_client, data, data_size);
 }
 
-void
-co_http_set_response_handler(
-    co_http_client_t* client,
-    co_http_response_fn handler
+const co_http_request_t*
+co_http_get_request(
+    const co_http_client_t* client
 )
 {
-    client->on_response = handler;
+    return client->request;
+}
+
+const co_http_response_t*
+co_http_get_response(
+    const co_http_client_t* client
+)
+{
+    return client->response;
+}
+
+void
+co_http_set_receive_handler(
+    co_http_client_t* client,
+    co_http_receive_fn handler
+)
+{
+    client->on_receive = handler;
 }
 
 void

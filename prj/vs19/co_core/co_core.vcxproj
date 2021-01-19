@@ -180,8 +180,6 @@
     <ClInclude Include="..\..\..\inc\coldforce\core\co_time.h" />
     <ClInclude Include="..\..\..\inc\coldforce\core\co_timer.h" />
     <ClInclude Include="..\..\..\inc\coldforce\core\co_timer_manager.h" />
-    <ClInclude Include="framework.h" />
-    <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\core\co.c" />
@@ -191,7 +189,6 @@
     <ClCompile Include="..\..\..\src\core\co_event.c" />
     <ClCompile Include="..\..\..\src\core\co_event_worker.c" />
     <ClCompile Include="..\..\..\src\core\co_list.c" />
-    <ClCompile Include="..\..\..\src\core\co_log.c" />
     <ClCompile Include="..\..\..\src\core\co_map.c" />
     <ClCompile Include="..\..\..\src\core\co_mutex.c" />
     <ClCompile Include="..\..\..\src\core\co_queue.c" />

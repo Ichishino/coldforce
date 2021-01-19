@@ -11,12 +11,10 @@ typedef struct
 } my_app;
 
 void on_my_response(my_app* self, co_http_client_t* client,
-    const co_http_request_t* request, const co_http_response_t* response,
-    int error_code)
+    const co_http_response_t* response, int error_code)
 {
     (void)self;
     (void)client;
-    (void)request;
 
     if (error_code == 0)
     {
@@ -59,7 +57,7 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
 
     self->client = co_http_client_create(base_url, &local_net_addr, NULL);
 
-    co_http_set_response_handler(self->client, (co_http_response_fn)on_my_response);
+    co_http_set_receive_handler(self->client, (co_http_receive_fn)on_my_response);
 
     co_http_request_t* request = co_http_request_create_with("GET", file_path);
 

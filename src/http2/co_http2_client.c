@@ -214,11 +214,9 @@ co_http2_client_on_close(
 {
     client->module.close(client->tcp_client);
 
-    co_http2_close_fn close_handler = client->on_close;
-
-    if (close_handler != NULL)
+    if (client->on_close != NULL)
     {
-        close_handler(
+        client->on_close(
             client->tcp_client->sock.owner_thread,
             client, error_code);
     }
@@ -320,9 +318,7 @@ co_http2_client_on_receive_system_frame(
 
         if (client->on_window_update != NULL)
         {
-            co_http2_window_update_fn handler = client->on_window_update;
-
-            handler(
+            client->on_window_update(
                 client->tcp_client->sock.owner_thread,
                 client, client->system_stream);
         }
@@ -366,9 +362,7 @@ co_http2_client_on_push_promise(
 
     if (client->on_push_request != NULL)
     {
-        co_http2_push_request_fn handler = client->on_push_request;
-
-        if (!handler(
+        if (!client->on_push_request(
             client->tcp_client->sock.owner_thread,
             client, stream, promised_stream, header))
         {

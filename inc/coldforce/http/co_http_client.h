@@ -25,19 +25,14 @@ CO_EXTERN_C_BEGIN
 
 struct co_http_client_t;
 
-typedef void(*co_http_request_fn)(
+typedef void(*co_http_receive_fn)(
     void* self, struct co_http_client_t* client,
-    const co_http_request_t* request,
-    int error_code);
-
-typedef void(*co_http_response_fn)(
-    void* self, struct co_http_client_t* client,
-    const co_http_request_t* request, const co_http_response_t* response,
+    const co_http_message_t* message,
     int error_code);
 
 typedef bool(*co_http_progress_fn)(
     void* self, struct co_http_client_t* client,
-    const co_http_request_t* request, const co_http_response_t* response,
+    const co_http_message_t* message,
     size_t current_content_size);
 
 typedef void(*co_http_close_fn)(
@@ -77,15 +72,13 @@ typedef struct co_http_client_t
     size_t receive_data_index;
     co_byte_array_t* receive_data;
 
+    co_http_request_t* request;
     co_http_response_t* response;
     co_http_content_receiver_t content_receiver;
 
-    co_http_response_fn on_response;
+    co_http_receive_fn on_receive;
     co_http_progress_fn on_progress;
     co_http_close_fn on_close;
-
-    co_http_request_t* request;
-    co_http_request_fn on_request;
 
     co_map_t* upgrade_map;
     co_http_upgrade_ctx_t* upgrade_ctx;
@@ -111,8 +104,11 @@ CO_HTTP_API bool co_http_send_request(
 CO_HTTP_API bool co_http_send_data(
     co_http_client_t* client, const void* data, size_t data_size);
 
-CO_HTTP_API void co_http_set_response_handler(
-    co_http_client_t* client, co_http_response_fn handler);
+CO_HTTP_API const co_http_request_t* co_http_get_request(const co_http_client_t* client);
+CO_HTTP_API const co_http_response_t* co_http_get_response(const co_http_client_t* client);
+
+CO_HTTP_API void co_http_set_receive_handler(
+    co_http_client_t* client, co_http_receive_fn handler);
 CO_HTTP_API void co_http_set_progress_handler(
     co_http_client_t* client, co_http_progress_fn handler);
 CO_HTTP_API void co_http_set_close_handler(

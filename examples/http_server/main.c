@@ -152,7 +152,7 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t
     co_http_client_t* client = co_http_client_create_with(tcp_client);
 
     // set callback
-    co_http_set_request_handler(client, (co_http_request_fn)on_my_http_request);
+    co_http_set_receive_handler(client, (co_http_receive_fn)on_my_http_request);
     co_http_set_close_handler(client, (co_http_close_fn)on_my_http_close);
 }
 

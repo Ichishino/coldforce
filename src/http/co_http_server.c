@@ -22,16 +22,37 @@ co_http_server_on_request(
 )
 {
     co_http_request_t* request = client->request;
-    client->request = NULL;
 
-    if (client->on_request != NULL)
+    if (client->on_receive != NULL)
     {
-        co_http_request_fn request_handler = client->on_request;
-
-        request_handler(thread, client, request, error_code);
+        client->on_receive(thread, client,
+            (const co_http_message_t*)request, error_code);
     }
 
-    co_http_request_destroy(request);
+    co_http_request_destroy(client->request);
+    client->request = NULL;
+}
+
+static bool
+co_http_server_on_progress(
+    co_thread_t* thread,
+    co_http_client_t* client
+)
+{
+    if (client->on_progress != NULL)
+    {
+        if (!client->on_progress(thread, client,
+            (const co_http_message_t*)client->request,
+            client->content_receiver.receive_size))
+        {
+            co_http_server_on_request(
+                thread, client, CO_HTTP_ERROR_CANCEL);
+
+            return false;
+        }
+    }
+
+    return true;
 }
 
 static void
@@ -177,18 +198,9 @@ co_http_server_on_receive_ready(
                     return;
                 }
 
-                if (client->on_progress != NULL)
+                if (!co_http_server_on_progress(thread, client))
                 {
-                    if (!client->on_progress(
-                        client->tcp_client->sock.owner_thread,
-                        client, client->request, NULL,
-                        client->content_receiver.receive_size))
-                    {
-                        co_http_server_on_request(
-                            thread, client, CO_HTTP_ERROR_CANCEL);
-
-                        return;
-                    }
+                    return;
                 }
             }
             else if (result == CO_HTTP_PARSE_MORE_DATA)
@@ -212,18 +224,9 @@ co_http_server_on_receive_ready(
 
         if (result == CO_HTTP_PARSE_COMPLETE)
         {
-            if (client->on_progress != NULL)
+            if (!co_http_server_on_progress(thread, client))
             {
-                if (!client->on_progress(
-                    client->tcp_client->sock.owner_thread,
-                    client, client->request, NULL,
-                    client->content_receiver.receive_size))
-                {
-                    co_http_server_on_request(
-                        thread, client, CO_HTTP_ERROR_CANCEL);
-
-                    return;
-                }
+                return;
             }
 
             co_http_complete_receive_content(
@@ -243,17 +246,7 @@ co_http_server_on_receive_ready(
             co_http_content_more_data(
                 &client->content_receiver, client->receive_data);
 
-            if (client->on_progress != NULL)
-            {
-                if (!client->on_progress(
-                    client->tcp_client->sock.owner_thread,
-                    client, client->request, NULL,
-                    client->content_receiver.receive_size))
-                {
-                    co_http_server_on_request(
-                        thread, client, CO_HTTP_ERROR_CANCEL);
-                }
-            }
+            co_http_server_on_progress(thread, client);
 
             return;
         }
@@ -279,17 +272,15 @@ co_http_server_on_close(
     co_http_client_t* client =
         (co_http_client_t*)tcp_client->sock.sub_class;
 
-    co_http_close_fn close_handler = client->on_close;
-
     if (client->request != NULL)
     {
         co_http_server_on_request(
             thread, client, CO_HTTP_ERROR_CONNECTION_CLOSED);
     }
 
-    if (close_handler != NULL)
+    if (client->on_close != NULL)
     {
-        close_handler(thread, client);
+        client->on_close(thread, client);
     }
 }
 
@@ -465,15 +456,6 @@ co_http_server_get_socket(
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
-
-void
-co_http_set_request_handler(
-    co_http_client_t* client,
-    co_http_request_fn handler
-)
-{
-    client->on_request = handler;
-}
 
 bool
 co_http_send_response(
