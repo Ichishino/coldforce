@@ -318,10 +318,10 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     // https server
     self->server = co_http_tls_server_create(&local_net_addr, &tls_ctx);
 
-    // protocol
+    // available protocols
     size_t protocol_count = 1;
     const char* protocols[] = { CO_HTTP2_PROTOCOL };
-    co_tls_tcp_server_set_alpn_protocols(
+    co_tls_tcp_server_set_alpn_available_protocols(
         self->server->tcp_server, protocols, protocol_count);
 
     // socket option

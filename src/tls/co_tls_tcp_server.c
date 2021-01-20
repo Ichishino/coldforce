@@ -79,7 +79,7 @@ co_tls_tcp_server_on_accept_ready(
 }
 
 static int
-co_tls_tcp_on_alpn_select(
+co_tls_tcp_server_on_alpn_select(
     SSL* ssl,
     const unsigned char** out,
     unsigned char* outlen,
@@ -93,13 +93,14 @@ co_tls_tcp_on_alpn_select(
     co_tls_tcp_server_t* tls = (co_tls_tcp_server_t*)arg;
 
     const uint8_t* protocols1 = tls->protocols;
-    const uint8_t* protocols2 = in;
 
     while ((uintptr_t)
         (protocols1 - tls->protocols) < tls->protocols_length)
     {
         uint8_t length1 = *protocols1;
         ++protocols1;
+
+        const uint8_t* protocols2 = in;
 
         while ((unsigned int)(protocols2 - in) < inlen)
         {
@@ -183,7 +184,7 @@ co_tls_tcp_server_close(
 }
 
 void
-co_tls_tcp_server_set_alpn_protocols(
+co_tls_tcp_server_set_alpn_available_protocols(
     co_tcp_server_t* server,
     const char* protocols[],
     size_t count
@@ -202,7 +203,7 @@ co_tls_tcp_server_set_alpn_protocols(
     co_tls_tcp_server_t* tls = co_tcp_server_get_tls(server);
 
     SSL_CTX_set_alpn_select_cb(
-        tls->ctx.ssl_ctx, co_tls_tcp_on_alpn_select, tls);
+        tls->ctx.ssl_ctx, co_tls_tcp_server_on_alpn_select, tls);
 
     tls->protocols_length = co_byte_array_get_count(buffer);
     tls->protocols = co_byte_array_detach(buffer);
@@ -224,4 +225,3 @@ co_tls_tcp_server_start(
     return co_tcp_server_start(
         server, (co_tcp_accept_fn)co_tls_tcp_server_on_accept_ready, backlog);
 }
-

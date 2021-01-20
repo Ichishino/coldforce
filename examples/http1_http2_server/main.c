@@ -143,37 +143,6 @@ void on_my_http2_close(my_app* self, co_http2_client_t* http2_client, int error_
     co_list_remove(self->http2_clients, (uintptr_t)http2_client);
 }
 
-bool on_my_http2_upgrade(my_app* self, co_http_client_t* http1_client)
-{
-    (void)self;
-
-    // upgrade
-    co_http2_client_t* http2_client = co_http2_client_upgrade(http1_client);
-
-    if (http2_client != NULL)
-    {
-        my_client_log(http2, http2_client, "http2 upgrade success");
-
-        co_http2_send_initial_settings(http2_client);
-
-        // set callback
-        co_http2_set_message_handler(http2_client, (co_http2_message_fn)on_my_http2_request);
-        co_http2_set_close_handler(http2_client, (co_http2_close_fn)on_my_http2_close);
-
-        co_list_add_tail(self->http2_clients, (uintptr_t)http2_client);
-
-        return true;
-    }
-    else
-    {
-        my_client_log(http, http1_client, "http2 upgrade failed");
-
-        co_http_client_destroy(http1_client);
-
-        return false;
-    }
-}
-
 //---------------------------------------------------------------------------//
 // http/1.1
 //---------------------------------------------------------------------------//
@@ -216,28 +185,53 @@ void on_my_http_close(my_app* self, co_http_client_t* http1_client)
 }
 
 //---------------------------------------------------------------------------//
-// tcp
+// tls
 //---------------------------------------------------------------------------//
 
 void on_my_tls_tcp_handshake(my_app* self, co_tcp_client_t* tcp_client, int error_code)
 {
     (void)self;
 
-    co_http_client_t* http1_client = co_tcp_get_http_client(tcp_client);
-
     if (error_code == 0)
     {
         my_client_log(tcp, tcp_client, "TLS handshake success");
 
-        // can send and receive
+        char protocol[32] = { 0 };
+        co_tls_tcp_get_alpn_selected_protocol(
+            tcp_client, protocol, sizeof(protocol));
+
+        if (strcmp(protocol, CO_HTTP2_PROTOCOL) == 0)
+        {
+            // http/2
+
+            co_http2_client_t* http2_client = co_http2_client_create_with(tcp_client);
+
+            co_http2_set_message_handler(http2_client, (co_http2_message_fn)on_my_http2_request);
+            co_http2_set_close_handler(http2_client, (co_http2_close_fn)on_my_http2_close);
+
+            co_list_add_tail(self->http2_clients, (uintptr_t)http2_client);
+        }
+        else
+        {
+            // http/1.1
+
+            co_http_client_t* http1_client = co_http_client_create_with(tcp_client);
+
+            co_http_set_receive_handler(http1_client, (co_http_receive_fn)on_my_http_request);
+            co_http_set_close_handler(http1_client, (co_http_close_fn)on_my_http_close);
+        }
     }
     else
     {
         my_client_log(tcp, tcp_client, "TLS handshake failed");
 
-        co_http_client_destroy(http1_client);
+        co_tcp_client_destroy(tcp_client);
     }
 }
+
+//---------------------------------------------------------------------------//
+// tcp
+//---------------------------------------------------------------------------//
 
 void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t* tcp_client)
 {
@@ -247,15 +241,6 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t
 
     // accept
     co_tcp_accept((co_thread_t*)self, tcp_client);
-
-    // create http client
-    co_http_client_t* http1_client = co_http_client_create_with(tcp_client);
-
-    // set callback
-    co_http_set_receive_handler(http1_client, (co_http_receive_fn)on_my_http_request);
-    co_http_set_close_handler(http1_client, (co_http_close_fn)on_my_http_close);
-    co_http_set_http2_upgrade_request_handler(
-        http1_client, (co_http_upgrade_request_fn)on_my_http2_upgrade);
 
     // TLS handshake
     co_tls_tcp_start_handshake(
@@ -291,10 +276,10 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     // https server
     self->server = co_http_tls_server_create(&local_net_addr, &tls_ctx);
 
-    // protocol
+    // available protocols
     size_t protocol_count = 2;
     const char* protocols[] = { CO_HTTP2_PROTOCOL, CO_HTTP_PROTOCOL };
-    co_tls_tcp_server_set_alpn_protocols(
+    co_tls_tcp_server_set_alpn_available_protocols(
         self->server->tcp_server, protocols, protocol_count);
 #else
     // http server

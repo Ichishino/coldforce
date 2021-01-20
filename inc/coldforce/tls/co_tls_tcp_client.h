@@ -51,12 +51,12 @@ CO_TLS_API void co_tls_tcp_client_close(co_tcp_client_t* client);
 CO_TLS_API bool co_tls_tcp_client_install(
     co_tcp_client_t* client, co_tls_ctx_st* tls_ctx);
 
-CO_TLS_API void co_tls_tcp_client_set_host_name(
+CO_TLS_API void co_tls_tcp_set_host_name(
     co_tcp_client_t* client, const char* host_name);
-CO_TLS_API void co_tls_tcp_client_set_alpn_protocols(
+CO_TLS_API void co_tls_tcp_set_alpn_protocols(
     co_tcp_client_t* client, const char* protocols[], size_t count);
-CO_TLS_API bool co_tls_tcp_client_get_alpn_selected_protocol(
-    co_tcp_client_t* client, char* buffer, size_t buffer_size);
+CO_TLS_API bool co_tls_tcp_get_alpn_selected_protocol(
+    const co_tcp_client_t* client, char* buffer, size_t buffer_size);
 
 CO_TLS_API bool co_tls_tcp_connect(co_tcp_client_t* client,
     const co_net_addr_t* remote_net_addr);

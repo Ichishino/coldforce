@@ -586,8 +586,13 @@ co_http_client_create(
 
         if (client->tcp_client != NULL)
         {
-            co_tls_tcp_client_set_host_name(
+            co_tls_tcp_set_host_name(
                 client->tcp_client, client->base_url->host);
+
+            const char* protocol = CO_HTTP_PROTOCOL;
+
+            co_tls_tcp_set_alpn_protocols(
+                client->tcp_client, &protocol, 1);
         }
     }
     else
