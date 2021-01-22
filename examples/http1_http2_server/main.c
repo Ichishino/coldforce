@@ -225,7 +225,7 @@ void on_my_tls_tcp_handshake(my_app* self, co_tcp_client_t* tcp_client, int erro
     {
         my_client_log(tcp, tcp_client, "TLS handshake failed");
 
-        co_tcp_client_destroy(tcp_client);
+        co_tls_tcp_client_destroy(tcp_client);
     }
 }
 
@@ -257,7 +257,7 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
 
     // client list
     co_list_ctx_st list_ctx = { 0 };
-    list_ctx.free_value = (co_free_fn)co_http2_client_destroy; // auto destroy
+    list_ctx.free_value = (co_item_free_fn)co_http2_client_destroy; // auto destroy
     self->http2_clients = co_list_create(&list_ctx);
 
     uint16_t port = 9443;
@@ -279,8 +279,8 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     // available protocols
     size_t protocol_count = 2;
     const char* protocols[] = { CO_HTTP2_PROTOCOL, CO_HTTP_PROTOCOL };
-    co_tls_tcp_server_set_alpn_available_protocols(
-        self->server->tcp_server, protocols, protocol_count);
+    co_http_tls_server_set_available_protocols(
+        self->server, protocols, protocol_count);
 #else
     // http server
     self->server = co_http_server_create(&local_net_addr);
@@ -315,8 +315,8 @@ int main(int argc, char* argv[])
 
     co_net_app_init(
         (co_app_t*)&app,
-        (co_create_fn)on_my_app_create,
-        (co_destroy_fn)on_my_app_destroy);
+        (co_app_create_fn)on_my_app_create,
+        (co_app_destroy_fn)on_my_app_destroy);
 
     // app start
     int exit_code = co_net_app_start((co_app_t*)&app, argc, argv);

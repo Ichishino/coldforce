@@ -55,7 +55,7 @@ co_win_udp_setup(
     }
 
     co_list_ctx_st list_ctx = { 0 };
-    list_ctx.free_value = (co_free_fn)co_win_free_io_ctx;
+    list_ctx.free_value = (co_item_free_fn)co_win_free_io_ctx;
     udp->win.io_send_ctxs = co_list_create(&list_ctx);
 
     if (udp->win.io_send_ctxs == NULL)

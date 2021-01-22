@@ -25,9 +25,9 @@ typedef co_list_iterator_t   co_str_list_iterator_t;
 
 #define CO_STR_LIST_CTX \
 	{ \
-		.free_value = (co_free_fn)co_string_destroy, \
-		.duplicate_value = (co_duplicate_fn)co_string_duplicate, \
-		.compare_values = (co_compare_fn)strcmp \
+		.free_value = (co_item_free_fn)co_string_destroy, \
+		.duplicate_value = (co_item_duplicate_fn)co_string_duplicate, \
+		.compare_values = (co_item_compare_fn)strcmp \
 	}
 
 //---------------------------------------------------------------------------//

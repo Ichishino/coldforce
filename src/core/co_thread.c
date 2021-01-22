@@ -92,8 +92,8 @@ co_thread_run(
 void
 co_thread_init(
     co_thread_t* thread,
-    co_create_fn create_handler,
-    co_destroy_fn destroy_handler
+    co_thread_create_fn create_handler,
+    co_thread_destroy_fn destroy_handler
 )
 {
     co_thread_setup(
@@ -103,8 +103,8 @@ co_thread_init(
 void
 co_thread_setup(
     co_thread_t* thread,
-    co_create_fn create_handler,
-    co_destroy_fn destroy_handler,
+    co_thread_create_fn create_handler,
+    co_thread_destroy_fn destroy_handler,
     co_event_worker_t* event_worker
 )
 {

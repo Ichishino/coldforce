@@ -234,29 +234,46 @@ void on_my_http2_close(my_app* self, co_http2_client_t* http2_client, int error_
 }
 
 //---------------------------------------------------------------------------//
-// tcp
+// tls
 //---------------------------------------------------------------------------//
 
 void on_my_tls_tcp_handshake(my_app* self, co_tcp_client_t* tcp_client, int error_code)
 {
     (void)self;
 
-    co_http2_client_t* http2_client = co_tcp_get_http2_client(tcp_client);
-
     if (error_code == 0)
     {
         my_client_log(tcp, tcp_client, "TLS handshake success");
 
-        // can send and receive
+        // create http2 client
+        co_http2_client_t* http2_client = co_http2_client_create_with(tcp_client);
+
+        // settings
+        co_http2_setting_param_st params[2];
+        params[0].identifier = CO_HTTP2_SETTING_ID_INITIAL_WINDOW_SIZE;
+        params[0].value = 1024 * 1024 * 10;
+        params[1].identifier = CO_HTTP2_SETTING_ID_MAX_CONCURRENT_STREAMS;
+        params[1].value = 200;
+        co_http2_init_settings(http2_client, params, 2);
+
+        // set callback
+        co_http2_set_message_handler(http2_client, (co_http2_message_fn)on_my_http2_request);
+        co_http2_set_close_handler(http2_client, (co_http2_close_fn)on_my_http2_close);
+
+        co_list_add_tail(self->http2_clients, (uintptr_t)http2_client);
     }
     else
     {
         my_client_log(tcp, tcp_client, "TLS handshake failed");
 
         // close
-        co_list_remove(self->http2_clients, (uintptr_t)http2_client);
+        co_tls_tcp_client_destroy(tcp_client);
     }
 }
+
+//---------------------------------------------------------------------------//
+// tcp
+//---------------------------------------------------------------------------//
 
 void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t* tcp_client)
 {
@@ -266,23 +283,6 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t
 
     // accept
     co_tcp_accept((co_thread_t*)self, tcp_client);
-
-    // create http2 client
-    co_http2_client_t* http2_client = co_http2_client_create_with(tcp_client);
-
-    // settings
-    co_http2_setting_param_st params[2];
-    params[0].identifier = CO_HTTP2_SETTING_ID_INITIAL_WINDOW_SIZE;
-    params[0].value = 1024 * 1024 * 10;
-    params[1].identifier = CO_HTTP2_SETTING_ID_MAX_CONCURRENT_STREAMS;
-    params[1].value = 200;
-    co_http2_init_settings(http2_client, params, 2);
-
-    // set callback
-    co_http2_set_message_handler(http2_client, (co_http2_message_fn)on_my_http2_request);
-    co_http2_set_close_handler(http2_client, (co_http2_close_fn)on_my_http2_close);
-
-    co_list_add_tail(self->http2_clients, (uintptr_t)http2_client);
 
     // TLS handshake
     co_tls_tcp_start_handshake(
@@ -299,7 +299,7 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
 
     // client list
     co_list_ctx_st list_ctx = { 0 };
-    list_ctx.free_value = (co_free_fn)co_http2_client_destroy; // auto destroy
+    list_ctx.free_value = (co_item_free_fn)co_http2_client_destroy; // auto destroy
     self->http2_clients = co_list_create(&list_ctx);
 
     uint16_t port = 9443;
@@ -321,8 +321,8 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     // available protocols
     size_t protocol_count = 1;
     const char* protocols[] = { CO_HTTP2_PROTOCOL };
-    co_tls_tcp_server_set_alpn_available_protocols(
-        self->server->tcp_server, protocols, protocol_count);
+    co_http_tls_server_set_available_protocols(
+        self->server, protocols, protocol_count);
 
     // socket option
     co_socket_option_set_reuse_addr(
@@ -353,8 +353,8 @@ int main(int argc, char* argv[])
 
     co_net_app_init(
         (co_app_t*)&app,
-        (co_create_fn)on_my_app_create,
-        (co_destroy_fn)on_my_app_destroy);
+        (co_app_create_fn)on_my_app_create,
+        (co_app_destroy_fn)on_my_app_destroy);
 
     // app start
     int exit_code = co_net_app_start((co_app_t*)&app, argc, argv);

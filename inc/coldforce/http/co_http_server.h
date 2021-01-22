@@ -47,6 +47,9 @@ CO_HTTP_API co_http_server_t* co_http_tls_server_create(
 CO_HTTP_API void co_http_server_destroy(co_http_server_t* server);
 CO_HTTP_API void co_http_server_close(co_http_server_t* server);
 
+CO_HTTP_API void co_http_tls_server_set_available_protocols(
+    co_http_server_t* server, const char* protocols[], size_t protocol_count);
+
 CO_HTTP_API bool co_http_server_start(
     co_http_server_t* server, co_tcp_accept_fn handler, int backlog);
 
@@ -67,11 +70,6 @@ CO_HTTP_API bool co_http_send_chunked_response(
     co_http_client_t* client, const void* data, size_t data_length);
 CO_HTTP_API bool co_http_end_chunked_response(
     co_http_client_t* client);
-
-//---------------------------------------------------------------------------//
-//---------------------------------------------------------------------------//
-
-CO_HTTP_API co_http_client_t* co_tcp_get_http_client(co_tcp_client_t* tcp_client);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

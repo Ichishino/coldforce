@@ -18,12 +18,12 @@ typedef struct
 {
     size_t hash_size;
 
-    co_hash_fn hash_key;
-    co_free_fn free_key;
-    co_free_fn free_value;
-    co_duplicate_fn duplicate_key;
-    co_duplicate_fn duplicate_value;
-    co_compare_fn compare_keys;
+    co_item_hash_fn hash_key;
+    co_item_free_fn free_key;
+    co_item_free_fn free_value;
+    co_item_duplicate_fn duplicate_key;
+    co_item_duplicate_fn duplicate_value;
+    co_item_compare_fn compare_keys;
 
 } co_map_ctx_st;
 
@@ -49,12 +49,12 @@ typedef struct
     size_t hash_size;
     co_map_item_t** items;
 
-    co_hash_fn hash_key;
-    co_free_fn free_key;
-    co_free_fn free_value;
-    co_duplicate_fn duplicate_key;
-    co_duplicate_fn duplicate_value;
-    co_compare_fn compare_keys;
+    co_item_hash_fn hash_key;
+    co_item_free_fn free_key;
+    co_item_free_fn free_value;
+    co_item_duplicate_fn duplicate_key;
+    co_item_duplicate_fn duplicate_value;
+    co_item_compare_fn compare_keys;
 
 } co_map_t;
 

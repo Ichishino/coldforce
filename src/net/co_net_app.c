@@ -15,8 +15,8 @@
 bool
 co_net_app_init(
     co_app_t* app,
-    co_create_fn create_handler,
-    co_destroy_fn destroy_handler
+    co_app_create_fn create_handler,
+    co_app_destroy_fn destroy_handler
 )
 {
     if (!co_net_setup())
@@ -29,7 +29,7 @@ co_net_app_init(
     net_worker->on_destroy = destroy_handler;
 
     co_app_setup(app,
-        create_handler, (co_destroy_fn)co_net_worker_on_destroy,
+        create_handler, (co_app_destroy_fn)co_net_worker_on_destroy,
         (co_event_worker_t*)net_worker);
 
     return true;

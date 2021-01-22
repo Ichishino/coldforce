@@ -108,14 +108,11 @@ typedef enum
 
 } co_wait_result_t;
 
-typedef bool(*co_create_fn)(void* self, uintptr_t param);
-typedef void(*co_destroy_fn)(void* self);
-
-typedef size_t(*co_hash_fn)(uintptr_t data);
-typedef void(*co_free_fn)(uintptr_t data);
-typedef uintptr_t(*co_duplicate_fn)(uintptr_t src);
-typedef intptr_t(*co_compare_fn)(uintptr_t data1, uintptr_t data2);
-typedef void(*co_copy_fn)(uintptr_t dest, uintptr_t src);
+typedef size_t(*co_item_hash_fn)(uintptr_t data);
+typedef void(*co_item_free_fn)(uintptr_t data);
+typedef uintptr_t(*co_item_duplicate_fn)(uintptr_t src);
+typedef intptr_t(*co_item_compare_fn)(uintptr_t data1, uintptr_t data2);
+typedef void(*co_item_copy_fn)(uintptr_t dest, uintptr_t src);
 
 typedef struct
 {

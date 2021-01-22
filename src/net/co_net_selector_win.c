@@ -50,7 +50,7 @@ co_net_selector_create(
     co_array_set_count(net_selector->ol_entries, 1);
 
     co_list_ctx_st list_ctx = { 0 };
-    list_ctx.free_value = (co_free_fn)co_mem_free;
+    list_ctx.free_value = (co_item_free_fn)co_mem_free;
     net_selector->io_ctx_trash = co_list_create(&list_ctx);
 
     return net_selector;

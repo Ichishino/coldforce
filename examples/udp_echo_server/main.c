@@ -81,8 +81,8 @@ int main(int argc, char* argv[])
 
     co_net_app_init(
         (co_app_t*)&app,
-        (co_create_fn)on_my_app_create,
-        (co_destroy_fn)on_my_app_destroy);
+        (co_app_create_fn)on_my_app_create,
+        (co_app_destroy_fn)on_my_app_destroy);
 
     // app start
     return co_net_app_start((co_app_t*)&app, argc, argv);

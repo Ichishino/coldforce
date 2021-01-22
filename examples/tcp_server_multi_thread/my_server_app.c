@@ -98,6 +98,6 @@ void init_my_server_app(my_server_app* server_app)
 {
     co_net_app_init(
         (co_app_t*)server_app,
-        (co_create_fn)on_my_server_app_create,
-        (co_destroy_fn)on_my_server_app_destroy);
+        (co_app_create_fn)on_my_server_app_create,
+        (co_app_destroy_fn)on_my_server_app_destroy);
 }

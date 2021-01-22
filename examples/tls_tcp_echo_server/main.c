@@ -93,7 +93,7 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
 
     // client list
     co_list_ctx_st list_ctx = { 0 };
-    list_ctx.free_value = (co_free_fn)co_tls_tcp_client_destroy; // auto destroy
+    list_ctx.free_value = (co_item_free_fn)co_tls_tcp_client_destroy; // auto destroy
     self->client_list = co_list_create(&list_ctx);
 
     uint16_t port = 9443;
@@ -140,8 +140,8 @@ int main(int argc, char* argv[])
 
     co_net_app_init(
         (co_app_t*)&app,
-        (co_create_fn)on_my_app_create,
-        (co_destroy_fn)on_my_app_destroy);
+        (co_app_create_fn)on_my_app_create,
+        (co_app_destroy_fn)on_my_app_destroy);
 
     // app start
     int exit_code = co_net_app_start((co_app_t*)&app, argc, argv);

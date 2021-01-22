@@ -298,10 +298,10 @@ co_http_set_upgrade_handler(
     {
         co_map_ctx_st ctx = { 0 };
 
-        ctx.hash_key = (co_hash_fn)co_string_hash;
-        ctx.free_key = (co_free_fn)co_string_destroy;
-        ctx.duplicate_key = (co_duplicate_fn)co_string_duplicate;
-        ctx.compare_keys = (co_compare_fn)co_string_case_compare;
+        ctx.hash_key = (co_item_hash_fn)co_string_hash;
+        ctx.free_key = (co_item_free_fn)co_string_destroy;
+        ctx.duplicate_key = (co_item_duplicate_fn)co_string_duplicate;
+        ctx.compare_keys = (co_item_compare_fn)co_string_case_compare;
 
         client->upgrade_map = co_map_create(&ctx);
     }
@@ -433,6 +433,17 @@ co_http_server_close(
     {
         server->module.close(server->tcp_server);
     }
+}
+
+void
+co_http_tls_server_set_available_protocols(
+    co_http_server_t* server,
+    const char* protocols[],
+    size_t protocol_count
+)
+{
+    co_tls_tcp_server_set_alpn_available_protocols(
+        server->tcp_server, protocols, protocol_count);
 }
 
 bool
@@ -592,15 +603,4 @@ co_http_end_chunked_response(
 )
 {
     return co_http_send_chunked_response(client, NULL, 0);
-}
-
-//---------------------------------------------------------------------------//
-//---------------------------------------------------------------------------//
-
-co_http_client_t*
-co_tcp_get_http_client(
-    co_tcp_client_t* tcp_client
-)
-{
-    return (co_http_client_t*)tcp_client->sock.sub_class;
 }

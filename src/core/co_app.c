@@ -23,8 +23,8 @@ extern CO_THREAD_LOCAL co_thread_t* current_thread;
 void
 co_app_init(
     co_app_t* app,
-    co_create_fn create_handler,
-    co_destroy_fn destroy_handler
+    co_app_create_fn create_handler,
+    co_app_destroy_fn destroy_handler
 )
 {
     co_app_setup(
@@ -34,8 +34,8 @@ co_app_init(
 void
 co_app_setup(
     co_app_t* app,
-    co_create_fn create_handler,
-    co_destroy_fn destroy_handler,
+    co_app_create_fn create_handler,
+    co_app_destroy_fn destroy_handler,
     co_event_worker_t* event_worker
 )
 {

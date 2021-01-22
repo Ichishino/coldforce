@@ -287,13 +287,3 @@ co_http_set_http2_upgrade_request_handler(
         client, CO_HTTP2_UPGRADE, (void*)handler);
 }
 
-//---------------------------------------------------------------------------//
-//---------------------------------------------------------------------------//
-
-co_http2_client_t*
-co_tcp_get_http2_client(
-    co_tcp_client_t* tcp_client
-)
-{
-    return (co_http2_client_t*)tcp_client->sock.sub_class;
-}

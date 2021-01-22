@@ -63,7 +63,7 @@ co_event_worker_setup(
     event_worker->timer_manager = co_timer_manager_create();
 
     co_list_ctx_st list_ctx = { 0 };
-    list_ctx.free_value = (co_free_fn)co_mem_free;
+    list_ctx.free_value = (co_item_free_fn)co_mem_free;
     event_worker->mem_trash = co_list_create(&list_ctx);
 
     if (event_worker->wait == NULL)
@@ -367,7 +367,7 @@ co_event_worker_unregister_timer(
 
         co_event_t* queued_event = (co_event_t*)
             co_queue_find(event_worker->event_queue,
-                &timer_event, (co_compare_fn)co_compare_event);
+                &timer_event, (co_item_compare_fn)co_compare_event);
         co_assert(queued_event != NULL);
 
         queued_event->param2 = false;

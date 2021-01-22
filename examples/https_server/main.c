@@ -150,19 +150,22 @@ void on_my_tls_tcp_handshake(my_app* self, co_tcp_client_t* tcp_client, int erro
 {
     (void)self;
 
-    co_http_client_t* client = co_tcp_get_http_client(tcp_client);
-
     if (error_code == 0)
     {
         my_client_log(tcp, tcp_client, "TLS handshake success");
 
-        // can send and receive
+        // create http client
+        co_http_client_t* client = co_http_client_create_with(tcp_client);
+
+        // set callback
+        co_http_set_receive_handler(client, (co_http_receive_fn)on_my_http_request);
+        co_http_set_close_handler(client, (co_http_close_fn)on_my_http_close);
     }
     else
     {
         my_client_log(tcp, tcp_client, "TLS handshake failed");
 
-        co_http_client_destroy(client);
+        co_tls_tcp_client_destroy(tcp_client);
     }
 }
 
@@ -174,13 +177,6 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t
 
     // accept
     co_tcp_accept((co_thread_t*)self, tcp_client);
-
-    // create http client
-    co_http_client_t* client = co_http_client_create_with(tcp_client);
-
-    // set callback
-    co_http_set_receive_handler(client, (co_http_receive_fn)on_my_http_request);
-    co_http_set_close_handler(client, (co_http_close_fn)on_my_http_close);
 
     // TLS handshake
     co_tls_tcp_start_handshake(
@@ -205,6 +201,12 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     SSL_CTX_use_PrivateKey_file(tls_ctx.ssl_ctx, "server.key", SSL_FILETYPE_PEM);
 
     self->server = co_http_tls_server_create(&local_net_addr, &tls_ctx);
+
+    // available protocols
+    size_t protocol_count = 1;
+    const char* protocols[] = { CO_HTTP_PROTOCOL };
+    co_http_tls_server_set_available_protocols(
+        self->server, protocols, protocol_count);
 
     // socket option
     co_socket_option_set_reuse_addr(
@@ -234,8 +236,8 @@ int main(int argc, char* argv[])
 
     co_net_app_init(
         (co_app_t*)&app,
-        (co_create_fn)on_my_app_create,
-        (co_destroy_fn)on_my_app_destroy);
+        (co_app_create_fn)on_my_app_create,
+        (co_app_destroy_fn)on_my_app_destroy);
 
     // app start
     int exit_code = co_net_app_start((co_app_t*)&app, argc, argv);

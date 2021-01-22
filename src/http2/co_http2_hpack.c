@@ -336,7 +336,8 @@ co_http2_hpack_dynamic_table_setup(
     dynamic_table->total_size = 0;
 
     co_list_ctx_st ctx = { 0 };
-    ctx.free_value = (co_free_fn)co_http2_hpack_dynamic_table_item_free;
+    ctx.free_value =
+        (co_item_free_fn)co_http2_hpack_dynamic_table_item_free;
     dynamic_table->items = co_list_create(&ctx);
 }
 

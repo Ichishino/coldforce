@@ -63,7 +63,7 @@ co_http2_client_setup(
     client->on_ping = NULL;
 
     co_map_ctx_st map_ctx = { 0 };
-    map_ctx.free_value = (co_free_fn)co_http2_stream_destroy;
+    map_ctx.free_value = (co_item_free_fn)co_http2_stream_destroy;
     client->stream_map = co_map_create(&map_ctx);
 
     client->last_stream_id = 0;

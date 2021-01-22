@@ -14,9 +14,9 @@ CO_EXTERN_C_BEGIN
 
 typedef struct
 {
-    co_free_fn free_value;
-    co_duplicate_fn duplicate_value;
-    co_compare_fn compare_values;
+    co_item_free_fn free_value;
+    co_item_duplicate_fn duplicate_value;
+    co_item_compare_fn compare_values;
 
 } co_list_ctx_st;
 
@@ -42,9 +42,9 @@ typedef struct
     co_list_item_t* head;
     co_list_item_t* tail;
 
-    co_free_fn free_value;
-    co_compare_fn compare_values;
-    co_duplicate_fn duplicate_value;
+    co_item_free_fn free_value;
+    co_item_compare_fn compare_values;
+    co_item_duplicate_fn duplicate_value;
 
 } co_list_t;
 

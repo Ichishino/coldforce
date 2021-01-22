@@ -56,7 +56,7 @@ CO_API void co_queue_remove(co_queue_t* queue, size_t count);
 CO_API void* co_queue_peek_head(co_queue_t* queue);
 
 CO_API void* co_queue_find(
-    co_queue_t* queue, const void* value_address, co_compare_fn compare);
+    co_queue_t* queue, const void* value_address, co_item_compare_fn compare);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

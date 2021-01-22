@@ -32,7 +32,7 @@ typedef struct co_net_worker_t
     co_list_t* udps;
 
     co_tcp_transfer_fn on_tcp_transfer;
-    co_destroy_fn on_destroy;
+    co_thread_destroy_fn on_destroy;
 
 #ifdef CO_DEBUG
     uint32_t sock_count;

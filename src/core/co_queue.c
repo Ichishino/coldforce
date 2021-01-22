@@ -331,7 +331,7 @@ void*
 co_queue_find(
     co_queue_t* queue,
     const void* value_address,
-    co_compare_fn compare
+    co_item_compare_fn compare
 )
 {
     if (queue->count == 0)
