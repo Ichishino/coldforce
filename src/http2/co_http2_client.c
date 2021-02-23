@@ -902,7 +902,7 @@ co_http2_connect(
 }
 
 bool
-co_http2_request_upgrade(
+co_http2_connect_and_request_upgrade(
     co_http2_client_t* client,
     const char* path,
     const co_http2_setting_param_st* param,

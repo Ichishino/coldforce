@@ -134,7 +134,7 @@ CO_HTTP2_API bool co_http2_is_running(const co_http2_client_t* client);
 CO_HTTP2_API bool co_http2_connect(
     co_http2_client_t* client, co_http2_connect_fn handler);
 
-CO_HTTP2_API bool co_http2_request_upgrade(
+CO_HTTP2_API bool co_http2_connect_and_request_upgrade(
     co_http2_client_t* client, const char* path,
     const co_http2_setting_param_st* param, uint16_t param_count,
     co_http2_upgrade_fn handler);
