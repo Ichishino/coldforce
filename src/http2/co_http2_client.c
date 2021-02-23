@@ -777,7 +777,7 @@ co_http2_client_create(
 
             const char* protocol = CO_HTTP2_PROTOCOL;
 
-            co_tls_tcp_set_alpn_protocols(
+            co_tls_tcp_set_available_protocols(
                 client->tcp_client, &protocol, 1);
         }
     }

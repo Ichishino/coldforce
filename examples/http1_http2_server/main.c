@@ -197,7 +197,7 @@ void on_my_tls_tcp_handshake(my_app* self, co_tcp_client_t* tcp_client, int erro
         my_client_log(tcp, tcp_client, "TLS handshake success");
 
         char protocol[32] = { 0 };
-        co_tls_tcp_get_alpn_selected_protocol(
+        co_tls_tcp_get_selected_protocol(
             tcp_client, protocol, sizeof(protocol));
 
         if (strcmp(protocol, CO_HTTP2_PROTOCOL) == 0)

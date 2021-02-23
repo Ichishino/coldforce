@@ -37,7 +37,7 @@ CO_TLS_API co_tcp_server_t* co_tls_tcp_server_create(
 CO_TLS_API void co_tls_tcp_server_destroy(co_tcp_server_t* server);
 CO_TLS_API void co_tls_tcp_server_close(co_tcp_server_t* server);
 
-CO_TLS_API void co_tls_tcp_server_set_alpn_available_protocols(
+CO_TLS_API void co_tls_tcp_server_set_available_protocols(
     co_tcp_server_t* server, const char* protocols[], size_t protocol_count);
 
 CO_TLS_API bool co_tls_tcp_server_start(

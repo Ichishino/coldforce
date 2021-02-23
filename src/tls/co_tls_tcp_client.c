@@ -422,7 +422,7 @@ co_tls_tcp_set_host_name(
 }
 
 void
-co_tls_tcp_set_alpn_protocols(
+co_tls_tcp_set_available_protocols(
     co_tcp_client_t* client,
     const char* protocols[],
     size_t count
@@ -447,7 +447,7 @@ co_tls_tcp_set_alpn_protocols(
 }
 
 bool
-co_tls_tcp_get_alpn_selected_protocol(
+co_tls_tcp_get_selected_protocol(
     const co_tcp_client_t* client,
     char* buffer,
     size_t buffer_size

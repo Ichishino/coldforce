@@ -442,7 +442,7 @@ co_http_tls_server_set_available_protocols(
     size_t protocol_count
 )
 {
-    co_tls_tcp_server_set_alpn_available_protocols(
+    co_tls_tcp_server_set_available_protocols(
         server->tcp_server, protocols, protocol_count);
 }
 
