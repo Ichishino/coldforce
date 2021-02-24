@@ -9,6 +9,7 @@
 
 #include <sys/event.h>
 #include <sys/time.h>
+#include <sys/errno.h>
 
 //---------------------------------------------------------------------------//
 // net selector (mac)
@@ -120,14 +121,14 @@ co_net_selector_register(
     if (flags & CO_SOCKET_EVENT_RECEIVE)
     {
         EV_SET(&ev[0], sock->handle,
-            EVFILT_READ, EV_ADD, 0, 0, sock);
+            EVFILT_READ, (EV_ADD | EV_CLEAR), 0, 0, sock);
         ++ev_count;
     }
 
     if (flags & CO_SOCKET_EVENT_SEND)
     {
         EV_SET(&ev[ev_count], sock->handle,
-            EVFILT_WRITE, EV_ADD, 0, 0, sock);
+            EVFILT_WRITE, (EV_ADD | EV_CLEAR), 0, 0, sock);
         ++ev_count;
     }
 
@@ -136,19 +137,19 @@ co_net_selector_register(
         if (flags == CO_SOCKET_EVENT_ACCEPT)
         {
             EV_SET(&ev[0], sock->handle,
-                EVFILT_READ, EV_ADD, 0, 0, sock);
+                EVFILT_READ, (EV_ADD | EV_CLEAR), 0, 0, sock);
             ev_count = 1;
         }
         else if (flags == CO_SOCKET_EVENT_CONNECT)
         {
             EV_SET(&ev[0], sock->handle,
-                EVFILT_WRITE, EV_ADD, 0, 0, sock);
+                EVFILT_WRITE, (EV_ADD | EV_CLEAR), 0, 0, sock);
             ev_count = 1;
         }
         else if (flags == CO_SOCKET_EVENT_CANCEL)
         {
             EV_SET(&ev[0], sock->handle,
-                EVFILT_READ, EV_ADD, 0, 0, NULL);
+                EVFILT_READ, (EV_ADD | EV_CLEAR), 0, 0, NULL);
             ev_count = 1;
         }
         else
@@ -173,11 +174,12 @@ co_net_selector_register(
 void
 co_net_selector_unregister(
     co_net_selector_t* net_selector,
-    co_socket_t* sock)
+    co_socket_t* sock
+)
 {
     co_assert(net_selector->sock_count > 0);
 
-    struct kevent ev[2];
+    struct kevent ev[2] = { 0 };
 
     EV_SET(&ev[0], sock->handle, EVFILT_READ, EV_DELETE, 0, 0, NULL);
     EV_SET(&ev[1], sock->handle, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
@@ -202,23 +204,27 @@ co_net_selector_update(
 
     if (flags & CO_SOCKET_EVENT_RECEIVE)
     {
-        EV_SET(&ev[0], sock->handle, EVFILT_READ, EV_ADD, 0, 0, sock);
+        EV_SET(&ev[0], sock->handle,
+            EVFILT_READ, (EV_ADD | EV_CLEAR), 0, 0, sock);
     }
     else
     {
-        EV_SET(&ev[0], sock->handle, EVFILT_READ, EV_DISABLE, 0, 0, sock);
+        EV_SET(&ev[0], sock->handle,
+            EVFILT_READ, EV_DISABLE, 0, 0, sock);
     }
 
     if (flags & CO_SOCKET_EVENT_SEND)
     {
-        EV_SET(&ev[1], sock->handle, EVFILT_WRITE, EV_ADD, 0, 0, sock);
+        EV_SET(&ev[1], sock->handle,
+            EVFILT_WRITE, (EV_ADD | EV_CLEAR), 0, 0, sock);
     }
     else
     {
-        EV_SET(&ev[1], sock->handle, EVFILT_WRITE, EV_DISABLE, 0, 0, sock);
+        EV_SET(&ev[1], sock->handle,
+            EVFILT_WRITE, EV_DISABLE, 0, 0, sock);
     }
 
-    if (kevent(net_selector->kqueue_fd, ev, 2, NULL, 0, NULL) == 1)
+    if (kevent(net_selector->kqueue_fd, ev, 2, NULL, 0, NULL) == -1)
     {
         return false;
     }
@@ -320,7 +326,7 @@ co_net_selector_wait(
     {
         result = CO_WAIT_RESULT_TIMEOUT;
     }
-    else
+    else if (co_socket_get_error() != EINTR)
     {
         result = CO_WAIT_RESULT_ERROR;
     }

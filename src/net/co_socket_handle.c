@@ -136,8 +136,11 @@ co_socket_handle_connect(
     const co_net_addr_t* net_addr
 )
 {
+    size_t net_addr_size;
+    co_net_addr_get_size(net_addr, &net_addr_size);
+
     int result = connect(handle,
-        (const struct sockaddr*)net_addr, sizeof(co_net_addr_t));
+        (const struct sockaddr*)net_addr, (socklen_t)net_addr_size);
 
     return (result == 0);
 }

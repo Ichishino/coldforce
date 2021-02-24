@@ -181,8 +181,12 @@ co_tcp_client_on_send_ready(
     (void)client;
 #else
 
-    co_buffer_st* send_data =
-        (co_buffer_st*)co_queue_peek_head(client->send_queue);
+    co_buffer_st* send_data = NULL;
+
+    if (client->send_queue != NULL)
+    {
+        send_data = (co_buffer_st*)co_queue_peek_head(client->send_queue);
+    }
 
     if (send_data == NULL)
     {
