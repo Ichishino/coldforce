@@ -1,6 +1,7 @@
 #include <coldforce/coldforce_tls.h>
 
 #include <stdio.h>
+#include <string.h>
 
 // my app object
 typedef struct

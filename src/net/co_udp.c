@@ -154,6 +154,8 @@ co_udp_create(
 
     if (udp->sock.handle == CO_SOCKET_INVALID_HANDLE)
     {
+        co_mem_free(udp);
+
         return NULL;
     }
 

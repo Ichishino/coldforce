@@ -1,0 +1,327 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 50;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		4AFA7EC525B5E693006D1AD7 /* co_http2_server.c in Sources */ = {isa = PBXBuildFile; fileRef = 4AFA7EBD25B5E692006D1AD7 /* co_http2_server.c */; };
+		4AFA7EC625B5E693006D1AD7 /* co_http2_frame.c in Sources */ = {isa = PBXBuildFile; fileRef = 4AFA7EBE25B5E692006D1AD7 /* co_http2_frame.c */; };
+		4AFA7EC725B5E693006D1AD7 /* co_http2_header.c in Sources */ = {isa = PBXBuildFile; fileRef = 4AFA7EBF25B5E692006D1AD7 /* co_http2_header.c */; };
+		4AFA7EC825B5E693006D1AD7 /* co_http2_huffman.c in Sources */ = {isa = PBXBuildFile; fileRef = 4AFA7EC025B5E693006D1AD7 /* co_http2_huffman.c */; };
+		4AFA7EC925B5E693006D1AD7 /* co_http2_stream.c in Sources */ = {isa = PBXBuildFile; fileRef = 4AFA7EC125B5E693006D1AD7 /* co_http2_stream.c */; };
+		4AFA7ECA25B5E693006D1AD7 /* co_http2_client.c in Sources */ = {isa = PBXBuildFile; fileRef = 4AFA7EC225B5E693006D1AD7 /* co_http2_client.c */; };
+		4AFA7ECB25B5E693006D1AD7 /* co_http2.c in Sources */ = {isa = PBXBuildFile; fileRef = 4AFA7EC325B5E693006D1AD7 /* co_http2.c */; };
+		4AFA7ECC25B5E693006D1AD7 /* co_http2_hpack.c in Sources */ = {isa = PBXBuildFile; fileRef = 4AFA7EC425B5E693006D1AD7 /* co_http2_hpack.c */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		4AFA7EB325B5E64B006D1AD7 /* libco_http2.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libco_http2.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		4AFA7EBD25B5E692006D1AD7 /* co_http2_server.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = co_http2_server.c; path = ../../../src/http2/co_http2_server.c; sourceTree = "<group>"; };
+		4AFA7EBE25B5E692006D1AD7 /* co_http2_frame.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = co_http2_frame.c; path = ../../../src/http2/co_http2_frame.c; sourceTree = "<group>"; };
+		4AFA7EBF25B5E692006D1AD7 /* co_http2_header.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = co_http2_header.c; path = ../../../src/http2/co_http2_header.c; sourceTree = "<group>"; };
+		4AFA7EC025B5E693006D1AD7 /* co_http2_huffman.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = co_http2_huffman.c; path = ../../../src/http2/co_http2_huffman.c; sourceTree = "<group>"; };
+		4AFA7EC125B5E693006D1AD7 /* co_http2_stream.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = co_http2_stream.c; path = ../../../src/http2/co_http2_stream.c; sourceTree = "<group>"; };
+		4AFA7EC225B5E693006D1AD7 /* co_http2_client.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = co_http2_client.c; path = ../../../src/http2/co_http2_client.c; sourceTree = "<group>"; };
+		4AFA7EC325B5E693006D1AD7 /* co_http2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = co_http2.c; path = ../../../src/http2/co_http2.c; sourceTree = "<group>"; };
+		4AFA7EC425B5E693006D1AD7 /* co_http2_hpack.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = co_http2_hpack.c; path = ../../../src/http2/co_http2_hpack.c; sourceTree = "<group>"; };
+		4AFA7ECE25B5E6A5006D1AD7 /* http2 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = http2; path = ../../../inc/coldforce/http2; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		4AFA7EB125B5E64B006D1AD7 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		4AFA7EAA25B5E64B006D1AD7 = {
+			isa = PBXGroup;
+			children = (
+				4AFA7EBB25B5E656006D1AD7 /* Source Files */,
+				4AFA7EBC25B5E668006D1AD7 /* Header Files */,
+				4AFA7EB425B5E64B006D1AD7 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		4AFA7EB425B5E64B006D1AD7 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4AFA7EB325B5E64B006D1AD7 /* libco_http2.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		4AFA7EBB25B5E656006D1AD7 /* Source Files */ = {
+			isa = PBXGroup;
+			children = (
+				4AFA7EC225B5E693006D1AD7 /* co_http2_client.c */,
+				4AFA7EBE25B5E692006D1AD7 /* co_http2_frame.c */,
+				4AFA7EBF25B5E692006D1AD7 /* co_http2_header.c */,
+				4AFA7EC425B5E693006D1AD7 /* co_http2_hpack.c */,
+				4AFA7EC025B5E693006D1AD7 /* co_http2_huffman.c */,
+				4AFA7EBD25B5E692006D1AD7 /* co_http2_server.c */,
+				4AFA7EC125B5E693006D1AD7 /* co_http2_stream.c */,
+				4AFA7EC325B5E693006D1AD7 /* co_http2.c */,
+			);
+			name = "Source Files";
+			sourceTree = "<group>";
+		};
+		4AFA7EBC25B5E668006D1AD7 /* Header Files */ = {
+			isa = PBXGroup;
+			children = (
+				4AFA7ECE25B5E6A5006D1AD7 /* http2 */,
+			);
+			name = "Header Files";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		4AFA7EAF25B5E64B006D1AD7 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		4AFA7EB225B5E64B006D1AD7 /* co_http2 */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4AFA7EB725B5E64B006D1AD7 /* Build configuration list for PBXNativeTarget "co_http2" */;
+			buildPhases = (
+				4AFA7EAF25B5E64B006D1AD7 /* Headers */,
+				4AFA7EB025B5E64B006D1AD7 /* Sources */,
+				4AFA7EB125B5E64B006D1AD7 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = co_http2;
+			productName = co_http2;
+			productReference = 4AFA7EB325B5E64B006D1AD7 /* libco_http2.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		4AFA7EAB25B5E64B006D1AD7 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 1200;
+				TargetAttributes = {
+					4AFA7EB225B5E64B006D1AD7 = {
+						CreatedOnToolsVersion = 12.0.1;
+					};
+				};
+			};
+			buildConfigurationList = 4AFA7EAE25B5E64B006D1AD7 /* Build configuration list for PBXProject "co_http2" */;
+			compatibilityVersion = "Xcode 9.3";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 4AFA7EAA25B5E64B006D1AD7;
+			productRefGroup = 4AFA7EB425B5E64B006D1AD7 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				4AFA7EB225B5E64B006D1AD7 /* co_http2 */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		4AFA7EB025B5E64B006D1AD7 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4AFA7EC625B5E693006D1AD7 /* co_http2_frame.c in Sources */,
+				4AFA7EC525B5E693006D1AD7 /* co_http2_server.c in Sources */,
+				4AFA7ECC25B5E693006D1AD7 /* co_http2_hpack.c in Sources */,
+				4AFA7EC825B5E693006D1AD7 /* co_http2_huffman.c in Sources */,
+				4AFA7ECA25B5E693006D1AD7 /* co_http2_client.c in Sources */,
+				4AFA7EC725B5E693006D1AD7 /* co_http2_header.c in Sources */,
+				4AFA7EC925B5E693006D1AD7 /* co_http2_stream.c in Sources */,
+				4AFA7ECB25B5E693006D1AD7 /* co_http2.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		4AFA7EB525B5E64B006D1AD7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		4AFA7EB625B5E64B006D1AD7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		4AFA7EB825B5E64B006D1AD7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				EXECUTABLE_PREFIX = lib;
+				HEADER_SEARCH_PATHS = (
+					"../../../inc/**",
+					"/usr/local/opt/openssl/include/**",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		4AFA7EB925B5E64B006D1AD7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				EXECUTABLE_PREFIX = lib;
+				HEADER_SEARCH_PATHS = (
+					"../../../inc/**",
+					"/usr/local/opt/openssl/include/**",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		4AFA7EAE25B5E64B006D1AD7 /* Build configuration list for PBXProject "co_http2" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4AFA7EB525B5E64B006D1AD7 /* Debug */,
+				4AFA7EB625B5E64B006D1AD7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4AFA7EB725B5E64B006D1AD7 /* Build configuration list for PBXNativeTarget "co_http2" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4AFA7EB825B5E64B006D1AD7 /* Debug */,
+				4AFA7EB925B5E64B006D1AD7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 4AFA7EAB25B5E64B006D1AD7 /* Project object */;
+}

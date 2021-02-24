@@ -1,0 +1,8 @@
+//
+// Coldforce
+// example_openssl.xcconfig
+//
+
+HEADER_SEARCH_PATHS = ../../../../inc/** /usr/local/opt/openssl/include/**
+LIBRARY_SEARCH_PATHS = /usr/local/opt/openssl/lib/**
+OTHER_LDFLAGS = -lpthread -lssl -lcrypto

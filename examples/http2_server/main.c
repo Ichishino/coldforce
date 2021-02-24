@@ -4,6 +4,8 @@
 
 #include <coldforce/coldforce_http2.h>
 
+#include <string.h>
+
 // openssl
 #ifdef _WIN32
 #pragma comment(lib, "libssl.lib")
@@ -312,8 +314,25 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     // TLS setting (openssl)
     co_tls_ctx_st tls_ctx = { 0 };
     tls_ctx.ssl_ctx = SSL_CTX_new(TLS_server_method());
-    SSL_CTX_use_certificate_file(tls_ctx.ssl_ctx, "server.crt", SSL_FILETYPE_PEM);
-    SSL_CTX_use_PrivateKey_file(tls_ctx.ssl_ctx, "server.key", SSL_FILETYPE_PEM);
+
+    const char* certificate_file = "server.crt";
+    const char* private_key_file = "server.key";
+
+    if (SSL_CTX_use_certificate_file(
+        tls_ctx.ssl_ctx, certificate_file, SSL_FILETYPE_PEM) != 1)
+    {
+        printf("SSL_CTX_use_certificate_file failed\n");
+
+        return false;
+    }
+
+    if (SSL_CTX_use_PrivateKey_file(
+        tls_ctx.ssl_ctx, private_key_file, SSL_FILETYPE_PEM) != 1)
+    {
+        printf("SSL_CTX_use_PrivateKey_file failed\n");
+
+        return false;
+    }
 
     // https server
     self->server = co_http_tls_server_create(&local_net_addr, &tls_ctx);

@@ -4,6 +4,8 @@
 
 #include <coldforce/coldforce_http.h>
 
+#include <string.h>
+
 // my app object
 typedef struct
 {
