@@ -23,7 +23,7 @@ co_http_client_setup(
     {
         client->module.destroy = co_tls_tcp_client_destroy;
         client->module.close = co_tls_tcp_client_close;
-        client->module.connect_async = co_tls_tcp_connect_async;
+        client->module.connect = co_tls_tcp_connect;
         client->module.send = co_tls_tcp_send;
         client->module.receive_all = co_tls_tcp_receive_all;
     }
@@ -31,7 +31,7 @@ co_http_client_setup(
     {
         client->module.destroy = co_tcp_client_destroy;
         client->module.close = co_tcp_client_close;
-        client->module.connect_async = co_tcp_connect_async;
+        client->module.connect = co_tcp_connect;
         client->module.send = co_tcp_send;
         client->module.receive_all = co_tcp_receive_all;
     }
@@ -666,7 +666,7 @@ co_http_send_request(
     }
     else
     {
-        if (!client->module.connect_async(
+        if (!client->module.connect(
             client->tcp_client,
             &client->tcp_client->remote_net_addr,
             (co_tcp_connect_fn)co_http_client_on_connect))

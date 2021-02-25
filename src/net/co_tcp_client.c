@@ -380,37 +380,8 @@ co_tcp_client_destroy(
     }
 }
 
-int
-co_tcp_connect(
-    co_tcp_client_t* client,
-    const co_net_addr_t* remote_net_addr
-)
-{
-    co_socket_handle_set_blocking(client->sock.handle, true);
-
-    if (!co_socket_handle_connect(
-        client->sock.handle, remote_net_addr))
-    {
-        return co_socket_get_error();
-    }
-
-    co_socket_handle_get_remote_net_addr(
-        client->sock.handle, &client->remote_net_addr);
-
-    co_net_worker_register_tcp_connection(
-        co_socket_get_net_worker(&client->sock),
-        client);
-
-#ifdef CO_OS_WIN
-    client->open_remote = true;
-    co_win_tcp_client_receive_start(client);
-#endif
-
-    return 0;
-}
-
 bool
-co_tcp_connect_async(
+co_tcp_connect(
     co_tcp_client_t* client,
     const co_net_addr_t* remote_net_addr,
     co_tcp_connect_fn handler

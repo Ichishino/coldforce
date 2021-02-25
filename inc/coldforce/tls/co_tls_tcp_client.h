@@ -59,8 +59,6 @@ CO_TLS_API bool co_tls_tcp_get_selected_protocol(
     const co_tcp_client_t* client, char* buffer, size_t buffer_size);
 
 CO_TLS_API bool co_tls_tcp_connect(co_tcp_client_t* client,
-    const co_net_addr_t* remote_net_addr);
-CO_TLS_API bool co_tls_tcp_connect_async(co_tcp_client_t* client,
     const co_net_addr_t* remote_net_addr, co_tcp_connect_fn handler);
 
 CO_TLS_API bool co_tls_tcp_start_handshake(

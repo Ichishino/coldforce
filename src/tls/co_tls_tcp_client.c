@@ -478,15 +478,6 @@ co_tls_tcp_get_selected_protocol(
 bool
 co_tls_tcp_connect(
     co_tcp_client_t* client,
-    const co_net_addr_t* remote_net_addr
-)
-{
-    return co_tcp_connect(client, remote_net_addr);
-}
-
-bool
-co_tls_tcp_connect_async(
-    co_tcp_client_t* client,
     const co_net_addr_t* remote_net_addr,
     co_tcp_connect_fn handler
 )
@@ -495,7 +486,7 @@ co_tls_tcp_connect_async(
 
     tls->on_connect = handler;
 
-    return co_tcp_connect_async(
+    return co_tcp_connect(
         client, remote_net_addr,
         (co_tcp_connect_fn)co_tls_tcp_on_connect);
 }

@@ -79,9 +79,7 @@ CO_NET_API co_tcp_client_t* co_tcp_client_create(
 CO_NET_API void co_tcp_client_destroy(co_tcp_client_t* client);
 CO_NET_API void co_tcp_client_close(co_tcp_client_t* client);
 
-CO_NET_API int co_tcp_connect(
-    co_tcp_client_t* client, const co_net_addr_t* remote_net_addr);
-CO_NET_API bool co_tcp_connect_async(
+CO_NET_API bool co_tcp_connect(
     co_tcp_client_t* client, const co_net_addr_t* remote_net_addr,
     co_tcp_connect_fn handler);
 

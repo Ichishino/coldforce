@@ -29,7 +29,7 @@ Coldforce は C言語で作られた、さまざまなネットワークプロ�
 * [prj](https://github.com/Ichishino/coldforce/tree/master/prj)  
 プロジェクトファイル
 * [src](https://github.com/Ichishino/coldforce/tree/master/src)  
-ソースコード
+ソースファイル
 
 ### モジュール構成
 * **co_core** - アプリケーション基本機能

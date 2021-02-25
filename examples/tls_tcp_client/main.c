@@ -97,8 +97,8 @@ void my_connect(my_app* self)
     co_net_addr_set_address(&remote_net_addr, ip_address);
     co_net_addr_set_port(&remote_net_addr, port);
 
-    // connect async
-    co_tls_tcp_connect_async(
+    // connect
+    co_tls_tcp_connect(
         self->client, &remote_net_addr, (co_tcp_connect_fn)on_my_tls_tcp_connect);
 
     char remote_str[64];
