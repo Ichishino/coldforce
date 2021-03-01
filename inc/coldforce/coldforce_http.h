@@ -18,6 +18,7 @@
 #include <coldforce/http/co_http_server.h>
 #include <coldforce/http/co_http_client.h>
 #include <coldforce/http/co_base64.h>
+#include <coldforce/http/co_sha1.h>
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

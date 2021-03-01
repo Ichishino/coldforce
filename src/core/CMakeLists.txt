@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-project(co C)
+project(co_core C)
 
 add_library(${PROJECT_NAME} STATIC
 

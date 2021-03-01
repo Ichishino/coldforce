@@ -83,6 +83,9 @@ CO_NET_API void co_udp_set_send_complete_handler(
 
 CO_NET_API co_socket_t* co_udp_get_socket(co_udp_t* udp);
 
+CO_NET_API void co_udp_set_data(co_udp_t* udp, uintptr_t data);
+CO_NET_API uintptr_t co_udp_get_data(const co_udp_t* udp);
+
 #ifdef CO_OS_WIN
 CO_NET_API size_t co_win_udp_get_receive_data_size(const co_udp_t* udp);
 CO_NET_API void co_win_udp_set_receive_buffer_size(co_udp_t* udp, size_t new_size);

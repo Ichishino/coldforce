@@ -121,6 +121,8 @@ CO_HTTP_API const co_net_addr_t* co_http_get_remote_net_addr(const co_http_clien
 CO_HTTP_API co_socket_t* co_http_client_get_socket(co_http_client_t* client);
 CO_HTTP_API const char* co_http_get_base_url(const co_http_client_t* client);
 CO_HTTP_API bool co_http_is_open(const co_http_client_t* client);
+CO_HTTP_API void co_http_set_data(co_http_client_t* client, uintptr_t data);
+CO_HTTP_API uintptr_t co_http_get_data(const co_http_client_t* client);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

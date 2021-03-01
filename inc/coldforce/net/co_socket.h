@@ -39,6 +39,8 @@ typedef struct
     void* sub_class;
     void* tls;
 
+    uintptr_t data;
+
 } co_socket_t;
 
 struct co_net_worker_t* co_socket_get_net_worker(co_socket_t* sock);

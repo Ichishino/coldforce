@@ -109,6 +109,9 @@ CO_NET_API const co_net_addr_t*
 
 CO_NET_API co_socket_t* co_tcp_client_get_socket(co_tcp_client_t* client);
 
+CO_NET_API void co_tcp_set_data(co_tcp_client_t* client, uintptr_t data);
+CO_NET_API uintptr_t co_tcp_get_data(const co_tcp_client_t* client);
+
 #ifdef CO_OS_WIN
 CO_NET_API size_t co_win_tcp_get_receive_data_size(const co_tcp_client_t* client);
 CO_NET_API void co_win_tcp_set_receive_buffer_size(co_tcp_client_t* client, size_t size);

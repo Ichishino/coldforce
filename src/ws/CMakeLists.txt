@@ -1,22 +1,15 @@
 cmake_minimum_required(VERSION 2.8)
 
-project(co_http C)
+project(co_ws C)
 
 add_library(${PROJECT_NAME} STATIC
 
-    co_base64.c
-    co_http.c
-    co_http_client.c
-    co_http_content_receiver.c
-    co_http_cookie.c
-    co_http_header.c
-    co_http_message.c
-    co_http_request.c
-    co_http_response.c
-    co_http_server.c
-    co_http_string_list.c
-    co_http_url.c
-    co_sha1.c
+    co_random.c
+    co_ws.c
+    co_ws_client.c
+    co_ws_frame.c
+    co_ws_http_extension.c
+    co_ws_server.c
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC ../../inc)

@@ -1,6 +1,8 @@
 #include <coldforce/core/co_std.h>
 #include <coldforce/core/co_string.h>
 
+#include <coldforce/net/co_byte_order.h>
+
 #include <coldforce/http/co_http.h>
 
 #include <coldforce/http2/co_http2_frame.h>

@@ -744,7 +744,8 @@ co_http_get_remote_net_addr(
     const co_http_client_t* client
 )
 {
-    return &client->tcp_client->remote_net_addr;
+    return ((client->tcp_client != NULL) ?
+        &client->tcp_client->remote_net_addr : NULL);
 }
 
 co_socket_t*
@@ -752,7 +753,8 @@ co_http_client_get_socket(
     co_http_client_t* client
 )
 {
-    return &client->tcp_client->sock;
+    return ((client->tcp_client != NULL) ?
+        &client->tcp_client->sock : NULL);
 }
 
 const char*
@@ -760,7 +762,8 @@ co_http_get_base_url(
     const co_http_client_t* client
 )
 {
-    return client->base_url->src;
+    return ((client->base_url != NULL) ?
+        client->base_url->src : NULL);
 }
 
 bool
@@ -768,5 +771,23 @@ co_http_is_open(
     const co_http_client_t* client
 )
 {
-    return co_tcp_is_open(client->tcp_client);
+    return ((client->tcp_client != NULL) ?
+        co_tcp_is_open(client->tcp_client) : false);
+}
+
+void
+co_http_set_data(
+    co_http_client_t* client,
+    uintptr_t data
+)
+{
+    co_tcp_set_data(client->tcp_client, data);
+}
+
+uintptr_t
+co_http_get_data(
+    const co_http_client_t* client
+)
+{
+    return co_tcp_get_data(client->tcp_client);
 }

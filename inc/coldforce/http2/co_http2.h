@@ -24,29 +24,6 @@ CO_EXTERN_C_BEGIN
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-#ifdef CO_LITTLE_ENDIAN
-
-#define co_byte_order_16_flip(n) \
-    (((n & 0x00FF) << 8) | ((n & 0xFF00) >> 8))
-#define co_byte_order_32_flip(n) \
-    (((n & 0x0000000FF) << 24) | ((n & 0x00000FF00) << 8) | \
-        ((n & 0x00FF0000) >> 8) | ((n & 0xFF000000) >>24))
-
-#define co_byte_order_16_network_to_host(n) co_byte_order_16_flip(n)
-#define co_byte_order_16_host_to_network(n) co_byte_order_16_flip(n)
-#define co_byte_order_32_network_to_host(n) co_byte_order_32_flip(n)
-#define co_byte_order_32_host_to_network(n) co_byte_order_32_flip(n)
-
-#else
-#define co_byte_order_16_network_to_host(n) (n)
-#define co_byte_order_16_host_to_network(n) (n)
-#define co_byte_order_32_network_to_host(n) (n)
-#define co_byte_order_32_host_to_network(n) (n)
-#endif
-
-//---------------------------------------------------------------------------//
-//---------------------------------------------------------------------------//
-
 #define CO_HTTP2_ERROR_STREAM_CLOSED        -6000
 #define CO_HTTP2_ERROR_FILE_IO              -6101
 #define CO_HTTP2_ERROR_PARSE_ERROR          -6102

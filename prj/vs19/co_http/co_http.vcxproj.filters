@@ -47,6 +47,9 @@
     <ClCompile Include="..\..\..\src\http\co_base64.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\http\co_sha1.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\inc\coldforce\http\co_http.h">
@@ -86,6 +89,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\inc\coldforce\http\co_base64.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\coldforce\http\co_sha1.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

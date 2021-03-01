@@ -160,6 +160,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\inc\coldforce\coldforce_net.h" />
+    <ClInclude Include="..\..\..\inc\coldforce\net\co_byte_order.h" />
     <ClInclude Include="..\..\..\inc\coldforce\net\co_net.h" />
     <ClInclude Include="..\..\..\inc\coldforce\net\co_net_addr.h" />
     <ClInclude Include="..\..\..\inc\coldforce\net\co_net_addr_resolve.h" />

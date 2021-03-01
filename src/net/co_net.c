@@ -6,6 +6,7 @@
 #include <coldforce/net/co_net_win.h>
 #else
 #include <signal.h>
+#include <time.h>
 #endif
 
 //---------------------------------------------------------------------------//
@@ -24,6 +25,7 @@ co_net_setup(
     }
 #else
     signal(SIGPIPE, SIG_IGN);
+    srandom(time(NULL));
 #endif
 
     return true;

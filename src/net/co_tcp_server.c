@@ -105,6 +105,7 @@ co_tcp_server_create(
     server->sock.open_local = true;
     server->sock.sub_class = NULL;
     server->sock.tls = NULL;
+    server->sock.data = 0;
 
     memcpy(&server->sock.local_net_addr,
         local_net_addr, sizeof(co_net_addr_t));

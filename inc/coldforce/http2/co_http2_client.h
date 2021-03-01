@@ -179,6 +179,8 @@ CO_HTTP2_API const co_net_addr_t* co_http2_get_remote_net_addr(const co_http2_cl
 CO_HTTP2_API co_socket_t* co_http2_client_get_socket(co_http2_client_t* client);
 CO_HTTP2_API const char* co_http2_get_base_url(const co_http2_client_t* client);
 CO_HTTP2_API bool co_http2_is_open(const co_http2_client_t* client);
+CO_HTTP2_API void co_http2_set_data(co_http2_client_t* client, uintptr_t data);
+CO_HTTP2_API uintptr_t co_http2_get_data(const co_http2_client_t* client);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

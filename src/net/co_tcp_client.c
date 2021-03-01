@@ -72,6 +72,7 @@ co_tcp_client_setup(
     client->sock.open_local = false;
     client->sock.sub_class = NULL;
     client->sock.tls = NULL;
+    client->sock.data = 0;
 
     client->open_remote = false;
 
@@ -650,4 +651,24 @@ co_tcp_client_get_socket(
 )
 {
     return &client->sock;
+}
+
+void
+co_tcp_set_data(
+    co_tcp_client_t* client,
+    uintptr_t data
+)
+{
+    if (client != NULL)
+    {
+        client->sock.data = data;
+    }
+}
+
+uintptr_t
+co_tcp_get_data(
+    const co_tcp_client_t* client
+)
+{
+    return ((client != NULL) ? client->sock.data : 0);
 }

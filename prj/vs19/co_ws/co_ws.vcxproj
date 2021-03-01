@@ -18,11 +18,42 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\ws\co_random.c" />
+    <ClCompile Include="..\..\..\src\ws\co_ws.c" />
+    <ClCompile Include="..\..\..\src\ws\co_ws_client.c" />
+    <ClCompile Include="..\..\..\src\ws\co_ws_frame.c" />
+    <ClCompile Include="..\..\..\src\ws\co_ws_http_extension.c" />
+    <ClCompile Include="..\..\..\src\ws\co_ws_server.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\inc\coldforce\coldforce_ws.h" />
+    <ClInclude Include="..\..\..\inc\coldforce\ws\co_random.h" />
+    <ClInclude Include="..\..\..\inc\coldforce\ws\co_ws.h" />
+    <ClInclude Include="..\..\..\inc\coldforce\ws\co_ws_client.h" />
+    <ClInclude Include="..\..\..\inc\coldforce\ws\co_ws_frame.h" />
+    <ClInclude Include="..\..\..\inc\coldforce\ws\co_ws_http_extension.h" />
+    <ClInclude Include="..\..\..\inc\coldforce\ws\co_ws_server.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\co_core\co_core.vcxproj">
+      <Project>{4d32c6c5-283e-4610-aac5-b64943bedbbd}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\co_http\co_http.vcxproj">
+      <Project>{702988b4-8828-46e5-951f-ab5267db3b38}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\co_net\co_net.vcxproj">
+      <Project>{bc7afcd0-9685-4d50-949c-fc7a194e972f}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\co_tls\co_tls.vcxproj">
+      <Project>{325fd737-e9f2-4528-b106-e009d03b0788}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{702988b4-8828-46e5-951f-ab5267db3b38}</ProjectGuid>
-    <RootNamespace>cohttp</RootNamespace>
+    <ProjectGuid>{6d8c833f-5540-40fb-925e-428262ac2ca7}</ProjectGuid>
+    <RootNamespace>cows</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -90,11 +121,11 @@
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;CO_HTTP_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;CO_WS_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>../../../inc/</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../inc</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -108,11 +139,11 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;CO_HTTP_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;CO_WS_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>../../../inc/</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../inc</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -126,11 +157,11 @@
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;CO_HTTP_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;CO_WS_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>../../../inc/</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../inc</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -144,11 +175,11 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;CO_HTTP_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;CO_WS_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>../../../inc/</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../inc</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -158,74 +189,6 @@
       <EnableUAC>false</EnableUAC>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\..\src\http\co_base64.c" />
-    <ClCompile Include="..\..\..\src\http\co_http.c" />
-    <ClCompile Include="..\..\..\src\http\co_http_client.c">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">pch.h</PrecompiledHeaderFile>
-      <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">pch.h</PrecompiledHeaderFile>
-      <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">pch.h</PrecompiledHeaderFile>
-      <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">pch.h</PrecompiledHeaderFile>
-      <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\http\co_http_content_receiver.c" />
-    <ClCompile Include="..\..\..\src\http\co_http_cookie.c" />
-    <ClCompile Include="..\..\..\src\http\co_http_header.c" />
-    <ClCompile Include="..\..\..\src\http\co_http_message.c" />
-    <ClCompile Include="..\..\..\src\http\co_http_request.c" />
-    <ClCompile Include="..\..\..\src\http\co_http_response.c" />
-    <ClCompile Include="..\..\..\src\http\co_http_server.c" />
-    <ClCompile Include="..\..\..\src\http\co_http_string_list.c" />
-    <ClCompile Include="..\..\..\src\http\co_http_url.c">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">pch.h</PrecompiledHeaderFile>
-      <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">pch.h</PrecompiledHeaderFile>
-      <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">pch.h</PrecompiledHeaderFile>
-      <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">pch.h</PrecompiledHeaderFile>
-      <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\http\co_sha1.c" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\..\inc\coldforce\coldforce_http.h" />
-    <ClInclude Include="..\..\..\inc\coldforce\http\co_base64.h" />
-    <ClInclude Include="..\..\..\inc\coldforce\http\co_http.h" />
-    <ClInclude Include="..\..\..\inc\coldforce\http\co_http_client.h" />
-    <ClInclude Include="..\..\..\inc\coldforce\http\co_http_content_receiver.h" />
-    <ClInclude Include="..\..\..\inc\coldforce\http\co_http_cookie.h" />
-    <ClInclude Include="..\..\..\inc\coldforce\http\co_http_header.h" />
-    <ClInclude Include="..\..\..\inc\coldforce\http\co_http_message.h" />
-    <ClInclude Include="..\..\..\inc\coldforce\http\co_http_request.h" />
-    <ClInclude Include="..\..\..\inc\coldforce\http\co_http_response.h" />
-    <ClInclude Include="..\..\..\inc\coldforce\http\co_http_server.h" />
-    <ClInclude Include="..\..\..\inc\coldforce\http\co_http_string_list.h" />
-    <ClInclude Include="..\..\..\inc\coldforce\http\co_http_url.h" />
-    <ClInclude Include="..\..\..\inc\coldforce\http\co_sha1.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\co_core\co_core.vcxproj">
-      <Project>{4d32c6c5-283e-4610-aac5-b64943bedbbd}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\co_net\co_net.vcxproj">
-      <Project>{bc7afcd0-9685-4d50-949c-fc7a194e972f}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\co_tls\co_tls.vcxproj">
-      <Project>{325fd737-e9f2-4528-b106-e009d03b0788}</Project>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

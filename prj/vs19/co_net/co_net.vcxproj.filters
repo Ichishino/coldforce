@@ -71,6 +71,9 @@
     <ClInclude Include="..\..\..\inc\coldforce\net\co_net_selector_linux.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\inc\coldforce\net\co_byte_order.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\net\co_net.c">

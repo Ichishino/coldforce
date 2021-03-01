@@ -1,0 +1,116 @@
+#ifndef CO_WS_CLIENT_H_INCLUDED
+#define CO_WS_CLIENT_H_INCLUDED
+
+#include <coldforce/http/co_http_client.h>
+
+#include <coldforce/ws/co_ws.h>
+#include <coldforce/ws/co_ws_frame.h>
+
+CO_EXTERN_C_BEGIN
+
+//---------------------------------------------------------------------------//
+// websocket client
+//---------------------------------------------------------------------------//
+
+//---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
+
+struct co_ws_client_t;
+
+typedef void(*co_ws_connect_fn)(
+    void* self, struct co_ws_client_t*,
+    const co_http_response_t* response, int error_code);
+
+typedef void(*co_ws_receive_fn)(
+    void* self, struct co_ws_client_t*, const co_ws_frame_t*, int error_code);
+
+typedef void(*co_ws_close_fn)(
+    void* self, struct co_ws_client_t*);
+
+typedef struct co_ws_client_t
+{
+    co_tcp_client_t* tcp_client;
+    co_tcp_client_module_t module;
+
+    co_http_url_st* base_url;
+
+    size_t receive_data_index;
+    co_byte_array_t* receive_data;
+
+    co_ws_connect_fn on_connect;
+    co_ws_receive_fn on_receive;
+    co_ws_close_fn on_close;
+
+    co_http_request_t* upgrade_request;
+
+    bool mask;
+    bool closed;
+
+} co_ws_client_t;
+
+void co_ws_client_setup(co_ws_client_t* client,
+    co_tcp_client_t* tcp_client, co_http_url_st* base_url);
+void co_ws_client_cleanup(co_ws_client_t* client);
+
+void co_ws_client_on_frame(co_thread_t* thread,
+    co_ws_client_t* client, co_ws_frame_t* frame, int error_code);
+
+void co_ws_client_on_receive_ready(co_thread_t* thread,
+    co_tcp_client_t* tcp_client);
+void co_ws_client_on_close(co_thread_t* thread,
+    co_tcp_client_t* tcp_client);
+
+bool co_ws_send_raw_data(co_ws_client_t* client,
+    const void* data, size_t data_size);
+
+//---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
+
+CO_WS_API co_ws_client_t* co_ws_client_create(
+    const char* url, const co_net_addr_t* local_net_addr, co_tls_ctx_st* tls_ctx);
+CO_WS_API void co_ws_client_destroy(co_ws_client_t* client);
+CO_WS_API void co_ws_client_close(co_ws_client_t* client);
+
+CO_WS_API bool co_ws_connect(co_ws_client_t* client,
+    co_http_request_t* upgrade_request, co_ws_connect_fn handler);
+
+CO_WS_API bool co_ws_send(co_ws_client_t* client,
+    bool fin, uint8_t opcode, const void* data, size_t data_size);
+
+CO_WS_API bool co_ws_send_binary(co_ws_client_t* client,
+    const void* data, size_t data_size);
+CO_WS_API bool co_ws_send_text(co_ws_client_t* client,
+    const char* utf8_str);
+
+CO_WS_API bool co_ws_send_continuation(co_ws_client_t* client,
+    bool fin, const void* data, size_t data_size);
+
+CO_WS_API bool co_ws_send_close(co_ws_client_t* client,
+    uint16_t reason_code, const char* utf8_reason_str);
+
+CO_WS_API bool co_ws_send_ping(co_ws_client_t* client,
+    const void* data, size_t data_size);
+CO_WS_API bool co_ws_send_pong(co_ws_client_t* client,
+    const void* data, size_t data_size);
+
+CO_WS_API void co_ws_set_receive_handler(co_ws_client_t* client, co_ws_receive_fn handler);
+CO_WS_API void co_ws_set_close_handler(co_ws_client_t* client, co_ws_close_fn handler);
+
+CO_WS_API void co_ws_default_receive(co_ws_client_t* client, const co_ws_frame_t* frame);
+
+//---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
+
+CO_WS_API const co_net_addr_t* co_ws_get_remote_net_addr(const co_ws_client_t* client);
+CO_WS_API co_socket_t* co_ws_client_get_socket(co_ws_client_t* client);
+CO_WS_API const char* co_ws_get_base_url(const co_ws_client_t* client);
+CO_WS_API bool co_ws_is_open(const co_ws_client_t* client);
+CO_WS_API void co_ws_set_data(co_ws_client_t* client, uintptr_t data);
+CO_WS_API uintptr_t co_ws_get_data(const co_ws_client_t* client);
+
+//---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
+
+CO_EXTERN_C_END
+
+#endif // CO_WS_CLIENT_H_INCLUDED

@@ -119,6 +119,7 @@ co_udp_create(
     udp->sock.open_local = true;
     udp->sock.sub_class = NULL;
     udp->sock.tls = NULL;
+    udp->sock.data = 0;
 
     memcpy(&udp->sock.local_net_addr,
         local_net_addr, sizeof(co_net_addr_t));
@@ -423,4 +424,21 @@ co_udp_get_socket(
 )
 {
     return &udp->sock;
+}
+
+void
+co_udp_set_data(
+    co_udp_t* udp,
+    uintptr_t data
+)
+{
+    udp->sock.data = data;
+}
+
+uintptr_t
+co_udp_get_data(
+    const co_udp_t* udp
+)
+{
+    return udp->sock.data;
 }
