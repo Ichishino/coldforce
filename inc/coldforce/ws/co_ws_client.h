@@ -96,7 +96,7 @@ CO_WS_API bool co_ws_send_pong(co_ws_client_t* client,
 CO_WS_API void co_ws_set_receive_handler(co_ws_client_t* client, co_ws_receive_fn handler);
 CO_WS_API void co_ws_set_close_handler(co_ws_client_t* client, co_ws_close_fn handler);
 
-CO_WS_API void co_ws_default_receive(co_ws_client_t* client, const co_ws_frame_t* frame);
+CO_WS_API void co_ws_default_handler(co_ws_client_t* client, const co_ws_frame_t* frame);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

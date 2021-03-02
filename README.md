@@ -8,6 +8,7 @@ Coldforce は C言語で作られた、さまざまなネットワークプロ�
 * TLS(TCP)
 * HTTP/1.1
 * HTTP/2
+* WebSocket
 
 ### 対応OS
 * Windows
@@ -19,24 +20,13 @@ Coldforce は C言語で作られた、さまざまなネットワークプロ�
 * pthread (-lpthread) オプション
 * TLS, HTTP/1.1, HTTP/2機能を使用する場合は、OpenSSL(-lssl -lcrypt) が必要となります。
 
-### フォルダ構成
-* [build](https://github.com/Ichishino/coldforce/tree/master/build)  
-コンパイルやビルドによって出力される中間ファイルや、バイナリファイル用
-* [examples](https://github.com/Ichishino/coldforce/tree/master/examples)  
-実装サンプルコード
-* [inc](https://github.com/Ichishino/coldforce/tree/master/inc)  
-ヘッダファイル
-* [prj](https://github.com/Ichishino/coldforce/tree/master/prj)  
-プロジェクトファイル
-* [src](https://github.com/Ichishino/coldforce/tree/master/src)  
-ソースファイル
-
 ### モジュール構成
 * **co_core** - アプリケーション基本機能
 * **co_net** - ネットワーク基本機能及び、TCP/UDP機能
 * **co_tls** - TLS機能
 * **co_http** - HTTP/1.1機能
 * **co_http2** - HTTP/2機能
+* **co_ws** - WebSocket機能
 
 ### ビルド方法
 * Windows  
@@ -94,6 +84,8 @@ int main(int argc, char* argv[])
 * 詳細は [examples](https://github.com/Ichishino/coldforce/tree/master/examples) を参照してください。
 
 ### 今後の予定
-* WebSocket
+* WebSocket (over HTTP/2)
 * DTLS
+* HTTP/3
+* WebTransport?
 * その他

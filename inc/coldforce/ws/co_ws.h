@@ -22,8 +22,10 @@ CO_EXTERN_C_BEGIN
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-#define CO_WS_ERROR_PARSE_FAILED           -7001
-#define CO_WS_ERROR_RECEIVE_INVALID_DATA   -7002
+#define CO_WS_ERROR_INVALID_FRAME          -7001
+#define CO_WS_ERROR_INVALID_RESPONSE       -7002
+#define CO_WS_ERROR_DATA_TOO_BIG           -7003
+#define CO_WS_ERROR_OUT_OF_MEMORY          -7004
 
 #define CO_HTTP_HEADER_SEC_WS_KEY          "Sec-WebSocket-Key"
 #define CO_HTTP_HEADER_SEC_WS_EXTENSIONS   "Sec-WebSocket-Extensions"
@@ -32,8 +34,6 @@ CO_EXTERN_C_BEGIN
 #define CO_HTTP_HEADER_SEC_WS_VERSION      "Sec-WebSocket-Version"
 
 #define CO_WS_PARSE_COMPLETE      0
-#define CO_WS_PARSE_ERROR         -1
-#define CO_WS_PARSE_DATA_TOO_BIG  -2
 #define CO_WS_PARSE_MORE_DATA     1
 
 //---------------------------------------------------------------------------//

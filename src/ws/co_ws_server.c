@@ -98,7 +98,7 @@ co_ws_server_on_receive_ready(
             co_http_request_destroy(request);
 
             co_ws_client_on_frame(
-                thread, client, NULL, CO_WS_ERROR_PARSE_FAILED);
+                thread, client, NULL, result);
 
             return;
         }

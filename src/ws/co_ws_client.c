@@ -86,6 +86,17 @@ co_ws_client_on_frame(
     int error_code
 )
 {
+    if (error_code == CO_WS_ERROR_DATA_TOO_BIG)
+    {
+        co_ws_send_close(client,
+            CO_WS_CLOSE_REASON_DATA_SIZE_TOO_BIG, NULL);
+    }
+    else if (error_code != 0)
+    {
+        co_ws_send_close(client,
+            CO_WS_CLOSE_REASON_PROTOCOL_ERROR, NULL);
+    }
+
     if (client->on_receive != NULL)
     {
         client->on_receive(
@@ -234,14 +245,14 @@ co_ws_client_on_receive_ready(
                     co_http_response_destroy(response);
 
                     handler(thread, client, NULL,
-                        CO_WS_ERROR_RECEIVE_INVALID_DATA);
+                        CO_WS_ERROR_INVALID_RESPONSE);
 
                     return;
                 }
             }
 
             co_ws_client_on_frame(
-                thread, client, NULL, CO_WS_ERROR_PARSE_FAILED);
+                thread, client, NULL, result);
 
             return;
         }
@@ -691,7 +702,7 @@ co_ws_set_close_handler(
 }
 
 void
-co_ws_default_receive(
+co_ws_default_handler(
     co_ws_client_t* client,
     const co_ws_frame_t* frame
 )

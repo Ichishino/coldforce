@@ -11,6 +11,7 @@
 #include <coldforce/coldforce_http.h>
 #include <coldforce/coldforce_http2.h>
 
+#include <coldforce/ws/co_ws_config.h>
 #include <coldforce/ws/co_ws_frame.h>
 #include <coldforce/ws/co_ws_client.h>
 #include <coldforce/ws/co_ws_server.h>

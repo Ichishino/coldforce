@@ -67,55 +67,60 @@ void on_my_http2_server_push_request(
     const co_http2_header_t* request_header, const co_http2_data_st* receive_data)
 {
     (void)self;
-    (void)http2_client;
     (void)request_header;
     (void)receive_data;
 
-    const char* authority = "127.0.0.1:9443";
+    const co_http2_settings_st* settings =
+        co_http2_get_remote_settings(http2_client);
 
-    //-----------------------------------------------------------------------//
-    // push "/test.css"
-    //-----------------------------------------------------------------------//
+    if (settings->enable_push == 1)
+    {
+        const char* authority = "127.0.0.1:9443";
 
-    // push request
+        //-----------------------------------------------------------------------//
+        // push "/test.css"
+        //-----------------------------------------------------------------------//
 
-    co_http2_header_t* request_header_1 = co_http2_header_create_request("GET", "/test.css");
-    co_http2_header_set_authority(request_header_1, authority);
-    
-    co_http2_stream_t* response_stream_1 =
-        co_http2_stream_send_server_push_request(stream, request_header_1);
+        // push request
 
-    // push response
+        co_http2_header_t* request_header_1 = co_http2_header_create_request("GET", "/test.css");
+        co_http2_header_set_authority(request_header_1, authority);
 
-    co_http2_header_t* response_header_1 = co_http2_header_create_response(200);
+        co_http2_stream_t* response_stream_1 =
+            co_http2_stream_send_server_push_request(stream, request_header_1);
 
-    const char* response_content_1 = "h1{ font-size:20px; }";
-    uint32_t response_content_size_1 = (uint32_t)strlen(response_content_1);
+        // push response
 
-    co_http2_stream_send_header(response_stream_1, false, response_header_1);
-    co_http2_stream_send_data(response_stream_1, true, response_content_1, response_content_size_1);
+        co_http2_header_t* response_header_1 = co_http2_header_create_response(200);
 
-    //-----------------------------------------------------------------------//
-    // push "/test.js"
-    //-----------------------------------------------------------------------//
+        const char* response_content_1 = "h1{ font-size:20px; }";
+        uint32_t response_content_size_1 = (uint32_t)strlen(response_content_1);
 
-    // push request
+        co_http2_stream_send_header(response_stream_1, false, response_header_1);
+        co_http2_stream_send_data(response_stream_1, true, response_content_1, response_content_size_1);
 
-    co_http2_header_t* request_header_2 = co_http2_header_create_request("GET", "/test.js");
-    co_http2_header_set_authority(request_header_2, authority);
+        //-----------------------------------------------------------------------//
+        // push "/test.js"
+        //-----------------------------------------------------------------------//
 
-    co_http2_stream_t* response_stream_2 =
-        co_http2_stream_send_server_push_request(stream, request_header_2);
+        // push request
 
-    // push response
+        co_http2_header_t* request_header_2 = co_http2_header_create_request("GET", "/test.js");
+        co_http2_header_set_authority(request_header_2, authority);
 
-    co_http2_header_t* response_header_2 = co_http2_header_create_response(200);
+        co_http2_stream_t* response_stream_2 =
+            co_http2_stream_send_server_push_request(stream, request_header_2);
 
-    const char* response_content_2 = "document.write('Hello !!');";
-    uint32_t response_content_size_2 = (uint32_t)strlen(response_content_2);
+        // push response
 
-    co_http2_stream_send_header(response_stream_2, false, response_header_2);
-    co_http2_stream_send_data(response_stream_2, true, response_content_2, response_content_size_2);
+        co_http2_header_t* response_header_2 = co_http2_header_create_response(200);
+
+        const char* response_content_2 = "document.write('Hello !!');";
+        uint32_t response_content_size_2 = (uint32_t)strlen(response_content_2);
+
+        co_http2_stream_send_header(response_stream_2, false, response_header_2);
+        co_http2_stream_send_data(response_stream_2, true, response_content_2, response_content_size_2);
+    }
 
     //-----------------------------------------------------------------------//
     // response "/serverpush"

@@ -124,8 +124,5 @@
     <ClCompile Include="..\..\..\src\net\co_net_win.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\net\co_net_selector_linux.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
 </Project>

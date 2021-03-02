@@ -3,6 +3,7 @@
 #include <coldforce/net/co_byte_order.h>
 
 #include <coldforce/ws/co_ws_frame.h>
+#include <coldforce/ws/co_ws_config.h>
 
 //---------------------------------------------------------------------------//
 // websocket frame
@@ -30,7 +31,7 @@ co_ws_frame_deserialize(
 
     if (frame->header.opcode > 0x0f)
     {
-        return CO_WS_PARSE_ERROR;
+        return CO_WS_ERROR_INVALID_FRAME;
     }
 
     frame->header.payload_size = 0;
@@ -103,9 +104,11 @@ co_ws_frame_deserialize(
         return CO_WS_PARSE_MORE_DATA;
     }
 
-    if (frame->header.payload_size > SIZE_MAX)
+    if ((frame->header.payload_size >
+            co_ws_config_get_max_payload_size()) ||
+        (frame->header.payload_size > SIZE_MAX))
     {
-        return CO_WS_PARSE_DATA_TOO_BIG;
+        return CO_WS_ERROR_DATA_TOO_BIG;
     }
     else if (frame->header.payload_size > 0)
     {
@@ -115,7 +118,7 @@ co_ws_frame_deserialize(
 
         if (frame->payload_data == NULL)
         {
-            return CO_WS_PARSE_ERROR;
+            return CO_WS_ERROR_OUT_OF_MEMORY;
         }
 
         co_byte_array_get(data, temp_index,
