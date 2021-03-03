@@ -100,7 +100,7 @@ co_http_header_deserialize(
         if (co_http_header_get_field_count(header) >
             max_header_field_count)
         {
-            return CO_HTTP_ERROR_TOO_MANY_HEADER_FIELDS;
+            return CO_HTTP_ERROR_HEADER_FIELDS_TOO_MANY;
         }
 
         const char* temp_data = &data_ptr[(*index)];
@@ -113,7 +113,7 @@ co_http_header_deserialize(
         {
             if (temp_size > max_header_line_size)
             {
-                return CO_HTTP_ERROR_TOO_LONG_HEADER_LINE;
+                return CO_HTTP_ERROR_HEADER_LINE_TOO_LONG;
             }
             else
             {
@@ -164,7 +164,7 @@ co_http_header_deserialize(
 
         if (line_length > max_header_line_size)
         {
-            return CO_HTTP_ERROR_TOO_LONG_HEADER_LINE;
+            return CO_HTTP_ERROR_HEADER_LINE_TOO_LONG;
         }
 
         const char* colon =

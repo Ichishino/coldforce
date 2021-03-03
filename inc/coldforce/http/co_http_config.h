@@ -12,9 +12,9 @@ CO_EXTERN_C_BEGIN
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-#define CO_HTTP_CONFIG_MAX_RECEIVE_HEADER_LINE_SIZE       8192
-#define CO_HTTP_CONFIG_MAX_RECEIVE_HEADER_FIELD_COUNT     1024
-#define CO_HTTP_CONFIG_MAX_RECEIVE_CONTENT_SIZE         SIZE_MAX
+#define CO_HTTP_CONFIG_DEFAULT_MAX_RECEIVE_HEADER_LINE_SIZE       8192
+#define CO_HTTP_CONFIG_DEFAULT_MAX_RECEIVE_HEADER_FIELD_COUNT     1024
+#define CO_HTTP_CONFIG_DEFAULT_MAX_RECEIVE_CONTENT_SIZE         SIZE_MAX
 
 typedef struct
 {

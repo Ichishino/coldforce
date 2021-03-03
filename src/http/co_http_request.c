@@ -54,7 +54,7 @@ co_http_request_deserialize(
     {
         if (data_size > max_header_line_size)
         {
-            return CO_HTTP_ERROR_TOO_LONG_HEADER_LINE;
+            return CO_HTTP_ERROR_HEADER_LINE_TOO_LONG;
         }
         else
         {
@@ -66,7 +66,7 @@ co_http_request_deserialize(
 
     if (length > max_header_line_size)
     {
-        return CO_HTTP_ERROR_TOO_LONG_HEADER_LINE;
+        return CO_HTTP_ERROR_HEADER_LINE_TOO_LONG;
     }
 
     size_t item_length = 0;

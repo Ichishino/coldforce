@@ -94,7 +94,7 @@ co_http_receive_chunked_data(
 
             if (receiver->chunk_size > max_content_size)
             {
-                return CO_HTTP_ERROR_TOO_BIG_CONTENT;
+                return CO_HTTP_ERROR_CONTENT_TOO_BIG;
             }
 
             receiver->index +=
@@ -118,7 +118,7 @@ co_http_receive_chunked_data(
 
         if (receiver->chunk_receive_size > max_content_size)
         {
-            return CO_HTTP_ERROR_TOO_BIG_CONTENT;
+            return CO_HTTP_ERROR_CONTENT_TOO_BIG;
         }
 
         if (receiver->chunk_size <= receiver->chunk_receive_size)

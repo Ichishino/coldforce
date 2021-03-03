@@ -89,7 +89,7 @@ co_ws_client_on_frame(
     if (error_code == CO_WS_ERROR_DATA_TOO_BIG)
     {
         co_ws_send_close(client,
-            CO_WS_CLOSE_REASON_DATA_SIZE_TOO_BIG, NULL);
+            CO_WS_CLOSE_REASON_DATA_TOO_BIG, NULL);
     }
     else if (error_code != 0)
     {

@@ -105,7 +105,7 @@ co_ws_frame_deserialize(
     }
 
     if ((frame->header.payload_size >
-            co_ws_config_get_max_payload_size()) ||
+            co_ws_config_get_max_receive_payload_size()) ||
         (frame->header.payload_size > SIZE_MAX))
     {
         return CO_WS_ERROR_DATA_TOO_BIG;

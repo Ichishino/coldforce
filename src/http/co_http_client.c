@@ -415,7 +415,7 @@ co_http_client_on_receive_ready(
                         co_http_config_get_max_receive_content_size()))
                 {
                     co_http_client_on_resopnse(
-                        thread, client, CO_HTTP_ERROR_TOO_BIG_CONTENT);
+                        thread, client, CO_HTTP_ERROR_CONTENT_TOO_BIG);
 
                     return;
                 }
