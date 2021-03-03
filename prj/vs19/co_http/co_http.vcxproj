@@ -175,6 +175,7 @@
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\http\co_http_config.c" />
     <ClCompile Include="..\..\..\src\http\co_http_content_receiver.c" />
     <ClCompile Include="..\..\..\src\http\co_http_cookie.c" />
     <ClCompile Include="..\..\..\src\http\co_http_header.c" />
@@ -204,6 +205,7 @@
     <ClInclude Include="..\..\..\inc\coldforce\http\co_base64.h" />
     <ClInclude Include="..\..\..\inc\coldforce\http\co_http.h" />
     <ClInclude Include="..\..\..\inc\coldforce\http\co_http_client.h" />
+    <ClInclude Include="..\..\..\inc\coldforce\http\co_http_config.h" />
     <ClInclude Include="..\..\..\inc\coldforce\http\co_http_content_receiver.h" />
     <ClInclude Include="..\..\..\inc\coldforce\http\co_http_cookie.h" />
     <ClInclude Include="..\..\..\inc\coldforce\http\co_http_header.h" />

@@ -6,6 +6,7 @@
 #include <coldforce/http/co_http_string_list.h>
 #include <coldforce/http/co_http_server.h>
 #include <coldforce/http/co_http_client.h>
+#include <coldforce/http/co_http_config.h>
 
 //---------------------------------------------------------------------------//
 // http server
@@ -198,6 +199,16 @@ co_http_server_on_receive_ready(
                     return;
                 }
 
+                if ((!client->content_receiver.chunked) &&
+                    (client->content_receiver.size >
+                        co_http_config_get_max_receive_content_size()))
+                {
+                    co_http_server_on_request(
+                        thread, client, CO_HTTP_ERROR_TOO_BIG_CONTENT);
+
+                    return;
+                }
+
                 if (!co_http_server_on_progress(thread, client))
                 {
                     return;
@@ -212,8 +223,7 @@ co_http_server_on_receive_ready(
             }
             else
             {
-                co_http_server_on_request(
-                    thread, client, CO_HTTP_ERROR_PARSE_HEADER);
+                co_http_server_on_request(thread, client, result);
 
                 return;
             }
@@ -252,8 +262,7 @@ co_http_server_on_receive_ready(
         }
         else
         {
-            co_http_server_on_request(
-                thread, client, CO_HTTP_ERROR_PARSE_CONTENT);
+            co_http_server_on_request(thread, client, result);
 
             return;
         }

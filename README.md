@@ -35,7 +35,7 @@ Visual Studio のプロジェクトファイル (prj/vs19/coldforce.sln) を使�
 CMake を使用してください。
 ```shellsession
 $ cd build
-$ cmake ../
+$ cmake ..
 $ make
 ```
 * macOS  
@@ -84,8 +84,8 @@ int main(int argc, char* argv[])
 * 詳細は [examples](https://github.com/Ichishino/coldforce/tree/master/examples) を参照してください。
 
 ### 今後の予定
-* WebSocket (over HTTP/2)
 * DTLS
-* HTTP/3
+* QUIC?
+* HTTP/3?
 * WebTransport?
 * その他

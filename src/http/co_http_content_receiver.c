@@ -3,6 +3,7 @@
 
 #include <coldforce/http/co_http_content_receiver.h>
 #include <coldforce/http/co_http_string_list.h>
+#include <coldforce/http/co_http_config.h>
 
 //---------------------------------------------------------------------------//
 // http content receiver
@@ -68,6 +69,9 @@ co_http_receive_chunked_data(
 
     size_t receive_size = data_size - receiver->index;
 
+    const size_t max_content_size =
+        co_http_config_get_max_receive_content_size();
+
     while (receive_size > 0)
     {
         if (receiver->chunk_size == 0)
@@ -88,6 +92,11 @@ co_http_receive_chunked_data(
             receiver->chunk_size =
                 co_string_to_size_t(&data_ptr[receiver->index], NULL, 16);
 
+            if (receiver->chunk_size > max_content_size)
+            {
+                return CO_HTTP_ERROR_TOO_BIG_CONTENT;
+            }
+
             receiver->index +=
                 (new_line - &data_ptr[receiver->index]) + CO_HTTP_CRLF_LENGTH;
             receive_size = data_size - receiver->index;
@@ -106,6 +115,11 @@ co_http_receive_chunked_data(
         }
 
         receiver->chunk_receive_size += content_size;
+
+        if (receiver->chunk_receive_size > max_content_size)
+        {
+            return CO_HTTP_ERROR_TOO_BIG_CONTENT;
+        }
 
         if (receiver->chunk_size <= receiver->chunk_receive_size)
         {

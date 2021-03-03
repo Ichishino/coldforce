@@ -2,6 +2,7 @@
 #include <coldforce/core/co_string.h>
 
 #include <coldforce/http/co_http_header.h>
+#include <coldforce/http/co_http_config.h>
 
 #ifndef CO_OS_WIN
 #include <errno.h>
@@ -89,8 +90,19 @@ co_http_header_deserialize(
         (const char*)co_byte_array_get_const_ptr(data, 0);
     const size_t data_size = co_byte_array_get_count(data);
 
+    const size_t max_header_line_size =
+        co_http_config_get_max_receive_header_line_size();
+    const size_t max_header_field_count =
+        co_http_config_get_max_receive_header_field_count();
+
     for (;;)
     {
+        if (co_http_header_get_field_count(header) >
+            max_header_field_count)
+        {
+            return CO_HTTP_ERROR_TOO_MANY_HEADER_FIELDS;
+        }
+
         const char* temp_data = &data_ptr[(*index)];
         size_t temp_size = data_size - (*index);
 
@@ -99,7 +111,14 @@ co_http_header_deserialize(
 
         if (new_line == NULL)
         {
-            return CO_HTTP_PARSE_MORE_DATA;
+            if (temp_size > max_header_line_size)
+            {
+                return CO_HTTP_ERROR_TOO_LONG_HEADER_LINE;
+            }
+            else
+            {
+                return CO_HTTP_PARSE_MORE_DATA;
+            }
         }
 
         if (new_line == temp_data)
@@ -141,8 +160,15 @@ co_http_header_deserialize(
             return CO_HTTP_PARSE_COMPLETE;
         }
 
+        size_t line_length = (new_line - temp_data);
+
+        if (line_length > max_header_line_size)
+        {
+            return CO_HTTP_ERROR_TOO_LONG_HEADER_LINE;
+        }
+
         const char* colon =
-            co_string_find_n(temp_data, CO_HTTP_COLON, (new_line - temp_data));
+            co_string_find_n(temp_data, CO_HTTP_COLON, line_length);
 
         if (colon == NULL)
         {
@@ -174,7 +200,7 @@ co_http_header_deserialize(
 
         co_http_header_add_field_ptr(header, name, value);
 
-        (*index) += (new_line - temp_data) + CO_HTTP_CRLF_LENGTH;
+        (*index) += line_length + CO_HTTP_CRLF_LENGTH;
     }
 }
 

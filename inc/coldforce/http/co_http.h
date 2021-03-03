@@ -62,14 +62,17 @@ CO_EXTERN_C_BEGIN
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-#define CO_HTTP_ERROR_CONNECT_FAILED        -5001
-#define CO_HTTP_ERROR_TLS_HANDSHAKE_FAILED  -5002
-#define CO_HTTP_ERROR_CONNECTION_CLOSED     -5003
-#define CO_HTTP_ERROR_OUT_OF_MEMORY         -5004
-#define CO_HTTP_ERROR_PARSE_HEADER          -5005
-#define CO_HTTP_ERROR_PARSE_CONTENT         -5006
-#define CO_HTTP_ERROR_CANCEL                -5007
-#define CO_HTTP_ERROR_PROTOCOL_ERROR        -5008
+#define CO_HTTP_ERROR_CONNECT_FAILED              -5001
+#define CO_HTTP_ERROR_TLS_HANDSHAKE_FAILED        -5002
+#define CO_HTTP_ERROR_CONNECTION_CLOSED           -5003
+#define CO_HTTP_ERROR_OUT_OF_MEMORY               -5004
+#define CO_HTTP_ERROR_PARSE_HEADER                -5005
+#define CO_HTTP_ERROR_PARSE_CONTENT               -5006
+#define CO_HTTP_ERROR_TOO_BIG_CONTENT             -5007
+#define CO_HTTP_ERROR_TOO_LONG_HEADER_LINE        -5008
+#define CO_HTTP_ERROR_TOO_MANY_HEADER_FIELDS      -5009
+#define CO_HTTP_ERROR_CANCEL                      -5010
+#define CO_HTTP_ERROR_PROTOCOL_ERROR              -5011
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

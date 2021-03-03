@@ -2,6 +2,7 @@
 #include <coldforce/core/co_string.h>
 
 #include <coldforce/http/co_http_request.h>
+#include <coldforce/http/co_http_config.h>
 
 //---------------------------------------------------------------------------//
 // http request
@@ -46,12 +47,28 @@ co_http_request_deserialize(
     const char* new_line =
         co_string_find_n(data_ptr, CO_HTTP_CRLF, data_size);
 
+    const size_t max_header_line_size =
+        co_http_config_get_max_receive_header_line_size();
+
     if (new_line == NULL)
     {
-        return CO_HTTP_PARSE_ERROR;
+        if (data_size > max_header_line_size)
+        {
+            return CO_HTTP_ERROR_TOO_LONG_HEADER_LINE;
+        }
+        else
+        {
+            return CO_HTTP_PARSE_MORE_DATA;
+        }
     }
 
     size_t length = (new_line - data_ptr);
+
+    if (length > max_header_line_size)
+    {
+        return CO_HTTP_ERROR_TOO_LONG_HEADER_LINE;
+    }
+
     size_t item_length = 0;
     size_t temp_index = 0;
 

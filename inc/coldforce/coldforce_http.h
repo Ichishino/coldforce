@@ -9,6 +9,7 @@
 #include <coldforce/coldforce_net.h>
 #include <coldforce/coldforce_tls.h>
 
+#include <coldforce/http/co_http_config.h>
 #include <coldforce/http/co_http_url.h>
 #include <coldforce/http/co_http_string_list.h>
 #include <coldforce/http/co_http_cookie.h>
