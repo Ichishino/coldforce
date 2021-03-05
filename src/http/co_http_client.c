@@ -53,9 +53,6 @@ co_http_client_setup(
     client->on_receive = NULL;
     client->on_progress = NULL;
     client->on_close = NULL;
-
-    client->upgrade_ctx = NULL;
-    client->upgrade_map = NULL;
 }
 
 void
@@ -81,15 +78,6 @@ co_http_client_cleanup(
 
         co_http_response_destroy(client->response);
         client->response = NULL;
-
-        if (client->upgrade_ctx != NULL)
-        {
-            co_mem_free(client->upgrade_ctx);
-            client->upgrade_ctx = NULL;
-        }
-
-        co_map_destroy(client->upgrade_map);
-        client->upgrade_map = NULL;
     }
 }
 
@@ -186,34 +174,6 @@ co_http_client_send_all_requests(
 }
 
 static void
-co_http_client_on_upgrade_response(
-    co_thread_t* thread,
-    co_http_client_t* client,
-    co_http_request_t* request,
-    int error_code
-)
-{
-    const co_map_data_st* map_data =
-        co_map_get(client->upgrade_map,
-            (uintptr_t)client->upgrade_ctx->key);
-
-    co_http_upgrade_response_fn handler =
-        (co_http_upgrade_response_fn)map_data->value;
-
-    client->request = request;
-
-    handler(thread, client, error_code);
-
-    client->request = NULL;
-
-    if (client->upgrade_ctx != NULL)
-    {
-        co_mem_free(client->upgrade_ctx);
-        client->upgrade_ctx = NULL;
-    }
-}
-
-static void
 co_http_client_on_resopnse(
     co_thread_t* thread,
     co_http_client_t* client,
@@ -244,14 +204,6 @@ co_http_client_on_resopnse(
     if (request == NULL)
     {
         co_http_client_clear_request_queue(client);
-
-        return;
-    }
-
-    if (client->upgrade_ctx != NULL)
-    {
-        co_http_client_on_upgrade_response(
-            thread, client, request, error_code);
 
         return;
     }
@@ -389,16 +341,6 @@ co_http_client_on_receive_ready(
 
             if (result == CO_HTTP_PARSE_COMPLETE)
             {
-                if (client->upgrade_ctx != NULL)
-                {
-                    int error_code =
-                        (client->response->status_code == 101) ? 0 : -1;
-
-                    co_http_client_on_resopnse(thread, client, error_code);
-
-                    return;
-                }
-
                 co_http_content_receiver_clear(&client->content_receiver);
 
                 if (!co_http_start_receive_content(

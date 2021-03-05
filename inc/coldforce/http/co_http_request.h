@@ -29,8 +29,6 @@ typedef struct
 
 } co_http_request_t;
 
-bool co_http_request_is_connection_preface(const co_http_request_t* request);
-
 CO_HTTP_API void co_http_request_serialize(
     const co_http_request_t* request, co_byte_array_t* buffer);
 CO_HTTP_API int co_http_request_deserialize(

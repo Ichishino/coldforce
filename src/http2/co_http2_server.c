@@ -5,6 +5,7 @@
 #include <coldforce/http2/co_http2_server.h>
 #include <coldforce/http2/co_http2_client.h>
 #include <coldforce/http2/co_http2_stream.h>
+#include <coldforce/http2/co_http2_http_extension.h>
 
 //---------------------------------------------------------------------------//
 // http2 server
@@ -42,11 +43,6 @@ co_http2_server_on_upgrade_request(
         }
     }
 
-    if (client->tcp_client->sock.tls != NULL)
-    {
-        return false;
-    }
-
     co_http_request_t* request = co_http_request_create();
 
     if (co_http_request_deserialize(
@@ -75,20 +71,28 @@ co_http2_server_on_upgrade_request(
         return false;
     }
 
-    bool result = co_http2_set_upgrade_settings(
+    co_http_request_destroy(request);
+
+    co_http2_set_upgrade_settings(
         http2_settings, strlen(http2_settings),
         &client->remote_settings);
 
-    co_http2_send_upgrade_response(client, result);
+    co_http_response_t* response =
+        co_http_response_create_http2_upgrade(101, "Switching Protocols");
 
-    co_http_request_destroy(request);
+    co_byte_array_t* buffer = co_byte_array_create();
+    co_http_response_serialize(response, buffer);
 
-    if (result)
-    {
-        co_http2_send_initial_settings(client);
-    }
+    co_http2_send_raw_data(client,
+        co_byte_array_get_ptr(buffer, 0),
+        co_byte_array_get_count(buffer));
 
-    return result;
+    co_byte_array_destroy(buffer);
+    co_http_response_destroy(response);
+
+    co_http2_send_initial_settings(client);
+
+    return true;
 }
 
 void
@@ -270,20 +274,5 @@ co_http2_send_ping(
 
     return co_http2_stream_send_frame(
         client->system_stream, ping_frame);
-}
-
-//---------------------------------------------------------------------------//
-//---------------------------------------------------------------------------//
-
-void
-co_http_set_http2_upgrade_request_handler(
-    co_http_client_t* client,
-    co_http_upgrade_request_fn handler
-)
-{
-    co_http_set_upgrade_handler(
-        client, CO_HTTP_UPGRADE_CONNECTION_PREFACE, (void*)handler);
-    co_http_set_upgrade_handler(
-        client, CO_HTTP2_UPGRADE, (void*)handler);
 }
 

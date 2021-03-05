@@ -90,12 +90,24 @@ co_http_request_deserialize(
         (strcmp(method, "PUT") != 0) &&
         (strcmp(method, "DELETE") != 0) &&
         (strcmp(method, "PATCH") != 0) &&
-        (strcmp(method, "PRI") != 0) &&
         (strcmp(method, "HEAD") != 0) &&
         (strcmp(method, "OPTIONS") != 0) &&
         (strcmp(method, "CONNECT") != 0) &&
         (strcmp(method, "TRACE") != 0))
     {
+        if ((data_size >= 24) &&
+            (memcmp(&data_ptr[temp_index],
+                "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n", 24) == 0))
+        {
+            request->method = method;
+            request->url = co_http_url_create("*");
+            request->version = co_string_duplicate("HTTP/2.0");
+
+            (*index) += 24;
+
+            return CO_HTTP_PARSE_COMPLETE;
+        }
+
         co_string_destroy(method);
 
         return CO_HTTP_PARSE_ERROR;
@@ -143,38 +155,6 @@ co_http_request_deserialize(
     (*index) += (new_line - data_ptr) + CO_HTTP_CRLF_LENGTH;
 
     return co_http_message_deserialize_header(&request->message, data, index);
-}
-
-bool
-co_http_request_is_connection_preface(
-    const co_http_request_t* request
-)
-{
-    const char* method = co_http_request_get_method(request);
-
-    if ((method == NULL) ||
-        (co_string_case_compare(method, "PRI") != 0))
-    {
-        return false;
-    }
-
-    const char* path = co_http_request_get_path(request);
-
-    if ((path == NULL) ||
-        (co_string_case_compare(path, "*") != 0))
-    {
-        return false;
-    }
-
-    const char* version = co_http_request_get_version(request);
-
-    if ((version == NULL) ||
-        (co_string_case_compare(version, "HTTP/2.0") != 0))
-    {
-        return false;
-    }
-
-    return true;
 }
 
 void

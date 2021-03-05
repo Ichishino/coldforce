@@ -38,6 +38,9 @@
     <ClInclude Include="..\..\..\inc\coldforce\http2\co_http2_server.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\inc\coldforce\http2\co_http2_http_extension.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\http2\co_http2.c">
@@ -62,6 +65,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\http2\co_http2_server.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\http2\co_http2_http_extension.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

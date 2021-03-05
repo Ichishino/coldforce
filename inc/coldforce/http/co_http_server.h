@@ -17,9 +17,6 @@ CO_EXTERN_C_BEGIN
 
 struct co_http_server_t;
 
-typedef bool(*co_http_upgrade_request_fn)(
-    void* self, struct co_http_client_t* client);
-
 typedef struct
 {
     void (*destroy)(co_tcp_server_t*);

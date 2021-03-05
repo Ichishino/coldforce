@@ -1,7 +1,6 @@
 #ifndef CO_HTTP_CLIENT_H_INCLUDED
 #define CO_HTTP_CLIENT_H_INCLUDED
 
-#include <coldforce/core/co_map.h>
 #include <coldforce/core/co_byte_array.h>
 
 #include <coldforce/net/co_tcp_client.h>
@@ -38,9 +37,6 @@ typedef bool(*co_http_progress_fn)(
 typedef void(*co_http_close_fn)(
     void* self, struct co_http_client_t* client);
 
-typedef void(*co_http_upgrade_response_fn)(
-    void* self, struct co_http_client_t* client, int error_code);
-
 typedef struct
 {
     void (*destroy)(co_tcp_client_t*);
@@ -51,13 +47,6 @@ typedef struct
     ssize_t (*receive_all)(co_tcp_client_t*, co_byte_array_t*);
 
 } co_tcp_client_module_t;
-
-typedef struct
-{
-    bool server;
-    const char* key;
-
-} co_http_upgrade_ctx_t;
 
 typedef struct co_http_client_t
 {
@@ -80,15 +69,9 @@ typedef struct co_http_client_t
     co_http_progress_fn on_progress;
     co_http_close_fn on_close;
 
-    co_map_t* upgrade_map;
-    co_http_upgrade_ctx_t* upgrade_ctx;
-
 } co_http_client_t;
 
 void co_http_client_setup(co_http_client_t* client);
-
-CO_HTTP_API void co_http_set_upgrade_handler(
-    co_http_client_t* client, const char* key, void* handler);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

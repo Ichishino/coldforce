@@ -96,100 +96,6 @@ co_http_server_on_receive_ready(
 
             if (result == CO_HTTP_PARSE_COMPLETE)
             {
-                if (co_http_request_is_connection_preface(client->request))
-                {
-                    if (data_size < (client->receive_data_index + 6))
-                    {
-                        co_http_server_on_request(
-                            thread, client, CO_HTTP_ERROR_PARSE_HEADER);
-
-                        return;
-                    }
-
-                    client->receive_data_index += 6;
-
-                    if (client->upgrade_map == NULL)
-                    {
-                        co_http_server_on_request(
-                            thread, client, CO_HTTP_ERROR_PROTOCOL_ERROR);
-
-                        return;
-                    }
-
-                    const co_map_data_st* map_data =
-                        co_map_get(client->upgrade_map,
-                            (uintptr_t)CO_HTTP_UPGRADE_CONNECTION_PREFACE);
-
-                    if (map_data == NULL)
-                    {
-                        co_http_server_on_request(
-                            thread, client, CO_HTTP_ERROR_PROTOCOL_ERROR);
-
-                        return;
-                    }
-
-                    co_http_upgrade_request_fn handler =
-                        (co_http_upgrade_request_fn)map_data->value;
-
-                    client->upgrade_ctx =
-                        (co_http_upgrade_ctx_t*)co_mem_alloc(
-                            sizeof(co_http_upgrade_ctx_t));
-                    client->upgrade_ctx->server = true;
-                    client->upgrade_ctx->key = CO_HTTP_UPGRADE_CONNECTION_PREFACE;
-
-                    if (handler(thread, client))
-                    {
-                        tcp_client->on_receive_ready(thread, tcp_client);
-                    }
-
-                    return;
-                }
-                else if (
-                    (client->tcp_client->sock.tls == NULL) &&
-                    (client->upgrade_map != NULL))
-                {
-                    const co_http_header_t* request_header =
-                        co_http_request_get_header(client->request);
-                    const char* upgrade = co_http_header_get_field(
-                        request_header, CO_HTTP_HEADER_UPGRADE);
-
-                    if (upgrade != NULL)
-                    {
-                        co_http_string_item_st items[8];
-                        size_t item_count =
-                            co_http_string_list_parse(upgrade, items, 8);
-
-                        co_map_iterator_t it;
-                        co_map_iterator_init(client->upgrade_map, &it);
-
-                        while (co_map_iterator_has_next(&it))
-                        {
-                            const co_map_data_st* map_data =
-                                co_map_iterator_get_next(&it);
-                            const char* key = (const char*)map_data->key;
-
-                            if (co_http_string_list_contains(items, item_count, key))
-                            {
-                                co_http_upgrade_request_fn handler =
-                                    (co_http_upgrade_request_fn)map_data->value;
-
-                                client->upgrade_ctx =
-                                    (co_http_upgrade_ctx_t*)co_mem_alloc(
-                                        sizeof(co_http_upgrade_ctx_t));
-                                client->upgrade_ctx->server = true;
-                                client->upgrade_ctx->key = key;
-
-                                if (handler(thread, client))
-                                {
-                                    tcp_client->on_receive_ready(thread, tcp_client);
-                                }
-
-                                return;
-                            }
-                        }
-                    }
-                }
-
                 co_http_content_receiver_clear(&client->content_receiver);
 
                 if (!co_http_start_receive_content(
@@ -291,31 +197,6 @@ co_http_server_on_close(
     {
         client->on_close(thread, client);
     }
-}
-
-//---------------------------------------------------------------------------//
-//---------------------------------------------------------------------------//
-
-void
-co_http_set_upgrade_handler(
-    co_http_client_t* client,
-    const char* key,
-    void* handler
-)
-{
-    if (client->upgrade_map == NULL)
-    {
-        co_map_ctx_st ctx = { 0 };
-
-        ctx.hash_key = (co_item_hash_fn)co_string_hash;
-        ctx.free_key = (co_item_free_fn)co_string_destroy;
-        ctx.duplicate_key = (co_item_duplicate_fn)co_string_duplicate;
-        ctx.compare_keys = (co_item_compare_fn)co_string_case_compare;
-
-        client->upgrade_map = co_map_create(&ctx);
-    }
-
-    co_map_set(client->upgrade_map, (uintptr_t)key, (uintptr_t)handler);
 }
 
 //---------------------------------------------------------------------------//

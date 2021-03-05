@@ -415,14 +415,16 @@ co_http2_client_on_upgrade_response(
 
         if (status_code == 101)
         {
-            handler(thread, client, 0);
+            handler(thread, client, response, 0);
         }
         else
         {
-            handler(thread, client,
+            handler(thread, client, response,
                 CO_HTTP2_ERROR_UPGRADE_FAILED);
         }
     }
+
+    co_http_response_destroy(response);
 
     return true;
 }
@@ -483,17 +485,20 @@ co_http2_client_on_tcp_connect_and_upgrade(
     }
     else
     {
+        co_byte_array_destroy(client->upgrade_request_data);
+        client->upgrade_request_data = NULL;
+
         if (client->on_upgrade != NULL)
         {
-            co_http2_connect_fn handler = client->on_upgrade;
+            co_http2_upgrade_fn handler = client->on_upgrade;
             client->on_upgrade = NULL;
 
-            handler(thread, client, error_code);
+            handler(thread, client, NULL, error_code);
         }
     }
 }
 
-static void
+void
 co_http2_client_on_tcp_receive_ready(
     co_thread_t* thread,
     co_tcp_client_t* tcp_client
@@ -645,43 +650,6 @@ co_http2_set_upgrade_settings(
     co_mem_free(settings_data);
 
     return result;
-}
-
-void
-co_http2_send_upgrade_response(
-    co_http2_client_t* client,
-    bool result
-)
-{
-    co_http_response_t* response = NULL;
-
-    if (result)
-    {
-        response = co_http_response_create_with(101, "Switching Protocols");
-
-        co_http_header_t* response_header =
-            co_http_response_get_header(response);
-        co_http_header_add_field(response_header,
-            CO_HTTP_HEADER_UPGRADE, CO_HTTP2_UPGRADE);
-        co_http_header_add_field(response_header,
-            CO_HTTP_HEADER_CONNECTION, CO_HTTP_HEADER_UPGRADE);
-    }
-    else
-    {
-        response = co_http_response_create_with(400, "Bad Request");
-    }
-
-    co_http_response_set_version(response, CO_HTTP_VERSION_1_1);
-
-    co_byte_array_t* buffer = co_byte_array_create();
-    co_http_response_serialize(response, buffer);
-
-    co_http2_send_raw_data(client,
-        co_byte_array_get_ptr(buffer, 0),
-        co_byte_array_get_count(buffer));
-
-    co_byte_array_destroy(buffer);
-    co_http_response_destroy(response);
 }
 
 //---------------------------------------------------------------------------//
@@ -905,72 +873,17 @@ co_http2_connect(
 bool
 co_http2_connect_and_request_upgrade(
     co_http2_client_t* client,
-    const char* path,
-    const co_http2_setting_param_st* param,
-    uint16_t param_count,
+    co_http_request_t* upgrade_request,
     co_http2_upgrade_fn handler
 )
 {
     client->on_upgrade = handler;
     client->upgrade_request_data = co_byte_array_create();
 
-    char* b64_str = NULL;
-    size_t b64_str_length = 0;
-
-    if (param_count > 0)
-    {
-        co_byte_array_t* buffer = co_byte_array_create();
-
-        for (uint16_t param_index = 0;
-            param_index < param_count; ++param_index)
-        {
-            uint16_t u16 =
-                co_byte_order_16_host_to_network(
-                    param[param_index].identifier);
-            co_byte_array_add(
-                buffer, &u16, sizeof(uint16_t));
-
-            uint32_t u32 =
-                co_byte_order_32_host_to_network(
-                    param[param_index].value);
-            co_byte_array_add(
-                buffer, &u32, sizeof(uint32_t));
-        }
-
-        co_base64url_encode(
-            co_byte_array_get_const_ptr(buffer, 0),
-            co_byte_array_get_count(buffer),
-            &b64_str, &b64_str_length,
-            false);
-
-        co_byte_array_destroy(buffer);
-    }
-
-    co_http_request_t* request =
-        co_http_request_create_with("GET", path);
-    co_http_header_t* header =
-        co_http_request_get_header(request);
-
-    co_http_request_set_version(request, CO_HTTP_VERSION_1_1);
-
-    char* host_and_port =
-        co_http_url_create_host_and_port(client->base_url);
-
-    co_http_header_add_field_ptr(
-        header, co_string_duplicate(CO_HTTP_HEADER_HOST), host_and_port);
-
-    co_http_header_add_field(
-        header, CO_HTTP_HEADER_CONNECTION,
-        CO_HTTP_HEADER_UPGRADE", "CO_HTTP2_HEADER_SETTINGS);
-    co_http_header_add_field(
-        header, CO_HTTP_HEADER_UPGRADE,
-        CO_HTTP2_UPGRADE);
-    co_http_header_add_field_ptr(
-        header, co_string_duplicate(CO_HTTP2_HEADER_SETTINGS),
-        ((b64_str != NULL) ? b64_str : co_string_duplicate("")));
-
     co_http_request_serialize(
-        request, client->upgrade_request_data);
+        upgrade_request, client->upgrade_request_data);
+
+    co_http_request_destroy(upgrade_request);
 
     return client->module.connect(
         client->tcp_client,
@@ -1058,7 +971,7 @@ co_http2_set_close_stream_handler(
     client->on_close_stream = handler;
 }
 
-void
+bool
 co_http2_send_initial_settings(
     co_http2_client_t* client
 )
@@ -1130,16 +1043,19 @@ co_http2_send_initial_settings(
         co_http2_create_settings_frame(
             false, false, params, param_count);
 
-    co_http2_stream_send_frame(
+    bool result = co_http2_stream_send_frame(
         client->system_stream, frame);
 
-    if (client->local_settings.initial_window_size !=
-        CO_HTTP2_SETTING_DEFAULT_INITIAL_WINDOW_SIZE)
+    if (result &&
+        (client->local_settings.initial_window_size !=
+            CO_HTTP2_SETTING_DEFAULT_INITIAL_WINDOW_SIZE))
     {
-        co_http2_stream_send_window_update(
+        result = co_http2_stream_send_window_update(
             client->system_stream,
             client->local_settings.initial_window_size);
     }
+
+    return result;
 }
 
 void
@@ -1249,98 +1165,4 @@ co_http2_get_data(
 )
 {
     return co_tcp_get_data(client->tcp_client);
-}
-
-//---------------------------------------------------------------------------//
-//---------------------------------------------------------------------------//
-
-co_http2_client_t*
-co_http2_client_upgrade(
-    co_http_client_t* client
-)
-{
-    co_http2_client_t* new_client =
-        (co_http2_client_t*)co_mem_alloc(sizeof(co_http2_client_t));
-
-    if (new_client == NULL)
-    {
-        return NULL;
-    }
-
-    co_tcp_receive_fn receive_handler;
-    co_http2_settings_st* settings = NULL;
-    uint32_t new_stream_id = 0;
-
-    if (strcmp(client->upgrade_ctx->key,
-        CO_HTTP_UPGRADE_CONNECTION_PREFACE) == 0)
-    {
-        receive_handler =
-            (co_tcp_receive_fn)co_http2_server_on_tcp_receive_ready;
-    }
-    else
-    {
-        if (client->upgrade_ctx->server)
-        {
-            receive_handler =
-                (co_tcp_receive_fn)co_http2_server_on_tcp_receive_ready;
-
-            settings = &new_client->remote_settings;
-        }
-        else
-        {
-            new_stream_id = UINT32_MAX;
-
-            receive_handler =
-                (co_tcp_receive_fn)co_http2_client_on_tcp_receive_ready;
-
-            settings = &new_client->local_settings;
-        }
-    }
-
-    new_client->base_url = client->base_url;
-    client->base_url = NULL;
-
-    new_client->tcp_client = client->tcp_client;
-    client->tcp_client = NULL;
-
-    co_http2_client_setup(new_client);
-
-    co_byte_array_t* receive_data = new_client->receive_data;
-    new_client->receive_data = client->receive_data;
-    new_client->receive_data_index = client->receive_data_index;
-    client->receive_data = receive_data;
-
-    new_client->new_stream_id = new_stream_id;
-
-    if (settings != NULL)
-    {
-        const co_http_header_t* header =
-            co_http_request_get_header(client->request);
-        const char* http2_settings =
-            co_http_header_get_field(
-                header, CO_HTTP2_HEADER_SETTINGS);
-
-        bool result = false;
-
-        if (http2_settings != NULL)
-        {
-            result = co_http2_set_upgrade_settings(
-                http2_settings, strlen(http2_settings), settings);
-        }
-
-        if (client->upgrade_ctx->server)
-        {
-            co_http2_send_upgrade_response(new_client, result);
-        }
-    }
-
-    co_tcp_set_receive_handler(
-        new_client->tcp_client, receive_handler);
-    co_tcp_set_close_handler(
-        new_client->tcp_client,
-        (co_tcp_close_fn)co_http2_client_on_tcp_close);
-
-    co_http_client_destroy(client);
-
-    return new_client;
 }
