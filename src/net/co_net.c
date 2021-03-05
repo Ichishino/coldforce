@@ -25,7 +25,7 @@ co_net_setup(
     }
 #else
     signal(SIGPIPE, SIG_IGN);
-    srandom(time(NULL));
+    srandom((unsigned int)time(NULL));
 #endif
 
     return true;

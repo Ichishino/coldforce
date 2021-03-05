@@ -40,6 +40,7 @@
 		4A09F3F325AABEEB00AC987D /* co_net_worker.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = co_net_worker.c; path = ../../../src/net/co_net_worker.c; sourceTree = "<group>"; };
 		4A09FD3225AACB7000AC987D /* net */ = {isa = PBXFileReference; lastKnownFileType = folder; name = net; path = ../../../inc/coldforce/net; sourceTree = "<group>"; };
 		4A09FD3425AACB9400AC987D /* co_net_selector_mac.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = co_net_selector_mac.c; path = ../../../src/net/co_net_selector_mac.c; sourceTree = "<group>"; };
+		4A23C26225F2516200D3E910 /* common_config.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = common_config.xcconfig; path = ../common_config.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -56,6 +57,7 @@
 		4A09F3D225AABEA100AC987D = {
 			isa = PBXGroup;
 			children = (
+				4A23C26225F2516200D3E910 /* common_config.xcconfig */,
 				4A09FD3025AACB3900AC987D /* Source Files */,
 				4A09FD3125AACB4F00AC987D /* Header Files */,
 				4A09F3DC25AABEA100AC987D /* Products */,
@@ -298,10 +300,10 @@
 		};
 		4A09F3E025AABEA100AC987D /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4A23C26225F2516200D3E910 /* common_config.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				EXECUTABLE_PREFIX = lib;
-				HEADER_SEARCH_PATHS = "../../../inc/**";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 			};
@@ -309,10 +311,10 @@
 		};
 		4A09F3E125AABEA100AC987D /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4A23C26225F2516200D3E910 /* common_config.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				EXECUTABLE_PREFIX = lib;
-				HEADER_SEARCH_PATHS = "../../../inc/**";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 			};

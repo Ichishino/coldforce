@@ -7,22 +7,30 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		4ACE0B1925B5D24100674D6C /* co_tls.c in Sources */ = {isa = PBXBuildFile; fileRef = 4ACE0B1625B5D24000674D6C /* co_tls.c */; };
-		4ACE0B1A25B5D24100674D6C /* co_tls_tcp_client.c in Sources */ = {isa = PBXBuildFile; fileRef = 4ACE0B1725B5D24000674D6C /* co_tls_tcp_client.c */; };
-		4ACE0B1B25B5D24100674D6C /* co_tls_tcp_server.c in Sources */ = {isa = PBXBuildFile; fileRef = 4ACE0B1825B5D24100674D6C /* co_tls_tcp_server.c */; };
+		4A23C24225F249F600D3E910 /* co_ws_config.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A23C23B25F249F600D3E910 /* co_ws_config.c */; };
+		4A23C24325F249F600D3E910 /* co_random.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A23C23C25F249F600D3E910 /* co_random.c */; };
+		4A23C24425F249F600D3E910 /* co_ws_http_extension.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A23C23D25F249F600D3E910 /* co_ws_http_extension.c */; };
+		4A23C24525F249F600D3E910 /* co_ws.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A23C23E25F249F600D3E910 /* co_ws.c */; };
+		4A23C24625F249F600D3E910 /* co_ws_server.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A23C23F25F249F600D3E910 /* co_ws_server.c */; };
+		4A23C24725F249F600D3E910 /* co_ws_client.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A23C24025F249F600D3E910 /* co_ws_client.c */; };
+		4A23C24825F249F600D3E910 /* co_ws_frame.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A23C24125F249F600D3E910 /* co_ws_frame.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		4A23C25525F24E1000D3E910 /* common_config.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = common_config.xcconfig; path = ../common_config.xcconfig; sourceTree = "<group>"; };
-		4ACE0B0C25B5D1BC00674D6C /* libco_tls.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libco_tls.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		4ACE0B1625B5D24000674D6C /* co_tls.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = co_tls.c; path = ../../../src/tls/co_tls.c; sourceTree = "<group>"; };
-		4ACE0B1725B5D24000674D6C /* co_tls_tcp_client.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = co_tls_tcp_client.c; path = ../../../src/tls/co_tls_tcp_client.c; sourceTree = "<group>"; };
-		4ACE0B1825B5D24100674D6C /* co_tls_tcp_server.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = co_tls_tcp_server.c; path = ../../../src/tls/co_tls_tcp_server.c; sourceTree = "<group>"; };
-		4AFA7E7825B5E475006D1AD7 /* tls */ = {isa = PBXFileReference; lastKnownFileType = folder; name = tls; path = ../../../inc/coldforce/tls; sourceTree = "<group>"; };
+		4A23C22D25F2491C00D3E910 /* libco_ws.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libco_ws.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		4A23C23B25F249F600D3E910 /* co_ws_config.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = co_ws_config.c; path = ../../../src/ws/co_ws_config.c; sourceTree = "<group>"; };
+		4A23C23C25F249F600D3E910 /* co_random.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = co_random.c; path = ../../../src/ws/co_random.c; sourceTree = "<group>"; };
+		4A23C23D25F249F600D3E910 /* co_ws_http_extension.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = co_ws_http_extension.c; path = ../../../src/ws/co_ws_http_extension.c; sourceTree = "<group>"; };
+		4A23C23E25F249F600D3E910 /* co_ws.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = co_ws.c; path = ../../../src/ws/co_ws.c; sourceTree = "<group>"; };
+		4A23C23F25F249F600D3E910 /* co_ws_server.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = co_ws_server.c; path = ../../../src/ws/co_ws_server.c; sourceTree = "<group>"; };
+		4A23C24025F249F600D3E910 /* co_ws_client.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = co_ws_client.c; path = ../../../src/ws/co_ws_client.c; sourceTree = "<group>"; };
+		4A23C24125F249F600D3E910 /* co_ws_frame.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = co_ws_frame.c; path = ../../../src/ws/co_ws_frame.c; sourceTree = "<group>"; };
+		4A23C24A25F24A0D00D3E910 /* ws */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ws; path = ../../../inc/coldforce/ws; sourceTree = "<group>"; };
+		4A23C25125F24D0000D3E910 /* common_config.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = common_config.xcconfig; path = ../common_config.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		4ACE0B0A25B5D1BC00674D6C /* Frameworks */ = {
+		4A23C22B25F2491C00D3E910 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -32,46 +40,50 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		4ACE0B0325B5D1BC00674D6C = {
+		4A23C22425F2491C00D3E910 = {
 			isa = PBXGroup;
 			children = (
-				4A23C25525F24E1000D3E910 /* common_config.xcconfig */,
-				4ACE0B1425B5D20400674D6C /* Source Files */,
-				4ACE0B1525B5D21600674D6C /* Header Files */,
-				4ACE0B0D25B5D1BC00674D6C /* Products */,
+				4A23C25125F24D0000D3E910 /* common_config.xcconfig */,
+				4A23C23A25F249D500D3E910 /* Source Files */,
+				4A23C23925F249C900D3E910 /* Header Files */,
+				4A23C22E25F2491C00D3E910 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		4ACE0B0D25B5D1BC00674D6C /* Products */ = {
+		4A23C22E25F2491C00D3E910 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				4ACE0B0C25B5D1BC00674D6C /* libco_tls.a */,
+				4A23C22D25F2491C00D3E910 /* libco_ws.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		4ACE0B1425B5D20400674D6C /* Source Files */ = {
+		4A23C23925F249C900D3E910 /* Header Files */ = {
 			isa = PBXGroup;
 			children = (
-				4ACE0B1725B5D24000674D6C /* co_tls_tcp_client.c */,
-				4ACE0B1825B5D24100674D6C /* co_tls_tcp_server.c */,
-				4ACE0B1625B5D24000674D6C /* co_tls.c */,
-			);
-			name = "Source Files";
-			sourceTree = "<group>";
-		};
-		4ACE0B1525B5D21600674D6C /* Header Files */ = {
-			isa = PBXGroup;
-			children = (
-				4AFA7E7825B5E475006D1AD7 /* tls */,
+				4A23C24A25F24A0D00D3E910 /* ws */,
 			);
 			name = "Header Files";
+			sourceTree = "<group>";
+		};
+		4A23C23A25F249D500D3E910 /* Source Files */ = {
+			isa = PBXGroup;
+			children = (
+				4A23C23C25F249F600D3E910 /* co_random.c */,
+				4A23C24025F249F600D3E910 /* co_ws_client.c */,
+				4A23C23B25F249F600D3E910 /* co_ws_config.c */,
+				4A23C24125F249F600D3E910 /* co_ws_frame.c */,
+				4A23C23D25F249F600D3E910 /* co_ws_http_extension.c */,
+				4A23C23F25F249F600D3E910 /* co_ws_server.c */,
+				4A23C23E25F249F600D3E910 /* co_ws.c */,
+			);
+			name = "Source Files";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
-		4ACE0B0825B5D1BC00674D6C /* Headers */ = {
+		4A23C22925F2491C00D3E910 /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -81,37 +93,37 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		4ACE0B0B25B5D1BC00674D6C /* co_tls */ = {
+		4A23C22C25F2491C00D3E910 /* co_ws */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 4ACE0B1025B5D1BC00674D6C /* Build configuration list for PBXNativeTarget "co_tls" */;
+			buildConfigurationList = 4A23C23125F2491C00D3E910 /* Build configuration list for PBXNativeTarget "co_ws" */;
 			buildPhases = (
-				4ACE0B0825B5D1BC00674D6C /* Headers */,
-				4ACE0B0925B5D1BC00674D6C /* Sources */,
-				4ACE0B0A25B5D1BC00674D6C /* Frameworks */,
+				4A23C22925F2491C00D3E910 /* Headers */,
+				4A23C22A25F2491C00D3E910 /* Sources */,
+				4A23C22B25F2491C00D3E910 /* Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = co_tls;
-			productName = co_tls;
-			productReference = 4ACE0B0C25B5D1BC00674D6C /* libco_tls.a */;
+			name = co_ws;
+			productName = co_ws;
+			productReference = 4A23C22D25F2491C00D3E910 /* libco_ws.a */;
 			productType = "com.apple.product-type.library.static";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		4ACE0B0425B5D1BC00674D6C /* Project object */ = {
+		4A23C22525F2491C00D3E910 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 1200;
 				TargetAttributes = {
-					4ACE0B0B25B5D1BC00674D6C = {
+					4A23C22C25F2491C00D3E910 = {
 						CreatedOnToolsVersion = 12.0.1;
 					};
 				};
 			};
-			buildConfigurationList = 4ACE0B0725B5D1BC00674D6C /* Build configuration list for PBXProject "co_tls" */;
+			buildConfigurationList = 4A23C22825F2491C00D3E910 /* Build configuration list for PBXProject "co_ws" */;
 			compatibilityVersion = "Xcode 9.3";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -119,31 +131,35 @@
 				en,
 				Base,
 			);
-			mainGroup = 4ACE0B0325B5D1BC00674D6C;
-			productRefGroup = 4ACE0B0D25B5D1BC00674D6C /* Products */;
+			mainGroup = 4A23C22425F2491C00D3E910;
+			productRefGroup = 4A23C22E25F2491C00D3E910 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				4ACE0B0B25B5D1BC00674D6C /* co_tls */,
+				4A23C22C25F2491C00D3E910 /* co_ws */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXSourcesBuildPhase section */
-		4ACE0B0925B5D1BC00674D6C /* Sources */ = {
+		4A23C22A25F2491C00D3E910 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4ACE0B1A25B5D24100674D6C /* co_tls_tcp_client.c in Sources */,
-				4ACE0B1B25B5D24100674D6C /* co_tls_tcp_server.c in Sources */,
-				4ACE0B1925B5D24100674D6C /* co_tls.c in Sources */,
+				4A23C24725F249F600D3E910 /* co_ws_client.c in Sources */,
+				4A23C24325F249F600D3E910 /* co_random.c in Sources */,
+				4A23C24825F249F600D3E910 /* co_ws_frame.c in Sources */,
+				4A23C24225F249F600D3E910 /* co_ws_config.c in Sources */,
+				4A23C24625F249F600D3E910 /* co_ws_server.c in Sources */,
+				4A23C24425F249F600D3E910 /* co_ws_http_extension.c in Sources */,
+				4A23C24525F249F600D3E910 /* co_ws.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		4ACE0B0E25B5D1BC00674D6C /* Debug */ = {
+		4A23C22F25F2491C00D3E910 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -194,10 +210,6 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = (
-					"../../../inc/**",
-					"/usr/local/opt/openssl/include/**",
-				);
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -206,7 +218,7 @@
 			};
 			name = Debug;
 		};
-		4ACE0B0F25B5D1BC00674D6C /* Release */ = {
+		4A23C23025F2491C00D3E910 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -251,10 +263,6 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = (
-					"../../../inc/**",
-					"/usr/local/opt/openssl/include/**",
-				);
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
@@ -262,8 +270,9 @@
 			};
 			name = Release;
 		};
-		4ACE0B1125B5D1BC00674D6C /* Debug */ = {
+		4A23C23225F2491C00D3E910 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4A23C25125F24D0000D3E910 /* common_config.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				EXECUTABLE_PREFIX = lib;
@@ -272,8 +281,9 @@
 			};
 			name = Debug;
 		};
-		4ACE0B1225B5D1BC00674D6C /* Release */ = {
+		4A23C23325F2491C00D3E910 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4A23C25125F24D0000D3E910 /* common_config.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				EXECUTABLE_PREFIX = lib;
@@ -285,25 +295,25 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		4ACE0B0725B5D1BC00674D6C /* Build configuration list for PBXProject "co_tls" */ = {
+		4A23C22825F2491C00D3E910 /* Build configuration list for PBXProject "co_ws" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				4ACE0B0E25B5D1BC00674D6C /* Debug */,
-				4ACE0B0F25B5D1BC00674D6C /* Release */,
+				4A23C22F25F2491C00D3E910 /* Debug */,
+				4A23C23025F2491C00D3E910 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		4ACE0B1025B5D1BC00674D6C /* Build configuration list for PBXNativeTarget "co_tls" */ = {
+		4A23C23125F2491C00D3E910 /* Build configuration list for PBXNativeTarget "co_ws" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				4ACE0B1125B5D1BC00674D6C /* Debug */,
-				4ACE0B1225B5D1BC00674D6C /* Release */,
+				4A23C23225F2491C00D3E910 /* Debug */,
+				4A23C23325F2491C00D3E910 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = 4ACE0B0425B5D1BC00674D6C /* Project object */;
+	rootObject = 4A23C22525F2491C00D3E910 /* Project object */;
 }
