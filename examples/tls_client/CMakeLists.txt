@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-project(tls_tcp_echo_server C)
+project(tls_client C)
 
 include_directories(../../inc)
 

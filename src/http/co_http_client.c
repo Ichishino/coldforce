@@ -3,7 +3,7 @@
 
 #include <coldforce/net/co_net_addr_resolve.h>
 
-#include <coldforce/tls/co_tls_tcp_client.h>
+#include <coldforce/tls/co_tls_client.h>
 
 #include <coldforce/http/co_http_client.h>
 #include <coldforce/http/co_http_config.h>
@@ -22,11 +22,11 @@ co_http_client_setup(
 {
     if (client->tcp_client->sock.tls != NULL)
     {
-        client->module.destroy = co_tls_tcp_client_destroy;
-        client->module.close = co_tls_tcp_client_close;
-        client->module.connect = co_tls_tcp_connect;
-        client->module.send = co_tls_tcp_send;
-        client->module.receive_all = co_tls_tcp_receive_all;
+        client->module.destroy = co_tls_client_destroy;
+        client->module.close = co_tls_client_close;
+        client->module.connect = co_tls_connect;
+        client->module.send = co_tls_send;
+        client->module.receive_all = co_tls_receive_all;
     }
     else
     {
@@ -534,16 +534,16 @@ co_http_client_create(
     if (secure)
     {
         client->tcp_client =
-            co_tls_tcp_client_create(local_net_addr, tls_ctx);
+            co_tls_client_create(local_net_addr, tls_ctx);
 
         if (client->tcp_client != NULL)
         {
-            co_tls_tcp_set_host_name(
+            co_tls_set_host_name(
                 client->tcp_client, client->base_url->host);
 
             const char* protocol = CO_HTTP_PROTOCOL;
 
-            co_tls_tcp_set_available_protocols(
+            co_tls_set_available_protocols(
                 client->tcp_client, &protocol, 1);
         }
     }

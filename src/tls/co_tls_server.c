@@ -1,8 +1,8 @@
 #include <coldforce/core/co_std.h>
 #include <coldforce/core/co_string.h>
 
-#include <coldforce/tls/co_tls_tcp_server.h>
-#include <coldforce/tls/co_tls_tcp_client.h>
+#include <coldforce/tls/co_tls_server.h>
+#include <coldforce/tls/co_tls_client.h>
 
 //---------------------------------------------------------------------------//
 // tls tcp server
@@ -12,8 +12,8 @@
 //---------------------------------------------------------------------------//
 
 static void
-co_tls_tcp_server_setup(
-    co_tls_tcp_server_t* tls,
+co_tls_server_setup(
+    co_tls_server_t* tls,
     co_tls_ctx_st* tls_ctx
 )
 {
@@ -33,8 +33,8 @@ co_tls_tcp_server_setup(
 }
 
 static void
-co_tls_tcp_server_cleanup(
-    co_tls_tcp_server_t* tls
+co_tls_server_cleanup(
+    co_tls_server_t* tls
 )
 {
     if (tls != NULL)
@@ -49,14 +49,14 @@ co_tls_tcp_server_cleanup(
 }
 
 static void
-co_tls_tcp_server_on_accept_ready(
+co_tls_server_on_accept_ready(
     co_thread_t* thread,
     co_tcp_server_t* server,
     co_tcp_client_t* client
 )
 {
-    co_tls_tcp_client_t* client_tls =
-        (co_tls_tcp_client_t*)co_mem_alloc(sizeof(co_tls_tcp_client_t));
+    co_tls_client_t* client_tls =
+        (co_tls_client_t*)co_mem_alloc(sizeof(co_tls_client_t));
 
     if (client_tls == NULL)
     {
@@ -65,11 +65,11 @@ co_tls_tcp_server_on_accept_ready(
 
     client->sock.tls = client_tls;
 
-    co_tls_tcp_server_t* server_tls = co_tcp_server_get_tls(server);
+    co_tls_server_t* server_tls = co_tcp_server_get_tls(server);
 
     SSL_CTX_up_ref(server_tls->ctx.ssl_ctx);
 
-    co_tls_tcp_client_setup(client_tls, &server_tls->ctx);
+    co_tls_client_setup(client_tls, &server_tls->ctx);
     SSL_set_accept_state(client_tls->ssl);
 
     if (server_tls->on_accept_ready != NULL)
@@ -79,7 +79,7 @@ co_tls_tcp_server_on_accept_ready(
 }
 
 static int
-co_tls_tcp_server_on_alpn_select(
+co_tls_server_on_alpn_select(
     SSL* ssl,
     const unsigned char** out,
     unsigned char* outlen,
@@ -90,7 +90,7 @@ co_tls_tcp_server_on_alpn_select(
 {
     (void)ssl;
 
-    co_tls_tcp_server_t* tls = (co_tls_tcp_server_t*)arg;
+    co_tls_server_t* tls = (co_tls_server_t*)arg;
 
     const uint8_t* protocols1 = tls->protocols;
 
@@ -129,7 +129,7 @@ co_tls_tcp_server_on_alpn_select(
 //---------------------------------------------------------------------------//
 
 co_tcp_server_t*
-co_tls_tcp_server_create(
+co_tls_server_create(
     const co_net_addr_t* local_net_addr,
     co_tls_ctx_st* tls_ctx
 )
@@ -141,8 +141,8 @@ co_tls_tcp_server_create(
         return NULL;
     }
 
-    co_tls_tcp_server_t* tls =
-        (co_tls_tcp_server_t*)co_mem_alloc(sizeof(co_tls_tcp_server_t));
+    co_tls_server_t* tls =
+        (co_tls_server_t*)co_mem_alloc(sizeof(co_tls_server_t));
 
     if (tls == NULL)
     {
@@ -151,7 +151,7 @@ co_tls_tcp_server_create(
         return NULL;
     }
 
-    co_tls_tcp_server_setup(tls, tls_ctx);
+    co_tls_server_setup(tls, tls_ctx);
 
     server->sock.tls = tls;
 
@@ -159,13 +159,13 @@ co_tls_tcp_server_create(
 }
 
 void
-co_tls_tcp_server_destroy(
+co_tls_server_destroy(
     co_tcp_server_t* server
 )
 {
     if (server != NULL)
     {
-        co_tls_tcp_server_cleanup(server->sock.tls);
+        co_tls_server_cleanup(server->sock.tls);
         co_mem_free(server->sock.tls);
 
         co_tcp_server_destroy(server);
@@ -173,7 +173,7 @@ co_tls_tcp_server_destroy(
 }
 
 void
-co_tls_tcp_server_close(
+co_tls_server_close(
     co_tcp_server_t* server
 )
 {
@@ -184,7 +184,7 @@ co_tls_tcp_server_close(
 }
 
 void
-co_tls_tcp_server_set_available_protocols(
+co_tls_server_set_available_protocols(
     co_tcp_server_t* server,
     const char* protocols[],
     size_t count
@@ -200,10 +200,10 @@ co_tls_tcp_server_set_available_protocols(
         co_byte_array_add(buffer, protocols[index], length);
     }
 
-    co_tls_tcp_server_t* tls = co_tcp_server_get_tls(server);
+    co_tls_server_t* tls = co_tcp_server_get_tls(server);
 
     SSL_CTX_set_alpn_select_cb(
-        tls->ctx.ssl_ctx, co_tls_tcp_server_on_alpn_select, tls);
+        tls->ctx.ssl_ctx, co_tls_server_on_alpn_select, tls);
 
     tls->protocols_length = co_byte_array_get_count(buffer);
     tls->protocols = co_byte_array_detach(buffer);
@@ -212,16 +212,16 @@ co_tls_tcp_server_set_available_protocols(
 }
 
 bool
-co_tls_tcp_server_start(
+co_tls_server_start(
     co_tcp_server_t* server,
     co_tcp_accept_fn handler,
     int backlog
 )
 {
-    co_tls_tcp_server_t* tls = co_tcp_server_get_tls(server);
+    co_tls_server_t* tls = co_tcp_server_get_tls(server);
 
     tls->on_accept_ready = handler;
 
     return co_tcp_server_start(
-        server, (co_tcp_accept_fn)co_tls_tcp_server_on_accept_ready, backlog);
+        server, (co_tcp_accept_fn)co_tls_server_on_accept_ready, backlog);
 }

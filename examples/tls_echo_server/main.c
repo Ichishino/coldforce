@@ -42,7 +42,7 @@ void on_my_tcp_receive(my_app* self, co_tcp_client_t* client)
     co_byte_array_t* byte_array = co_byte_array_create();
 
     // receive
-    ssize_t data_size = co_tls_tcp_receive_all(client, byte_array);
+    ssize_t data_size = co_tls_receive_all(client, byte_array);
 
     printf("receive %zd bytes\n", (size_t)data_size);
 
@@ -51,7 +51,7 @@ void on_my_tcp_receive(my_app* self, co_tcp_client_t* client)
         unsigned char* data = co_byte_array_get_ptr(byte_array, 0);
 
         // send (echo)
-        co_tls_tcp_send(client, data, data_size);
+        co_tls_send(client, data, data_size);
     }
 
     co_byte_array_destroy(byte_array);
@@ -74,12 +74,12 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* server, co_tcp_client_t* cl
     // accept
     co_tcp_accept((co_thread_t*)self, client);
 
-    co_tls_tcp_set_receive_handler(client, (co_tcp_receive_fn)on_my_tcp_receive);
-    co_tls_tcp_set_close_handler(client, (co_tcp_close_fn)on_my_tcp_close);
+    co_tls_set_receive_handler(client, (co_tcp_receive_fn)on_my_tcp_receive);
+    co_tls_set_close_handler(client, (co_tcp_close_fn)on_my_tcp_close);
 
     // TLS handshake
-    co_tls_tcp_start_handshake(
-        client, (co_tls_tcp_handshake_fn)on_my_tls_handshake);
+    co_tls_start_handshake(
+        client, (co_tls_handshake_fn)on_my_tls_handshake);
 
     co_list_add_tail(self->client_list, (uintptr_t)client);
 
@@ -95,7 +95,7 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
 
     // client list
     co_list_ctx_st list_ctx = { 0 };
-    list_ctx.free_value = (co_item_free_fn)co_tls_tcp_client_destroy; // auto destroy
+    list_ctx.free_value = (co_item_free_fn)co_tls_client_destroy; // auto destroy
     self->client_list = co_list_create(&list_ctx);
 
     uint16_t port = 9443;
@@ -128,14 +128,14 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
         return false;
     }
 
-    self->server = co_tls_tcp_server_create(&local_net_addr, &tls_ctx);
+    self->server = co_tls_server_create(&local_net_addr, &tls_ctx);
 
     // socket option
     co_socket_option_set_reuse_addr(
         co_tcp_server_get_socket(self->server), true);
 
     // listen start
-    co_tls_tcp_server_start(self->server,
+    co_tls_server_start(self->server,
         (co_tcp_accept_fn)on_my_tcp_accept, SOMAXCONN);
 
     char local_str[64];
@@ -148,7 +148,7 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
 void on_my_app_destroy(my_app* self)
 {
     co_list_destroy(self->client_list);
-    co_tls_tcp_server_destroy(self->server);
+    co_tls_server_destroy(self->server);
 }
 
 int main(int argc, char* argv[])

@@ -5,8 +5,8 @@ project(co_tls C)
 add_library(${PROJECT_NAME} STATIC
 
     co_tls.c
-    co_tls_tcp_client.c
-    co_tls_tcp_server.c
+    co_tls_client.c
+    co_tls_server.c
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC ../../inc)

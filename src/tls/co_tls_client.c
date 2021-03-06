@@ -2,7 +2,7 @@
 
 #include <coldforce/net/co_net_event.h>
 
-#include <coldforce/tls/co_tls_tcp_client.h>
+#include <coldforce/tls/co_tls_client.h>
 
 //---------------------------------------------------------------------------//
 // tls tcp client
@@ -13,7 +13,7 @@
 
 #if CO_TLS_DEBUG
 static void
-co_tls_tcp_on_info(
+co_tls_on_info(
     const SSL* ssl,
     int type,
     int value
@@ -31,8 +31,8 @@ co_tls_tcp_on_info(
 #endif
 
 void
-co_tls_tcp_client_setup(
-    co_tls_tcp_client_t* tls,
+co_tls_client_setup(
+    co_tls_client_t* tls,
     co_tls_ctx_st* tls_ctx
 )
 {
@@ -53,7 +53,7 @@ co_tls_tcp_client_setup(
 #if CO_TLS_DEBUG
     if (SSL_CTX_get_info_callback(ssl_ctx) == NULL)
     {
-        SSL_CTX_set_info_callback(ssl_ctx, co_tls_tcp_on_info);
+        SSL_CTX_set_info_callback(ssl_ctx, co_tls_on_info);
     }
 #endif
     BIO* internal_bio = NULL;
@@ -68,8 +68,8 @@ co_tls_tcp_client_setup(
 }
 
 void
-co_tls_tcp_client_cleanup(
-    co_tls_tcp_client_t* tls
+co_tls_client_cleanup(
+    co_tls_client_t* tls
 )
 {
     if (tls != NULL)
@@ -98,11 +98,11 @@ co_tls_tcp_client_cleanup(
 }
 
 static bool
-co_tls_tcp_send_handshake(
+co_tls_send_handshake(
     co_tcp_client_t* client
 )
 {
-    co_tls_tcp_client_t* tls = co_tcp_client_get_tls(client);
+    co_tls_client_t* tls = co_tcp_client_get_tls(client);
 
     while (BIO_ctrl_pending(tls->network_bio) > 0)
     {
@@ -128,11 +128,11 @@ co_tls_tcp_send_handshake(
 }
 
 static bool
-co_tls_tcp_receive_handshake(
+co_tls_receive_handshake(
     co_tcp_client_t* client
 )
 {
-    co_tls_tcp_client_t* tls = co_tcp_client_get_tls(client);
+    co_tls_client_t* tls = co_tcp_client_get_tls(client);
 
 #ifdef CO_OS_WIN
 
@@ -191,14 +191,14 @@ co_tls_tcp_receive_handshake(
 }
 
 static bool
-co_tls_tcp_encrypt_data(
+co_tls_encrypt_data(
     co_tcp_client_t* client,
     const void* plain_data,
     size_t plain_data_size,
     co_byte_array_t* enc_data
 )
 {
-    co_tls_tcp_client_t* tls = co_tcp_client_get_tls(client);
+    co_tls_client_t* tls = co_tcp_client_get_tls(client);
 
     size_t plain_index = 0;
     size_t enc_index = 0;
@@ -242,7 +242,7 @@ co_tls_tcp_encrypt_data(
 }
 
 static void
-co_tls_tcp_on_handshale_complete(
+co_tls_on_handshale_complete(
     co_thread_t* thread,
     co_tcp_client_t* client,
     int error_code
@@ -250,10 +250,10 @@ co_tls_tcp_on_handshale_complete(
 {
     if (error_code != 0)
     {
-        co_tls_tcp_client_close(client);
+        co_tls_client_close(client);
     }
 
-    co_tls_tcp_client_t* tls = co_tcp_client_get_tls(client);
+    co_tls_client_t* tls = co_tcp_client_get_tls(client);
 
     if (tls->on_connect != NULL)
     {
@@ -264,7 +264,7 @@ co_tls_tcp_on_handshale_complete(
 }
 
 static void
-co_tls_tcp_on_connect(
+co_tls_on_connect(
     co_thread_t* thread,
     co_tcp_client_t* client,
     int error_code
@@ -272,12 +272,12 @@ co_tls_tcp_on_connect(
 {
     if (error_code == 0)
     {
-        co_tls_tcp_start_handshake(client,
-            (co_tls_tcp_handshake_fn)co_tls_tcp_on_handshale_complete);
+        co_tls_start_handshake(client,
+            (co_tls_handshake_fn)co_tls_on_handshale_complete);
     }
     else
     {
-        co_tls_tcp_client_t* tls = co_tcp_client_get_tls(client);
+        co_tls_client_t* tls = co_tcp_client_get_tls(client);
 
         if (tls->on_connect != NULL)
         {
@@ -289,18 +289,18 @@ co_tls_tcp_on_connect(
 }
 
 static void
-co_tls_tcp_on_receive_handshake(
+co_tls_on_receive_handshake(
     co_thread_t* thread,
     co_tcp_client_t* client
 )
 {
     (void)thread;
 
-    co_tls_tcp_client_t* tls = co_tcp_client_get_tls(client);
+    co_tls_client_t* tls = co_tcp_client_get_tls(client);
 
     int error_code = 0;
 
-    if (co_tls_tcp_receive_handshake(client))
+    if (co_tls_receive_handshake(client))
     {
         int ssl_result = SSL_do_handshake(tls->ssl);
         int ssl_error = SSL_get_error(tls->ssl, ssl_result);
@@ -310,7 +310,7 @@ co_tls_tcp_on_receive_handshake(
             if ((ssl_error == SSL_ERROR_WANT_READ) ||
                 (ssl_error == SSL_ERROR_WANT_WRITE))
             {
-                co_tls_tcp_send_handshake(client);
+                co_tls_send_handshake(client);
 
                 return;
             }
@@ -321,7 +321,7 @@ co_tls_tcp_on_receive_handshake(
         }
         else
         {
-            co_tls_tcp_send_handshake(client);
+            co_tls_send_handshake(client);
         }
     }
     else
@@ -342,7 +342,7 @@ co_tls_tcp_on_receive_handshake(
 //---------------------------------------------------------------------------//
 
 co_tcp_client_t*
-co_tls_tcp_client_create(
+co_tls_client_create(
     const co_net_addr_t* local_net_addr,
     co_tls_ctx_st* tls_ctx
 )
@@ -354,7 +354,7 @@ co_tls_tcp_client_create(
         return NULL;
     }
 
-    if (!co_tls_tcp_client_install(client, tls_ctx))
+    if (!co_tls_client_install(client, tls_ctx))
     {
         co_tcp_client_destroy(client);
 
@@ -365,13 +365,13 @@ co_tls_tcp_client_create(
 }
 
 void
-co_tls_tcp_client_destroy(
+co_tls_client_destroy(
     co_tcp_client_t* client
 )
 {
     if (client != NULL)
     {
-        co_tls_tcp_client_cleanup(client->sock.tls);
+        co_tls_client_cleanup(client->sock.tls);
         co_mem_free(client->sock.tls);
 
         co_tcp_client_destroy(client);
@@ -379,7 +379,7 @@ co_tls_tcp_client_destroy(
 }
 
 void
-co_tls_tcp_client_close(
+co_tls_client_close(
     co_tcp_client_t* client
 )
 {
@@ -390,20 +390,20 @@ co_tls_tcp_client_close(
 }
 
 bool
-co_tls_tcp_client_install(
+co_tls_client_install(
     co_tcp_client_t* client,
     co_tls_ctx_st* tls_ctx
 )
 {
-    co_tls_tcp_client_t* tls =
-        (co_tls_tcp_client_t*)co_mem_alloc(sizeof(co_tls_tcp_client_t));
+    co_tls_client_t* tls =
+        (co_tls_client_t*)co_mem_alloc(sizeof(co_tls_client_t));
 
     if (tls == NULL)
     {
         return false;
     }
 
-    co_tls_tcp_client_setup(tls, tls_ctx);
+    co_tls_client_setup(tls, tls_ctx);
     SSL_set_connect_state(tls->ssl);
 
     client->sock.tls = tls;
@@ -412,7 +412,7 @@ co_tls_tcp_client_install(
 }
 
 void
-co_tls_tcp_set_host_name(
+co_tls_set_host_name(
     co_tcp_client_t* client,
     const char* host_name
 )
@@ -422,7 +422,7 @@ co_tls_tcp_set_host_name(
 }
 
 void
-co_tls_tcp_set_available_protocols(
+co_tls_set_available_protocols(
     co_tcp_client_t* client,
     const char* protocols[],
     size_t count
@@ -447,7 +447,7 @@ co_tls_tcp_set_available_protocols(
 }
 
 bool
-co_tls_tcp_get_selected_protocol(
+co_tls_get_selected_protocol(
     const co_tcp_client_t* client,
     char* buffer,
     size_t buffer_size
@@ -476,28 +476,28 @@ co_tls_tcp_get_selected_protocol(
 }
 
 bool
-co_tls_tcp_connect(
+co_tls_connect(
     co_tcp_client_t* client,
     const co_net_addr_t* remote_net_addr,
     co_tcp_connect_fn handler
 )
 {
-    co_tls_tcp_client_t* tls = co_tcp_client_get_tls(client);
+    co_tls_client_t* tls = co_tcp_client_get_tls(client);
 
     tls->on_connect = handler;
 
     return co_tcp_connect(
         client, remote_net_addr,
-        (co_tcp_connect_fn)co_tls_tcp_on_connect);
+        (co_tcp_connect_fn)co_tls_on_connect);
 }
 
 bool
-co_tls_tcp_start_handshake(
+co_tls_start_handshake(
     co_tcp_client_t* client,
-    co_tls_tcp_handshake_fn handler
+    co_tls_handshake_fn handler
 )
 {
-    co_tls_tcp_client_t* tls = co_tcp_client_get_tls(client);
+    co_tls_client_t* tls = co_tcp_client_get_tls(client);
 
     if (tls == NULL)
     {
@@ -507,7 +507,7 @@ co_tls_tcp_start_handshake(
     tls->on_handshake_complete = handler;
     tls->on_receive_ready = client->on_receive_ready;
     client->on_receive_ready =
-        (co_tcp_receive_fn)co_tls_tcp_on_receive_handshake;
+        (co_tcp_receive_fn)co_tls_on_receive_handshake;
 
     int ssl_result = SSL_do_handshake(tls->ssl);
     int ssl_error = SSL_get_error(tls->ssl, ssl_result);
@@ -516,7 +516,7 @@ co_tls_tcp_start_handshake(
     {
         if (SSL_is_server(tls->ssl) == 0)
         {
-            return co_tls_tcp_send_handshake(client);
+            return co_tls_send_handshake(client);
         }
 
         return true;
@@ -526,7 +526,7 @@ co_tls_tcp_start_handshake(
 }
 
 bool
-co_tls_tcp_send(
+co_tls_send(
     co_tcp_client_t* client,
     const void* data,
     size_t data_size
@@ -536,7 +536,7 @@ co_tls_tcp_send(
 
     co_byte_array_t* send_data = co_byte_array_create();
 
-    if (co_tls_tcp_encrypt_data(
+    if (co_tls_encrypt_data(
         client, data, data_size, send_data))
     {
         result = co_tcp_send(client,
@@ -550,7 +550,7 @@ co_tls_tcp_send(
 }
 
 bool
-co_tls_tcp_send_async(
+co_tls_send_async(
     co_tcp_client_t* client,
     const void* data,
     size_t data_size
@@ -560,7 +560,7 @@ co_tls_tcp_send_async(
 
     co_byte_array_t* send_data = co_byte_array_create();
 
-    if (co_tls_tcp_encrypt_data(
+    if (co_tls_encrypt_data(
         client, data, data_size, send_data))
     {
         result = co_tcp_send_async(client,
@@ -574,13 +574,13 @@ co_tls_tcp_send_async(
 }
 
 ssize_t
-co_tls_tcp_receive(
+co_tls_receive(
     co_tcp_client_t* client,
     void* buffer,
     size_t buffer_size
 )
 {
-    co_tls_tcp_client_t* tls = co_tcp_client_get_tls(client);
+    co_tls_client_t* tls = co_tcp_client_get_tls(client);
 
     ssize_t raw_data_size =
         co_tcp_receive(client, buffer, buffer_size);
@@ -612,12 +612,12 @@ co_tls_tcp_receive(
 }
 
 ssize_t
-co_tls_tcp_receive_all(
+co_tls_receive_all(
     co_tcp_client_t* client,
     co_byte_array_t* byte_array
 )
 {
-    co_tls_tcp_client_t* tls = co_tcp_client_get_tls(client);
+    co_tls_client_t* tls = co_tcp_client_get_tls(client);
 
     ssize_t data_size = 0;
 
@@ -695,7 +695,7 @@ co_tls_tcp_receive_all(
 }
 
 bool
-co_tls_tcp_is_open(
+co_tls_is_open(
     const co_tcp_client_t* client
 )
 {
@@ -703,7 +703,7 @@ co_tls_tcp_is_open(
 }
 
 void
-co_tls_tcp_set_send_complete_handler(
+co_tls_set_send_complete_handler(
     co_tcp_client_t* client,
     co_tcp_send_fn handler
 )
@@ -712,7 +712,7 @@ co_tls_tcp_set_send_complete_handler(
 }
 
 void
-co_tls_tcp_set_receive_handler(
+co_tls_set_receive_handler(
     co_tcp_client_t* client,
     co_tcp_receive_fn handler
 )
@@ -721,7 +721,7 @@ co_tls_tcp_set_receive_handler(
 }
 
 void
-co_tls_tcp_set_close_handler(
+co_tls_set_close_handler(
     co_tcp_client_t* client,
     co_tcp_close_fn handler
 )
@@ -730,7 +730,7 @@ co_tls_tcp_set_close_handler(
 }
 
 const co_net_addr_t*
-co_tls_tcp_get_remote_net_addr(
+co_tls_get_remote_net_addr(
     const co_tcp_client_t* client
 )
 {

@@ -16,7 +16,7 @@ typedef struct
 
 void my_connect(my_app* self);
 
-void on_my_tls_tcp_receive(my_app* self, co_tcp_client_t* client)
+void on_my_tls_receive(my_app* self, co_tcp_client_t* client)
 {
     (void)self;
 
@@ -24,7 +24,7 @@ void on_my_tls_tcp_receive(my_app* self, co_tcp_client_t* client)
     {
         char buffer[1024];
 
-        ssize_t size = co_tls_tcp_receive(client, buffer, sizeof(buffer));
+        ssize_t size = co_tls_receive(client, buffer, sizeof(buffer));
 
         if (size <= 0)
         {
@@ -35,20 +35,20 @@ void on_my_tls_tcp_receive(my_app* self, co_tcp_client_t* client)
     }
 }
 
-void on_my_tls_tcp_close(my_app* self, co_tcp_client_t* client)
+void on_my_tls_close(my_app* self, co_tcp_client_t* client)
 {
     (void)client;
 
     printf("close\n");
 
-    co_tls_tcp_client_destroy(self->client);
+    co_tls_client_destroy(self->client);
     self->client = NULL;
 
     // quit app
     co_net_app_stop();
 }
 
-void on_my_tls_tcp_connect(my_app* self, co_tcp_client_t* client, int error_code)
+void on_my_tls_connect(my_app* self, co_tcp_client_t* client, int error_code)
 {
     if (error_code == 0)
     {
@@ -56,13 +56,13 @@ void on_my_tls_tcp_connect(my_app* self, co_tcp_client_t* client, int error_code
 
         // send
         const char* data = "hello";
-        co_tls_tcp_send(client, data, strlen(data));
+        co_tls_send(client, data, strlen(data));
     }
     else
     {
         printf("connect failed\n");
 
-        co_tls_tcp_client_destroy(self->client);
+        co_tls_client_destroy(self->client);
         self->client = NULL;
 
         // start retry timer
@@ -87,10 +87,10 @@ void my_connect(my_app* self)
     co_net_addr_t local_net_addr = CO_NET_ADDR_INIT;
     co_net_addr_set_family(&local_net_addr, CO_ADDRESS_FAMILY_IPV4);
 
-    self->client = co_tls_tcp_client_create(&local_net_addr, NULL);
+    self->client = co_tls_client_create(&local_net_addr, NULL);
 
-    co_tls_tcp_set_receive_handler(self->client, (co_tcp_receive_fn)on_my_tls_tcp_receive);
-    co_tls_tcp_set_close_handler(self->client, (co_tcp_close_fn)on_my_tls_tcp_close);
+    co_tls_set_receive_handler(self->client, (co_tcp_receive_fn)on_my_tls_receive);
+    co_tls_set_close_handler(self->client, (co_tcp_close_fn)on_my_tls_close);
 
     // remote address
     co_net_addr_t remote_net_addr = CO_NET_ADDR_INIT;
@@ -98,8 +98,8 @@ void my_connect(my_app* self)
     co_net_addr_set_port(&remote_net_addr, port);
 
     // connect
-    co_tls_tcp_connect(
-        self->client, &remote_net_addr, (co_tcp_connect_fn)on_my_tls_tcp_connect);
+    co_tls_connect(
+        self->client, &remote_net_addr, (co_tcp_connect_fn)on_my_tls_connect);
 
     char remote_str[64];
     co_net_addr_get_as_string(&remote_net_addr, remote_str);
@@ -123,7 +123,7 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
 void on_my_app_destroy(my_app* self)
 {
     co_timer_destroy(self->retry_timer);
-    co_tls_tcp_client_destroy(self->client);
+    co_tls_client_destroy(self->client);
 }
 
 int main(int argc, char* argv[])

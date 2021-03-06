@@ -1,7 +1,7 @@
 #ifndef CO_HTTP_SERVER_H_INCLUDED
 #define CO_HTTP_SERVER_H_INCLUDED
 
-#include <coldforce/tls/co_tls_tcp_server.h>
+#include <coldforce/tls/co_tls_server.h>
 
 #include <coldforce/http/co_http.h>
 #include <coldforce/http/co_http_client.h>

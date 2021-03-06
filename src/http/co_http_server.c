@@ -1,7 +1,7 @@
 #include <coldforce/core/co_std.h>
 #include <coldforce/core/co_string.h>
 
-#include <coldforce/tls/co_tls_tcp_client.h>
+#include <coldforce/tls/co_tls_client.h>
 
 #include <coldforce/http/co_http_string_list.h>
 #include <coldforce/http/co_http_server.h>
@@ -279,7 +279,7 @@ co_http_tls_server_create(
     }
 
     server->tcp_server =
-        co_tls_tcp_server_create(local_net_addr, tls_ctx);
+        co_tls_server_create(local_net_addr, tls_ctx);
 
     if (server->tcp_server == NULL)
     {
@@ -288,9 +288,9 @@ co_http_tls_server_create(
         return NULL;
     }
 
-    server->module.destroy = co_tls_tcp_server_destroy;
-    server->module.close = co_tls_tcp_server_close;
-    server->module.start = co_tls_tcp_server_start;
+    server->module.destroy = co_tls_server_destroy;
+    server->module.close = co_tls_server_close;
+    server->module.start = co_tls_server_start;
 
     server->tcp_server->sock.sub_class = server;
 
@@ -332,7 +332,7 @@ co_http_tls_server_set_available_protocols(
     size_t protocol_count
 )
 {
-    co_tls_tcp_server_set_available_protocols(
+    co_tls_server_set_available_protocols(
         server->tcp_server, protocols, protocol_count);
 }
 
