@@ -30,7 +30,8 @@ void on_my_tcp_receive(my_client_thread* self, co_tcp_client_t* client)
     ssize_t size = co_tcp_receive(client, buffer, sizeof(buffer));
 
     char remote_str[64];
-    co_get_remote_net_addr_as_string(client, remote_str);
+    co_net_addr_get_as_string(
+        co_tcp_get_remote_net_addr(client), remote_str);
     printf("receive %zd bytes from %s\n", (size_t)size, remote_str);
 
     // send
@@ -40,7 +41,8 @@ void on_my_tcp_receive(my_client_thread* self, co_tcp_client_t* client)
 void on_my_tcp_close(my_client_thread* self, co_tcp_client_t* client)
 {
     char remote_str[64];
-    co_get_remote_net_addr_as_string(client, remote_str);
+    co_net_addr_get_as_string(
+        co_tcp_get_remote_net_addr(client), remote_str);
     printf("close %s\n", remote_str);
 
     co_mutex_lock(self->mutex);
@@ -62,7 +64,8 @@ void on_my_tcp_transfer(my_client_thread* self, co_tcp_client_t* client)
     co_mutex_unlock(self->mutex);
 
     char remote_str[64];
-    co_get_remote_net_addr_as_string(client, remote_str);
+    co_net_addr_get_as_string(
+        co_tcp_get_remote_net_addr(client), remote_str);
     printf("accept %s\n", remote_str);
 }
 
