@@ -7,30 +7,30 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		4A7C9E6E25E69F9D00B178AA /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A7C9E6D25E69F9D00B178AA /* main.c */; };
-		4A7C9E8A25E69FFC00B178AA /* libco_core.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4A7C9E7525E69FB200B178AA /* libco_core.a */; };
-		4A7C9E8B25E69FFC00B178AA /* libco_net.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4A7C9E7D25E69FC200B178AA /* libco_net.a */; };
-		4A7C9E8C25E69FFC00B178AA /* libco_tls.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4A7C9E8525E69FD600B178AA /* libco_tls.a */; };
+		4ACF4BDF25F49AD900C45318 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 4ACF4BDE25F49AD900C45318 /* main.c */; };
+		4ADA37FA25F49BCD00F99319 /* libco_core.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4ACF4BE625F49AF800C45318 /* libco_core.a */; };
+		4ADA37FB25F49BCD00F99319 /* libco_net.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4ACF4BED25F49B0C00C45318 /* libco_net.a */; };
+		4ADA37FC25F49BCD00F99319 /* libco_tls.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4ACF4BF425F49B1D00C45318 /* libco_tls.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		4A7C9E7425E69FB200B178AA /* PBXContainerItemProxy */ = {
+		4ACF4BE525F49AF800C45318 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 4A7C9E7025E69FB200B178AA /* co_core.xcodeproj */;
+			containerPortal = 4ACF4BE125F49AF800C45318 /* co_core.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = 4AFA7EDE25B5E88F006D1AD7;
 			remoteInfo = co_core;
 		};
-		4A7C9E7C25E69FC200B178AA /* PBXContainerItemProxy */ = {
+		4ACF4BEC25F49B0C00C45318 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 4A7C9E7825E69FC200B178AA /* co_net.xcodeproj */;
+			containerPortal = 4ACF4BE825F49B0C00C45318 /* co_net.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = 4A09F3DB25AABEA100AC987D;
 			remoteInfo = co_net;
 		};
-		4A7C9E8425E69FD600B178AA /* PBXContainerItemProxy */ = {
+		4ACF4BF325F49B1D00C45318 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 4A7C9E8025E69FD600B178AA /* co_tls.xcodeproj */;
+			containerPortal = 4ACF4BEF25F49B1D00C45318 /* co_tls.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = 4ACE0B0C25B5D1BC00674D6C;
 			remoteInfo = co_tls;
@@ -38,7 +38,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		4A7C9E5F25E69F5700B178AA /* CopyFiles */ = {
+		4ACF4BD025F49A7100C45318 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = /usr/share/man/man1/;
@@ -50,74 +50,74 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		4A7C9E6125E69F5700B178AA /* tls_tcp_echo_server */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tls_tcp_echo_server; sourceTree = BUILT_PRODUCTS_DIR; };
-		4A7C9E6D25E69F9D00B178AA /* main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = main.c; path = ../../main.c; sourceTree = "<group>"; };
-		4A7C9E7025E69FB200B178AA /* co_core.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = co_core.xcodeproj; path = ../../../../prj/xcode/co_core/co_core.xcodeproj; sourceTree = "<group>"; };
-		4A7C9E7825E69FC200B178AA /* co_net.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = co_net.xcodeproj; path = ../../../../prj/xcode/co_net/co_net.xcodeproj; sourceTree = "<group>"; };
-		4A7C9E8025E69FD600B178AA /* co_tls.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = co_tls.xcodeproj; path = ../../../../prj/xcode/co_tls/co_tls.xcodeproj; sourceTree = "<group>"; };
-		4A7C9E8825E69FE200B178AA /* example_openssl.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = example_openssl.xcconfig; path = ../../../example_openssl.xcconfig; sourceTree = "<group>"; };
+		4ACF4BD225F49A7100C45318 /* tls_client */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tls_client; sourceTree = BUILT_PRODUCTS_DIR; };
+		4ACF4BDE25F49AD900C45318 /* main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = main.c; path = ../../main.c; sourceTree = "<group>"; };
+		4ACF4BE125F49AF800C45318 /* co_core.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = co_core.xcodeproj; path = ../../../../prj/xcode/co_core/co_core.xcodeproj; sourceTree = "<group>"; };
+		4ACF4BE825F49B0C00C45318 /* co_net.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = co_net.xcodeproj; path = ../../../../prj/xcode/co_net/co_net.xcodeproj; sourceTree = "<group>"; };
+		4ACF4BEF25F49B1D00C45318 /* co_tls.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = co_tls.xcodeproj; path = ../../../../prj/xcode/co_tls/co_tls.xcodeproj; sourceTree = "<group>"; };
+		4ACF4BF625F49B3000C45318 /* example_openssl.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = example_openssl.xcconfig; path = ../../../example_openssl.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		4A7C9E5E25E69F5700B178AA /* Frameworks */ = {
+		4ACF4BCF25F49A7100C45318 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4A7C9E8C25E69FFC00B178AA /* libco_tls.a in Frameworks */,
-				4A7C9E8A25E69FFC00B178AA /* libco_core.a in Frameworks */,
-				4A7C9E8B25E69FFC00B178AA /* libco_net.a in Frameworks */,
+				4ADA37FC25F49BCD00F99319 /* libco_tls.a in Frameworks */,
+				4ADA37FA25F49BCD00F99319 /* libco_core.a in Frameworks */,
+				4ADA37FB25F49BCD00F99319 /* libco_net.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		4A7C9E5825E69F5700B178AA = {
+		4ACF4BC925F49A7100C45318 = {
 			isa = PBXGroup;
 			children = (
-				4A7C9E8825E69FE200B178AA /* example_openssl.xcconfig */,
-				4A7C9E8025E69FD600B178AA /* co_tls.xcodeproj */,
-				4A7C9E7825E69FC200B178AA /* co_net.xcodeproj */,
-				4A7C9E7025E69FB200B178AA /* co_core.xcodeproj */,
-				4A7C9E6D25E69F9D00B178AA /* main.c */,
-				4A7C9E6225E69F5700B178AA /* Products */,
-				4A7C9E8925E69FFC00B178AA /* Frameworks */,
+				4ACF4BF625F49B3000C45318 /* example_openssl.xcconfig */,
+				4ACF4BEF25F49B1D00C45318 /* co_tls.xcodeproj */,
+				4ACF4BE825F49B0C00C45318 /* co_net.xcodeproj */,
+				4ACF4BE125F49AF800C45318 /* co_core.xcodeproj */,
+				4ACF4BDE25F49AD900C45318 /* main.c */,
+				4ACF4BD325F49A7100C45318 /* Products */,
+				4ADA37F625F49BCD00F99319 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
-		4A7C9E6225E69F5700B178AA /* Products */ = {
+		4ACF4BD325F49A7100C45318 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				4A7C9E6125E69F5700B178AA /* tls_tcp_echo_server */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		4A7C9E7125E69FB200B178AA /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				4A7C9E7525E69FB200B178AA /* libco_core.a */,
+				4ACF4BD225F49A7100C45318 /* tls_client */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		4A7C9E7925E69FC200B178AA /* Products */ = {
+		4ACF4BE225F49AF800C45318 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				4A7C9E7D25E69FC200B178AA /* libco_net.a */,
+				4ACF4BE625F49AF800C45318 /* libco_core.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		4A7C9E8125E69FD600B178AA /* Products */ = {
+		4ACF4BE925F49B0C00C45318 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				4A7C9E8525E69FD600B178AA /* libco_tls.a */,
+				4ACF4BED25F49B0C00C45318 /* libco_net.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		4A7C9E8925E69FFC00B178AA /* Frameworks */ = {
+		4ACF4BF025F49B1D00C45318 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4ACF4BF425F49B1D00C45318 /* libco_tls.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		4ADA37F625F49BCD00F99319 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
 			);
@@ -127,37 +127,37 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		4A7C9E6025E69F5700B178AA /* tls_tcp_echo_server */ = {
+		4ACF4BD125F49A7100C45318 /* tls_client */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 4A7C9E6825E69F5700B178AA /* Build configuration list for PBXNativeTarget "tls_tcp_echo_server" */;
+			buildConfigurationList = 4ACF4BD925F49A7100C45318 /* Build configuration list for PBXNativeTarget "tls_client" */;
 			buildPhases = (
-				4A7C9E5D25E69F5700B178AA /* Sources */,
-				4A7C9E5E25E69F5700B178AA /* Frameworks */,
-				4A7C9E5F25E69F5700B178AA /* CopyFiles */,
+				4ACF4BCE25F49A7100C45318 /* Sources */,
+				4ACF4BCF25F49A7100C45318 /* Frameworks */,
+				4ACF4BD025F49A7100C45318 /* CopyFiles */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = tls_tcp_echo_server;
-			productName = tls_tcp_echo_server;
-			productReference = 4A7C9E6125E69F5700B178AA /* tls_tcp_echo_server */;
+			name = tls_client;
+			productName = tls_client;
+			productReference = 4ACF4BD225F49A7100C45318 /* tls_client */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		4A7C9E5925E69F5700B178AA /* Project object */ = {
+		4ACF4BCA25F49A7100C45318 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1200;
+				LastUpgradeCheck = 1240;
 				TargetAttributes = {
-					4A7C9E6025E69F5700B178AA = {
-						CreatedOnToolsVersion = 12.0.1;
+					4ACF4BD125F49A7100C45318 = {
+						CreatedOnToolsVersion = 12.4;
 					};
 				};
 			};
-			buildConfigurationList = 4A7C9E5C25E69F5700B178AA /* Build configuration list for PBXProject "tls_tcp_echo_server" */;
+			buildConfigurationList = 4ACF4BCD25F49A7100C45318 /* Build configuration list for PBXProject "tls_client" */;
 			compatibilityVersion = "Xcode 9.3";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -165,67 +165,67 @@
 				en,
 				Base,
 			);
-			mainGroup = 4A7C9E5825E69F5700B178AA;
-			productRefGroup = 4A7C9E6225E69F5700B178AA /* Products */;
+			mainGroup = 4ACF4BC925F49A7100C45318;
+			productRefGroup = 4ACF4BD325F49A7100C45318 /* Products */;
 			projectDirPath = "";
 			projectReferences = (
 				{
-					ProductGroup = 4A7C9E7125E69FB200B178AA /* Products */;
-					ProjectRef = 4A7C9E7025E69FB200B178AA /* co_core.xcodeproj */;
+					ProductGroup = 4ACF4BE225F49AF800C45318 /* Products */;
+					ProjectRef = 4ACF4BE125F49AF800C45318 /* co_core.xcodeproj */;
 				},
 				{
-					ProductGroup = 4A7C9E7925E69FC200B178AA /* Products */;
-					ProjectRef = 4A7C9E7825E69FC200B178AA /* co_net.xcodeproj */;
+					ProductGroup = 4ACF4BE925F49B0C00C45318 /* Products */;
+					ProjectRef = 4ACF4BE825F49B0C00C45318 /* co_net.xcodeproj */;
 				},
 				{
-					ProductGroup = 4A7C9E8125E69FD600B178AA /* Products */;
-					ProjectRef = 4A7C9E8025E69FD600B178AA /* co_tls.xcodeproj */;
+					ProductGroup = 4ACF4BF025F49B1D00C45318 /* Products */;
+					ProjectRef = 4ACF4BEF25F49B1D00C45318 /* co_tls.xcodeproj */;
 				},
 			);
 			projectRoot = "";
 			targets = (
-				4A7C9E6025E69F5700B178AA /* tls_tcp_echo_server */,
+				4ACF4BD125F49A7100C45318 /* tls_client */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
-		4A7C9E7525E69FB200B178AA /* libco_core.a */ = {
+		4ACF4BE625F49AF800C45318 /* libco_core.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
 			path = libco_core.a;
-			remoteRef = 4A7C9E7425E69FB200B178AA /* PBXContainerItemProxy */;
+			remoteRef = 4ACF4BE525F49AF800C45318 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		4A7C9E7D25E69FC200B178AA /* libco_net.a */ = {
+		4ACF4BED25F49B0C00C45318 /* libco_net.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
 			path = libco_net.a;
-			remoteRef = 4A7C9E7C25E69FC200B178AA /* PBXContainerItemProxy */;
+			remoteRef = 4ACF4BEC25F49B0C00C45318 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		4A7C9E8525E69FD600B178AA /* libco_tls.a */ = {
+		4ACF4BF425F49B1D00C45318 /* libco_tls.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
 			path = libco_tls.a;
-			remoteRef = 4A7C9E8425E69FD600B178AA /* PBXContainerItemProxy */;
+			remoteRef = 4ACF4BF325F49B1D00C45318 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
 
 /* Begin PBXSourcesBuildPhase section */
-		4A7C9E5D25E69F5700B178AA /* Sources */ = {
+		4ACF4BCE25F49A7100C45318 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4A7C9E6E25E69F9D00B178AA /* main.c in Sources */,
+				4ACF4BDF25F49AD900C45318 /* main.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		4A7C9E6625E69F5700B178AA /* Debug */ = {
+		4ACF4BD725F49A7100C45318 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -276,7 +276,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MACOSX_DEPLOYMENT_TARGET = 11.1;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -284,7 +284,7 @@
 			};
 			name = Debug;
 		};
-		4A7C9E6725E69F5700B178AA /* Release */ = {
+		4ACF4BD825F49A7100C45318 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -329,25 +329,25 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MACOSX_DEPLOYMENT_TARGET = 11.1;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
 			};
 			name = Release;
 		};
-		4A7C9E6925E69F5700B178AA /* Debug */ = {
+		4ACF4BDA25F49A7100C45318 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 4A7C9E8825E69FE200B178AA /* example_openssl.xcconfig */;
+			baseConfigurationReference = 4ACF4BF625F49B3000C45318 /* example_openssl.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
 		};
-		4A7C9E6A25E69F5700B178AA /* Release */ = {
+		4ACF4BDB25F49A7100C45318 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 4A7C9E8825E69FE200B178AA /* example_openssl.xcconfig */;
+			baseConfigurationReference = 4ACF4BF625F49B3000C45318 /* example_openssl.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -357,25 +357,25 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		4A7C9E5C25E69F5700B178AA /* Build configuration list for PBXProject "tls_tcp_echo_server" */ = {
+		4ACF4BCD25F49A7100C45318 /* Build configuration list for PBXProject "tls_client" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				4A7C9E6625E69F5700B178AA /* Debug */,
-				4A7C9E6725E69F5700B178AA /* Release */,
+				4ACF4BD725F49A7100C45318 /* Debug */,
+				4ACF4BD825F49A7100C45318 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		4A7C9E6825E69F5700B178AA /* Build configuration list for PBXNativeTarget "tls_tcp_echo_server" */ = {
+		4ACF4BD925F49A7100C45318 /* Build configuration list for PBXNativeTarget "tls_client" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				4A7C9E6925E69F5700B178AA /* Debug */,
-				4A7C9E6A25E69F5700B178AA /* Release */,
+				4ACF4BDA25F49A7100C45318 /* Debug */,
+				4ACF4BDB25F49A7100C45318 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = 4A7C9E5925E69F5700B178AA /* Project object */;
+	rootObject = 4ACF4BCA25F49A7100C45318 /* Project object */;
 }
