@@ -26,6 +26,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		4A23C25625F24EEE00D3E910 /* common_config.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = common_config.xcconfig; path = ../common_config.xcconfig; sourceTree = "<group>"; };
 		4AFA7EDE25B5E88F006D1AD7 /* libco_core.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libco_core.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		4AFA7EE825B5E8C0006D1AD7 /* co_string.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = co_string.c; path = ../../../src/core/co_string.c; sourceTree = "<group>"; };
 		4AFA7EE925B5E8C0006D1AD7 /* co_list.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = co_list.c; path = ../../../src/core/co_list.c; sourceTree = "<group>"; };
@@ -60,6 +61,7 @@
 		4AFA7ED525B5E88F006D1AD7 = {
 			isa = PBXGroup;
 			children = (
+				4A23C25625F24EEE00D3E910 /* common_config.xcconfig */,
 				4AFA7EE625B5E894006D1AD7 /* Source Files */,
 				4AFA7EE725B5E89E006D1AD7 /* Header Files */,
 				4AFA7EDF25B5E88F006D1AD7 /* Products */,
@@ -306,10 +308,10 @@
 		};
 		4AFA7EE325B5E88F006D1AD7 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4A23C25625F24EEE00D3E910 /* common_config.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				EXECUTABLE_PREFIX = lib;
-				HEADER_SEARCH_PATHS = "../../../inc/**";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 			};
@@ -317,10 +319,10 @@
 		};
 		4AFA7EE425B5E88F006D1AD7 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4A23C25625F24EEE00D3E910 /* common_config.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				EXECUTABLE_PREFIX = lib;
-				HEADER_SEARCH_PATHS = "../../../inc/**";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 			};
