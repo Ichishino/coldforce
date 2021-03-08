@@ -11,7 +11,6 @@ add_library(${PROJECT_NAME} STATIC
     co_ws_frame.c
     co_ws_http_extension.c
     co_ws_server.c
-    co_string_conv.c
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC ../../inc)
