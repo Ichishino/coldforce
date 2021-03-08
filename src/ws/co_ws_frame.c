@@ -114,12 +114,14 @@ co_ws_frame_deserialize(
     {
         frame->payload_data =
             (uint8_t*)co_mem_alloc(
-                (size_t)frame->header.payload_size);
+                (size_t)frame->header.payload_size + 1);
 
         if (frame->payload_data == NULL)
         {
             return CO_WS_ERROR_OUT_OF_MEMORY;
         }
+
+        frame->payload_data[frame->header.payload_size] = '\0';
 
         co_byte_array_get(data, temp_index,
             frame->payload_data, (size_t)frame->header.payload_size);

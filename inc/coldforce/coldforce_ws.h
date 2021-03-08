@@ -16,6 +16,7 @@
 #include <coldforce/ws/co_ws_client.h>
 #include <coldforce/ws/co_ws_server.h>
 #include <coldforce/ws/co_ws_http_extension.h>
+#include <coldforce/ws/co_string_conv.h>
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

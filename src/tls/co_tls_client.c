@@ -242,7 +242,7 @@ co_tls_encrypt_data(
 }
 
 static void
-co_tls_on_handshale_complete(
+co_tls_on_handshake_complete(
     co_thread_t* thread,
     co_tcp_client_t* client,
     int error_code
@@ -273,7 +273,7 @@ co_tls_on_connect(
     if (error_code == 0)
     {
         co_tls_start_handshake(client,
-            (co_tls_handshake_fn)co_tls_on_handshale_complete);
+            (co_tls_handshake_fn)co_tls_on_handshake_complete);
     }
     else
     {
