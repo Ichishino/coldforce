@@ -59,7 +59,7 @@
 #   ifdef CO_EXPORTS
 #       define CO_API  __declspec(dllexport)
 #   else
-#       define CO_API  __declspec(dllimport)
+#       define CO_API
 #   endif
 #   define CO_THREAD_LOCAL __declspec(thread)
 #else

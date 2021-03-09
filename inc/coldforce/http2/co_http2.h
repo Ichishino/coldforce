@@ -13,7 +13,7 @@
 #   ifdef CO_HTTP2_EXPORTS
 #       define CO_HTTP2_API  __declspec(dllexport)
 #   else
-#       define CO_HTTP2_API  __declspec(dllimport)
+#       define CO_HTTP2_API
 #   endif
 #else
 #   define CO_HTTP2_API

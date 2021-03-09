@@ -11,7 +11,7 @@
 #   ifdef CO_WS_EXPORTS
 #       define CO_WS_API  __declspec(dllexport)
 #   else
-#       define CO_WS_API  __declspec(dllimport)
+#       define CO_WS_API
 #   endif
 #else
 #   define CO_WS_API

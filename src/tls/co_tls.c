@@ -7,9 +7,6 @@
 
 #ifdef CO_OS_WIN
 
-#pragma comment(lib, "libssl.lib")
-#pragma comment(lib, "libcrypto.lib")
-
 #include <windows.h>
 
 //---------------------------------------------------------------------------//
@@ -17,6 +14,9 @@
 //---------------------------------------------------------------------------//
 
 #ifdef _USRDLL
+
+#pragma comment(lib, "libssl.lib")
+#pragma comment(lib, "libcrypto.lib")
 
 BOOL APIENTRY
 DllMain(

@@ -17,7 +17,7 @@
 #   ifdef CO_NET_EXPORTS
 #       define CO_NET_API  __declspec(dllexport)
 #   else
-#       define CO_NET_API  __declspec(dllimport)
+#       define CO_NET_API
 #   endif
 #else
 #   define CO_NET_API

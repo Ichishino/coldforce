@@ -23,7 +23,7 @@
 #   ifdef CO_TLS_EXPORTS
 #       define CO_TLS_API  __declspec(dllexport)
 #   else
-#       define CO_TLS_API  __declspec(dllimport)
+#       define CO_TLS_API
 #   endif
 #else
 #   define CO_TLS_API

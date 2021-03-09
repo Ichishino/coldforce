@@ -35,7 +35,7 @@ void on_my_tls_handshake(my_app* self, co_tcp_client_t* client, int error_code)
     }
 }
 
-void on_my_tcp_receive(my_app* self, co_tcp_client_t* client)
+void on_my_tls_receive(my_app* self, co_tcp_client_t* client)
 {
     (void)self;
 
@@ -57,7 +57,7 @@ void on_my_tcp_receive(my_app* self, co_tcp_client_t* client)
     co_byte_array_destroy(byte_array);
 }
 
-void on_my_tcp_close(my_app* self, co_tcp_client_t* client)
+void on_my_tls_close(my_app* self, co_tcp_client_t* client)
 {
     char remote_str[64];
     co_net_addr_get_as_string(
@@ -74,8 +74,8 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* server, co_tcp_client_t* cl
     // accept
     co_tcp_accept((co_thread_t*)self, client);
 
-    co_tls_set_receive_handler(client, (co_tcp_receive_fn)on_my_tcp_receive);
-    co_tls_set_close_handler(client, (co_tcp_close_fn)on_my_tcp_close);
+    co_tls_set_receive_handler(client, (co_tcp_receive_fn)on_my_tls_receive);
+    co_tls_set_close_handler(client, (co_tcp_close_fn)on_my_tls_close);
 
     // TLS handshake
     co_tls_start_handshake(
