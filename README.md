@@ -18,7 +18,7 @@ Coldforce は C言語で作られた、さまざまなネットワークプロ�
 ### ビルド要件
 * C99対応コンパイラ
 * pthread (-lpthread) オプション
-* TLS, HTTP/1.1, HTTP/2機能を使用する場合は、OpenSSL(-lssl -lcrypt) が必要となります。
+* TLS, HTTP/1.1, HTTP/2機能を使用する場合は、OpenSSL(-lssl -lcrypto) が必要となります。
 
 ### モジュール構成
 * **co_core** - アプリケーション基本機能
