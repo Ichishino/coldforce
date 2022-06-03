@@ -1,0 +1,20 @@
+cmake_minimum_required(VERSION 2.8)
+
+project(coldforce_examples)
+
+add_subdirectory(http1_http2_server)
+add_subdirectory(http2_client)
+add_subdirectory(http2_server)
+add_subdirectory(http_client)
+add_subdirectory(http_server)
+add_subdirectory(https_server)
+add_subdirectory(tcp_client)
+add_subdirectory(tcp_echo_server)
+add_subdirectory(tcp_server_multi_thread)
+add_subdirectory(tls_client)
+add_subdirectory(tls_echo_server)
+add_subdirectory(udp_echo_server)
+add_subdirectory(udp_sender)
+add_subdirectory(ws_client)
+add_subdirectory(ws_server)
+

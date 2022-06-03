@@ -8,3 +8,6 @@ add_subdirectory(src/tls)
 add_subdirectory(src/http)
 add_subdirectory(src/http2)
 add_subdirectory(src/ws)
+
+add_subdirectory(examples)
+
