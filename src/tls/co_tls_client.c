@@ -4,6 +4,8 @@
 
 #include <coldforce/tls/co_tls_client.h>
 
+#ifdef CO_CAN_USE_TLS
+
 //---------------------------------------------------------------------------//
 // tls tcp client
 //---------------------------------------------------------------------------//
@@ -736,3 +738,5 @@ co_tls_get_remote_net_addr(
 {
     return co_tcp_get_remote_net_addr(client);
 }
+
+#endif // CO_CAN_USE_TLS

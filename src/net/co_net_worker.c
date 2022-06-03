@@ -430,7 +430,7 @@ co_net_worker_tcp_client_close_timer(
 )
 {
     co_tcp_client_t* client =
-        (co_tcp_client_t*)co_timer_get_param(timer);
+        (co_tcp_client_t*)co_timer_get_user_data(timer);
 
     client->open_remote = false;
 

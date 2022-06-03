@@ -14,6 +14,8 @@ CO_EXTERN_C_BEGIN
 // tls client
 //---------------------------------------------------------------------------//
 
+#ifdef CO_CAN_USE_TLS
+
 typedef void(*co_tls_handshake_fn)(
     void* self, co_tcp_client_t* client, int error_code);
 
@@ -90,6 +92,8 @@ CO_TLS_API const co_net_addr_t*
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
+
+#endif // CO_CAN_USE_TLS
 
 CO_EXTERN_C_END
 

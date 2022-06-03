@@ -392,8 +392,9 @@ co_http2_stream_frame_trace(
 )
 {
     char remote[64];
-    co_net_addr_get_as_string(
-        co_tcp_get_remote_net_addr(stream->client->tcp_client), remote);
+    co_net_addr_to_string(
+        co_tcp_get_remote_net_addr(stream->client->tcp_client),
+        remote, sizeof(remote));
 
     char info[256] = { 0 };
     char type[32] = { 0 };

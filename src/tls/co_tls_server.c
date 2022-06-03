@@ -4,6 +4,8 @@
 #include <coldforce/tls/co_tls_server.h>
 #include <coldforce/tls/co_tls_client.h>
 
+#ifdef CO_CAN_USE_TLS
+
 //---------------------------------------------------------------------------//
 // tls tcp server
 //---------------------------------------------------------------------------//
@@ -225,3 +227,5 @@ co_tls_server_start(
     return co_tcp_server_start(
         server, (co_tcp_accept_fn)co_tls_server_on_accept_ready, backlog);
 }
+
+#endif // CO_CAN_USE_TLS

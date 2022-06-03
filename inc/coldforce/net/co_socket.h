@@ -39,7 +39,7 @@ typedef struct
     void* sub_class;
     void* tls;
 
-    uintptr_t data;
+    uintptr_t user_data;
 
 } co_socket_t;
 

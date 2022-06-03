@@ -2,6 +2,7 @@
 #include <coldforce/core/co_string.h>
 
 #include <coldforce/tls/co_tls_client.h>
+#include <coldforce/tls/co_tls_server.h>
 
 #include <coldforce/http/co_http_string_list.h>
 #include <coldforce/http/co_http_server.h>
@@ -264,6 +265,58 @@ co_http_server_create(
     return server;
 }
 
+void
+co_http_server_destroy(
+    co_http_server_t* server
+)
+{
+    if (server != NULL)
+    {
+        if (server->tcp_server != NULL)
+        {
+            server->module.destroy(server->tcp_server);
+            server->tcp_server = NULL;
+
+            co_mem_free_later(server);
+        }
+    }
+}
+
+void
+co_http_server_close(
+    co_http_server_t* server
+)
+{
+    if (server != NULL)
+    {
+        server->module.close(server->tcp_server);
+    }
+}
+
+bool
+co_http_server_start(
+    co_http_server_t* server,
+    co_tcp_accept_fn handler,
+    int backlog
+)
+{
+    return server->module.start(
+        server->tcp_server, handler, backlog);
+}
+
+co_socket_t*
+co_http_server_get_socket(
+    co_http_server_t* server
+)
+{
+    return &server->tcp_server->sock;
+}
+
+//---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
+
+#ifdef CO_CAN_USE_TLS
+
 co_http_server_t*
 co_http_tls_server_create(
     const co_net_addr_t* local_net_addr,
@@ -298,34 +351,6 @@ co_http_tls_server_create(
 }
 
 void
-co_http_server_destroy(
-    co_http_server_t* server
-)
-{
-    if (server != NULL)
-    {
-        if (server->tcp_server != NULL)
-        {
-            server->module.destroy(server->tcp_server);
-            server->tcp_server = NULL;
-
-            co_mem_free_later(server);
-        }
-    }
-}
-
-void
-co_http_server_close(
-    co_http_server_t* server
-)
-{
-    if (server != NULL)
-    {
-        server->module.close(server->tcp_server);
-    }
-}
-
-void
 co_http_tls_server_set_available_protocols(
     co_http_server_t* server,
     const char* protocols[],
@@ -336,24 +361,7 @@ co_http_tls_server_set_available_protocols(
         server->tcp_server, protocols, protocol_count);
 }
 
-bool
-co_http_server_start(
-    co_http_server_t* server,
-    co_tcp_accept_fn handler,
-    int backlog
-)
-{
-    return server->module.start(
-        server->tcp_server, handler, backlog);
-}
-
-co_socket_t*
-co_http_server_get_socket(
-    co_http_server_t* server
-)
-{
-    return &server->tcp_server->sock;
-}
+#endif // CO_CAN_USE_TLS
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

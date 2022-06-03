@@ -19,8 +19,8 @@ typedef struct
 #define my_client_log(protocol, client, str) \
     do { \
         char remote_str[64]; \
-        co_net_addr_get_as_string( \
-            co_##protocol##_get_remote_net_addr(client), remote_str); \
+        co_net_addr_to_string( \
+            co_##protocol##_get_remote_net_addr(client), remote_str, sizeof(remote_str)); \
         printf("%s: %s\n", str, remote_str); \
     } while(0)
 
@@ -165,7 +165,7 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     uint16_t port = 9080;
 
     // local address
-    co_net_addr_t local_net_addr = CO_NET_ADDR_INIT;
+    co_net_addr_t local_net_addr = { 0 };
     co_net_addr_set_family(&local_net_addr, CO_ADDRESS_FAMILY_IPV4);
     co_net_addr_set_port(&local_net_addr, port);
 
@@ -180,7 +180,7 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
         (co_tcp_accept_fn)on_my_tcp_accept, SOMAXCONN);
 
     char local_str[64];
-    co_net_addr_get_as_string(&local_net_addr, local_str);
+    co_net_addr_to_string(&local_net_addr, local_str, sizeof(local_str));
     printf("listen %s\n", local_str);
 
     return true;

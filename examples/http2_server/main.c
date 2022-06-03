@@ -6,11 +6,13 @@
 
 #include <string.h>
 
+#ifdef CO_CAN_USE_TLS
 // openssl
 #ifdef _WIN32
 #pragma comment(lib, "libssl.lib")
 #pragma comment(lib, "libcrypto.lib")
 #endif
+#endif // CO_CAN_USE_TLS
 
 // my app object
 typedef struct
@@ -26,8 +28,8 @@ typedef struct
 #define my_client_log(protocol, client, str) \
     do { \
         char remote_str[64]; \
-        co_net_addr_get_as_string( \
-            co_##protocol##_get_remote_net_addr(client), remote_str); \
+        co_net_addr_to_string( \
+            co_##protocol##_get_remote_net_addr(client), remote_str, sizeof(remote_str)); \
         printf("%s: %s\n", str, remote_str); \
     } while(0)
 
@@ -244,6 +246,8 @@ void on_my_http2_close(my_app* self, co_http2_client_t* http2_client, int error_
 // tls
 //---------------------------------------------------------------------------//
 
+#ifdef CO_CAN_USE_TLS
+
 void on_my_tls_handshake(my_app* self, co_tcp_client_t* tcp_client, int error_code)
 {
     (void)self;
@@ -255,7 +259,7 @@ void on_my_tls_handshake(my_app* self, co_tcp_client_t* tcp_client, int error_co
         // create http2 client
         co_http2_client_t* http2_client = co_http2_client_create_with(tcp_client);
 
-        // settings
+        // settings (optional)
         co_http2_setting_param_st params[2];
         params[0].identifier = CO_HTTP2_SETTING_ID_INITIAL_WINDOW_SIZE;
         params[0].value = 1024 * 1024 * 10;
@@ -278,6 +282,8 @@ void on_my_tls_handshake(my_app* self, co_tcp_client_t* tcp_client, int error_co
     }
 }
 
+#endif // CO_CAN_USE_TLS
+
 //---------------------------------------------------------------------------//
 // tcp
 //---------------------------------------------------------------------------//
@@ -291,9 +297,32 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t
     // accept
     co_tcp_accept((co_thread_t*)self, tcp_client);
 
+#ifdef CO_CAN_USE_TLS
+
     // TLS handshake
     co_tls_start_handshake(
         tcp_client, (co_tls_handshake_fn)on_my_tls_handshake);
+
+#else
+
+    // create http2 client
+    co_http2_client_t* http2_client = co_http2_client_create_with(tcp_client);
+
+    // settings (optional)
+    co_http2_setting_param_st params[2];
+    params[0].identifier = CO_HTTP2_SETTING_ID_INITIAL_WINDOW_SIZE;
+    params[0].value = 1024 * 1024 * 10;
+    params[1].identifier = CO_HTTP2_SETTING_ID_MAX_CONCURRENT_STREAMS;
+    params[1].value = 200;
+    co_http2_init_settings(http2_client, params, 2);
+
+    // set callback
+    co_http2_set_message_handler(http2_client, (co_http2_message_fn)on_my_http2_request);
+    co_http2_set_close_handler(http2_client, (co_http2_close_fn)on_my_http2_close);
+
+    co_list_add_tail(self->http2_clients, (uintptr_t)http2_client);
+
+#endif // CO_CAN_USE_TLS
 }
 
 //---------------------------------------------------------------------------//
@@ -312,9 +341,11 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     uint16_t port = 9443;
 
     // local address
-    co_net_addr_t local_net_addr = CO_NET_ADDR_INIT;
+    co_net_addr_t local_net_addr = { 0 };
     co_net_addr_set_family(&local_net_addr, CO_ADDRESS_FAMILY_IPV4);
     co_net_addr_set_port(&local_net_addr, port);
+
+#ifdef CO_CAN_USE_TLS
 
     // TLS setting (openssl)
     co_tls_ctx_st tls_ctx = { 0 };
@@ -356,8 +387,15 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     co_http_server_start(self->server,
         (co_tcp_accept_fn)on_my_tcp_accept, SOMAXCONN);
 
+#else
+
+    // http server
+    self->server = co_http_server_create(&local_net_addr);
+
+#endif // CO_CAN_USE_TLS
+
     char local_str[64];
-    co_net_addr_get_as_string(&local_net_addr, local_str);
+    co_net_addr_to_string(&local_net_addr, local_str, sizeof(local_str));
     printf("listen %s\n", local_str);
 
     return true;

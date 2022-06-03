@@ -299,15 +299,16 @@ co_net_selector_wait(
                     if ((events[index].data > 0) ||
                         (sock->type == CO_SOCKET_TYPE_TCP_SERVER))
                     {
-                        co_event_send(sock->owner_thread,
+                        co_thread_send_event(
+                            sock->owner_thread,
                             net_event_ids[sock->type - 1].read,
-                            (uintptr_t)sock, 0);
+                            (uintptr_t)sock,
+                            0);
                     }
                     else
                     {
-                        if (!co_event_send(sock->owner_thread,
-                            CO_NET_EVENT_ID_TCP_CLOSE,
-                            (uintptr_t)sock, 0))
+                        if (!co_thread_send_event(sock->owner_thread,
+                            CO_NET_EVENT_ID_TCP_CLOSE, (uintptr_t)sock, 0))
                         {
                             co_tcp_client_on_close((co_tcp_client_t*)sock);
                         }
@@ -315,9 +316,11 @@ co_net_selector_wait(
                 }
                 else if (events[index].filter == EVFILT_WRITE)
                 {
-                    co_event_send(sock->owner_thread,
+                    co_thread_send_event(
+                        sock->owner_thread,
                         net_event_ids[sock->type - 1].write,
-                        (uintptr_t)sock, error_code);
+                        (uintptr_t)sock,
+                        error_code);
                 }
             }
         }

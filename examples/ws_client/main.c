@@ -120,10 +120,15 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     const char* base_url = "ws://127.0.0.1:9080";
     const char* file_path = "/";
 
-    co_net_addr_t local_net_addr = CO_NET_ADDR_INIT;
+    co_net_addr_t local_net_addr = { 0 };
     co_net_addr_set_family(&local_net_addr, CO_ADDRESS_FAMILY_IPV4);
 
     self->client = co_ws_client_create(base_url, &local_net_addr, NULL);
+
+    if (self->client == NULL)
+    {
+        return false;
+    }
 
     co_ws_set_receive_handler(self->client, (co_ws_receive_fn)on_my_ws_receive);
     co_ws_set_close_handler(self->client, (co_ws_close_fn)on_my_ws_close);

@@ -28,6 +28,7 @@ co_http2_client_setup(
     co_http2_client_t* client
 )
 {
+#ifdef CO_CAN_USE_TLS
     if (client->tcp_client->sock.tls != NULL)
     {
         client->module.destroy = co_tls_client_destroy;
@@ -38,12 +39,16 @@ co_http2_client_setup(
     }
     else
     {
+#endif
         client->module.destroy = co_tcp_client_destroy;
         client->module.close = co_tcp_client_close;
         client->module.connect = co_tcp_connect;
         client->module.send = co_tcp_send;
         client->module.receive_all = co_tcp_receive_all;
+
+#ifdef CO_CAN_USE_TLS
     }
+#endif
 
     client->tcp_client->sock.sub_class = client;
 
@@ -696,7 +701,7 @@ co_http2_client_create(
     int address_family =
         co_net_addr_get_family(local_net_addr);
 
-    co_net_addr_t remote_net_addr = CO_NET_ADDR_INIT;
+    co_net_addr_t remote_net_addr = { 0 };
 
     if (!co_net_addr_set_address(
         &remote_net_addr, client->base_url->host))
@@ -736,6 +741,7 @@ co_http2_client_create(
 
     if (secure)
     {
+#ifdef CO_CAN_USE_TLS
         client->tcp_client =
             co_tls_client_create(local_net_addr, tls_ctx);
 
@@ -749,6 +755,14 @@ co_http2_client_create(
             co_tls_set_available_protocols(
                 client->tcp_client, &protocol, 1);
         }
+#else
+        (void)tls_ctx;
+
+        co_http_url_destroy(client->base_url);
+        co_mem_free(client);
+
+        return NULL;
+#endif
     }
     else
     {
@@ -1150,19 +1164,31 @@ co_http2_is_open(
         co_tcp_is_open(client->tcp_client) : false);
 }
 
-void
-co_http2_set_data(
+bool
+co_http2_set_user_data(
     co_http2_client_t* client,
-    uintptr_t data
+    uintptr_t user_data
 )
 {
-    co_tcp_set_data(client->tcp_client, data);
+    if (client != NULL)
+    {
+        return co_tcp_set_user_data(
+            client->tcp_client, user_data);
+    }
+
+    return false;
 }
 
-uintptr_t
-co_http2_get_data(
-    const co_http2_client_t* client
+bool
+co_http2_get_user_data(
+    const co_http2_client_t* client,
+    uintptr_t* user_data
 )
 {
-    return co_tcp_get_data(client->tcp_client);
+    if (client != NULL)
+    {
+        return co_tcp_get_user_data(client->tcp_client, user_data);
+    }
+
+    return false;
 }

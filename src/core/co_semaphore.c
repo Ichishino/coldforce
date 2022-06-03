@@ -105,19 +105,31 @@ co_semaphore_wait(
 
 #elif defined(CO_OS_LINUX)
 
-    struct timespec ts;
-    clock_gettime(CLOCK_REALTIME, &ts);
-
-    ts.tv_nsec += msec * 1000000;
-    ts.tv_sec += ts.tv_nsec / 1000000000;
-    ts.tv_nsec %= 1000000000;
-
     int res;
-    do
-    {
-        res = sem_timedwait((sem_t*)semaphore, &ts);
 
-    } while (res == -1 && errno == EINTR);
+    if (msec == CO_INFINITE)
+    {
+        do
+        {
+            res = sem_wait((sem_t*)semaphore);
+
+        } while (res == -1 && errno == EINTR);
+    }
+    else
+    {
+        struct timespec ts;
+        clock_gettime(CLOCK_REALTIME, &ts);
+
+        ts.tv_nsec += msec * 1000000;
+        ts.tv_sec += ts.tv_nsec / 1000000000;
+        ts.tv_nsec %= 1000000000;
+
+        do
+        {
+            res = sem_timedwait((sem_t*)semaphore, &ts);
+
+        } while (res == -1 && errno == EINTR);
+    }
 
     if (res == 0)
     {

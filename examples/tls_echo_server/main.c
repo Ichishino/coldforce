@@ -2,6 +2,8 @@
 
 #include <stdio.h>
 
+#ifdef CO_CAN_USE_TLS
+
 // openssl
 #ifdef _WIN32
 #pragma comment(lib, "libssl.lib")
@@ -60,8 +62,8 @@ void on_my_tls_receive(my_app* self, co_tcp_client_t* client)
 void on_my_tls_close(my_app* self, co_tcp_client_t* client)
 {
     char remote_str[64];
-    co_net_addr_get_as_string(
-        co_tcp_get_remote_net_addr(client), remote_str);
+    co_net_addr_to_string(
+        co_tcp_get_remote_net_addr(client), remote_str, sizeof(remote_str));
     printf("close %s\n", remote_str);
 
     co_list_remove(self->client_list, (uintptr_t)client);
@@ -84,8 +86,8 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* server, co_tcp_client_t* cl
     co_list_add_tail(self->client_list, (uintptr_t)client);
 
     char remote_str[64];
-    co_net_addr_get_as_string(
-        co_tcp_get_remote_net_addr(client), remote_str);
+    co_net_addr_to_string(
+        co_tcp_get_remote_net_addr(client), remote_str, sizeof(remote_str));
     printf("accept %s\n", remote_str);
 }
 
@@ -101,7 +103,7 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     uint16_t port = 9443;
 
     // local address
-    co_net_addr_t local_net_addr = CO_NET_ADDR_INIT;
+    co_net_addr_t local_net_addr = { 0 };
     co_net_addr_set_family(&local_net_addr, CO_ADDRESS_FAMILY_IPV4);
     co_net_addr_set_port(&local_net_addr, port);
     
@@ -139,7 +141,7 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
         (co_tcp_accept_fn)on_my_tcp_accept, SOMAXCONN);
 
     char local_str[64];
-    co_net_addr_get_as_string(&local_net_addr, local_str);
+    co_net_addr_to_string(&local_net_addr, local_str, sizeof(local_str));
     printf("listen %s\n", local_str);
 
     return true;
@@ -169,3 +171,18 @@ int main(int argc, char* argv[])
 
     return exit_code;
 }
+
+#else
+
+int main(int argc, char* argv[])
+{
+    (void)argc;
+    (void)argv;
+
+    co_tls_setup();
+    co_tls_cleanup();
+
+    return 0;
+}
+
+#endif // CO_CAN_USE_TLS

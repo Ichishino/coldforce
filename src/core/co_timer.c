@@ -14,7 +14,7 @@ co_timer_create(
     uint32_t msec,
     co_timer_fn handler,
     bool repeat,
-    uintptr_t param
+    uintptr_t user_data
 )
 {
     co_timer_t* timer =
@@ -31,7 +31,7 @@ co_timer_create(
     timer->repeat = repeat;
     timer->msec = msec;
     timer->handler = handler;
-    timer->param = param;
+    timer->user_data = user_data;
 
     return timer;
 }

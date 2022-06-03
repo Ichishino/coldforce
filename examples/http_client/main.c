@@ -49,13 +49,22 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
 {
     (void)arg;
 
+#ifdef CO_CAN_USE_TLS
     const char* base_url = "https://www.example.com";
+#else
+    const char* base_url = "http://www.example.com";
+#endif
     const char* file_path = "/index.html";
 
-    co_net_addr_t local_net_addr = CO_NET_ADDR_INIT;
+    co_net_addr_t local_net_addr = { 0 };
     co_net_addr_set_family(&local_net_addr, CO_ADDRESS_FAMILY_IPV4);
 
     self->client = co_http_client_create(base_url, &local_net_addr, NULL);
+
+    if (self->client == NULL)
+    {
+        return false;
+    }
 
     co_http_set_receive_handler(self->client, (co_http_receive_fn)on_my_response);
 

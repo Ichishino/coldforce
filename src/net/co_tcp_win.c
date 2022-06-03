@@ -425,7 +425,7 @@ co_win_tcp_client_receive_start(
 
         if (error != ERROR_IO_PENDING)
         {
-            co_event_send(client->sock.owner_thread,
+            co_thread_send_event(client->sock.owner_thread,
                 CO_NET_EVENT_ID_TCP_CLOSE, (uintptr_t)client, 0);
 
             return false;

@@ -51,9 +51,11 @@ co_udp_on_send_ready(
 
         co_mem_free(used_data.buffer.ptr);
 
-        co_event_send(udp->sock.owner_thread,
+        co_thread_send_event(
+            udp->sock.owner_thread,
             CO_NET_EVENT_ID_UDP_SEND_COMPLETE,
-            (uintptr_t)udp, (uintptr_t)sent_size);
+            (uintptr_t)udp,
+            (uintptr_t)sent_size);
 
         co_udp_on_send_ready(udp);
     }
@@ -119,7 +121,7 @@ co_udp_create(
     udp->sock.open_local = true;
     udp->sock.sub_class = NULL;
     udp->sock.tls = NULL;
-    udp->sock.data = 0;
+    udp->sock.user_data = 0;
 
     memcpy(&udp->sock.local_net_addr,
         local_net_addr, sizeof(co_net_addr_t));
@@ -296,8 +298,11 @@ co_udp_send_async(
         udp->sock_event_flags &= ~CO_SOCKET_EVENT_SEND;
         co_net_worker_update_udp(net_worker, udp);
 
-        co_event_send(udp->sock.owner_thread,
-            CO_NET_EVENT_ID_UDP_SEND_COMPLETE, (uintptr_t)udp, data_size);
+        co_thread_send_event(
+            udp->sock.owner_thread,
+            CO_NET_EVENT_ID_UDP_SEND_COMPLETE,
+            (uintptr_t)udp,
+            data_size);
 
         return true;
     }
@@ -426,19 +431,34 @@ co_udp_get_socket(
     return &udp->sock;
 }
 
-void
-co_udp_set_data(
+bool
+co_udp_set_user_data(
     co_udp_t* udp,
-    uintptr_t data
+    uintptr_t user_data
 )
 {
-    udp->sock.data = data;
+    if (udp != NULL)
+    {
+        udp->sock.user_data = user_data;
+
+        return true;
+    }
+
+    return false;
 }
 
-uintptr_t
-co_udp_get_data(
-    const co_udp_t* udp
+bool
+co_udp_get_user_data(
+    const co_udp_t* udp,
+    uintptr_t* user_data
 )
 {
-    return udp->sock.data;
+    if (udp != NULL)
+    {
+        *user_data = udp->sock.user_data;
+
+        return true;
+    }
+
+    return false;
 }

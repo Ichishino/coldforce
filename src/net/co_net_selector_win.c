@@ -166,7 +166,7 @@ co_net_selector_wait(
 
                 if (data_length > 0)
                 {
-                    if (!co_event_send(
+                    if (!co_thread_send_event(
                         io_ctx->sock->owner_thread,
                         CO_NET_EVENT_ID_TCP_RECEIVE_READY,
                         (uintptr_t)io_ctx->sock, (uintptr_t)data_length))
@@ -177,7 +177,7 @@ co_net_selector_wait(
                 }
                 else
                 {
-                    if (!co_event_send(
+                    if (!co_thread_send_event(
                         io_ctx->sock->owner_thread,
                         CO_NET_EVENT_ID_TCP_CLOSE,
                         (uintptr_t)io_ctx->sock, 0))
@@ -192,7 +192,7 @@ co_net_selector_wait(
             {
                 if (io_ctx->sock != NULL)
                 {
-                    co_event_send(
+                    co_thread_send_event(
                         io_ctx->sock->owner_thread,
                         CO_NET_EVENT_ID_TCP_SEND_COMPLETE,
                         (uintptr_t)io_ctx->sock,
@@ -205,7 +205,7 @@ co_net_selector_wait(
             {
                 if (io_ctx->sock != NULL)
                 {
-                    co_event_send(
+                    co_thread_send_event(
                         io_ctx->sock->owner_thread,
                         CO_NET_EVENT_ID_TCP_ACCEPT_READY,
                         (uintptr_t)io_ctx->sock,
@@ -233,7 +233,7 @@ co_net_selector_wait(
                     }
                 }
 
-                co_event_send(
+                co_thread_send_event(
                     io_ctx->sock->owner_thread,
                     CO_NET_EVENT_ID_TCP_CONNECT_COMPLETE,
                     (uintptr_t)io_ctx->sock,
@@ -245,7 +245,7 @@ co_net_selector_wait(
             {
                 if (io_ctx->sock != NULL)
                 {
-                    co_event_send(
+                    co_thread_send_event(
                         io_ctx->sock->owner_thread,
                         CO_NET_EVENT_ID_UDP_SEND_COMPLETE,
                         (uintptr_t)io_ctx->sock,
@@ -258,7 +258,7 @@ co_net_selector_wait(
             {
                 if (io_ctx->sock != NULL)
                 {
-                    co_event_send(
+                    co_thread_send_event(
                         io_ctx->sock->owner_thread,
                         CO_NET_EVENT_ID_UDP_RECEIVE_READY,
                         (uintptr_t)io_ctx->sock,

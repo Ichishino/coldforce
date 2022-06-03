@@ -214,9 +214,10 @@ co_net_addr_get_scope_id(
 }
 
 bool
-co_net_addr_get_as_string(
+co_net_addr_to_string(
     const co_net_addr_t* net_addr,
-    char* buffer
+    char* buffer,
+    size_t size
 )
 {
     if (co_net_is_ipv4(net_addr) || co_net_is_ipv6(net_addr))
@@ -235,12 +236,18 @@ co_net_addr_get_as_string(
             return false;
         }
 
-        sprintf(buffer, "%s%c%d",
-            address, (co_net_is_ipv4(net_addr) ? ':' : '.'), port);
+        if (co_net_is_ipv6(net_addr))
+        {
+            snprintf(buffer, size, "[%s]:%d", address, port);
+        }
+        else
+        {
+            snprintf(buffer, size, "%s:%d", address, port);
+        }
     }
     else if (co_net_is_unix(net_addr))
     {
-        sprintf(buffer, "unix:%s", net_addr->sa.un.sun_path);
+        snprintf(buffer, size, "unix:%s", net_addr->sa.un.sun_path);
     }
     else
     {

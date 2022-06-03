@@ -105,8 +105,8 @@ CO_WS_API const co_net_addr_t* co_ws_get_remote_net_addr(const co_ws_client_t* c
 CO_WS_API co_socket_t* co_ws_client_get_socket(co_ws_client_t* client);
 CO_WS_API const char* co_ws_get_base_url(const co_ws_client_t* client);
 CO_WS_API bool co_ws_is_open(const co_ws_client_t* client);
-CO_WS_API void co_ws_set_data(co_ws_client_t* client, uintptr_t data);
-CO_WS_API uintptr_t co_ws_get_data(const co_ws_client_t* client);
+CO_WS_API bool co_ws_set_user_data(co_ws_client_t* client, uintptr_t user_data);
+CO_WS_API bool co_ws_get_user_data(const co_ws_client_t* client, uintptr_t* user_data);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

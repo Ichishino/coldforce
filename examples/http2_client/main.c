@@ -156,12 +156,21 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
 {
     (void)arg;
 
+#ifdef CO_CAN_USE_TLS
     const char* base_url = "https://127.0.0.1:9443";
+#else
+    const char* base_url = "http://127.0.0.1:9443";
+#endif
 
-    co_net_addr_t local_net_addr = CO_NET_ADDR_INIT;
+    co_net_addr_t local_net_addr = { 0 };
     co_net_addr_set_family(&local_net_addr, CO_ADDRESS_FAMILY_IPV4);
 
     self->client = co_http2_client_create(base_url, &local_net_addr, NULL);
+
+    if (self->client == NULL)
+    {
+        return false;
+    }
 
     co_http2_setting_param_st params[1];
     params[0].identifier = CO_HTTP2_SETTING_ID_INITIAL_WINDOW_SIZE;

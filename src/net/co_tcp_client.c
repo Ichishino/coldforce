@@ -72,7 +72,7 @@ co_tcp_client_setup(
     client->sock.open_local = false;
     client->sock.sub_class = NULL;
     client->sock.tls = NULL;
-    client->sock.data = 0;
+    client->sock.user_data = 0;
 
     client->open_remote = false;
 
@@ -208,9 +208,11 @@ co_tcp_client_on_send_ready(
 
         co_mem_free(used_data.ptr);
 
-        co_event_send(client->sock.owner_thread,
+        co_thread_send_event(
+            client->sock.owner_thread,
             CO_NET_EVENT_ID_TCP_SEND_COMPLETE,
-            (uintptr_t)client, (uintptr_t)sent_size);
+            (uintptr_t)client,
+            (uintptr_t)sent_size);
 
         co_tcp_client_on_send_ready(client);
     }
@@ -266,9 +268,11 @@ co_tcp_client_on_receive_ready(
     }
     else
     {
-        co_event_send(client->sock.owner_thread,
+        co_thread_send_event(
+            client->sock.owner_thread,
             CO_NET_EVENT_ID_TCP_RECEIVE_READY,
-            (uintptr_t)client, 0);
+            (uintptr_t)client,
+            0);
     }
 #endif
 }
@@ -406,8 +410,11 @@ co_tcp_connect(
     if (co_socket_handle_connect(
         client->sock.handle, remote_net_addr))
     {
-        co_event_send(client->sock.owner_thread,
-            CO_NET_EVENT_ID_TCP_CONNECT_COMPLETE, (uintptr_t)client, 0);
+        co_thread_send_event(
+            client->sock.owner_thread,
+            CO_NET_EVENT_ID_TCP_CONNECT_COMPLETE,
+            (uintptr_t)client,
+            0);
     }
     else
     {
@@ -473,8 +480,11 @@ co_tcp_send_async(
     {
         co_net_worker_set_tcp_send(net_worker, client, false);
 
-        co_event_send(client->sock.owner_thread,
-            CO_NET_EVENT_ID_TCP_SEND_COMPLETE, (uintptr_t)client, (uintptr_t)data_size);
+        co_thread_send_event(
+            client->sock.owner_thread,
+            CO_NET_EVENT_ID_TCP_SEND_COMPLETE,
+            (uintptr_t)client,
+            (uintptr_t)data_size);
 
         return true;
     }
@@ -653,22 +663,34 @@ co_tcp_client_get_socket(
     return &client->sock;
 }
 
-void
-co_tcp_set_data(
+bool
+co_tcp_set_user_data(
     co_tcp_client_t* client,
-    uintptr_t data
+    uintptr_t user_data
 )
 {
     if (client != NULL)
     {
-        client->sock.data = data;
+        client->sock.user_data = user_data;
+
+        return true;
     }
+
+    return false;
 }
 
-uintptr_t
-co_tcp_get_data(
-    const co_tcp_client_t* client
+bool
+co_tcp_get_user_data(
+    const co_tcp_client_t* client,
+    uintptr_t* user_data
 )
 {
-    return ((client != NULL) ? client->sock.data : 0);
+    if (client != NULL)
+    {
+        *user_data = client->sock.user_data;
+
+        return true;
+    }
+
+    return false;
 }

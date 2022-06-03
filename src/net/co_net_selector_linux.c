@@ -234,7 +234,7 @@ co_net_selector_wait(
                 {
                     if (sock->type == CO_SOCKET_TYPE_TCP_CONNECTION)
                     {
-                        if (!co_event_send(sock->owner_thread,
+                        if (!co_thread_send_event(sock->owner_thread,
                             CO_NET_EVENT_ID_TCP_CLOSE, (uintptr_t)sock, error_code))
                         {
                             co_tcp_client_on_close((co_tcp_client_t*)sock);
@@ -246,14 +246,20 @@ co_net_selector_wait(
 
                 if (e->events & EPOLLIN)
                 {
-                    co_event_send(sock->owner_thread,
-                        net_event_ids[sock->type - 1].read, (uintptr_t)sock, error_code);
+                    co_thread_send_event(
+                        sock->owner_thread,
+                        net_event_ids[sock->type - 1].read,
+                        (uintptr_t)sock,
+                        error_code);
                 }
 
                 if (e->events & EPOLLOUT)
                 {
-                    co_event_send(sock->owner_thread,
-                        net_event_ids[sock->type - 1].write, (uintptr_t)sock, error_code);
+                    co_thread_send_event(
+                        sock->owner_thread,
+                        net_event_ids[sock->type - 1].write,
+                        (uintptr_t)sock,
+                        error_code);
                 }
             }
         }

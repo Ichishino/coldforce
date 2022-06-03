@@ -10,7 +10,7 @@
 //---------------------------------------------------------------------------//
 
 void
-co_event_set_handler(
+co_thread_set_event_handler(
     co_thread_t* thread,
     co_event_id_t event_id,
     co_event_fn handler
@@ -22,7 +22,7 @@ co_event_set_handler(
 }
 
 co_event_fn
-co_event_get_handler(
+co_thread_get_event_handler(
     co_thread_t* thread,
     co_event_id_t
     event_id
@@ -35,7 +35,7 @@ co_event_get_handler(
 }
 
 void
-co_event_remove_handler(
+co_thread_remove_event_handler(
     co_thread_t* thread,
     co_event_id_t event_id
 )
@@ -45,7 +45,7 @@ co_event_remove_handler(
 }
 
 bool
-co_event_send(
+co_thread_send_event(
     co_thread_t* thread,
     co_event_id_t event_id,
     uintptr_t param1,
@@ -58,7 +58,7 @@ co_event_send(
 }
 
 bool
-co_event_send_task(
+co_thread_send_task_event(
     co_thread_t* thread,
     co_task_fn handler,
     uintptr_t param1,

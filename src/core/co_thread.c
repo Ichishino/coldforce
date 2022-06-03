@@ -205,7 +205,7 @@ co_thread_stop(
     if ((thread != NULL) &&
         (thread->event_worker != NULL))
     {
-        co_event_send(thread, CO_EVENT_ID_STOP, 0, 0);
+        co_thread_send_event(thread, CO_EVENT_ID_STOP, 0, 0);
     }
 }
 

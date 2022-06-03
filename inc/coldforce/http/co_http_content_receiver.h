@@ -1,6 +1,8 @@
 #ifndef CO_HTTP_CONTENT_RECEIVER_H_INCLUDED
 #define CO_HTTP_CONTENT_RECEIVER_H_INCLUDED
 
+#include <stdio.h>
+
 #include <coldforce/core/co_byte_array.h>
 
 #include <coldforce/http/co_http.h>

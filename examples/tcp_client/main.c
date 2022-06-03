@@ -77,7 +77,7 @@ void my_connect(my_app* self)
     uint16_t port = 9000;
 
     // local address
-    co_net_addr_t local_net_addr = CO_NET_ADDR_INIT;
+    co_net_addr_t local_net_addr = { 0 };
     co_net_addr_set_family(&local_net_addr, CO_ADDRESS_FAMILY_IPV4);
 
     self->client = co_tcp_client_create(&local_net_addr);
@@ -86,7 +86,7 @@ void my_connect(my_app* self)
     co_tcp_set_close_handler(self->client, (co_tcp_close_fn)on_my_tcp_close);
 
     // remote address
-    co_net_addr_t remote_net_addr = CO_NET_ADDR_INIT;
+    co_net_addr_t remote_net_addr = { 0 };
     co_net_addr_set_address(&remote_net_addr, ip_address);
     co_net_addr_set_port(&remote_net_addr, port);
 
@@ -95,7 +95,7 @@ void my_connect(my_app* self)
         self->client, &remote_net_addr, (co_tcp_connect_fn)on_my_tcp_connect);
 
     char remote_str[64];
-    co_net_addr_get_as_string(&remote_net_addr, remote_str);
+    co_net_addr_to_string(&remote_net_addr, remote_str, sizeof(remote_str));
     printf("connect to %s\n", remote_str);
 }
 

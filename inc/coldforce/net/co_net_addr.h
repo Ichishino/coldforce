@@ -42,8 +42,6 @@ typedef struct
 
 } co_net_addr_t;
 
-#define CO_NET_ADDR_INIT  { 0 }
-
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
@@ -64,7 +62,7 @@ CO_NET_API bool co_net_addr_get_unix_path(const co_net_addr_t* net_addr, char* p
 CO_NET_API bool co_net_addr_set_scope_id(co_net_addr_t* net_addr, uint32_t scope_id);
 CO_NET_API bool co_net_addr_get_scope_id(const co_net_addr_t* net_addr, uint32_t* scope_id);
 
-CO_NET_API bool co_net_addr_get_as_string(const co_net_addr_t* net_addr, char* buffer);
+CO_NET_API bool co_net_addr_to_string(const co_net_addr_t* net_addr, char* buffer, size_t size);
 
 CO_NET_API bool co_net_addr_is_equal(
     const co_net_addr_t* net_addr1, const co_net_addr_t* net_addr2);
