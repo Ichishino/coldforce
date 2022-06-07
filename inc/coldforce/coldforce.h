@@ -19,6 +19,7 @@
 #include <coldforce/core/co_thread.h>
 #include <coldforce/core/co_app.h>
 #include <coldforce/core/co_debug.h>
+#include <coldforce/core/co_log.h>
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

@@ -3,6 +3,7 @@
 #include <coldforce/net/co_net_event.h>
 
 #include <coldforce/tls/co_tls_client.h>
+#include <coldforce/tls/co_tls_log.h>
 
 #ifdef CO_CAN_USE_TLS
 
@@ -13,29 +14,35 @@
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-#if CO_TLS_DEBUG
 static void
 co_tls_on_info(
     const SSL* ssl,
-    int type,
-    int value
+    int where,
+    int ret
 )
 {
-    printf("[CO_TLS] 0x%08X-%s %s (%d) %s\n",
-        type, SSL_alert_type_string(value), SSL_state_string_long(ssl),
-        value, SSL_alert_desc_string_long(value));
+    co_tcp_client_t* client =
+        (co_tcp_client_t*)SSL_get_ex_data(ssl, 0);
 
-    if (type == SSL_CB_HANDSHAKE_DONE)
+    co_tls_log_info(
+        &client->sock.local_net_addr, "---", &client->remote_net_addr,
+        "0x%08X-%s %s (%d) %s",
+        where, SSL_alert_type_string(ret), SSL_state_string_long(ssl),
+        ret, SSL_alert_desc_string_long(ret));
+
+    if (where == SSL_CB_HANDSHAKE_DONE)
     {
-        printf("[CO_TLS] %s %s\n", SSL_get_version(ssl), SSL_get_cipher_name(ssl));
+        co_tls_log_info(
+            &client->sock.local_net_addr, "---", &client->remote_net_addr,
+            "%s %s", SSL_get_version(ssl), SSL_get_cipher_name(ssl));
     }
 }
-#endif
 
 void
 co_tls_client_setup(
     co_tls_client_t* tls,
-    co_tls_ctx_st* tls_ctx
+    co_tls_ctx_st* tls_ctx,
+    co_tcp_client_t* client
 )
 {
     SSL_CTX* ssl_ctx = NULL;
@@ -52,12 +59,13 @@ co_tls_client_setup(
     tls->ctx.ssl_ctx = ssl_ctx;
     tls->ssl = SSL_new(tls->ctx.ssl_ctx);
 
-#if CO_TLS_DEBUG
+    SSL_set_ex_data(tls->ssl, 0, client);
+
     if (SSL_CTX_get_info_callback(ssl_ctx) == NULL)
     {
         SSL_CTX_set_info_callback(ssl_ctx, co_tls_on_info);
     }
-#endif
+
     BIO* internal_bio = NULL;
 
     BIO_new_bio_pair(&internal_bio, 0, &tls->network_bio, 0);
@@ -104,6 +112,12 @@ co_tls_send_handshake(
     co_tcp_client_t* client
 )
 {
+    co_tls_log_info(
+        &client->sock.local_net_addr,
+        "-->",
+        &client->remote_net_addr,
+        "handshake send");
+
     co_tls_client_t* tls = co_tcp_client_get_tls(client);
 
     while (BIO_ctrl_pending(tls->network_bio) > 0)
@@ -298,6 +312,12 @@ co_tls_on_receive_handshake(
 {
     (void)thread;
 
+    co_tls_log_info(
+        &client->sock.local_net_addr,
+        "<--",
+        &client->remote_net_addr,
+        "handshake receive");
+
     co_tls_client_t* tls = co_tcp_client_get_tls(client);
 
     int error_code = 0;
@@ -330,6 +350,12 @@ co_tls_on_receive_handshake(
     {
         error_code = CO_TLS_ERROR_HANDSHAKE_FAILED;
     }
+
+    co_tls_log_info(
+        &client->sock.local_net_addr,
+        "<--",
+        &client->remote_net_addr,
+        "handshake finished (%d)", error_code);
 
     if (tls->on_handshake_complete != NULL)
     {
@@ -405,7 +431,7 @@ co_tls_client_install(
         return false;
     }
 
-    co_tls_client_setup(tls, tls_ctx);
+    co_tls_client_setup(tls, tls_ctx, client);
     SSL_set_connect_state(tls->ssl);
 
     client->sock.tls = tls;
@@ -499,6 +525,12 @@ co_tls_start_handshake(
     co_tls_handshake_fn handler
 )
 {
+    co_tls_log_info(
+        &client->sock.local_net_addr,
+        "-->",
+        &client->remote_net_addr,
+        "handshake start");
+
     co_tls_client_t* tls = co_tcp_client_get_tls(client);
 
     if (tls == NULL)

@@ -11,6 +11,7 @@
 #include <coldforce/net/co_net_addr_resolve.h>
 #include <coldforce/net/co_net_thread.h>
 #include <coldforce/net/co_net_app.h>
+#include <coldforce/net/co_net_log.h>
 #include <coldforce/net/co_socket.h>
 #include <coldforce/net/co_socket_option.h>
 #include <coldforce/net/co_tcp_server.h>

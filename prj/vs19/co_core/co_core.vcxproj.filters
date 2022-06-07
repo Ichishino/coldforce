@@ -74,6 +74,9 @@
     <ClInclude Include="..\..\..\inc\coldforce\core\co_timer_manager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\inc\coldforce\core\co_log.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\core\co.c">
@@ -122,6 +125,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\core\co_timer_manager.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\co_log.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

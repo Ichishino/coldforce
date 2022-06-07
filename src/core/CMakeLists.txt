@@ -11,6 +11,7 @@ add_library(${PROJECT_NAME} STATIC
     co_event.c
     co_event_worker.c
     co_list.c
+    co_log.c
     co_map.c
     co_mutex.c
     co_queue.c

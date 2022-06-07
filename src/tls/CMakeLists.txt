@@ -6,6 +6,7 @@ add_library(${PROJECT_NAME} STATIC
 
     co_tls.c
     co_tls_client.c
+    co_tls_log.c
     co_tls_server.c
 )
 

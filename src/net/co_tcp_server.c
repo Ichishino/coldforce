@@ -4,6 +4,7 @@
 #include <coldforce/net/co_tcp_client.h>
 #include <coldforce/net/co_net_worker.h>
 #include <coldforce/net/co_net_event.h>
+#include <coldforce/net/co_net_log.h>
 
 //---------------------------------------------------------------------------//
 // tcp server
@@ -34,6 +35,12 @@ co_tcp_server_on_accept_ready(
     }
 
     server->win.accept_handle = CO_SOCKET_INVALID_HANDLE;
+
+    co_tcp_log_info(
+        &server->sock.local_net_addr,
+        "<--",
+        &win_client->remote_net_addr,
+        "accept");
 
     if ((co_net_addr_get_family(
             &win_client->remote_net_addr) != AF_UNSPEC) &&
@@ -71,6 +78,12 @@ co_tcp_server_on_accept_ready(
 
             return;
         }
+
+        co_tcp_log_info(
+            &server->sock.local_net_addr,
+            "<--",
+            &client->remote_net_addr,
+            "accept");
 
         if (server->on_accept_ready != NULL)
         {
@@ -177,6 +190,12 @@ co_tcp_server_start(
     co_win_tcp_server_accept_start(server);
 #endif
 
+    co_tcp_log_info(
+        &server->sock.local_net_addr,
+        "server start",
+       NULL,
+        "");
+
     return true;
 }
 
@@ -194,6 +213,12 @@ co_tcp_server_close (
     {
         return;
     }
+
+    co_tcp_log_info(
+        &server->sock.local_net_addr,
+        "server closed",
+        NULL,
+        "");
 
     co_net_worker_unregister_tcp_server(
         co_socket_get_net_worker(&server->sock),

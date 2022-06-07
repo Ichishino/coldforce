@@ -20,6 +20,9 @@
     <ClCompile Include="..\..\..\src\tls\co_tls_server.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\tls\co_tls_log.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\inc\coldforce\tls\co_tls.h">
@@ -32,6 +35,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\inc\coldforce\tls\co_tls_server.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\coldforce\tls\co_tls_log.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

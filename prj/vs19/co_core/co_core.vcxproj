@@ -310,6 +310,7 @@
     <ClInclude Include="..\..\..\inc\coldforce\core\co_event.h" />
     <ClInclude Include="..\..\..\inc\coldforce\core\co_event_worker.h" />
     <ClInclude Include="..\..\..\inc\coldforce\core\co_list.h" />
+    <ClInclude Include="..\..\..\inc\coldforce\core\co_log.h" />
     <ClInclude Include="..\..\..\inc\coldforce\core\co_map.h" />
     <ClInclude Include="..\..\..\inc\coldforce\core\co_mutex.h" />
     <ClInclude Include="..\..\..\inc\coldforce\core\co_queue.h" />
@@ -340,6 +341,7 @@
     <ClCompile Include="..\..\..\src\core\co_time.c" />
     <ClCompile Include="..\..\..\src\core\co_timer.c" />
     <ClCompile Include="..\..\..\src\core\co_timer_manager.c" />
+    <ClCompile Include="..\..\..\src\co_log.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

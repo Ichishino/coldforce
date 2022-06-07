@@ -8,6 +8,7 @@ add_library(${PROJECT_NAME} STATIC
     co_net_addr.c
     co_net_addr_resolve.c
     co_net_app.c
+    co_net_log.c
     co_net_selector_linux.c
     co_net_thread.c
     co_net_worker.c

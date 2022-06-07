@@ -74,6 +74,9 @@
     <ClInclude Include="..\..\..\inc\coldforce\net\co_byte_order.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\inc\coldforce\net\co_net_log.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\net\co_net.c">
@@ -122,6 +125,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\net\co_net_win.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\net\co_net_log.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -37,8 +37,10 @@ typedef struct
 #define co_tcp_client_get_tls(client) \
     ((co_tls_client_t*)client->sock.tls)
 
-void co_tls_client_setup(co_tls_client_t* tls, co_tls_ctx_st* tls_ctx);
-void co_tls_client_cleanup(co_tls_client_t* tls);
+void co_tls_client_setup(
+    co_tls_client_t* tls, co_tls_ctx_st* tls_ctx, co_tcp_client_t* client);
+void co_tls_client_cleanup(
+    co_tls_client_t* tls);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

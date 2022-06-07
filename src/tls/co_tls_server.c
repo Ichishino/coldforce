@@ -71,7 +71,7 @@ co_tls_server_on_accept_ready(
 
     SSL_CTX_up_ref(server_tls->ctx.ssl_ctx);
 
-    co_tls_client_setup(client_tls, &server_tls->ctx);
+    co_tls_client_setup(client_tls, &server_tls->ctx, client);
     SSL_set_accept_state(client_tls->ssl);
 
     if (server_tls->on_accept_ready != NULL)

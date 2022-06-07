@@ -311,12 +311,14 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\src\tls\co_tls.c" />
     <ClCompile Include="..\..\..\src\tls\co_tls_client.c" />
+    <ClCompile Include="..\..\..\src\tls\co_tls_log.c" />
     <ClCompile Include="..\..\..\src\tls\co_tls_server.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\inc\coldforce\coldforce_tls.h" />
     <ClInclude Include="..\..\..\inc\coldforce\tls\co_tls.h" />
     <ClInclude Include="..\..\..\inc\coldforce\tls\co_tls_client.h" />
+    <ClInclude Include="..\..\..\inc\coldforce\tls\co_tls_log.h" />
     <ClInclude Include="..\..\..\inc\coldforce\tls\co_tls_server.h" />
   </ItemGroup>
   <ItemGroup>
