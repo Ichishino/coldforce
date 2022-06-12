@@ -95,6 +95,8 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
 {
     (void)arg;
 
+    self->server = NULL;
+
     // client list
     co_list_ctx_st list_ctx = { 0 };
     list_ctx.free_value = (co_item_free_fn)co_tls_client_destroy; // auto destroy

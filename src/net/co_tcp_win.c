@@ -3,6 +3,7 @@
 #include <coldforce/net/co_tcp_win.h>
 #include <coldforce/net/co_net_worker.h>
 #include <coldforce/net/co_net_event.h>
+#include <coldforce/net/co_net_log.h>
 
 #ifdef CO_OS_WIN
 
@@ -544,6 +545,15 @@ co_win_tcp_clear_receive_buffer(
     co_tcp_client_t* client
 )
 {
+    co_tcp_log_hex_dump_debug(
+        &client->sock.local_net_addr,
+        "<--",
+        &client->remote_net_addr,
+        co_win_tcp_get_receive_buffer(client),
+        co_win_tcp_get_receive_data_size(client),
+        "tcp receive %zd bytes",
+        co_win_tcp_get_receive_data_size(client));
+
     client->win.receive.index = 0;
     client->win.receive.size = 0;
 }

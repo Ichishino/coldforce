@@ -40,7 +40,7 @@ co_tcp_server_on_accept_ready(
         &server->sock.local_net_addr,
         "<--",
         &win_client->remote_net_addr,
-        "accept");
+        "tcp accept");
 
     if ((co_net_addr_get_family(
             &win_client->remote_net_addr) != AF_UNSPEC) &&
@@ -83,7 +83,7 @@ co_tcp_server_on_accept_ready(
             &server->sock.local_net_addr,
             "<--",
             &client->remote_net_addr,
-            "accept");
+            "tcp accept");
 
         if (server->on_accept_ready != NULL)
         {
@@ -192,7 +192,7 @@ co_tcp_server_start(
 
     co_tcp_log_info(
         &server->sock.local_net_addr,
-        "server start",
+        "tcp server start",
        NULL,
         "");
 
@@ -216,7 +216,7 @@ co_tcp_server_close (
 
     co_tcp_log_info(
         &server->sock.local_net_addr,
-        "server closed",
+        "tcp server closed",
         NULL,
         "");
 

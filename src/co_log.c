@@ -49,7 +49,7 @@ co_log_setup(
         return;
     }
 
-    g_log.level = CO_LOG_LEVEL_DEBUG;
+    g_log.level = CO_LOG_LEVEL_NONE;
     g_log.mutex = co_mutex_create();
     g_log.output = stdout;
 

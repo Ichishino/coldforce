@@ -176,7 +176,7 @@ co_tcp_client_on_connect_complete(
             &client->sock.local_net_addr,
             "<--",
             &client->remote_net_addr,
-            "connect success");
+            "tcp connect success");
     }
     else
     {
@@ -184,7 +184,7 @@ co_tcp_client_on_connect_complete(
             &client->sock.local_net_addr,
             "<--",
             &client->remote_net_addr,
-            "connect error (%s)", error_code);
+            "tcp connect error (%s)", error_code);
     }
 
     if (client->on_connect_complete != NULL)
@@ -201,9 +201,9 @@ co_tcp_client_on_send_ready(
 {
     co_tcp_log_debug(
         &client->sock.local_net_addr,
-        "-->",
+        "<--",
         &client->remote_net_addr,
-        "send async ready");
+        "tcp send async ready");
 
 #ifdef CO_OS_WIN
     (void)client;
@@ -255,9 +255,9 @@ co_tcp_client_on_send_complete(
 {
     co_tcp_log_debug(
         &client->sock.local_net_addr,
-        "-->",
+        "<--",
         &client->remote_net_addr,
-        "send async complete");
+        "tcp send async complete");
 
 #ifdef CO_OS_WIN
     co_list_remove_head(client->win.io_send_ctxs);
@@ -278,9 +278,9 @@ co_tcp_client_on_receive_ready(
 {
     co_tcp_log_debug(
         &client->sock.local_net_addr,
-        "-->",
+        "<--",
         &client->remote_net_addr,
-        "receive ready (%zd)", data_size);
+        "tcp receive ready",);
 
 #ifdef CO_OS_WIN
     if (data_size > 0)
@@ -333,7 +333,7 @@ co_tcp_client_on_close(
             &client->sock.local_net_addr,
             "<--",
             &client->remote_net_addr,
-            "closed by peer");
+            "tcp closed by peer");
 
         client->sock.open_local = false;
 
@@ -348,7 +348,7 @@ co_tcp_client_on_close(
             &client->sock.local_net_addr,
             "-->",
             &client->remote_net_addr,
-            "closed");
+            "tcp closed");
 
         co_tcp_client_destroy(client);
     }
@@ -486,7 +486,7 @@ co_tcp_connect(
         &client->sock.local_net_addr,
         "-->",
         &client->remote_net_addr,
-        "connect start");
+        "tcp connect start");
 
     return true;
 }
@@ -498,6 +498,13 @@ co_tcp_send(
     size_t data_size
 )
 {
+    co_tcp_log_hex_dump_debug(
+        &client->sock.local_net_addr,
+        "-->",
+        &client->remote_net_addr,
+        data, data_size,
+        "tcp send %zd bytes", data_size);
+
 #ifdef CO_OS_WIN
 
     return co_win_tcp_client_send(client, data, data_size);
@@ -524,6 +531,13 @@ co_tcp_send_async(
     size_t data_size
 )
 {
+    co_tcp_log_hex_dump_debug(
+        &client->sock.local_net_addr,
+        "-->",
+        &client->remote_net_addr,
+        data, data_size,
+        "tcp send async %zd bytes", data_size);
+
 #ifdef CO_OS_WIN
 
     return co_win_tcp_client_send_async(client, data, data_size);
@@ -602,6 +616,13 @@ co_tcp_receive(
     if (co_win_tcp_client_receive(
         client, buffer, buffer_size, &data_size))
     {
+        co_tcp_log_hex_dump_debug(
+            &client->sock.local_net_addr,
+            "<--",
+            &client->remote_net_addr,
+            buffer, data_size,
+            "tcp receive %zd bytes", data_size);
+
         return (ssize_t)data_size;
     }
     else

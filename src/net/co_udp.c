@@ -3,6 +3,7 @@
 #include <coldforce/net/co_udp.h>
 #include <coldforce/net/co_net_event.h>
 #include <coldforce/net/co_net_worker.h>
+#include <coldforce/net/co_net_log.h>
 
 #ifndef CO_OS_WIN
 #include <errno.h>
@@ -20,6 +21,12 @@ co_udp_on_send_ready(
     co_udp_t* udp
 )
 {
+    co_udp_log_debug(
+        &udp->sock.local_net_addr,
+        NULL,
+        NULL,
+        "udp send ready");
+
 #ifdef CO_OS_WIN
     (void)udp;
 #else
@@ -69,6 +76,12 @@ co_udp_on_send_complete(
     size_t data_size
 )
 {
+    co_udp_log_debug(
+        &udp->sock.local_net_addr,
+        NULL,
+        NULL,
+        "udp send complete");
+
 #ifdef CO_OS_WIN
     co_list_remove_head(udp->win.io_send_ctxs);
 #endif
@@ -86,6 +99,12 @@ co_udp_on_receive_ready(
     size_t data_size
 )
 {
+    co_udp_log_debug(
+        &udp->sock.local_net_addr,
+        NULL,
+        NULL,
+        "udp receive ready");
+
 #ifdef CO_OS_WIN
     udp->win.receive.size = data_size;
 #endif
@@ -251,6 +270,13 @@ co_udp_send(
     size_t data_size
 )
 {
+    co_udp_log_hex_dump_debug(
+        &udp->sock.local_net_addr,
+        "-->",
+        remote_net_addr,
+        data, data_size,
+        "udp send %d bytes", data_size);
+
 #ifdef CO_OS_WIN
 
     return co_win_udp_send(udp, remote_net_addr, data, data_size);
@@ -278,6 +304,13 @@ co_udp_send_async(
     size_t data_size
 )
 {
+    co_udp_log_hex_dump_debug(
+        &udp->sock.local_net_addr,
+        "-->",
+        remote_net_addr,
+        data, data_size,
+        "udp send async %d bytes", data_size);
+
 #ifdef CO_OS_WIN
 
     return co_win_udp_send_async(
@@ -360,6 +393,12 @@ co_udp_receive_start(
         return false;
     }
 
+    co_udp_log_info(
+        &udp->sock.local_net_addr,
+        NULL,
+        NULL,
+        "udp receive start");
+
     udp->sock_event_flags |= CO_SOCKET_EVENT_RECEIVE;
     udp->on_receive_ready = handler;
 
@@ -391,27 +430,37 @@ co_udp_receive(
     size_t buffer_size
 )
 {
+    ssize_t result = -1;
+
 #ifdef CO_OS_WIN
 
     size_t data_size = 0;
 
-    if (!co_win_udp_receive(
+    if (co_win_udp_receive(
         udp, remote_net_addr,
         buffer, buffer_size, &data_size))
     {
-        return (ssize_t)-1;
-    }
-    else
-    {
-        return (ssize_t)data_size;
+        result = (ssize_t)data_size;
     }
 
 #else
 
-    return co_socket_handle_receive_from(
+    result = co_socket_handle_receive_from(
         udp->sock.handle, remote_net_addr, buffer, buffer_size, 0);
 
 #endif
+
+    if (result > 0)
+    {
+        co_udp_log_hex_dump_debug(
+            &udp->sock.local_net_addr,
+            "<--",
+            remote_net_addr,
+            buffer, result,
+            "udp receive %d bytes", result);
+    }
+
+    return result;
 }
 
 void

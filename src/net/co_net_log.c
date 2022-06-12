@@ -11,6 +11,52 @@
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
+static void
+co_net_log_write_addresses(
+    const co_net_addr_t* addr1,
+    const char* text,
+    const co_net_addr_t* addr2
+)
+{
+    char addr1_str[64];
+    addr1_str[0] = '\0';
+
+    if (addr1 != NULL)
+    {
+        co_net_addr_to_string(
+            addr1, addr1_str, sizeof(addr1_str));
+    }
+
+    char addr2_str[64];
+    addr2_str[0] = '\0';
+
+    if (addr2 != NULL)
+    {
+        co_net_addr_to_string(
+            addr2, addr2_str, sizeof(addr2_str));
+    }
+
+    co_log_t* log = co_log_get_default();
+
+    if (addr1 != NULL)
+    {
+        fprintf((FILE*)log->output, "(%s) ", addr1_str);
+    }
+
+    if (text != NULL)
+    {
+        fprintf((FILE*)log->output, "%s ", text);
+    }
+
+    if (addr2 != NULL)
+    {
+        fprintf((FILE*)log->output, "(%s) ", addr2_str);
+    }
+}
+
+//---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
+
 void
 co_tcp_log_enable(
     bool enable
@@ -56,42 +102,11 @@ co_net_log_write(
         return;
     }
 
-    char addr1_str[64];
-    addr1_str[0] = '\0';
-
-    if (addr1 != NULL)
-    {
-        co_net_addr_to_string(
-            addr1, addr1_str, sizeof(addr1_str));
-    }
-
-    char addr2_str[64];
-    addr2_str[0] = '\0';
-
-    if (addr2 != NULL)
-    {
-        co_net_addr_to_string(
-            addr2, addr2_str, sizeof(addr2_str));
-    }
-
     co_mutex_lock(log->mutex);
 
     co_log_write_header(level, category);
 
-    if (addr1 != NULL)
-    {
-        fprintf((FILE*)log->output, "(%s) ", addr1_str);
-    }
-
-    if (text != NULL)
-    {
-        fprintf((FILE*)log->output, "%s ", text);
-    }
-
-    if (addr2 != NULL)
-    {
-        fprintf((FILE*)log->output, "(%s) ", addr2_str);
-    }
+    co_net_log_write_addresses(addr1, text, addr2);
 
     va_list args;
     va_start(args, format);
@@ -99,6 +114,100 @@ co_net_log_write(
     va_end(args);
 
     fprintf((FILE*)log->output, "\n");
+    fflush((FILE*)log->output);
+
+    co_mutex_unlock(log->mutex);
+}
+
+void
+co_net_log_hex_dump(
+    int level,
+    int category,
+    const co_net_addr_t* addr1,
+    const char* text,
+    const co_net_addr_t* addr2,
+    const void* data,
+    size_t size,
+    const char* format,
+    ...
+)
+{
+    co_log_t* log = co_log_get_default();
+
+    if (level > log->level ||
+        !log->category[category].enable)
+    {
+        return;
+    }
+
+    co_mutex_lock(log->mutex);
+
+    co_log_write_header(level, category);
+    co_net_log_write_addresses(addr1, text, addr2);
+
+    va_list args;
+    va_start(args, format);
+    vfprintf((FILE*)log->output, format, args);
+    va_end(args);
+
+    fprintf((FILE*)log->output, "\n");
+
+    co_log_write_header(level, category);
+
+    fprintf((FILE*)log->output,
+        "--------------------------------------------------------------\n");
+
+    const uint8_t* bytes = (const uint8_t*)data;
+
+    for (size_t index1 = 0; index1 < size; index1 += 16)
+    {
+        char hex[64];
+        char txt[32];
+
+        char* phex = hex;
+        char* ptxt = txt;
+
+        for (size_t index2 = 0;
+            (index2 < 16) && ((index1 + index2) < size);
+            ++index2)
+        {
+            uint8_t byte = bytes[index1 + index2];
+
+            if (((index2 % 4) == 0) && (index2 > 0))
+            {
+                *phex = ' ';
+                phex++;
+            }
+
+            sprintf(phex, "%02x", byte);
+            phex += 2;
+
+            if (isprint(byte))
+            {
+                *ptxt = byte;
+            }
+            else
+            {
+                *ptxt = '.';
+            }
+
+            ++ptxt;
+        }
+
+        *phex = '\0';
+        *ptxt = '\0';
+
+        co_log_write_header(level, category);
+
+        fprintf((FILE*)log->output,
+            "%08zx: %-35s %s\n", index1, hex, txt);
+    }
+
+    co_log_write_header(level, category);
+
+    fprintf((FILE*)log->output,
+        "--------------------------------------------------------------\n");
+
     fflush((FILE*)log->output);
 
     co_mutex_unlock(log->mutex);

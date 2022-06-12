@@ -21,12 +21,19 @@ CO_EXTERN_C_BEGIN
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-CO_NET_API
-void co_net_log_write(
+CO_NET_API void co_net_log_write(
     int level, int category,
     const co_net_addr_t* addr1,
     const char* text,
     const co_net_addr_t* addr2,
+    const char* format, ...);
+
+CO_NET_API void co_net_log_hex_dump(
+    int level, int category,
+    const co_net_addr_t* addr1,
+    const char* text,
+    const co_net_addr_t* addr2,
+    const void* data, size_t size,
     const char* format, ...);
 
 //---------------------------------------------------------------------------//
@@ -52,6 +59,10 @@ void co_net_log_write(
     co_tcp_log_write(CO_LOG_LEVEL_DEBUG, \
         addr1, text, addr2, format, ##__VA_ARGS__)
 
+#define co_tcp_log_hex_dump_debug(addr1, text, addr2, data, size, format, ...) \
+    co_net_log_hex_dump(CO_LOG_LEVEL_DEBUG, CO_TCP_LOG_CATEGORY, \
+        addr1, text, addr2, data, size, format, ##__VA_ARGS__)
+
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
@@ -74,6 +85,10 @@ void co_net_log_write(
 #define co_udp_log_debug(addr1, text, addr2, format, ...) \
     co_udp_log_write(CO_LOG_LEVEL_DEBUG, \
         addr1, text, addr2, format, ##__VA_ARGS__)
+
+#define co_udp_log_hex_dump_debug(addr1, text, addr2, data, size, format, ...) \
+    co_net_log_hex_dump(CO_LOG_LEVEL_DEBUG, CO_UDP_LOG_CATEGORY, \
+        addr1, text, addr2, data, size, format, ##__VA_ARGS__)
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

@@ -116,7 +116,7 @@ co_tls_send_handshake(
         &client->sock.local_net_addr,
         "-->",
         &client->remote_net_addr,
-        "handshake send");
+        "tls handshake send");
 
     co_tls_client_t* tls = co_tcp_client_get_tls(client);
 
@@ -128,6 +128,13 @@ co_tls_send_handshake(
             BIO_read(tls->network_bio, buffer, sizeof(buffer));
 
         co_socket_handle_set_blocking(client->sock.handle, true);
+
+        co_tcp_log_hex_dump_debug(
+            &client->sock.local_net_addr,
+            "-->",
+            &client->remote_net_addr,
+            buffer, bio_result,
+            "tcp send %d bytes", bio_result);
 
         ssize_t sent_size = co_socket_handle_send(
             client->sock.handle, buffer, (size_t)bio_result, 0);
@@ -174,11 +181,24 @@ co_tls_receive_handshake(
             break;
         }
 
+        co_tcp_log_hex_dump_debug(
+            &client->sock.local_net_addr,
+            "<--",
+            &client->remote_net_addr,
+            buffer, data_size,
+            "tcp receive %d bytes", data_size);
+
         co_queue_push_array(
             tls->receive_data_queue, buffer, data_size);
     }
 
 #endif
+
+    co_tls_log_info(
+        &client->sock.local_net_addr,
+        "<--",
+        &client->remote_net_addr,
+        "tls handshake receive");
 
     while (co_queue_get_count(tls->receive_data_queue) > 0)
     {
@@ -312,12 +332,6 @@ co_tls_on_receive_handshake(
 {
     (void)thread;
 
-    co_tls_log_info(
-        &client->sock.local_net_addr,
-        "<--",
-        &client->remote_net_addr,
-        "handshake receive");
-
     co_tls_client_t* tls = co_tcp_client_get_tls(client);
 
     int error_code = 0;
@@ -355,7 +369,7 @@ co_tls_on_receive_handshake(
         &client->sock.local_net_addr,
         "<--",
         &client->remote_net_addr,
-        "handshake finished (%d)", error_code);
+        "tls handshake finished (%d)", error_code);
 
     if (tls->on_handshake_complete != NULL)
     {
@@ -529,7 +543,7 @@ co_tls_start_handshake(
         &client->sock.local_net_addr,
         "-->",
         &client->remote_net_addr,
-        "handshake start");
+        "tls handshake start");
 
     co_tls_client_t* tls = co_tcp_client_get_tls(client);
 
@@ -566,6 +580,13 @@ co_tls_send(
     size_t data_size
 )
 {
+    co_tls_log_hex_dump_debug(
+        &client->sock.local_net_addr,
+        "-->",
+        &client->remote_net_addr,
+        data, data_size,
+        "tls send %zd bytes", data_size);
+
     bool result = false;
 
     co_byte_array_t* send_data = co_byte_array_create();
@@ -590,6 +611,13 @@ co_tls_send_async(
     size_t data_size
 )
 {
+    co_tls_log_hex_dump_debug(
+        &client->sock.local_net_addr,
+        "-->",
+        &client->remote_net_addr,
+        data, data_size,
+        "tls send async %zd bytes", data_size);
+
     bool result = false;
 
     co_byte_array_t* send_data = co_byte_array_create();
@@ -641,6 +669,16 @@ co_tls_receive(
 
     int ssl_result =
         SSL_read(tls->ssl, buffer, (int)buffer_size);
+
+    if (ssl_result > 0)
+    {
+        co_tls_log_hex_dump_debug(
+            &client->sock.local_net_addr,
+            "<--",
+            &client->remote_net_addr,
+            buffer, ssl_result,
+            "tls receive %d bytes", ssl_result);
+    }
 
     return ssl_result;
 }
@@ -713,6 +751,13 @@ co_tls_receive_all(
 
         if (ssl_result > 0)
         {
+            co_tls_log_hex_dump_debug(
+                &client->sock.local_net_addr,
+                "<--",
+                &client->remote_net_addr,
+                buffer, ssl_result,
+                "tls receive %d bytes", ssl_result);
+
             co_byte_array_add(byte_array, buffer, ssl_result);
 
             data_size += ssl_result;
