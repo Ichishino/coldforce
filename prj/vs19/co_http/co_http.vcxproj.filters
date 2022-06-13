@@ -53,6 +53,9 @@
     <ClCompile Include="..\..\..\src\http\co_http_config.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\http\co_http_log.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\inc\coldforce\http\co_http.h">

@@ -333,6 +333,7 @@
     <ClCompile Include="..\..\..\src\http\co_http_content_receiver.c" />
     <ClCompile Include="..\..\..\src\http\co_http_cookie.c" />
     <ClCompile Include="..\..\..\src\http\co_http_header.c" />
+    <ClCompile Include="..\..\..\src\http\co_http_log.c" />
     <ClCompile Include="..\..\..\src\http\co_http_message.c" />
     <ClCompile Include="..\..\..\src\http\co_http_request.c" />
     <ClCompile Include="..\..\..\src\http\co_http_response.c" />

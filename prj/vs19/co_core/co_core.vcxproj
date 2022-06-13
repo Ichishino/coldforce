@@ -332,6 +332,7 @@
     <ClCompile Include="..\..\..\src\core\co_event.c" />
     <ClCompile Include="..\..\..\src\core\co_event_worker.c" />
     <ClCompile Include="..\..\..\src\core\co_list.c" />
+    <ClCompile Include="..\..\..\src\core\co_log.c" />
     <ClCompile Include="..\..\..\src\core\co_map.c" />
     <ClCompile Include="..\..\..\src\core\co_mutex.c" />
     <ClCompile Include="..\..\..\src\core\co_queue.c" />
@@ -341,7 +342,6 @@
     <ClCompile Include="..\..\..\src\core\co_time.c" />
     <ClCompile Include="..\..\..\src\core\co_timer.c" />
     <ClCompile Include="..\..\..\src\core\co_timer_manager.c" />
-    <ClCompile Include="..\..\..\src\co_log.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

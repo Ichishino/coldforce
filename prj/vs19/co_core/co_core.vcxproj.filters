@@ -127,7 +127,7 @@
     <ClCompile Include="..\..\..\src\core\co_timer_manager.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\co_log.c">
+    <ClCompile Include="..\..\..\src\core\co_log.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
