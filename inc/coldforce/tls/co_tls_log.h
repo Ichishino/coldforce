@@ -40,14 +40,16 @@ CO_EXTERN_C_BEGIN
     co_tls_log_write(CO_LOG_LEVEL_DEBUG, \
         addr1, text, addr2, format, ##__VA_ARGS__)
 
-#define co_tls_log_hex_dump_debug(addr1, text, addr2, data, size, format, ...) \
-    co_net_log_hex_dump(CO_LOG_LEVEL_DEBUG, CO_TLS_LOG_CATEGORY, \
+#define co_tls_log_hex_dump(addr1, text, addr2, data, size, format, ...) \
+    co_net_log_hex_dump(CO_TLS_LOG_CATEGORY, \
         addr1, text, addr2, data, size, format, ##__VA_ARGS__)
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-CO_TLS_API void co_tls_log_enable(bool enable);
+CO_TLS_API void co_tls_log_set_level(int level);
+
+CO_TLS_API void co_tls_log_set_enable_data_trace(bool enable);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

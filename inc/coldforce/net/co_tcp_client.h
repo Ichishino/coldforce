@@ -26,16 +26,16 @@ CO_EXTERN_C_BEGIN
 struct co_tcp_client_t;
 
 typedef void(*co_tcp_close_fn)(
-    void* self, struct co_tcp_client_t* client);
+    co_thread_t* self, struct co_tcp_client_t* client);
 
 typedef void(*co_tcp_send_fn)(
-    void* self, struct co_tcp_client_t* client, bool result);
+    co_thread_t* self, struct co_tcp_client_t* client, bool result);
 
 typedef void(*co_tcp_receive_fn)(
-    void* self, struct co_tcp_client_t* client);
+    co_thread_t* self, struct co_tcp_client_t* client);
 
 typedef void(*co_tcp_connect_fn)(
-    void* self, struct co_tcp_client_t* client, int error_code);
+    co_thread_t* self, struct co_tcp_client_t* client, int error_code);
 
 typedef struct co_tcp_client_t
 {

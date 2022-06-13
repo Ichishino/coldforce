@@ -545,7 +545,7 @@ co_win_tcp_clear_receive_buffer(
     co_tcp_client_t* client
 )
 {
-    co_tcp_log_hex_dump_debug(
+    co_tcp_log_hex_dump(
         &client->sock.local_net_addr,
         "<--",
         &client->remote_net_addr,

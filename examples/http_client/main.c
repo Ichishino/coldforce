@@ -41,8 +41,60 @@ void on_my_response(my_app* self, co_http_client_t* client,
         printf("error: %d\n", error_code);
     }
 
-    // quit app
-    co_net_app_stop();
+    if (!co_http_is_running(self->client))
+    {
+        // quit app
+        co_net_app_stop();
+    }
+}
+
+void on_my_connect(my_app* self, co_http_client_t* client, int error_code)
+{
+    if (error_code == 0)
+    {
+        co_http_set_receive_handler(self->client, (co_http_receive_fn)on_my_response);
+
+        // you can send http requests in parallel
+
+        // GET request
+        {
+            co_http_request_t* request = co_http_request_create_with("GET", "/index.html");
+
+            // set header
+            co_http_header_t* header = co_http_request_get_header(request);
+            co_http_header_add_field(header, "Accept", "text/html");
+
+            // send request
+            co_http_send_request(self->client, request);
+        }
+
+        // POST request
+        {
+            co_http_request_t* request = co_http_request_create_with("POST", "/index.html");
+
+            // set header
+            co_http_header_t* header = co_http_request_get_header(request);
+            co_http_header_add_field(header, "Accept", "text/html");
+
+            // content
+            const char* data = "{\"data\":\"hello\"}";
+            size_t data_len = strlen(data);
+            co_http_header_add_field(header, "Content-Type", "application/json");
+            co_http_header_set_content_length(header, data_len);
+
+            // send request
+            co_http_send_request(self->client, request);
+            co_http_send_data(self->client, data, data_len);
+        }
+    }
+    else
+    {
+        co_http_client_destroy(client);
+        self->client = NULL;
+
+        // quit app
+        co_net_app_stop();
+    }
 }
 
 bool on_my_app_create(my_app* self, const co_arg_st* arg)
@@ -54,7 +106,6 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
 #else
     const char* base_url = "http://www.example.com";
 #endif
-    const char* file_path = "/index.html";
 
     co_net_addr_t local_net_addr = { 0 };
     co_net_addr_set_family(&local_net_addr, CO_ADDRESS_FAMILY_IPV4);
@@ -66,16 +117,8 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
         return false;
     }
 
-    co_http_set_receive_handler(self->client, (co_http_receive_fn)on_my_response);
-
-    co_http_request_t* request = co_http_request_create_with("GET", file_path);
-
-    // set header
-    co_http_header_t* header = co_http_request_get_header(request);
-    co_http_header_add_field(header, "Accept", "text/html");
-
-    // send request
-    co_http_send_request(self->client, request);
+    // connect start
+    co_http_connect(self->client, (co_http_connect_fn)on_my_connect);
 
     return true;
 }

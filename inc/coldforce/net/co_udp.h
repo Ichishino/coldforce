@@ -23,10 +23,10 @@ CO_EXTERN_C_BEGIN
 struct co_udp_t;
 
 typedef void(*co_udp_send_fn)(
-    void* self, struct co_udp_t* udp, bool result);
+    co_thread_t* self, struct co_udp_t* udp, bool result);
 
 typedef void (*co_udp_receive_fn)(
-    void* self, struct co_udp_t* udp);
+    co_thread_t* self, struct co_udp_t* udp);
 
 typedef struct
 {

@@ -392,7 +392,7 @@ co_http_send_response(
     co_http_response_serialize(response, buffer);
 
     bool result = 
-        co_http_send_data(client,
+        co_http_send_raw_data(client,
             co_byte_array_get_ptr(buffer, 0),
             co_byte_array_get_count(buffer));
 
@@ -453,7 +453,7 @@ co_http_begin_chunked_response(
     co_http_response_serialize(response, buffer);
 
     bool result =
-        co_http_send_data(client,
+        co_http_send_raw_data(client,
             co_byte_array_get_ptr(buffer, 0),
             co_byte_array_get_count(buffer));
 
@@ -486,7 +486,7 @@ co_http_send_chunked_response(
     co_byte_array_add_string(buffer, CO_HTTP_CRLF);
 
     bool result =
-        co_http_send_data(client,
+        co_http_send_raw_data(client,
             co_byte_array_get_ptr(buffer, 0),
             co_byte_array_get_count(buffer));
 

@@ -11,6 +11,7 @@ add_library(${PROJECT_NAME} STATIC
     co_http_content_receiver.c
     co_http_cookie.c
     co_http_header.c
+    co_http_log.c
     co_http_message.c
     co_http_request.c
     co_http_response.c

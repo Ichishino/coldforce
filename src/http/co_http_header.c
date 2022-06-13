@@ -495,5 +495,10 @@ co_http_header_get_content_length(
 
     *length = co_string_to_size_t(str, NULL, 10);
 
+    if (errno != 0)
+    {
+        return false;
+    }
+
     return true;
 }

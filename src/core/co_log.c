@@ -7,6 +7,7 @@
 #else
 #include <time.h>
 #include <sys/time.h>
+#include <stdarg.h>
 #endif
 
 //---------------------------------------------------------------------------//
@@ -17,7 +18,7 @@
 //---------------------------------------------------------------------------//
 
 static co_log_t g_log = { 0 };
-static const char* g_level_name[] = { "", "ERR", "WRN", "INF", "DBG" };
+static const char* g_level_name[] = { "", "ERR", "WRN", "INF", "DBG", "DAT"};
 
 co_log_t*
 co_log_get_default(
@@ -49,14 +50,14 @@ co_log_setup(
         return;
     }
 
-    g_log.level = CO_LOG_LEVEL_NONE;
     g_log.mutex = co_mutex_create();
     g_log.output = stdout;
 
     for (size_t index = 0; index <= CO_LOG_CATEGORY_MAX; ++index)
     {
-        g_log.category[index].enable = false;
         g_log.category[index].name = "";
+        g_log.category[index].level = CO_LOG_LEVEL_NONE;
+        g_log.category[index].enable_data_trace = false;
     }
 
     g_log.category[
@@ -98,42 +99,44 @@ co_log_write_header(
 
 void
 co_log_set_level(
+    int category,
     int level
 )
 {
     co_log_setup();
 
-    g_log.level = level;
+    g_log.category[category].level = level;
 }
 
 int
 co_log_get_level(
-    void
+    int category
 )
 {
-    return g_log.level;
+    return g_log.category[category].level;
 }
 
-
 void
-co_log_set_enable(
+co_log_set_enable_data_trace(
     int category,
     bool enable
 )
 {
     co_assert(category <= CO_LOG_CATEGORY_MAX);
 
-    g_log.category[category].enable = enable;
+    co_log_setup();
+
+    g_log.category[category].enable_data_trace = enable;
 }
 
 bool
-co_log_get_enable(
+co_log_get_enable_data_trace(
     int category
 )
 {
     co_assert(category <= CO_LOG_CATEGORY_MAX);
 
-    return g_log.category[category].enable;
+    return g_log.category[category].enable_data_trace;
 }
 
 void
@@ -158,8 +161,7 @@ co_log_write(
     co_assert(level < CO_LOG_LEVEL_MAX);
     co_assert(category <= CO_LOG_CATEGORY_MAX);
 
-    if (level > g_log.level ||
-        !g_log.category[category].enable)
+    if (level > g_log.category[category].level)
     {
         return;
     }

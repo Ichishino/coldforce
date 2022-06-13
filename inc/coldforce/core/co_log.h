@@ -17,6 +17,7 @@ enum co_log_level_en
     CO_LOG_LEVEL_WARNING,
     CO_LOG_LEVEL_INFO,
     CO_LOG_LEVEL_DEBUG,
+    CO_LOG_LEVEL_DATA,
 
     CO_LOG_LEVEL_MAX
 };
@@ -31,12 +32,11 @@ enum co_log_level_en
 
 typedef struct co_log_t
 {
-    int level;
-
     struct Category
     {
-        bool enable;
         const char* name;
+        int level;
+        bool enable_data_trace;
 
     } category[CO_LOG_CATEGORY_MAX + 1];
 
@@ -52,11 +52,11 @@ CO_API void co_log_write_header(int level, int category);
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-CO_API void co_log_set_level(int level);
-CO_API int co_log_get_level(void);
+CO_API void co_log_set_level(int category, int level);
+CO_API int co_log_get_level(int category);
 
-CO_API void co_log_set_enable(int category, bool enable);
-CO_API bool co_log_get_enable(int category);
+CO_API void co_log_set_enable_data_trace(int category, bool enable);
+CO_API bool co_log_get_enable_data_trace(int category);
 
 CO_API void co_log_add_category(int category, const char* name);
 

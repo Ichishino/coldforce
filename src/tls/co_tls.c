@@ -1,12 +1,13 @@
 ﻿#include <coldforce/core/co_std.h>
 
 #include <coldforce/tls/co_tls.h>
+#include <coldforce/tls/co_tls_log.h>
 
 #ifdef CO_CAN_USE_TLS
 #include <openssl/conf.h>
 #include <openssl/crypto.h>
 #else
-#pragma message("[CO_TLS] error: 'OpenSSL' not found.")
+#pragma message("<<coldforce>> [WRN] <TLS> **** 'OpenSSL' not found. ****")
 #endif
 
 #ifdef CO_OS_WIN
@@ -67,7 +68,8 @@ co_tls_setup(
     return true;
 #else
 
-    printf("[CO_TLS] error: 'OpenSSL' not found.\n");
+    co_tls_log_error(
+        NULL, NULL, NULL, "'OpenSSL' not found");
 
     return false;
 #endif
