@@ -309,6 +309,7 @@
     <ClInclude Include="..\..\..\inc\coldforce\http2\co_http2_hpack.h" />
     <ClInclude Include="..\..\..\inc\coldforce\http2\co_http2_http_extension.h" />
     <ClInclude Include="..\..\..\inc\coldforce\http2\co_http2_huffman.h" />
+    <ClInclude Include="..\..\..\inc\coldforce\http2\co_http2_log.h" />
     <ClInclude Include="..\..\..\inc\coldforce\http2\co_http2_server.h" />
     <ClInclude Include="..\..\..\inc\coldforce\http2\co_http2_stream.h" />
   </ItemGroup>
@@ -334,6 +335,7 @@
     <ClCompile Include="..\..\..\src\http2\co_http2_hpack.c" />
     <ClCompile Include="..\..\..\src\http2\co_http2_http_extension.c" />
     <ClCompile Include="..\..\..\src\http2\co_http2_huffman.c" />
+    <ClCompile Include="..\..\..\src\http2\co_http2_log.c" />
     <ClCompile Include="..\..\..\src\http2\co_http2_server.c" />
     <ClCompile Include="..\..\..\src\http2\co_http2_stream.c" />
   </ItemGroup>

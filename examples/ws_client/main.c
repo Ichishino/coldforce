@@ -14,7 +14,7 @@ void on_my_ws_receive(my_app* self, co_ws_client_t* client, const co_ws_frame_t*
 {
     if (error_code == 0)
     {
-        bool fin = co_ws_frame_is_fin(frame);
+        bool fin = co_ws_frame_get_fin(frame);
         uint8_t opcode = co_ws_frame_get_opcode(frame);
         size_t data_size = (size_t)co_ws_frame_get_payload_size(frame);
         const uint8_t* data = co_ws_frame_get_payload_data(frame);
@@ -75,8 +75,6 @@ void on_my_connect(my_app* self, co_ws_client_t* client, const co_http_response_
 
     if (error_code == 0)
     {
-        co_http_response_print_header(response);
-
         bool upgrade_result = false;
 
         if (co_http_response_validate_ws_upgrade(response, client, &upgrade_result))

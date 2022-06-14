@@ -1,7 +1,5 @@
 #include <coldforce/core/co_std.h>
 
-#include <coldforce/net/co_net_log.h>
-
 #include <coldforce/http/co_http_log.h>
 
 //---------------------------------------------------------------------------//

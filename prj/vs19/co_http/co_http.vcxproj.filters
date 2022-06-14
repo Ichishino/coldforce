@@ -103,5 +103,8 @@
     <ClInclude Include="..\..\..\inc\coldforce\http\co_http_config.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\inc\coldforce\http\co_http_log.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

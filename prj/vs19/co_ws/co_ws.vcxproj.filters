@@ -32,6 +32,9 @@
     <ClCompile Include="..\..\..\src\ws\co_ws_config.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\ws\co_ws_log.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\inc\coldforce\ws\co_ws.h">
@@ -56,6 +59,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\inc\coldforce\ws\co_ws_config.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\coldforce\ws\co_ws_log.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

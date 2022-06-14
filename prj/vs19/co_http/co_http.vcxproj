@@ -376,6 +376,7 @@
     <ClInclude Include="..\..\..\inc\coldforce\http\co_http_content_receiver.h" />
     <ClInclude Include="..\..\..\inc\coldforce\http\co_http_cookie.h" />
     <ClInclude Include="..\..\..\inc\coldforce\http\co_http_header.h" />
+    <ClInclude Include="..\..\..\inc\coldforce\http\co_http_log.h" />
     <ClInclude Include="..\..\..\inc\coldforce\http\co_http_message.h" />
     <ClInclude Include="..\..\..\inc\coldforce\http\co_http_request.h" />
     <ClInclude Include="..\..\..\inc\coldforce\http\co_http_response.h" />

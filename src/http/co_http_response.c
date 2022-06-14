@@ -124,26 +124,6 @@ co_http_response_deserialize(
     return co_http_message_deserialize_header(&response->message, data, index);
 }
 
-void
-co_http_response_print_header(
-    const co_http_response_t* response
-)
-{
-    if (response != NULL)
-    {
-        printf("--------\n");
-
-        printf("%s %d %s\n",
-            co_http_response_get_version(response),
-            co_http_response_get_status_code(response),
-            co_http_response_get_reason_phrase(response));
-
-        co_http_header_print(&response->message.header);
-
-        printf("--------\n");
-    }
-}
-
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 

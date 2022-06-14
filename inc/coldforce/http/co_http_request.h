@@ -34,8 +34,6 @@ CO_HTTP_API void co_http_request_serialize(
 CO_HTTP_API int co_http_request_deserialize(
     co_http_request_t* request, const co_byte_array_t* data, size_t* index);
 
-CO_HTTP_API void co_http_request_print_header(const co_http_request_t* request);
-
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 

@@ -157,26 +157,6 @@ co_http_request_deserialize(
     return co_http_message_deserialize_header(&request->message, data, index);
 }
 
-void
-co_http_request_print_header(
-    const co_http_request_t* request
-)
-{
-    if (request != NULL)
-    {
-        printf("--------\n");
-
-        printf("%s %s %s\n",
-            co_http_request_get_method(request),
-            co_http_request_get_url(request)->src,
-            co_http_request_get_version(request));
-
-        co_http_header_print(&request->message.header);
-
-        printf("--------\n");
-    }
-}
-
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 

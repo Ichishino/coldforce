@@ -194,7 +194,7 @@ co_ws_frame_get_opcode(
 }
 
 bool
-co_ws_frame_is_fin(
+co_ws_frame_get_fin(
     const co_ws_frame_t* frame
 )
 {

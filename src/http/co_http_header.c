@@ -204,25 +204,6 @@ co_http_header_deserialize(
     }
 }
 
-void
-co_http_header_print(
-    const co_http_header_t* header
-)
-{
-    co_list_iterator_t* it =
-        co_list_get_head_iterator(header->field_list);
-
-    while (it != NULL)
-    {
-        const co_list_data_st* data =
-            co_list_get_next(header->field_list, &it);
-        const co_http_header_field_t* field =
-            (const co_http_header_field_t*)data->value;
-
-        printf("%s: %s\n", field->name, field->value);
-    }
-}
-
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 

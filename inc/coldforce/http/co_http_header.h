@@ -40,8 +40,6 @@ void co_http_header_serialize(
 int co_http_header_deserialize(
     co_http_header_t* header, const co_byte_array_t* data, size_t* index);
 
-void co_http_header_print(const co_http_header_t* header);
-
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
