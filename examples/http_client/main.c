@@ -54,7 +54,7 @@ void on_my_connect(my_app* self, co_http_client_t* client, int error_code)
     {
         co_http_set_receive_handler(self->client, (co_http_receive_fn)on_my_response);
 
-        // you can send http requests in parallel
+        // http requests in parallel
 
         // GET request
         {
@@ -89,6 +89,8 @@ void on_my_connect(my_app* self, co_http_client_t* client, int error_code)
     }
     else
     {
+        printf("connect error: %d\n", error_code);
+
         co_http_client_destroy(client);
         self->client = NULL;
 
@@ -114,6 +116,8 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
 
     if (self->client == NULL)
     {
+        printf("error: faild to resolve hostname or OpenSSL is not installed\n");
+
         return false;
     }
 

@@ -19,6 +19,7 @@
 
 void
 co_net_log_write_addresses(
+    co_log_t* log,
     const co_net_addr_t* addr1,
     const char* text,
     const co_net_addr_t* addr2
@@ -42,8 +43,6 @@ co_net_log_write_addresses(
             addr2, addr2_str, sizeof(addr2_str));
     }
 
-    co_log_t* log = co_log_get_default();
-
     if (addr1 != NULL)
     {
         fprintf((FILE*)log->output, "(%s) ", addr1_str);
@@ -61,7 +60,9 @@ co_net_log_write_addresses(
 }
 
 void
-co_net_log_write_data_trace(
+co_net_log_write_data(
+    co_log_t* log,
+    int level,
     int category,
     const co_net_addr_t* addr1,
     const char* text,
@@ -70,16 +71,8 @@ co_net_log_write_data_trace(
     ...
 )
 {
-    co_log_t* log = co_log_get_default();
-
-    if (!log->category[category].enable_data_trace)
-    {
-        return;
-    }
-
-    co_log_write_header(CO_LOG_LEVEL_DATA, category);
-
-    co_net_log_write_addresses(addr1, text, addr2);
+    co_log_write_header(level, category);
+    co_net_log_write_addresses(log, addr1, text, addr2);
 
     va_list args;
     va_start(args, format);
@@ -119,32 +112,6 @@ co_udp_log_set_level(
 }
 
 void
-co_tcp_log_set_enable_data_trace(
-    bool enable
-)
-{
-    co_log_set_enable_data_trace(
-        CO_TCP_LOG_CATEGORY, enable);
-
-    co_log_add_category(
-        CO_TCP_LOG_CATEGORY,
-        CO_TCP_LOG_CATEGORY_NAME);
-}
-
-void
-co_udp_log_set_enable_data_trace(
-    bool enable
-)
-{
-    co_log_set_enable_data_trace(
-        CO_UDP_LOG_CATEGORY, enable);
-
-    co_log_add_category(
-        CO_UDP_LOG_CATEGORY,
-        CO_UDP_LOG_CATEGORY_NAME);
-}
-
-void
 co_net_log_write(
     int level,
     int category,
@@ -165,8 +132,7 @@ co_net_log_write(
     co_mutex_lock(log->mutex);
 
     co_log_write_header(level, category);
-
-    co_net_log_write_addresses(addr1, text, addr2);
+    co_net_log_write_addresses(log, addr1, text, addr2);
 
     va_list args;
     va_start(args, format);
@@ -180,7 +146,8 @@ co_net_log_write(
 }
 
 void
-co_net_log_hex_dump(
+co_net_log_write_hex_dump(
+    int level,
     int category,
     const co_net_addr_t* addr1,
     const char* text,
@@ -193,15 +160,15 @@ co_net_log_hex_dump(
 {
     co_log_t* log = co_log_get_default();
 
-    if (!log->category[category].enable_data_trace)
+    if (level > log->category[category].level)
     {
         return;
     }
 
     co_mutex_lock(log->mutex);
 
-    co_log_write_header(CO_LOG_LEVEL_DATA, category);
-    co_net_log_write_addresses(addr1, text, addr2);
+    co_log_write_header(level, category);
+    co_net_log_write_addresses(log, addr1, text, addr2);
 
     va_list args;
     va_start(args, format);
@@ -210,7 +177,7 @@ co_net_log_hex_dump(
 
     fprintf((FILE*)log->output, "\n");
 
-    co_log_write_header(CO_LOG_LEVEL_DATA, category);
+    co_log_write_header(level, category);
 
     fprintf((FILE*)log->output,
         "--------------------------------------------------------------\n");
@@ -255,13 +222,13 @@ co_net_log_hex_dump(
         *phex = '\0';
         *ptxt = '\0';
 
-        co_log_write_header(CO_LOG_LEVEL_DATA, category);
+        co_log_write_header(level, category);
 
         fprintf((FILE*)log->output,
             "%08zx: %-35s %s\n", index1, hex, txt);
     }
 
-    co_log_write_header(CO_LOG_LEVEL_DATA, category);
+    co_log_write_header(level, category);
 
     fprintf((FILE*)log->output,
         "--------------------------------------------------------------\n");

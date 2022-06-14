@@ -262,7 +262,7 @@ co_http_client_on_receive_ready(
 
             if (result == CO_HTTP_PARSE_COMPLETE)
             {
-                co_http_log_trace_response_header(
+                co_http_log_debug_response_header(
                     client, "<--", client->response, "http receive response");
 
                 co_http_content_receiver_clear(&client->content_receiver);
@@ -429,6 +429,9 @@ co_http_client_create(
             client->base_url->host, client->base_url->scheme,
             &hint, &remote_net_addr, 1) == 0)
         {
+            co_http_log_error(NULL, NULL, NULL,
+                "failed to resolve hostname (%s)", base_url);
+
             co_http_url_destroy(client->base_url);
             co_mem_free(client);
 
@@ -473,6 +476,9 @@ co_http_client_create(
         }
 #else
         (void)tls_ctx;
+
+        co_http_log_error(NULL, NULL, NULL,
+            "OpenSSL is not installed");
 
         co_http_url_destroy(client->base_url);
         co_mem_free(client);
@@ -576,7 +582,7 @@ co_http_send_request(
             request->message.content.size);
     }
 
-    co_http_log_trace_request_header(
+    co_http_log_debug_request_header(
         client, "-->", request, "http send request");
 
     co_byte_array_t* buffer = co_byte_array_create();
@@ -605,12 +611,10 @@ co_http_send_data(
     size_t data_size
 )
 {
-    co_net_log_hex_dump(
-        CO_HTTP_LOG_CATEGORY,
+    co_tcp_log_debug(
         &client->tcp_client->sock.local_net_addr,
         "-->",
         &client->tcp_client->remote_net_addr,
-        data, data_size,
         "http send data %zd bytes", data_size);
 
     return client->module.send(

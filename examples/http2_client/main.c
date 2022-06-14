@@ -169,6 +169,8 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
 
     if (self->client == NULL)
     {
+        printf("error: faild to resolve hostname or OpenSSL is not installed\n");
+
         return false;
     }
 

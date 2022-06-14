@@ -22,9 +22,13 @@ CO_EXTERN_C_BEGIN
 //---------------------------------------------------------------------------//
 
 CO_NET_API void co_net_log_write_addresses(
+    co_log_t* log,
     const co_net_addr_t* addr1,
     const char* text,
     const co_net_addr_t* addr2);
+
+//---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
 
 CO_NET_API void co_net_log_write(
     int level, int category,
@@ -33,15 +37,8 @@ CO_NET_API void co_net_log_write(
     const co_net_addr_t* addr2,
     const char* format, ...);
 
-CO_NET_API void co_net_log_write_data_trace(
-    int category,
-    const co_net_addr_t* addr1,
-    const char* text,
-    const co_net_addr_t* addr2,
-    const char* format, ...);
-
-CO_NET_API void co_net_log_hex_dump(
-    int category,
+CO_NET_API void co_net_log_write_hex_dump(
+    int level, int category,
     const co_net_addr_t* addr1,
     const char* text,
     const co_net_addr_t* addr2,
@@ -72,7 +69,7 @@ CO_NET_API void co_net_log_hex_dump(
         addr1, text, addr2, format, ##__VA_ARGS__)
 
 #define co_tcp_log_hex_dump(addr1, text, addr2, data, size, format, ...) \
-    co_net_log_hex_dump(CO_TCP_LOG_CATEGORY, \
+    co_net_log_write_hex_dump(CO_LOG_LEVEL_DEBUG, CO_TCP_LOG_CATEGORY, \
         addr1, text, addr2, data, size, format, ##__VA_ARGS__)
 
 //---------------------------------------------------------------------------//
@@ -99,7 +96,7 @@ CO_NET_API void co_net_log_hex_dump(
         addr1, text, addr2, format, ##__VA_ARGS__)
 
 #define co_udp_log_hex_dump(addr1, text, addr2, data, size, format, ...) \
-    co_net_log_hex_dump(CO_UDP_LOG_CATEGORY, \
+    co_net_log_write_hex_dump(CO_LOG_LEVEL_DEBUG, CO_UDP_LOG_CATEGORY, \
         addr1, text, addr2, data, size, format, ##__VA_ARGS__)
 
 //---------------------------------------------------------------------------//
@@ -107,9 +104,6 @@ CO_NET_API void co_net_log_hex_dump(
 
 CO_NET_API void co_tcp_log_set_level(int level);
 CO_NET_API void co_udp_log_set_level(int level);
-
-CO_NET_API void co_tcp_log_set_enable_data_trace(bool enable);
-CO_NET_API void co_udp_log_set_enable_data_trace(bool enable);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

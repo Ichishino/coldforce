@@ -67,10 +67,6 @@ co_tls_setup(
 
     return true;
 #else
-
-    co_tls_log_error(
-        NULL, NULL, NULL, "'OpenSSL' not found");
-
     return false;
 #endif
 }

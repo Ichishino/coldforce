@@ -18,7 +18,7 @@
 //---------------------------------------------------------------------------//
 
 static co_log_t g_log = { 0 };
-static const char* g_level_name[] = { "", "ERR", "WRN", "INF", "DBG", "DAT"};
+static const char* g_level_name[] = { "", "ERR", "WRN", "INF", "DBG" };
 
 co_log_t*
 co_log_get_default(
@@ -57,7 +57,6 @@ co_log_setup(
     {
         g_log.category[index].name = "";
         g_log.category[index].level = CO_LOG_LEVEL_NONE;
-        g_log.category[index].enable_data_trace = false;
     }
 
     g_log.category[
@@ -106,37 +105,6 @@ co_log_set_level(
     co_log_setup();
 
     g_log.category[category].level = level;
-}
-
-int
-co_log_get_level(
-    int category
-)
-{
-    return g_log.category[category].level;
-}
-
-void
-co_log_set_enable_data_trace(
-    int category,
-    bool enable
-)
-{
-    co_assert(category <= CO_LOG_CATEGORY_MAX);
-
-    co_log_setup();
-
-    g_log.category[category].enable_data_trace = enable;
-}
-
-bool
-co_log_get_enable_data_trace(
-    int category
-)
-{
-    co_assert(category <= CO_LOG_CATEGORY_MAX);
-
-    return g_log.category[category].enable_data_trace;
 }
 
 void

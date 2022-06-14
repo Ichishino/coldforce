@@ -636,6 +636,16 @@ co_tcp_receive(
         co_socket_handle_receive(
             client->sock.handle, buffer, buffer_size, 0);
 
+    if (data_size > 0)
+    {
+        co_tcp_log_hex_dump(
+            &client->sock.local_net_addr,
+            "<--",
+            &client->remote_net_addr,
+            buffer, data_size,
+            "tcp receive %zd bytes", data_size);
+    }
+
     return data_size;
 
 #endif

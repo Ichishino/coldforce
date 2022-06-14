@@ -22,15 +22,3 @@ co_tls_log_set_level(
         CO_TLS_LOG_CATEGORY_NAME);
 }
 
-void
-co_tls_log_set_enable_data_trace(
-    bool enable
-)
-{
-    co_log_set_enable_data_trace(
-        CO_TLS_LOG_CATEGORY, enable);
-
-    co_log_add_category(
-        CO_TLS_LOG_CATEGORY,
-        CO_TLS_LOG_CATEGORY_NAME);
-}

@@ -4,6 +4,7 @@
 #include <coldforce/http/co_http_content_receiver.h>
 #include <coldforce/http/co_http_string_list.h>
 #include <coldforce/http/co_http_config.h>
+#include <coldforce/http/co_http_log.h>
 
 //---------------------------------------------------------------------------//
 // http content receiver
@@ -34,6 +35,9 @@ co_http_receive_plain_data(
 
         if (content_size > 0)
         {
+            co_http_log_debug(NULL, NULL, NULL,
+                "http receive data %zd bytes", content_size);
+
             if (receiver->fp == NULL)
             {
                 co_byte_array_add(
@@ -91,6 +95,9 @@ co_http_receive_chunked_data(
 
             receiver->chunk_size =
                 co_string_to_size_t(&data_ptr[receiver->index], NULL, 16);
+
+            co_http_log_debug(NULL, NULL, NULL,
+                "http receive chunked data %zd bytes", receiver->chunk_size);
 
             if (receiver->chunk_size > max_content_size)
             {
