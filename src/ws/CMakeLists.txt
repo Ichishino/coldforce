@@ -14,7 +14,7 @@ add_library(${PROJECT_NAME} STATIC
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC ../../inc)
-target_compile_options(${PROJECT_NAME} PUBLIC -Wall)
+target_compile_options(${PROJECT_NAME} PUBLIC -Wall -Wextra)
 
 add_custom_command(
     TARGET ${PROJECT_NAME} POST_BUILD

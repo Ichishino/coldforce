@@ -228,7 +228,7 @@ co_tcp_client_on_send_ready(
     ssize_t sent_size = co_socket_handle_send(
         client->sock.handle, send_data->ptr, send_data->size, 0);
 
-    if (sent_size == send_data->size)
+    if ((sent_size > 0) && ((size_t)sent_size == send_data->size))
     {
         co_buffer_st used_data;
         co_queue_pop(client->send_queue, &used_data);
@@ -287,6 +287,8 @@ co_tcp_client_on_receive_ready(
     {
         client->win.receive.size = data_size;
     }
+#else
+    (void)data_size;
 #endif
 
     if ((client->on_receive_ready != NULL) && client->sock.open_local)

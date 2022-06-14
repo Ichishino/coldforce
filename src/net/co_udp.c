@@ -51,7 +51,7 @@ co_udp_on_send_ready(
             &send_data->remote_net_addr,
             send_data->buffer.ptr, send_data->buffer.size, 0);
 
-    if (sent_size == send_data->buffer.size)
+    if ((sent_size > 0) && ((size_t)sent_size == send_data->buffer.size))
     {
         co_udp_send_data_t used_data;
         co_queue_pop(udp->send_queue, &used_data);
@@ -107,6 +107,8 @@ co_udp_on_receive_ready(
 
 #ifdef CO_OS_WIN
     udp->win.receive.size = data_size;
+#else
+    (void)data_size;
 #endif
 
     if (udp->on_receive_ready != NULL)

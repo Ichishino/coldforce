@@ -88,7 +88,7 @@ co_http_receive_chunked_data(
                 return CO_HTTP_PARSE_MORE_DATA;
             }
 
-            if ((new_line - &data_ptr[receiver->index]) > CO_SIZE_T_HEX_DIGIT_MAX)
+            if (((size_t)(new_line - &data_ptr[receiver->index])) > CO_SIZE_T_HEX_DIGIT_MAX)
             {
                 return CO_HTTP_PARSE_ERROR;
             }
