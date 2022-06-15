@@ -10,6 +10,7 @@ add_library(${PROJECT_NAME} STATIC
     co_ws_config.c
     co_ws_frame.c
     co_ws_http_extension.c
+    co_ws_log.c
     co_ws_server.c
 )
 

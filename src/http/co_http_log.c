@@ -37,8 +37,9 @@ co_http_log_write_header(
 void
 co_http_log_write_request_header(
     int level,
-    const co_http_client_t* client,
+    const co_net_addr_t* addr1,
     const char* text,
+    const co_net_addr_t* addr2,
     const co_http_request_t* request,
     const char* format,
     ...
@@ -56,9 +57,8 @@ co_http_log_write_request_header(
     co_log_write_header(
         level, CO_HTTP_LOG_CATEGORY);
 
-    co_net_log_write_addresses(log,
-        &client->tcp_client->sock.local_net_addr, text,
-        &client->tcp_client->remote_net_addr);
+    co_net_log_write_addresses(
+        log, addr1, text, addr2);
 
     va_list args;
     va_start(args, format);
@@ -96,8 +96,9 @@ co_http_log_write_request_header(
 void
 co_http_log_write_response_header(
     int level,
-    const co_http_client_t* client,
+    const co_net_addr_t* addr1,
     const char* text,
+    const co_net_addr_t* addr2,
     const co_http_response_t* response,
     const char* format,
     ...
@@ -115,9 +116,8 @@ co_http_log_write_response_header(
     co_log_write_header(
         level, CO_HTTP_LOG_CATEGORY);
 
-    co_net_log_write_addresses(log,
-        &client->tcp_client->sock.local_net_addr, text,
-        &client->tcp_client->remote_net_addr);
+    co_net_log_write_addresses(
+        log, addr1, text, addr2);
 
     va_list args;
     va_start(args, format);

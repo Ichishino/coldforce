@@ -17,6 +17,14 @@ CO_EXTERN_C_BEGIN
 
 #define CO_WS_LOG_CATEGORY             (CO_LOG_CATEGORY_USER_MAX + 5)
 
+void co_ws_log_write_frame(
+    int level,
+    const co_net_addr_t* addr1,
+    const char* text,
+    const co_net_addr_t* addr2,
+    bool fin, uint8_t opcode, size_t data_size,
+    const char* format, ...);
+
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
@@ -39,6 +47,10 @@ CO_EXTERN_C_BEGIN
 #define co_ws_log_debug(addr1, text, addr2, format, ...) \
     co_ws_log_write(CO_LOG_LEVEL_DEBUG, \
         addr1, text, addr2, format, ##__VA_ARGS__)
+
+#define co_ws_log_debug_frame(addr1, text, addr2, fin, opcode, data_size, format, ...) \
+    co_ws_log_write_frame(CO_LOG_LEVEL_DEBUG, \
+        addr1, text, addr2, fin, opcode, data_size, format, ##__VA_ARGS__)
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

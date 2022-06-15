@@ -1,8 +1,11 @@
 #include <coldforce/core/co_std.h>
 
+#include <coldforce/http/co_http_log.h>
+
 #include <coldforce/ws/co_ws_client.h>
 #include <coldforce/ws/co_ws_server.h>
 #include <coldforce/ws/co_ws_http_extension.h>
+#include <coldforce/ws/co_ws_log.h>
 
 //---------------------------------------------------------------------------//
 // websocket server
@@ -46,6 +49,13 @@ co_ws_server_on_receive_ready(
 
         if (result == CO_WS_PARSE_COMPLETE)
         {
+            co_ws_log_debug_frame(
+                &client->tcp_client->sock.local_net_addr,
+                "<--",
+                &client->tcp_client->remote_net_addr,
+                frame->header.fin, frame->header.opcode, frame->header.payload_size,
+                "ws receive frame");
+
             co_ws_client_on_frame(
                 thread, client, frame, 0);
 
@@ -72,13 +82,33 @@ co_ws_server_on_receive_ready(
                 client->receive_data, &client->receive_data_index) ==
                 CO_HTTP_PARSE_COMPLETE)
             {
+                co_http_log_debug_request_header(
+                    &client->tcp_client->sock.local_net_addr,
+                    "<--",
+                    &client->tcp_client->remote_net_addr,
+                    request,
+                    "http receive request");
+
                 if (co_http_request_validate_ws_upgrade(request))
                 {
+                    co_ws_log_info(
+                        &client->tcp_client->sock.local_net_addr,
+                        "<--",
+                        &client->tcp_client->remote_net_addr,
+                        "ws receive upgrade request");
+
                     co_http_response_t* response =
                         co_http_response_create_ws_upgrade(
                             request, NULL, NULL);
                     co_http_response_set_version(
                         response, CO_HTTP_VERSION_1_1);
+
+                    co_http_log_debug_response_header(
+                        &client->tcp_client->sock.local_net_addr,
+                        "-->",
+                        &client->tcp_client->remote_net_addr,
+                        response,
+                        "http send response");
 
                     co_byte_array_t* buffer = co_byte_array_create();
                     co_http_response_serialize(response, buffer);

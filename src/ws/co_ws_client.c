@@ -6,9 +6,12 @@
 
 #include <coldforce/tls/co_tls_client.h>
 
+#include <coldforce/http/co_http_log.h>
+
 #include <coldforce/ws/co_random.h>
 #include <coldforce/ws/co_ws_client.h>
 #include <coldforce/ws/co_ws_http_extension.h>
+#include <coldforce/ws/co_ws_log.h>
 
 //---------------------------------------------------------------------------//
 // websocket client
@@ -123,6 +126,12 @@ co_ws_client_on_connect(
 
     if (error_code == 0)
     {
+        co_ws_log_info(
+            &client->tcp_client->sock.local_net_addr,
+            "<--",
+            &client->tcp_client->remote_net_addr,
+            "ws connect success");
+
         co_http_request_set_version(
             client->upgrade_request, CO_HTTP_VERSION_1_1);
 
@@ -140,6 +149,19 @@ co_ws_client_on_connect(
             co_http_url_destroy_string(host);
         }
 
+        co_ws_log_info(
+            &client->tcp_client->sock.local_net_addr,
+            "-->",
+            &client->tcp_client->remote_net_addr,
+            "ws send upgrade request");
+
+        co_http_log_debug_request_header(
+            &client->tcp_client->sock.local_net_addr,
+            "-->",
+            &client->tcp_client->remote_net_addr,
+            client->upgrade_request,
+            "http send request");
+
         co_byte_array_t* buffer = co_byte_array_create();
 
         co_http_request_serialize(
@@ -153,6 +175,12 @@ co_ws_client_on_connect(
     }
     else
     {
+        co_ws_log_error(
+            &client->tcp_client->sock.local_net_addr,
+            "<--",
+            &client->tcp_client->remote_net_addr,
+            "ws connect error (%d)", error_code);
+
         co_http_request_destroy(client->upgrade_request);
         client->upgrade_request = NULL;
 
@@ -201,6 +229,13 @@ co_ws_client_on_receive_ready(
 
         if (result == CO_WS_PARSE_COMPLETE)
         {
+            co_ws_log_debug_frame(
+                &client->tcp_client->sock.local_net_addr,
+                "<--",
+                &client->tcp_client->remote_net_addr,
+                frame->header.fin, frame->header.opcode, frame->header.payload_size,
+                "ws receive frame");
+
             co_ws_client_on_frame(
                 thread, client, frame, 0);
 
@@ -232,6 +267,19 @@ co_ws_client_on_receive_ready(
                     client->receive_data, &client->receive_data_index) ==
                     CO_HTTP_PARSE_COMPLETE)
                 {
+                    co_http_log_debug_response_header(
+                        &client->tcp_client->sock.local_net_addr,
+                        "<--",
+                        &client->tcp_client->remote_net_addr,
+                        response,
+                        "http receive response");
+
+                    co_ws_log_info(
+                        &client->tcp_client->sock.local_net_addr,
+                        "<--",
+                        &client->tcp_client->remote_net_addr,
+                        "ws receive upgrade response");
+
                     handler(thread, client, response, 0);
 
                     co_http_response_destroy(response);
@@ -358,6 +406,9 @@ co_ws_client_create(
             url->host, url->scheme,
             &hint, &remote_net_addr, 1) == 0)
         {
+            co_ws_log_error(NULL, NULL, NULL,
+                "failed to resolve hostname (%s)", base_url);
+
             co_http_url_destroy(url);
             co_mem_free(client);
 
@@ -402,6 +453,9 @@ co_ws_client_create(
         }
 #else
         (void)tls_ctx;
+
+        co_ws_log_error(NULL, NULL, NULL,
+            "OpenSSL is not installed");
 
         co_http_url_destroy(url);
         co_mem_free(client);
@@ -486,10 +540,21 @@ co_ws_connect(
     co_http_request_destroy(client->upgrade_request);
     client->upgrade_request = upgrade_request;
 
-    return client->module.connect(
+    bool result =  client->module.connect(
         client->tcp_client,
         &client->tcp_client->remote_net_addr,
         (co_tcp_connect_fn)co_ws_client_on_connect);
+
+    if (result)
+    {
+        co_ws_log_info(
+            &client->tcp_client->sock.local_net_addr,
+            "-->",
+            &client->tcp_client->remote_net_addr,
+            "ws connect start");
+    }
+
+    return result;
 }
 
 bool
@@ -501,6 +566,13 @@ co_ws_send(
     size_t data_size
 )
 {
+    co_ws_log_debug_frame(
+        &client->tcp_client->sock.local_net_addr,
+        "-->",
+        &client->tcp_client->remote_net_addr,
+        fin, opcode, data_size,
+        "ws send frame");
+
     uint8_t header[32];
     uint32_t header_size = CO_WS_FRAME_HEADER_MIN_SIZE;
 

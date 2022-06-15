@@ -99,7 +99,9 @@ co_http_server_on_receive_ready(
             if (result == CO_HTTP_PARSE_COMPLETE)
             {
                 co_http_log_debug_request_header(
-                    client, "<--", client->request, "http receive request");
+                    &client->tcp_client->sock.local_net_addr, "<--",
+                    &client->tcp_client->remote_net_addr,
+                    client->request, "http receive request");
 
                 co_http_content_receiver_clear(&client->content_receiver);
 
@@ -392,7 +394,9 @@ co_http_send_response(
     co_http_response_set_version(response, CO_HTTP_VERSION_1_1);
 
     co_http_log_debug_response_header(
-        client, "-->", response, "http send response");
+        &client->tcp_client->sock.local_net_addr, "-->",
+        &client->tcp_client->remote_net_addr,
+        response, "http send response");
 
     co_byte_array_t* buffer = co_byte_array_create();
 
@@ -456,7 +460,9 @@ co_http_begin_chunked_response(
     co_http_response_set_version(response, CO_HTTP_VERSION_1_1);
 
     co_http_log_debug_response_header(
-        client, "-->", response, "http send response");
+        &client->tcp_client->sock.local_net_addr, "-->",
+        &client->tcp_client->remote_net_addr,
+        response, "http send response");
 
     co_byte_array_t* buffer = co_byte_array_create();
 

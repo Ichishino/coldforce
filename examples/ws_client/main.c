@@ -116,6 +116,7 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     (void)arg;
 
     const char* base_url = "ws://127.0.0.1:9080";
+
     const char* file_path = "/";
 
     co_net_addr_t local_net_addr = { 0 };
@@ -125,6 +126,8 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
 
     if (self->client == NULL)
     {
+        printf("error: faild to resolve hostname or OpenSSL is not installed\n");
+
         return false;
     }
 
@@ -146,6 +149,9 @@ void on_my_app_destroy(my_app* self)
 
 int main(int argc, char* argv[])
 {
+//    co_http_log_set_level(CO_LOG_LEVEL_MAX);
+//    co_ws_log_set_level(CO_LOG_LEVEL_MAX);
+
     co_tls_setup();
 
     my_app app;

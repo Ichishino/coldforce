@@ -18,17 +18,19 @@ CO_EXTERN_C_BEGIN
 
 #define CO_HTTP_LOG_CATEGORY             (CO_LOG_CATEGORY_USER_MAX + 4)
 
-void co_http_log_write_request_header(
+CO_HTTP_API void co_http_log_write_request_header(
     int level,
-    const co_http_client_t* client,
+    const co_net_addr_t* addr1,
     const char* text,
+    const co_net_addr_t* addr2,
     const co_http_request_t* request,
     const char* format, ...);
 
-void co_http_log_write_response_header(
+CO_HTTP_API void co_http_log_write_response_header(
     int level,
-    const co_http_client_t* client,
+    const co_net_addr_t* addr1,
     const char* text,
+    const co_net_addr_t* addr2,
     const co_http_response_t* response,
     const char* format, ...);
 
@@ -55,13 +57,13 @@ void co_http_log_write_response_header(
     co_http_log_write(CO_LOG_LEVEL_DEBUG, \
         addr1, text, addr2, format, ##__VA_ARGS__)
 
-#define co_http_log_debug_request_header(client, text, request, format, ...) \
+#define co_http_log_debug_request_header(addr1, text, addr2, request, format, ...) \
     co_http_log_write_request_header(CO_LOG_LEVEL_DEBUG, \
-        client, text, request, format, ##__VA_ARGS__)
+        addr1, text, addr2, request, format, ##__VA_ARGS__)
 
-#define co_http_log_debug_response_header(client, text, response, format, ...) \
+#define co_http_log_debug_response_header(addr1, text, addr2, response, format, ...) \
     co_http_log_write_response_header(CO_LOG_LEVEL_DEBUG, \
-        client, text, response, format, ##__VA_ARGS__)
+        addr1, text, addr2, response, format, ##__VA_ARGS__)
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
