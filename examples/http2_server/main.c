@@ -48,6 +48,7 @@ void on_my_http2_stop_app_request(
     co_http2_header_t* response_header = co_http2_header_create_response(200);
 
     co_http2_header_add_field(response_header, "content-type", "text/html");
+    co_http2_header_add_field(response_header, "cache-control", "no-store");
 
     const char* response_content =
         "<html>\n"
@@ -131,6 +132,7 @@ void on_my_http2_server_push_request(
     co_http2_header_t* response_header = co_http2_header_create_response(200);
 
     co_http2_header_add_field(response_header, "content-type", "text/html");
+    co_http2_header_add_field(response_header, "cache-control", "no-store");
 
     char response_content[8192];
     sprintf(response_content,
@@ -168,6 +170,7 @@ void on_my_http2_default_request(
     co_http2_header_t* response_header = co_http2_header_create_response(200);
 
     co_http2_header_add_field(response_header, "content-type", "text/html");
+    co_http2_header_add_field(response_header, "cache-control", "no-store");
 
     char response_content[8192];
     sprintf(response_content,

@@ -48,6 +48,7 @@ void on_my_http2_stop_app_request(
     co_http2_header_t* response_header = co_http2_header_create_response(200);
 
     co_http2_header_add_field(response_header, "content-type", "text/html");
+    co_http2_header_add_field(response_header, "cache-control", "no-store");
 
     const char* response_content =
         "<html>\n"
@@ -81,6 +82,7 @@ void on_my_http2_default_request(
     co_http2_header_t* response_header = co_http2_header_create_response(200);
 
     co_http2_header_add_field(response_header, "content-type", "text/html");
+    co_http2_header_add_field(response_header, "cache-control", "no-store");
 
     char response_content[8192];
     sprintf(response_content,
@@ -164,13 +166,17 @@ void on_my_http_request(my_app* self, co_http_client_t* http1_client,
         co_http_response_t* response =
             co_http_response_create_with(200, "OK");
 
+        co_http_header_t* response_header = co_http_response_get_header(response);
+
+        co_http_header_add_field(response_header, "Content-Type", "text/html");
+        co_http_header_add_field(response_header, "Cache-Control", "no-store");
+
         const char* content =
             "<html><head><title>HTTP/1.1</title></head>"
                 "<body>HTTP/1.1 OK</body></html>";
         size_t content_size = strlen(content);
 
-        co_http_header_t* header = co_http_response_get_header(response);
-        co_http_header_set_content_length(header, content_size);
+        co_http_header_set_content_length(response_header, content_size);
 
         co_http_send_response(http1_client, response);
         co_http_send_data(http1_client, content, content_size);

@@ -34,6 +34,7 @@ void on_my_http_stop_app_request(my_app* self, co_http_client_t* client)
     co_http_header_t* response_header = co_http_response_get_header(response);
 
     co_http_header_add_field(response_header, "Content-Type", "text/html");
+    co_http_header_add_field(response_header, "Cache-Control", "no-store");
 
     const char* response_content =
         "<html>\n"
@@ -75,6 +76,7 @@ void on_my_http_default_request(my_app* self, co_http_client_t* client, const co
     co_http_header_t* response_header = co_http_response_get_header(response);
 
     co_http_header_add_field(response_header, "Content-Type", "text/html");
+    co_http_header_add_field(response_header, "Cache-Control", "no-store");
 
     char response_content[8192];
     sprintf(response_content,
