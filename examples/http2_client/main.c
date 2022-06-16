@@ -175,7 +175,7 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     }
 
     co_http2_setting_param_st params[1];
-    params[0].identifier = CO_HTTP2_SETTING_ID_INITIAL_WINDOW_SIZE;
+    params[0].id = CO_HTTP2_SETTING_ID_INITIAL_WINDOW_SIZE;
     params[0].value = CO_HTTP2_SETTING_MAX_WINDOW_SIZE;
     co_http2_init_settings(self->client, params, 1);
 
@@ -198,6 +198,9 @@ void on_my_app_destroy(my_app* self)
 
 int main(int argc, char* argv[])
 {
+//    co_http_log_set_level(CO_LOG_LEVEL_MAX);
+//    co_http2_log_set_level(CO_LOG_LEVEL_MAX);
+
     co_tls_setup();
 
     my_app app;

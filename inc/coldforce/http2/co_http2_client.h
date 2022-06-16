@@ -22,34 +22,34 @@ CO_EXTERN_C_BEGIN
 struct co_http2_client_t;
 
 typedef void(*co_http2_connect_fn)(
-    void* self, struct co_http2_client_t* client, int error_code);
+    co_thread_t* self, struct co_http2_client_t* client, int error_code);
 
 typedef void(*co_http2_upgrade_fn)(
-    void* self, struct co_http2_client_t* client,
+    co_thread_t* self, struct co_http2_client_t* client,
     const co_http_response_t* response, int error_code);
 
 typedef void(*co_http2_close_fn)(
-    void* self, struct co_http2_client_t* client, int error_code);
+    co_thread_t* self, struct co_http2_client_t* client, int error_code);
 
 typedef void(*co_http2_priority_fn)(
-    void* self, struct co_http2_client_t* client, co_http2_stream_t* stream,
+    co_thread_t* self, struct co_http2_client_t* client, co_http2_stream_t* stream,
     uint32_t stream_dependency, uint8_t weight);
 
 typedef void(*co_http2_window_update_fn)(
-    void* self, struct co_http2_client_t* client, co_http2_stream_t* stream);
+    co_thread_t* self, struct co_http2_client_t* client, co_http2_stream_t* stream);
 
 typedef void(*co_http2_close_stream_fn)(
-    void* self, struct co_http2_client_t* client, co_http2_stream_t* stream, int error_code);
+    co_thread_t* self, struct co_http2_client_t* client, co_http2_stream_t* stream, int error_code);
 
 typedef bool(*co_http2_push_request_fn)(
-    void* self, struct co_http2_client_t* client,
+    co_thread_t* self, struct co_http2_client_t* client,
     const co_http2_stream_t* request_stream, co_http2_stream_t* response_stream,
-    co_http2_header_t* request_header);
+    const co_http2_header_t* request_header);
 
 typedef co_http2_message_fn co_http2_push_response_fn;
 
 typedef void(*co_http2_ping_fn)(
-    void* self, struct co_http2_client_t* client, uint64_t user_data);
+    co_thread_t* self, struct co_http2_client_t* client, uint64_t user_data);
 
 typedef struct
 {

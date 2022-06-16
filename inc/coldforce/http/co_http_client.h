@@ -39,7 +39,7 @@ typedef bool(*co_http_progress_fn)(
     size_t current_content_size);
 
 typedef void(*co_http_close_fn)(
-    void* self, struct co_http_client_t* client);
+    co_thread_t* self, struct co_http_client_t* client);
 
 typedef struct
 {

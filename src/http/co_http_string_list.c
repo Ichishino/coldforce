@@ -81,7 +81,7 @@ co_http_string_list_cleanup(
 
 const char*
 co_http_string_list_find(
-    co_http_string_item_st* items,
+    const co_http_string_item_st* items,
     size_t item_count,
     const char* first
 )
@@ -99,7 +99,7 @@ co_http_string_list_find(
 
 bool
 co_http_string_list_contains(
-    co_http_string_item_st* items,
+    const co_http_string_item_st* items,
     size_t item_count,
     const char* first
 )

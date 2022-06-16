@@ -80,9 +80,6 @@ typedef struct co_http2_stream_t
 
 } co_http2_stream_t;
 
-void co_http2_stream_frame_trace(
-    co_http2_stream_t* stream, bool send, const co_http2_frame_t* frame);
-
 co_http2_stream_t* co_http2_stream_create(
     uint32_t id, struct co_http2_client_t* client, co_http2_message_fn message_handler);
 void co_http2_stream_destroy(co_http2_stream_t* stream);

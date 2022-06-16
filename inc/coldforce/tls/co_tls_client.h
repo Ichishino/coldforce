@@ -17,7 +17,7 @@ CO_EXTERN_C_BEGIN
 #ifdef CO_CAN_USE_TLS
 
 typedef void(*co_tls_handshake_fn)(
-    void* self, co_tcp_client_t* client, int error_code);
+    co_thread_t* self, co_tcp_client_t* client, int error_code);
 
 typedef struct
 {

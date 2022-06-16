@@ -18,14 +18,14 @@ CO_EXTERN_C_BEGIN
 struct co_ws_client_t;
 
 typedef void(*co_ws_connect_fn)(
-    void* self, struct co_ws_client_t*,
+    co_thread_t* self, struct co_ws_client_t*,
     const co_http_response_t* response, int error_code);
 
 typedef void(*co_ws_receive_fn)(
-    void* self, struct co_ws_client_t*, const co_ws_frame_t*, int error_code);
+    co_thread_t* self, struct co_ws_client_t*, const co_ws_frame_t*, int error_code);
 
 typedef void(*co_ws_close_fn)(
-    void* self, struct co_ws_client_t*);
+    co_thread_t* self, struct co_ws_client_t*);
 
 typedef struct co_ws_client_t
 {

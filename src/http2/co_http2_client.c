@@ -12,6 +12,7 @@
 #include <coldforce/http2/co_http2_client.h>
 #include <coldforce/http2/co_http2_stream.h>
 #include <coldforce/http2/co_http2_frame.h>
+#include <coldforce/http2/co_http2_log.h>
 
 //---------------------------------------------------------------------------//
 // http2 client
@@ -259,7 +260,7 @@ co_http2_client_on_receive_system_frame(
         {
             co_http2_set_setting_param(
                 &client->remote_settings,
-                frame->payload.settings.params[index].identifier,
+                frame->payload.settings.params[index].id,
                 frame->payload.settings.params[index].value);
         }
 
@@ -346,12 +347,6 @@ co_http2_client_on_push_promise(
     co_http2_header_t* header
 )
 {
-#ifdef CO_HTTP2_DEBUG
-    printf("[CO_HTTP2] <INF> ==== PUSH-PROMISE REQUEST ===\n");
-    co_http2_header_print(header);
-    printf("[CO_HTTP2] <INF> =============================\n");
-#endif
-
     co_http2_stream_t* promised_stream =
         co_http2_stream_create(promised_id,
             client, client->on_push_response);
@@ -449,6 +444,18 @@ co_http2_client_on_tcp_connect(
 
     if (error_code == 0)
     {
+        co_http2_log_info(
+            &client->tcp_client->sock.local_net_addr,
+            "<--",
+            &client->tcp_client->remote_net_addr,
+            "http2 connect success");
+
+        co_http2_log_info(
+            &client->tcp_client->sock.local_net_addr,
+            "-->",
+            &client->tcp_client->remote_net_addr,
+            "http2 send connection preface");
+
         co_http2_send_raw_data(client,
             CO_HTTP2_CONNECTION_PREFACE,
             CO_HTTP2_CONNECTION_PREFACE_LENGTH);
@@ -457,6 +464,13 @@ co_http2_client_on_tcp_connect(
     }
     else
     {
+        co_http2_log_error(
+            &client->tcp_client->sock.local_net_addr,
+            "<--",
+            &client->tcp_client->remote_net_addr,
+            "http2 connect error (%d)",
+            error_code);
+
         if (client->on_connect != NULL)
         {
             co_http2_connect_fn handler = client->on_connect;
@@ -548,9 +562,12 @@ co_http2_client_on_tcp_receive_ready(
                 continue;
             }
 
-#ifdef CO_HTTP2_DEBUG
-            co_http2_stream_frame_trace(stream, false, frame);
-#endif
+            co_http2_log_debug_frame(
+                &stream->client->tcp_client->sock.local_net_addr, "<--",
+                &stream->client->tcp_client->remote_net_addr,
+                frame,
+                "http2 receive frame");
+
             if (frame->header.stream_id == 0)
             {
                 co_http2_client_on_receive_system_frame(client, frame);
@@ -713,6 +730,9 @@ co_http2_client_create(
             client->base_url->host, client->base_url->scheme,
             &hint, &remote_net_addr, 1) == 0)
         {
+            co_http2_log_error(NULL, NULL, NULL,
+                "failed to resolve hostname (%s)", base_url);
+
             co_http_url_destroy(client->base_url);
             co_mem_free(client);
 
@@ -757,6 +777,9 @@ co_http2_client_create(
         }
 #else
         (void)tls_ctx;
+
+        co_http2_log_error(NULL, NULL, NULL,
+            "OpenSSL is not installed");
 
         co_http_url_destroy(client->base_url);
         co_mem_free(client);
@@ -878,10 +901,22 @@ co_http2_connect(
 {
     client->on_connect = handler;
 
-    return client->module.connect(
+    bool result = client->module.connect(
         client->tcp_client,
         &client->tcp_client->remote_net_addr,
         (co_tcp_connect_fn)co_http2_client_on_tcp_connect);
+
+    if (result)
+    {
+        co_http2_log_info(
+            &client->tcp_client->sock.local_net_addr,
+            "-->",
+            &client->tcp_client->remote_net_addr,
+            "http2 connect start (%s)",
+            client->base_url->src);
+    }
+
+    return result;
 }
 
 bool
@@ -996,7 +1031,7 @@ co_http2_send_initial_settings(
     if (client->local_settings.header_table_size !=
         CO_HTTP2_SETTING_DEFAULT_HEADER_TABLE_SIZE)
     {
-        params[param_count].identifier =
+        params[param_count].id =
             CO_HTTP2_SETTING_ID_HEADER_TABLE_SIZE;
         params[param_count].value =
             client->local_settings.header_table_size;
@@ -1006,7 +1041,7 @@ co_http2_send_initial_settings(
     if (client->local_settings.enable_push !=
         CO_HTTP2_SETTING_DEFAULT_ENABLE_PUSH)
     {
-        params[param_count].identifier =
+        params[param_count].id =
             CO_HTTP2_SETTING_ID_ENABLE_PUSH;
         params[param_count].value =
             client->local_settings.enable_push;
@@ -1016,7 +1051,7 @@ co_http2_send_initial_settings(
     if (client->local_settings.max_concurrent_streams !=
         CO_HTTP2_SETTING_DEFAULT_MAX_CONCURRENT_STREAMS)
     {
-        params[param_count].identifier =
+        params[param_count].id =
             CO_HTTP2_SETTING_ID_MAX_CONCURRENT_STREAMS;
         params[param_count].value =
             client->local_settings.max_concurrent_streams;
@@ -1026,7 +1061,7 @@ co_http2_send_initial_settings(
     if (client->local_settings.initial_window_size !=
         CO_HTTP2_SETTING_DEFAULT_INITIAL_WINDOW_SIZE)
     {
-        params[param_count].identifier =
+        params[param_count].id =
             CO_HTTP2_SETTING_ID_INITIAL_WINDOW_SIZE;
         params[param_count].value =
             client->local_settings.initial_window_size;
@@ -1036,7 +1071,7 @@ co_http2_send_initial_settings(
     if (client->local_settings.max_frame_size !=
         CO_HTTP2_SETTING_DEFAULT_MAX_FRAME_SIZE)
     {
-        params[param_count].identifier =
+        params[param_count].id =
             CO_HTTP2_SETTING_ID_MAX_FRAME_SIZE;
         params[param_count].value =
             client->local_settings.max_frame_size;
@@ -1046,7 +1081,7 @@ co_http2_send_initial_settings(
     if (client->local_settings.max_header_list_size !=
         CO_HTTP2_SETTING_DEFAULT_MAX_HEADER_LIST_SIZE)
     {
-        params[param_count].identifier =
+        params[param_count].id =
             CO_HTTP2_SETTING_ID_MAX_HEADER_LIST_SIZE;
         params[param_count].value =
             client->local_settings.max_header_list_size;
@@ -1083,7 +1118,7 @@ co_http2_init_settings(
     {
         co_http2_set_setting_param(
             &client->local_settings,
-            params[index].identifier, params[index].value);
+            params[index].id, params[index].value);
     }
 }
 
@@ -1105,7 +1140,7 @@ co_http2_update_settings(
     {
         co_http2_set_setting_param(
             &client->local_settings,
-            params[index].identifier, params[index].value);
+            params[index].id, params[index].value);
     }
 }
 

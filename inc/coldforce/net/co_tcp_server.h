@@ -23,10 +23,10 @@ CO_EXTERN_C_BEGIN
 struct co_tcp_server_t;
 
 typedef void(*co_tcp_accept_fn)(
-    void* self, struct co_tcp_server_t* server, co_tcp_client_t* client);
+    co_thread_t* self, struct co_tcp_server_t* server, co_tcp_client_t* client);
 
 typedef void(*co_tcp_transfer_fn)(
-    void* self, co_tcp_client_t* client);
+    co_thread_t* self, co_tcp_client_t* client);
 
 typedef struct co_tcp_server_t
 {

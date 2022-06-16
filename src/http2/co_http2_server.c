@@ -1,11 +1,13 @@
 #include <coldforce/core/co_std.h>
 
 #include <coldforce/http/co_base64.h>
+#include <coldforce/http/co_http_log.h>
 
 #include <coldforce/http2/co_http2_server.h>
 #include <coldforce/http2/co_http2_client.h>
 #include <coldforce/http2/co_http2_stream.h>
 #include <coldforce/http2/co_http2_http_extension.h>
+#include <coldforce/http2/co_http2_log.h>
 
 //---------------------------------------------------------------------------//
 // http2 server
@@ -34,6 +36,12 @@ co_http2_server_on_upgrade_request(
             CO_HTTP2_CONNECTION_PREFACE,
             CO_HTTP2_CONNECTION_PREFACE_LENGTH) == 0)
         {
+            co_http2_log_debug(
+                &client->tcp_client->sock.local_net_addr,
+                "<--",
+                &client->tcp_client->remote_net_addr,
+                "http2 receive connection preface");
+
             client->receive_data_index +=
                 CO_HTTP2_CONNECTION_PREFACE_LENGTH;
 
@@ -54,6 +62,13 @@ co_http2_server_on_upgrade_request(
 
         return false;
     }
+
+    co_http_log_debug_request_header(
+        &client->tcp_client->sock.local_net_addr,
+        "<--",
+        &client->tcp_client->remote_net_addr,
+        request,
+        "http receive request");
 
     const co_http_header_t* request_header =
         co_http_request_get_header(request);
@@ -79,6 +94,13 @@ co_http2_server_on_upgrade_request(
 
     co_http_response_t* response =
         co_http_response_create_http2_upgrade(101, "Switching Protocols");
+
+    co_http_log_debug_response_header(
+        &client->tcp_client->sock.local_net_addr,
+        "-->",
+        &client->tcp_client->remote_net_addr,
+        response,
+        "http send response");
 
     co_byte_array_t* buffer = co_byte_array_create();
     co_http_response_serialize(response, buffer);
@@ -156,9 +178,12 @@ co_http2_server_on_tcp_receive_ready(
                 }
             }
 
-#ifdef CO_HTTP2_DEBUG
-            co_http2_stream_frame_trace(stream, false, frame);
-#endif
+            co_http2_log_debug_frame(
+                &stream->client->tcp_client->sock.local_net_addr, "<--",
+                &stream->client->tcp_client->remote_net_addr,
+                frame,
+                "http2 receive frame");
+
             if (frame->header.type == CO_HTTP2_FRAME_TYPE_PUSH_PROMISE)
             {
                 co_http2_client_close(

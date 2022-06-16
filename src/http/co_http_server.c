@@ -278,6 +278,8 @@ co_http_server_destroy(
 {
     if (server != NULL)
     {
+        co_http_server_close(server);
+
         if (server->tcp_server != NULL)
         {
             server->module.destroy(server->tcp_server);
@@ -295,6 +297,10 @@ co_http_server_close(
 {
     if (server != NULL)
     {
+        co_http_log_info(
+            &server->tcp_server->sock.local_net_addr,
+            NULL, NULL, "http server closed");
+
         server->module.close(server->tcp_server);
     }
 }
@@ -306,6 +312,10 @@ co_http_server_start(
     int backlog
 )
 {
+    co_http_log_info(
+        &server->tcp_server->sock.local_net_addr,
+        NULL, NULL, "http server start");
+
     return server->module.start(
         server->tcp_server, handler, backlog);
 }

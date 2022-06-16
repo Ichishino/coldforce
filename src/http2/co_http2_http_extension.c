@@ -173,7 +173,7 @@ co_http_request_create_http2_upgrade(
         {
             uint16_t u16 =
                 co_byte_order_16_host_to_network(
-                    param[param_index].identifier);
+                    param[param_index].id);
             co_byte_array_add(
                 buffer, &u16, sizeof(uint16_t));
 

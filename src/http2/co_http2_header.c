@@ -51,50 +51,6 @@ co_http2_header_add_field_ptr(
     return co_list_add_tail(header->field_list, (uintptr_t)field);
 }
 
-void
-co_http2_header_print(
-    const co_http2_header_t* header
-)
-{
-    if (header->pseudo.authority != NULL)
-    {
-        printf("[CO_HTTP2] <INF> :authority: %s\n", header->pseudo.authority);
-    }
-
-    if (header->pseudo.method != NULL)
-    {
-        printf("[CO_HTTP2] <INF> :method: %s\n", header->pseudo.method);
-    }
-
-    if (header->pseudo.url != NULL)
-    {
-        printf("[CO_HTTP2] <INF> :path: %s\n", header->pseudo.url->src);
-    }
-
-    if (header->pseudo.scheme != NULL)
-    {
-        printf("[CO_HTTP2] <INF> :scheme: %s\n", header->pseudo.scheme);
-    }
-
-    if (header->pseudo.status_code != 0)
-    {
-        printf("[CO_HTTP2] <INF> :status: %hu\n", header->pseudo.status_code);
-    }
-
-    const co_list_iterator_t* it =
-        co_list_get_const_head_iterator(header->field_list);
-
-    while (it != NULL)
-    {
-        const co_list_data_st* data =
-            co_list_get_const_next(header->field_list, &it);
-        const co_http2_header_field_t* field =
-            (const co_http2_header_field_t*)data->value;
-
-        printf("[CO_HTTP2] <INF> %s: %s\n", field->name, field->value);
-    }
-}
-
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 

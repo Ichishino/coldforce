@@ -261,9 +261,9 @@ void on_my_tls_handshake(my_app* self, co_tcp_client_t* tcp_client, int error_co
 
         // settings (optional)
         co_http2_setting_param_st params[2];
-        params[0].identifier = CO_HTTP2_SETTING_ID_INITIAL_WINDOW_SIZE;
+        params[0].id = CO_HTTP2_SETTING_ID_INITIAL_WINDOW_SIZE;
         params[0].value = 1024 * 1024 * 10;
-        params[1].identifier = CO_HTTP2_SETTING_ID_MAX_CONCURRENT_STREAMS;
+        params[1].id = CO_HTTP2_SETTING_ID_MAX_CONCURRENT_STREAMS;
         params[1].value = 200;
         co_http2_init_settings(http2_client, params, 2);
 
@@ -310,9 +310,9 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t
 
     // settings (optional)
     co_http2_setting_param_st params[2];
-    params[0].identifier = CO_HTTP2_SETTING_ID_INITIAL_WINDOW_SIZE;
+    params[0].id = CO_HTTP2_SETTING_ID_INITIAL_WINDOW_SIZE;
     params[0].value = 1024 * 1024 * 10;
-    params[1].identifier = CO_HTTP2_SETTING_ID_MAX_CONCURRENT_STREAMS;
+    params[1].id = CO_HTTP2_SETTING_ID_MAX_CONCURRENT_STREAMS;
     params[1].value = 200;
     co_http2_init_settings(http2_client, params, 2);
 
@@ -411,6 +411,9 @@ void on_my_app_destroy(my_app* self)
 
 int main(int argc, char* argv[])
 {
+//    co_http_log_set_level(CO_LOG_LEVEL_MAX);
+//    co_http2_log_set_level(CO_LOG_LEVEL_MAX);
+
     co_tls_setup();
 
     my_app app;

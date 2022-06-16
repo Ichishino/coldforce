@@ -3,8 +3,6 @@
 
 #include <coldforce/core/co.h>
 
-//#define CO_HTTP2_DEBUG
-
 //---------------------------------------------------------------------------//
 // platform
 //---------------------------------------------------------------------------//
@@ -69,7 +67,7 @@ CO_EXTERN_C_BEGIN
 
 typedef struct
 {
-    uint16_t identifier;
+    uint16_t id;
     uint32_t value;
 
 } co_http2_setting_param_st;

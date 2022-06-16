@@ -123,7 +123,7 @@ co_http2_frame_serialize(
             index < frame->payload.settings.param_count; ++index)
         {
             u16 = co_byte_order_16_host_to_network(
-                frame->payload.settings.params[index].identifier);
+                frame->payload.settings.params[index].id);
             co_byte_array_add(buffer, &u16, sizeof(uint16_t));
 
             u32 = co_byte_order_32_host_to_network(
@@ -401,7 +401,7 @@ co_http2_frame_deserialize(
                 ++param_index)
             {
                 memcpy(&u16, data_ptr, sizeof(uint16_t));
-                frame->payload.settings.params[param_index].identifier =
+                frame->payload.settings.params[param_index].id =
                     co_byte_order_16_network_to_host(u16);
                 data_ptr += sizeof(uint16_t);
 
@@ -862,8 +862,8 @@ co_http2_create_settings_frame(
 
             for (uint16_t index = 0; index < param_count; ++index)
             {
-                frame->payload.settings.params[index].identifier =
-                    params[index].identifier;
+                frame->payload.settings.params[index].id =
+                    params[index].id;
                 frame->payload.settings.params[index].value =
                     params[index].value;
             }

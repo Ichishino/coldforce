@@ -56,8 +56,6 @@ typedef struct co_http2_header_t
 bool co_http2_header_add_field_ptr(
     co_http2_header_t* header, char* name, char* value);
 
-CO_HTTP2_API void co_http2_header_print(const co_http2_header_t* header);
-
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 

@@ -4,6 +4,7 @@
 #include <coldforce/http2/co_http2_stream.h>
 #include <coldforce/http2/co_http2_client.h>
 #include <coldforce/http2/co_http2_hpack.h>
+#include <coldforce/http2/co_http2_log.h>
 
 //---------------------------------------------------------------------------//
 // http2 stream
@@ -370,137 +371,16 @@ co_http2_stream_change_state(
     }
     }
 
-#ifdef CO_HTTP2_DEBUG
     if (error_code != CO_HTTP2_STREAM_ERROR_NO_ERROR)
     {
-        char remote[64];
-        co_net_addr_get_as_string(
-            co_tcp_get_remote_net_addr(stream->client->tcp_client), remote);
-        printf("[CO_HTTP2] <ERR> %s %s stream-%u *** state error: %d state(%d) frame(%d)\n",
-            remote, (send ? "S->" : "->R"), stream->id, error_code, stream->state, frame->header.type);
+        co_http2_log_error(
+            &stream->client->tcp_client->sock.local_net_addr, (send ? "-->" : "<--"),
+            &stream->client->tcp_client->remote_net_addr,
+            "stream-%u *** state error: %d state(%d) frame(%d)",
+            stream->id, error_code, stream->state, frame->header.type);
     }
-#endif
 
     return error_code;
-}
-
-void
-co_http2_stream_frame_trace(
-    co_http2_stream_t* stream,
-    bool send,
-    const co_http2_frame_t* frame
-)
-{
-    char remote[64];
-    co_net_addr_to_string(
-        co_tcp_get_remote_net_addr(stream->client->tcp_client),
-        remote, sizeof(remote));
-
-    char info[256] = { 0 };
-    char type[32] = { 0 };
-
-    switch (frame->header.type)
-    {
-    case CO_HTTP2_FRAME_TYPE_DATA:
-    {
-        sprintf(type, "DATA(%u)", frame->header.type);
-
-        break;
-    }
-    case CO_HTTP2_FRAME_TYPE_HEADERS:
-    {
-        sprintf(type, "HEAD(%u)", frame->header.type);
-
-        if (frame->header.flags & CO_HTTP2_FRAME_FLAG_PRIORITY)
-        {
-            sprintf(info, "dep_id:%u, weight:%u",
-                frame->payload.headers.stream_dependency,
-                frame->payload.headers.weight);
-        }
-
-        break;
-    }
-    case CO_HTTP2_FRAME_TYPE_PRIORITY:
-    {
-        sprintf(type, "PRIO(%u)", frame->header.type);
-
-        sprintf(info, "dep_id:%u, weight:%u",
-            frame->payload.priority.stream_dependency,
-            frame->payload.priority.weight);
-
-        break;
-    }
-    case CO_HTTP2_FRAME_TYPE_RST_STREAM:
-    {
-        sprintf(type, "RSTS(%u)", frame->header.type);
-
-        sprintf(info, "error:%u",
-            frame->payload.rst_stream.error_code);
-
-        break;
-    }
-    case CO_HTTP2_FRAME_TYPE_SETTINGS:
-    {
-        sprintf(type, "SETT(%u)", frame->header.type);
-
-        for (size_t index = 0; index < frame->payload.settings.param_count; ++index)
-        {
-            char setting[32];
-            sprintf(setting, "%u:%u ",
-                frame->payload.settings.params[index].identifier,
-                frame->payload.settings.params[index].value);
-
-            strcat(info, setting);
-        }
-        
-        break;
-    }
-    case CO_HTTP2_FRAME_TYPE_PUSH_PROMISE:
-    {
-        sprintf(type, "PUSH(%u)", frame->header.type);
-
-        sprintf(info, "promised_id:%u",
-            frame->payload.push_promise.promised_stream_id);
-
-        break;
-    }
-    case CO_HTTP2_FRAME_TYPE_PING:
-    {
-        sprintf(type, "PING(%u)", frame->header.type);
-
-        break;
-    }
-    case CO_HTTP2_FRAME_TYPE_GOAWAY:
-    {
-        sprintf(type, "GOAW(%u)", frame->header.type);
-
-        sprintf(info, "last_id:%u error:%u",
-            frame->payload.goaway.last_stream_id,
-            frame->payload.goaway.error_code);
-
-        break;
-    }
-    case CO_HTTP2_FRAME_TYPE_WINDOW_UPDATE:
-    {
-        sprintf(type, "WINU(%u)", frame->header.type);
-
-        sprintf(info, "size_inc:%u",
-            frame->payload.window_update.window_size_increment);
-
-        break;
-    }
-    case CO_HTTP2_FRAME_TYPE_CONTINUATION:
-    {
-        sprintf(type, "CONT(%u)", frame->header.type);
-
-        break;
-    }
-    }
-
-    printf("[CO_HTTP2] <INF> %s %s stream-%02u %s flags:0x%02x length:%u %s\n",
-        remote, (send ? "S->" : "->R"),
-        frame->header.stream_id, type,
-        frame->header.flags, frame->header.length, info);
 }
 
 //---------------------------------------------------------------------------//
@@ -522,9 +402,12 @@ co_http2_stream_send_frame(
 
     frame->header.stream_id = stream->id;
 
-#ifdef CO_HTTP2_DEBUG
-    co_http2_stream_frame_trace(stream, true, frame);
-#endif
+    co_http2_log_debug_frame(
+        &stream->client->tcp_client->sock.local_net_addr, "-->",
+        &stream->client->tcp_client->remote_net_addr,
+        frame,
+        "http2 send frame");
+
     co_byte_array_t* buffer = co_byte_array_create();
 
     co_http2_frame_serialize(frame, buffer);
@@ -556,16 +439,6 @@ co_http2_stream_on_receive_message(
     int error_code
 )
 {
-#ifdef CO_HTTP2_DEBUG
-    if (error_code == 0)
-    {
-        printf("[CO_HTTP2] <INF> ========== RECEIVE ==========\n");
-        co_http2_header_print(stream->receive_header);
-        printf("[CO_HTTP2] <INF> ======= CONTENT_SIZE(%zu)\n",
-            stream->receive_data.size);
-    }
-#endif
-
     if (stream->on_message != NULL)
     {
         stream->on_message(
@@ -734,6 +607,12 @@ co_http2_stream_on_receive_frame(
                 return false;
             }
 
+            co_http2_log_debug_header(
+                &stream->client->tcp_client->sock.local_net_addr, "<--",
+                &stream->client->tcp_client->remote_net_addr,
+                stream->receive_header,
+                "http2 receive header");
+
             co_byte_array_clear(stream->header_block_pool.data);
 
             if (stream->state == CO_HTTP2_STREAM_STATE_REMOTE_CLOSED)
@@ -844,6 +723,12 @@ co_http2_stream_on_receive_frame(
 
                 return false;
             }
+
+            co_http2_log_debug_header(
+                &stream->client->tcp_client->sock.local_net_addr, "<--",
+                &stream->client->tcp_client->remote_net_addr,
+                header,
+                "http2 receive header (push-promise)");
 
             co_http2_client_on_push_promise(
                 stream->client, stream, stream->promised_stream_id, header);
@@ -1086,11 +971,11 @@ co_http2_stream_send_header(
         }
     }
 
-#ifdef CO_HTTP2_DEBUG
-    printf("[CO_HTTP2] <INF> =========== SEND ============\n");
-    co_http2_header_print(header);
-    printf("[CO_HTTP2] <INF> =============================\n");
-#endif
+    co_http2_log_debug_header(
+        &stream->client->tcp_client->sock.local_net_addr, "-->",
+        &stream->client->tcp_client->remote_net_addr,
+        header,
+        "http2 send header");
 
     co_byte_array_t* request_data = co_byte_array_create();
 
@@ -1204,11 +1089,11 @@ co_http2_stream_send_server_push_request(
         }
     }
 
-#ifdef CO_HTTP2_DEBUG
-    printf("[CO_HTTP2] <INF> ======== PUSH PROMISE =======\n");
-    co_http2_header_print(header);
-    printf("[CO_HTTP2] <INF> =============================\n");
-#endif
+    co_http2_log_debug_header(
+        &stream->client->tcp_client->sock.local_net_addr, "-->",
+        &stream->client->tcp_client->remote_net_addr,
+        header,
+        "http2 send push-promise");
 
     co_byte_array_t* request_data = co_byte_array_create();
 
