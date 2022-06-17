@@ -15,10 +15,10 @@ co_tls_log_set_level(
 )
 {
     co_log_set_level(
-        CO_TLS_LOG_CATEGORY, level);
+        CO_LOG_CATEGORY_TLS, level);
 
     co_log_add_category(
-        CO_TLS_LOG_CATEGORY,
-        CO_TLS_LOG_CATEGORY_NAME);
+        CO_LOG_CATEGORY_TLS,
+        CO_LOG_CATEGORY_NAME_TLS);
 }
 

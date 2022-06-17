@@ -15,9 +15,9 @@ CO_EXTERN_C_BEGIN
 // http2 log
 //---------------------------------------------------------------------------//
 
-#define CO_HTTP2_LOG_CATEGORY_NAME        "HTTP2"
+#define CO_LOG_CATEGORY_NAME_HTTP2        "HTTP2"
 
-#define CO_HTTP2_LOG_CATEGORY             (CO_LOG_CATEGORY_USER_MAX + 6)
+#define CO_LOG_CATEGORY_HTTP2             (CO_LOG_CATEGORY_USER_MAX + 6)
 
 void co_http2_log_write_frame(
     int level,
@@ -39,7 +39,7 @@ void co_http2_log_write_header(
 //---------------------------------------------------------------------------//
 
 #define co_http2_log_write(level, addr1, text, addr2, format, ...) \
-    co_net_log_write(level, CO_HTTP2_LOG_CATEGORY, \
+    co_net_log_write(level, CO_LOG_CATEGORY_HTTP2, \
         addr1, text, addr2, format, ##__VA_ARGS__)
 
 #define co_http2_log_error(addr1, text, addr2, format, ...) \

@@ -14,9 +14,9 @@ CO_EXTERN_C_BEGIN
 // http log
 //---------------------------------------------------------------------------//
 
-#define CO_HTTP_LOG_CATEGORY_NAME        "HTTP"
+#define CO_LOG_CATEGORY_NAME_HTTP        "HTTP"
 
-#define CO_HTTP_LOG_CATEGORY             (CO_LOG_CATEGORY_USER_MAX + 4)
+#define CO_LOG_CATEGORY_HTTP             (CO_LOG_CATEGORY_USER_MAX + 5)
 
 CO_HTTP_API void co_http_log_write_request_header(
     int level,
@@ -38,7 +38,7 @@ CO_HTTP_API void co_http_log_write_response_header(
 //---------------------------------------------------------------------------//
 
 #define co_http_log_write(level, addr1, text, addr2, format, ...) \
-    co_net_log_write(level, CO_HTTP_LOG_CATEGORY, \
+    co_net_log_write(level, CO_LOG_CATEGORY_HTTP, \
         addr1, text, addr2, format, ##__VA_ARGS__)
 
 #define co_http_log_error(addr1, text, addr2, format, ...) \

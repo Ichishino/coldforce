@@ -27,7 +27,7 @@ co_http_log_write_header(
             (const co_http_header_field_t*)data->value;
 
         co_log_write_header(
-            level, CO_HTTP_LOG_CATEGORY);
+            level, CO_LOG_CATEGORY_HTTP);
 
         fprintf((FILE*)log->output,
             "%s: %s\n", field->name, field->value);
@@ -47,7 +47,7 @@ co_http_log_write_request_header(
 {
     co_log_t* log = co_log_get_default();
 
-    if (level > log->category[CO_HTTP_LOG_CATEGORY].level)
+    if (level > log->category[CO_LOG_CATEGORY_HTTP].level)
     {
         return;
     }
@@ -55,7 +55,7 @@ co_http_log_write_request_header(
     co_mutex_lock(log->mutex);
 
     co_log_write_header(
-        level, CO_HTTP_LOG_CATEGORY);
+        level, CO_LOG_CATEGORY_HTTP);
 
     co_net_log_write_addresses(
         log, addr1, text, addr2);
@@ -68,12 +68,12 @@ co_http_log_write_request_header(
     fprintf((FILE*)log->output, "\n");
 
     co_log_write_header(
-        level, CO_HTTP_LOG_CATEGORY);
+        level, CO_LOG_CATEGORY_HTTP);
     fprintf((FILE*)log->output,
         "-------------------------------------------------------------\n");
 
     co_log_write_header(
-        level, CO_HTTP_LOG_CATEGORY);
+        level, CO_LOG_CATEGORY_HTTP);
     fprintf((FILE*)log->output, "%s %s %s\n",
         co_http_request_get_method(request),
         co_http_request_get_url(request)->src,
@@ -84,7 +84,7 @@ co_http_log_write_request_header(
         co_http_request_get_const_header(request));
 
     co_log_write_header(
-        level, CO_HTTP_LOG_CATEGORY);
+        level, CO_LOG_CATEGORY_HTTP);
     fprintf((FILE*)log->output,
         "-------------------------------------------------------------\n");
 
@@ -106,7 +106,7 @@ co_http_log_write_response_header(
 {
     co_log_t* log = co_log_get_default();
 
-    if (level > log->category[CO_HTTP_LOG_CATEGORY].level)
+    if (level > log->category[CO_LOG_CATEGORY_HTTP].level)
     {
         return;
     }
@@ -114,7 +114,7 @@ co_http_log_write_response_header(
     co_mutex_lock(log->mutex);
 
     co_log_write_header(
-        level, CO_HTTP_LOG_CATEGORY);
+        level, CO_LOG_CATEGORY_HTTP);
 
     co_net_log_write_addresses(
         log, addr1, text, addr2);
@@ -127,12 +127,12 @@ co_http_log_write_response_header(
     fprintf((FILE*)log->output, "\n");
 
     co_log_write_header(
-        level, CO_HTTP_LOG_CATEGORY);
+        level, CO_LOG_CATEGORY_HTTP);
     fprintf((FILE*)log->output,
         "-------------------------------------------------------------\n");
 
     co_log_write_header(
-        level, CO_HTTP_LOG_CATEGORY);
+        level, CO_LOG_CATEGORY_HTTP);
     fprintf((FILE*)log->output, "%s %d %s\n",
         co_http_response_get_version(response),
         co_http_response_get_status_code(response),
@@ -143,7 +143,7 @@ co_http_log_write_response_header(
         co_http_response_get_const_header(response));
 
     co_log_write_header(
-        level, CO_HTTP_LOG_CATEGORY);
+        level, CO_LOG_CATEGORY_HTTP);
     fprintf((FILE*)log->output,
         "-------------------------------------------------------------\n");
 
@@ -161,9 +161,9 @@ co_http_log_set_level(
 )
 {
     co_log_set_level(
-        CO_HTTP_LOG_CATEGORY, level);
+        CO_LOG_CATEGORY_HTTP, level);
 
     co_log_add_category(
-        CO_HTTP_LOG_CATEGORY,
-        CO_HTTP_LOG_CATEGORY_NAME);
+        CO_LOG_CATEGORY_HTTP,
+        CO_LOG_CATEGORY_NAME_HTTP);
 }

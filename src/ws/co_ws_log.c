@@ -30,7 +30,7 @@ co_ws_log_write_frame(
 {
     co_log_t* log = co_log_get_default();
 
-    if (level > log->category[CO_WS_LOG_CATEGORY].level)
+    if (level > log->category[CO_LOG_CATEGORY_WS].level)
     {
         return;
     }
@@ -38,7 +38,7 @@ co_ws_log_write_frame(
     co_mutex_lock(log->mutex);
 
     co_log_write_header(
-        level, CO_WS_LOG_CATEGORY);
+        level, CO_LOG_CATEGORY_WS);
 
     co_net_log_write_addresses(
         log, addr1, text, addr2);
@@ -51,7 +51,7 @@ co_ws_log_write_frame(
     fprintf((FILE*)log->output, "\n");
 
     co_log_write_header(
-        level, CO_WS_LOG_CATEGORY);
+        level, CO_LOG_CATEGORY_WS);
     fprintf((FILE*)log->output,
         "-------------------------------------------------------------\n");
 
@@ -83,14 +83,14 @@ co_ws_log_write_frame(
     }
 
     co_log_write_header(
-        level, CO_WS_LOG_CATEGORY);
+        level, CO_LOG_CATEGORY_WS);
 
     fprintf((FILE*)log->output,
         "%s(0x%02x) fin(%d) payload_size(%zd)\n",
         opcode_str, opcode, fin, data_size);
 
     co_log_write_header(
-        level, CO_WS_LOG_CATEGORY);
+        level, CO_LOG_CATEGORY_WS);
     fprintf((FILE*)log->output,
         "-------------------------------------------------------------\n");
 
@@ -108,10 +108,10 @@ co_ws_log_set_level(
 )
 {
     co_log_set_level(
-        CO_WS_LOG_CATEGORY, level);
+        CO_LOG_CATEGORY_WS, level);
 
     co_log_add_category(
-        CO_WS_LOG_CATEGORY,
-        CO_WS_LOG_CATEGORY_NAME);
+        CO_LOG_CATEGORY_WS,
+        CO_LOG_CATEGORY_NAME_WS);
 }
 

@@ -13,9 +13,9 @@ CO_EXTERN_C_BEGIN
 // websocket log
 //---------------------------------------------------------------------------//
 
-#define CO_WS_LOG_CATEGORY_NAME        "WS"
+#define CO_LOG_CATEGORY_NAME_WS        "WS"
 
-#define CO_WS_LOG_CATEGORY             (CO_LOG_CATEGORY_USER_MAX + 5)
+#define CO_LOG_CATEGORY_WS             (CO_LOG_CATEGORY_USER_MAX + 7)
 
 void co_ws_log_write_frame(
     int level,
@@ -29,7 +29,7 @@ void co_ws_log_write_frame(
 //---------------------------------------------------------------------------//
 
 #define co_ws_log_write(level, addr1, text, addr2, format, ...) \
-    co_net_log_write(level, CO_WS_LOG_CATEGORY, \
+    co_net_log_write(level, CO_LOG_CATEGORY_WS, \
         addr1, text, addr2, format, ##__VA_ARGS__)
 
 #define co_ws_log_error(addr1, text, addr2, format, ...) \

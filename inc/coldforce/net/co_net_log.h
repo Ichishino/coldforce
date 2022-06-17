@@ -12,11 +12,11 @@ CO_EXTERN_C_BEGIN
 // net log
 //---------------------------------------------------------------------------//
 
-#define CO_TCP_LOG_CATEGORY_NAME        "TCP"
-#define CO_UDP_LOG_CATEGORY_NAME        "UDP"
+#define CO_LOG_CATEGORY_NAME_TCP        "TCP"
+#define CO_LOG_CATEGORY_NAME_UDP        "UDP"
 
-#define CO_TCP_LOG_CATEGORY             (CO_LOG_CATEGORY_USER_MAX + 1)
-#define CO_UDP_LOG_CATEGORY             (CO_LOG_CATEGORY_USER_MAX + 2)
+#define CO_LOG_CATEGORY_TCP             (CO_LOG_CATEGORY_USER_MAX + 2)
+#define CO_LOG_CATEGORY_UDP             (CO_LOG_CATEGORY_USER_MAX + 3)
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
@@ -49,7 +49,7 @@ CO_NET_API void co_net_log_write_hex_dump(
 //---------------------------------------------------------------------------//
 
 #define co_tcp_log_write(level, addr1, text, addr2, format, ...) \
-    co_net_log_write(level, CO_TCP_LOG_CATEGORY, \
+    co_net_log_write(level, CO_LOG_CATEGORY_TCP, \
         addr1, text, addr2, format, ##__VA_ARGS__)
 
 #define co_tcp_log_error(addr1, text, addr2, format, ...) \
@@ -69,14 +69,14 @@ CO_NET_API void co_net_log_write_hex_dump(
         addr1, text, addr2, format, ##__VA_ARGS__)
 
 #define co_tcp_log_hex_dump(addr1, text, addr2, data, size, format, ...) \
-    co_net_log_write_hex_dump(CO_LOG_LEVEL_DEBUG, CO_TCP_LOG_CATEGORY, \
+    co_net_log_write_hex_dump(CO_LOG_LEVEL_DEBUG, CO_LOG_CATEGORY_TCP, \
         addr1, text, addr2, data, size, format, ##__VA_ARGS__)
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
 #define co_udp_log_write(level, addr1, text, addr2, format, ...) \
-    co_net_log_write(level, CO_UDP_LOG_CATEGORY, \
+    co_net_log_write(level, CO_LOG_CATEGORY_UDP, \
         addr1, text, addr2, format, ##__VA_ARGS__)
 
 #define co_udp_log_error(addr1, text, addr2, format, ...) \
@@ -96,7 +96,7 @@ CO_NET_API void co_net_log_write_hex_dump(
         addr1, text, addr2, format, ##__VA_ARGS__)
 
 #define co_udp_log_hex_dump(addr1, text, addr2, data, size, format, ...) \
-    co_net_log_write_hex_dump(CO_LOG_LEVEL_DEBUG, CO_UDP_LOG_CATEGORY, \
+    co_net_log_write_hex_dump(CO_LOG_LEVEL_DEBUG, CO_LOG_CATEGORY_UDP, \
         addr1, text, addr2, data, size, format, ##__VA_ARGS__)
 
 //---------------------------------------------------------------------------//

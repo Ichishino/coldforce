@@ -148,3 +148,17 @@ co_log_write(
 
     co_mutex_unlock(g_log.mutex);
 }
+
+void
+co_core_log_set_level(
+    int level
+)
+{
+    co_log_set_level(
+        CO_LOG_CATEGORY_CORE, level);
+
+    co_log_add_category(
+        CO_LOG_CATEGORY_CORE,
+        CO_LOG_CATEGORY_NAME_CORE);
+}
+

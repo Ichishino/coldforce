@@ -13,15 +13,15 @@ CO_EXTERN_C_BEGIN
 // tls log
 //---------------------------------------------------------------------------//
 
-#define CO_TLS_LOG_CATEGORY_NAME        "TLS"
+#define CO_LOG_CATEGORY_NAME_TLS        "TLS"
 
-#define CO_TLS_LOG_CATEGORY             (CO_LOG_CATEGORY_USER_MAX + 3)
+#define CO_LOG_CATEGORY_TLS             (CO_LOG_CATEGORY_USER_MAX + 4)
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
 #define co_tls_log_write(level, addr1, text, addr2, format, ...) \
-    co_net_log_write(level, CO_TLS_LOG_CATEGORY, \
+    co_net_log_write(level, CO_LOG_CATEGORY_TLS, \
         addr1, text, addr2, format, ##__VA_ARGS__)
 
 #define co_tls_log_error(addr1, text, addr2, format, ...) \
@@ -41,7 +41,7 @@ CO_EXTERN_C_BEGIN
         addr1, text, addr2, format, ##__VA_ARGS__)
 
 #define co_tls_log_hex_dump(addr1, text, addr2, data, size, format, ...) \
-    co_net_log_write_hex_dump(CO_LOG_LEVEL_DEBUG, CO_TLS_LOG_CATEGORY, \
+    co_net_log_write_hex_dump(CO_LOG_LEVEL_DEBUG, CO_LOG_CATEGORY_TLS, \
         addr1, text, addr2, data, size, format, ##__VA_ARGS__)
 
 //---------------------------------------------------------------------------//

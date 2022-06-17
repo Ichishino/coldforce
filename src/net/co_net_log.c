@@ -91,11 +91,11 @@ co_tcp_log_set_level(
 )
 {
     co_log_set_level(
-        CO_TCP_LOG_CATEGORY, level);
+        CO_LOG_CATEGORY_TCP, level);
 
     co_log_add_category(
-        CO_TCP_LOG_CATEGORY,
-        CO_TCP_LOG_CATEGORY_NAME);
+        CO_LOG_CATEGORY_TCP,
+        CO_LOG_CATEGORY_NAME_TCP);
 }
 
 void
@@ -104,11 +104,11 @@ co_udp_log_set_level(
 )
 {
     co_log_set_level(
-        CO_UDP_LOG_CATEGORY, level);
+        CO_LOG_CATEGORY_UDP, level);
 
     co_log_add_category(
-        CO_UDP_LOG_CATEGORY,
-        CO_UDP_LOG_CATEGORY_NAME);
+        CO_LOG_CATEGORY_UDP,
+        CO_LOG_CATEGORY_NAME_UDP);
 }
 
 void

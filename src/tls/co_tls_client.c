@@ -422,8 +422,13 @@ co_tls_client_destroy(
 {
     if (client != NULL)
     {
-        co_tls_client_cleanup(client->sock.tls);
-        co_mem_free(client->sock.tls);
+        if (client->sock.tls != NULL)
+        {
+            co_tls_client_cleanup(client->sock.tls);
+            co_mem_free(client->sock.tls);
+
+            client->sock.tls = NULL;
+        }
 
         co_tcp_client_destroy(client);
     }

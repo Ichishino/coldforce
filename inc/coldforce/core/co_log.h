@@ -43,7 +43,10 @@ typedef struct co_log_t
 
 } co_log_t;
 
-CO_API co_log_t* co_log_get_default(void); 
+#define CO_LOG_CATEGORY_NAME_CORE        "CORE"
+#define CO_LOG_CATEGORY_CORE             (CO_LOG_CATEGORY_USER_MAX + 1)
+
+CO_API co_log_t* co_log_get_default(void);
 
 CO_API void co_log_write_header(int level, int category);
 
@@ -71,6 +74,12 @@ CO_API void co_log_write(int level, int category, const char* format, ...);
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
+CO_API void co_core_log_set_level(int level);
+
+//---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
+
 CO_EXTERN_C_END
 
 #endif // CO_LOG_H_INCLUDED
+
