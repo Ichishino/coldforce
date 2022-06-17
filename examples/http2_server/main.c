@@ -416,6 +416,8 @@ int main(int argc, char* argv[])
 {
 //    co_http_log_set_level(CO_LOG_LEVEL_MAX);
 //    co_http2_log_set_level(CO_LOG_LEVEL_MAX);
+//    co_tls_log_set_level(CO_LOG_LEVEL_MAX);
+//    co_tcp_log_set_level(CO_LOG_LEVEL_MAX);
 
     co_tls_setup();
 

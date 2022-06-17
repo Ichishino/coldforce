@@ -10,6 +10,7 @@ typedef struct
 
     // my app data
     co_http2_client_t* client;
+    char* request_path;
 
 } my_app;
 
@@ -134,7 +135,7 @@ void on_my_connect(my_app* self, co_http2_client_t* client, int error_code)
 
     if (error_code == 0)
     {
-        co_http2_header_t* header = co_http2_header_create_request("GET", "/");
+        co_http2_header_t* header = co_http2_header_create_request("GET", self->request_path);
         co_http2_header_add_field(header, "accept", "text/html");
 
         // new stream per request
@@ -161,6 +162,7 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
 #else
     const char* base_url = "http://127.0.0.1:9443";
 #endif
+    self->request_path = "/index.html";
 
     co_net_addr_t local_net_addr = { 0 };
     co_net_addr_set_family(&local_net_addr, CO_ADDRESS_FAMILY_IPV4);

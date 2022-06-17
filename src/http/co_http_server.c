@@ -300,11 +300,11 @@ co_http_server_close(
         if (server->tcp_server != NULL &&
             server->tcp_server->sock.open_local)
         {
+            server->module.close(server->tcp_server);
+
             co_http_log_info(
                 &server->tcp_server->sock.local_net_addr,
                 NULL, NULL, "http server closed");
-
-            server->module.close(server->tcp_server);
         }
     }
 }

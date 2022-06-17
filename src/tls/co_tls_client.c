@@ -371,6 +371,15 @@ co_tls_on_receive_handshake(
         &client->remote_net_addr,
         "tls handshake finished (%d)", error_code);
 
+    if (error_code == 0)
+    {
+        co_thread_send_event(
+            client->sock.owner_thread,
+            CO_NET_EVENT_ID_TCP_RECEIVE_READY,
+            (uintptr_t)client,
+            0);
+    }
+
     if (tls->on_handshake_complete != NULL)
     {
         client->on_receive_ready = tls->on_receive_ready;
