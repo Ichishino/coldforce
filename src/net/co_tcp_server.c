@@ -230,7 +230,9 @@ co_tcp_server_close (
 
     server->on_accept_ready = NULL;
 
-    co_socket_cleanup(&server->sock);
+    co_socket_handle_close(server->sock.handle);
+    server->sock.handle = CO_SOCKET_INVALID_HANDLE;
+    server->sock.open_local = false;
 }
 
 //---------------------------------------------------------------------------//

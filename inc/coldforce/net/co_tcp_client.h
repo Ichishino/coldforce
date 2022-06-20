@@ -41,10 +41,9 @@ typedef struct co_tcp_client_t
 {
     co_socket_t sock;
 
-    bool destroyed;
-
     co_net_addr_t remote_net_addr;
     bool open_remote;
+    bool destroy_later;
 
     co_tcp_connect_fn on_connect_complete;
     co_tcp_send_fn on_send_complete;
