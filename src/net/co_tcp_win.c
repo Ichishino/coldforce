@@ -130,9 +130,6 @@ co_win_tcp_server_cleanup(
 {
     co_win_free_io_ctx(server->win.accept_io_ctx);
     server->win.accept_io_ctx = NULL;
-
-    co_socket_handle_close(server->sock.handle);
-    server->sock.handle = CO_SOCKET_INVALID_HANDLE;
 }
 
 bool
@@ -235,7 +232,9 @@ co_win_tcp_client_cleanup(
 {
     if (client->win.receive.io_ctx != NULL)
     {   
-        co_win_free_io_ctx(client->win.receive.io_ctx);
+        client->win.receive.io_ctx->sock = NULL;
+
+        co_mem_free_later(client->win.receive.io_ctx);
         client->win.receive.io_ctx = NULL;
     }
 

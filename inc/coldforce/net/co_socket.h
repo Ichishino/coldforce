@@ -43,6 +43,9 @@ typedef struct
 
 } co_socket_t;
 
+void co_socket_setup(co_socket_t* sock);
+void co_socket_cleanup(co_socket_t* sock);
+
 struct co_net_worker_t* co_socket_get_net_worker(co_socket_t* sock);
 
 //---------------------------------------------------------------------------//

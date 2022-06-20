@@ -16,7 +16,7 @@ struct co_thread_t;
 
 struct co_timer_t;
 
-typedef void(*co_timer_fn)(void* self, struct co_timer_t* timer);
+typedef void(*co_timer_fn)(struct co_thread_t* self, struct co_timer_t* timer);
 
 typedef struct co_timer_t
 {

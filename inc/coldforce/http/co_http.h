@@ -73,6 +73,7 @@ CO_EXTERN_C_BEGIN
 #define CO_HTTP_ERROR_HEADER_FIELDS_TOO_MANY      -5009
 #define CO_HTTP_ERROR_CANCEL                      -5010
 #define CO_HTTP_ERROR_PROTOCOL_ERROR              -5011
+#define CO_HTTP_ERROR_RECEIVE_TIMEOUT             -5012
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

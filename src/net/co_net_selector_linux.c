@@ -74,7 +74,7 @@ co_net_selector_create(
         return NULL;
     }
 
-    struct epoll_event e;
+    struct epoll_event e = { 0 };
 
     e.events = EPOLLIN;
     e.data.ptr = NULL;
@@ -134,7 +134,7 @@ co_net_selector_register(
     uint32_t flags
 )
 {
-    struct epoll_event e;
+    struct epoll_event e = { 0 };
 
     e.events = flags | EPOLLET;
     e.data.ptr = sock;

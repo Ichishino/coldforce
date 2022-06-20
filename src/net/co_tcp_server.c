@@ -113,12 +113,11 @@ co_tcp_server_create(
         return NULL;
     }
 
+    co_socket_setup(&server->sock);
+
     server->sock.type = CO_SOCKET_TYPE_TCP_SERVER;
     server->sock.owner_thread = co_thread_get_current();
     server->sock.open_local = true;
-    server->sock.sub_class = NULL;
-    server->sock.tls = NULL;
-    server->sock.user_data = 0;
 
     memcpy(&server->sock.local_net_addr,
         local_net_addr, sizeof(co_net_addr_t));
@@ -227,13 +226,11 @@ co_tcp_server_close (
 #ifdef CO_OS_WIN
     co_win_tcp_server_accept_stop(server);
     co_win_tcp_server_cleanup(server);
-#else
-    co_socket_handle_close(server->sock.handle);
-    server->sock.handle = CO_SOCKET_INVALID_HANDLE;
 #endif
 
-    server->sock.open_local = false;
     server->on_accept_ready = NULL;
+
+    co_socket_cleanup(&server->sock);
 }
 
 //---------------------------------------------------------------------------//

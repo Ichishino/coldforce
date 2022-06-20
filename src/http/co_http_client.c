@@ -57,6 +57,8 @@ co_http_client_setup(
     client->on_receive = NULL;
     client->on_progress = NULL;
     client->on_close = NULL;
+
+    client->receive_timer = NULL;
 }
 
 void
@@ -79,6 +81,9 @@ co_http_client_cleanup(
 
         co_http_response_destroy(client->response);
         client->response = NULL;
+
+        co_timer_destroy(client->receive_timer);
+        client->receive_timer = NULL;
     }
 }
 
@@ -140,6 +145,12 @@ co_http_client_on_resopnse(
 
     client->request = request;
 
+    if ((client->receive_timer != NULL) &&
+        (co_list_get_count(client->receive_queue) == 0 || error_code != 0))
+    {
+        co_timer_stop(client->receive_timer);
+    }
+
     if (error_code == 0)
     {
         if (client->on_receive != NULL)
@@ -189,6 +200,19 @@ co_http_client_on_progress(
     return true;
 }
 
+static void
+co_http_client_on_receive_timer(
+    co_thread_t* thread,
+    co_timer_t* timer
+)
+{
+    co_http_client_t* client =
+        (co_http_client_t*)co_timer_get_user_data(timer);
+
+    co_http_client_on_resopnse(
+        thread, client, CO_HTTP_ERROR_RECEIVE_TIMEOUT);
+}
+
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
@@ -222,6 +246,9 @@ co_http_client_on_receive_ready(
 
     ssize_t receive_result = client->module.receive_all(
         client->tcp_client, client->receive_data);
+
+    co_timer_stop(client->receive_timer);
+    co_timer_start(client->receive_timer);
 
     if (receive_result <= 0)
     {
@@ -585,7 +612,7 @@ co_http_send_request(
     }
 
     co_http_log_debug_request_header(
-        &client->tcp_client->sock.local_net_addr, "<--",
+        &client->tcp_client->sock.local_net_addr, "-->",
         &client->tcp_client->remote_net_addr,
         request, "http send request");
 
@@ -602,6 +629,19 @@ co_http_send_request(
 
     if (result)
     {
+        if (client->receive_timer == NULL)
+        {
+            uint32_t msec = co_http_config_get_max_receive_wait_time();
+
+            client->receive_timer = co_timer_create(
+                msec, (co_timer_fn)co_http_client_on_receive_timer, false, (uintptr_t)client);
+        }
+
+        if (co_list_get_count(client->receive_queue) == 0)
+        {
+            co_timer_start(client->receive_timer);
+        }
+
         co_list_add_tail(client->receive_queue, (uintptr_t)request);
     }
 

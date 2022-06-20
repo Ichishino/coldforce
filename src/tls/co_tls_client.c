@@ -703,88 +703,26 @@ co_tls_receive_all(
     co_byte_array_t* byte_array
 )
 {
-    co_tls_client_t* tls = co_tcp_client_get_tls(client);
-
-    ssize_t data_size = 0;
+    size_t before = co_byte_array_get_count(byte_array);
 
     for (;;)
     {
         char buffer[8192];
-        ssize_t raw_data_size = 0;
 
-        if (co_queue_get_count(tls->receive_data_queue) > 0)
+        ssize_t result =
+            co_tls_receive(client, buffer, sizeof(buffer));
+
+        if (result <= 0)
         {
-            raw_data_size = (ssize_t)co_queue_peek_array(
-                tls->receive_data_queue, buffer, sizeof(buffer));
-
-            int bio_result =
-                BIO_write(tls->network_bio, buffer, (int)raw_data_size);
-
-            if (bio_result > 0)
-            {
-                co_queue_remove(tls->receive_data_queue, (size_t)bio_result);
-            }
-            else if (!BIO_should_retry(tls->network_bio))
-            {
-                break;
-            }
+            break;
         }
         else
         {
-            raw_data_size = co_tcp_receive(client, buffer, sizeof(buffer));
-
-            if (raw_data_size > 0)
-            {
-                int bio_result =
-                    BIO_write(tls->network_bio, buffer, (int)raw_data_size);
-
-                if (bio_result >= 0)
-                {
-                    size_t rest = (size_t)raw_data_size - (size_t)bio_result;
-
-                    if (rest > 0)
-                    {
-                        co_queue_push_array(
-                            tls->receive_data_queue, &buffer[bio_result], rest);
-                    }
-                }
-                else if (BIO_should_retry(tls->network_bio))
-                {
-                    co_queue_push_array(
-                        tls->receive_data_queue, buffer, (size_t)raw_data_size);
-                }
-                else
-                {
-                    break;
-                }
-            }
-        }
-        
-        int ssl_result =
-            SSL_read(tls->ssl, buffer, (int)sizeof(buffer));
-
-        if (ssl_result > 0)
-        {
-            co_tls_log_hex_dump(
-                &client->sock.local_net_addr,
-                "<--",
-                &client->remote_net_addr,
-                buffer, ssl_result,
-                "tls receive %d bytes", ssl_result);
-
-            co_byte_array_add(byte_array, buffer, ssl_result);
-
-            data_size += ssl_result;
-
-            continue;
-        }
-        else if (raw_data_size <= 0)
-        {
-            return data_size;
+            co_byte_array_add(byte_array, buffer, result);
         }
     }
 
-    return -1;
+    return (ssize_t)(co_byte_array_get_count(byte_array) - before);
 }
 
 bool

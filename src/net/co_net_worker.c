@@ -91,11 +91,8 @@ co_net_worker_on_destroy(
         {
             for (int counter = 0; counter < 3; ++counter)
             {
-                while (net_worker->event_worker.wait(
-                    &net_worker->event_worker, 1000) != CO_WAIT_RESULT_TIMEOUT)
-                {
-                    ;
-                }
+                net_worker->event_worker.wait(
+                    &net_worker->event_worker, 1000);
 
                 if (co_list_get_count(
                     net_worker->tcp_clients) == 0)

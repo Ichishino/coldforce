@@ -137,12 +137,11 @@ co_udp_create(
         return NULL;
     }
 
+    co_socket_setup(&udp->sock);
+
     udp->sock.type = CO_SOCKET_TYPE_UDP;
     udp->sock.owner_thread = co_thread_get_current();
     udp->sock.open_local = true;
-    udp->sock.sub_class = NULL;
-    udp->sock.tls = NULL;
-    udp->sock.user_data = 0;
 
     memcpy(&udp->sock.local_net_addr,
         local_net_addr, sizeof(co_net_addr_t));
@@ -215,6 +214,7 @@ co_udp_destroy(
             udp->send_queue = NULL;
         }
 #endif
+        co_socket_cleanup(&udp->sock);
         co_mem_free(udp);
     }
 }

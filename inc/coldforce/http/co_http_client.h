@@ -72,6 +72,8 @@ typedef struct co_http_client_t
     co_http_progress_fn on_progress;
     co_http_close_fn on_close;
 
+    co_timer_t* receive_timer;
+
 } co_http_client_t;
 
 void co_http_client_setup(co_http_client_t* client);

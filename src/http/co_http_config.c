@@ -10,7 +10,8 @@ static co_http_config_t http_config =
 {
     CO_HTTP_CONFIG_DEFAULT_MAX_RECEIVE_HEADER_LINE_SIZE,
     CO_HTTP_CONFIG_DEFAULT_MAX_RECEIVE_HEADER_FIELD_COUNT,
-    CO_HTTP_CONFIG_DEFAULT_MAX_RECEIVE_CONTENT_SIZE
+    CO_HTTP_CONFIG_DEFAULT_MAX_RECEIVE_CONTENT_SIZE,
+    CO_HTTP_CONFIG_DEFAULT_MAX_RECEIVE_WAIT_TIME
 };
 
 void
@@ -59,4 +60,20 @@ co_http_config_get_max_receive_content_size(
 )
 {
     return http_config.max_receive_content_size;
+}
+
+void
+co_http_config_set_max_receive_wait_time(
+    uint32_t max_receive_wait_time
+)
+{
+    http_config.max_receive_wait_time = max_receive_wait_time;
+}
+
+uint32_t
+co_http_config_get_max_receive_wait_time(
+    void
+)
+{
+    return http_config.max_receive_wait_time;
 }

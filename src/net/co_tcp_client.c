@@ -64,17 +64,11 @@ co_tcp_client_setup(
     co_tcp_client_t* client
 )
 {
-    co_net_addr_init(&client->sock.local_net_addr);
+    co_socket_setup(&client->sock);
+
+    client->destroyed = false;
+
     co_net_addr_init(&client->remote_net_addr);
-
-    client->sock.type = 0;
-    client->sock.owner_thread = NULL;
-    client->sock.handle = CO_SOCKET_INVALID_HANDLE;
-    client->sock.open_local = false;
-    client->sock.sub_class = NULL;
-    client->sock.tls = NULL;
-    client->sock.user_data = 0;
-
     client->open_remote = false;
 
     client->on_connect_complete = NULL;
@@ -124,13 +118,14 @@ co_tcp_client_cleanup(
 
 #endif
 
+    client->destroyed = false;
+
     client->on_connect_complete = NULL;
     client->on_send_complete = NULL;
     client->on_receive_ready = NULL;
     client->on_close = NULL;
 
-    co_socket_handle_close(client->sock.handle);
-    client->sock.handle = CO_SOCKET_INVALID_HANDLE;
+    co_socket_cleanup(&client->sock);
 }
 
 //---------------------------------------------------------------------------//
@@ -352,7 +347,10 @@ co_tcp_client_on_close(
             &client->remote_net_addr,
             "tcp closed");
 
-        co_tcp_client_destroy(client);
+        if (client->destroyed)
+        {
+            co_tcp_client_destroy(client);
+        }
     }
 }
 
@@ -435,6 +433,10 @@ co_tcp_client_destroy(
     {
         co_tcp_client_cleanup(client);
         co_mem_free_later(client);
+    }
+    else
+    {
+        client->destroyed = true;
     }
 }
 

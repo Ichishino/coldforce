@@ -111,22 +111,24 @@ co_win_udp_cleanup(
     co_udp_t* udp
 )
 {
-    if (udp != NULL)
+    if (udp->win.receive.io_ctx != NULL)
     {
-        co_mem_free(udp->win.receive.buffer.buf);
-        udp->win.receive.buffer.buf = NULL;
+        udp->win.receive.io_ctx->sock = NULL;
 
-        co_win_free_io_ctx(udp->win.receive.io_ctx);
+        co_mem_free_later(udp->win.receive.io_ctx);
         udp->win.receive.io_ctx = NULL;
+    }
 
-        if (udp->win.io_send_ctxs != NULL)
-        {
-            co_list_destroy(udp->win.io_send_ctxs);
-            udp->win.io_send_ctxs = NULL;
-        }
+    if (udp->win.receive.buffer.buf != NULL)
+    {
+        co_mem_free_later(udp->win.receive.buffer.buf);
+        udp->win.receive.buffer.buf = NULL;
+    }
 
-        co_socket_handle_close(udp->sock.handle);
-        udp->sock.handle = CO_SOCKET_INVALID_HANDLE;
+    if (udp->win.io_send_ctxs != NULL)
+    {
+        co_list_destroy(udp->win.io_send_ctxs);
+        udp->win.io_send_ctxs = NULL;
     }
 }
 
