@@ -298,17 +298,20 @@ co_tcp_client_on_receive_ready(
         client->win.receive.size = 0;
     }
 
-    if (client->win.receive.size == 0)
+    if (data_size > 0)
     {
-        co_win_tcp_client_receive_start(client);
-    }
-    else
-    {
-        co_thread_send_event(
-            client->sock.owner_thread,
-            CO_NET_EVENT_ID_TCP_RECEIVE_READY,
-            (uintptr_t)client,
-            0);
+        if (client->win.receive.size == 0)
+        {
+            co_win_tcp_client_receive_start(client);
+        }
+        else
+        {
+            co_thread_send_event(
+                client->sock.owner_thread,
+                CO_NET_EVENT_ID_TCP_RECEIVE_READY,
+                (uintptr_t)client,
+                0);
+        }
     }
 #endif
 }
