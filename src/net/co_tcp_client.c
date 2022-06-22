@@ -510,7 +510,7 @@ co_tcp_send(
     size_t data_size
 )
 {
-    co_tcp_log_hex_dump(
+    co_tcp_log_debug_hex_dump(
         &client->sock.local_net_addr,
         "-->",
         &client->remote_net_addr,
@@ -543,7 +543,7 @@ co_tcp_send_async(
     size_t data_size
 )
 {
-    co_tcp_log_hex_dump(
+    co_tcp_log_debug_hex_dump(
         &client->sock.local_net_addr,
         "-->",
         &client->remote_net_addr,
@@ -628,7 +628,7 @@ co_tcp_receive(
     if (co_win_tcp_client_receive(
         client, buffer, buffer_size, &data_size))
     {
-        co_tcp_log_hex_dump(
+        co_tcp_log_debug_hex_dump(
             &client->sock.local_net_addr,
             "<--",
             &client->remote_net_addr,
@@ -650,7 +650,7 @@ co_tcp_receive(
 
     if (data_size > 0)
     {
-        co_tcp_log_hex_dump(
+        co_tcp_log_debug_hex_dump(
             &client->sock.local_net_addr,
             "<--",
             &client->remote_net_addr,

@@ -232,9 +232,7 @@ co_win_tcp_client_cleanup(
 {
     if (client->win.receive.io_ctx != NULL)
     {   
-        client->win.receive.io_ctx->sock = NULL;
-
-        co_mem_free_later(client->win.receive.io_ctx);
+        co_win_free_io_ctx(client->win.receive.io_ctx);
         client->win.receive.io_ctx = NULL;
     }
 
@@ -544,7 +542,7 @@ co_win_tcp_clear_receive_buffer(
     co_tcp_client_t* client
 )
 {
-    co_tcp_log_hex_dump(
+    co_tcp_log_debug_hex_dump(
         &client->sock.local_net_addr,
         "<--",
         &client->remote_net_addr,

@@ -129,7 +129,7 @@ co_tls_send_handshake(
 
         co_socket_handle_set_blocking(client->sock.handle, true);
 
-        co_tcp_log_hex_dump(
+        co_tcp_log_debug_hex_dump(
             &client->sock.local_net_addr,
             "-->",
             &client->remote_net_addr,
@@ -181,7 +181,7 @@ co_tls_receive_handshake(
             break;
         }
 
-        co_tcp_log_hex_dump(
+        co_tcp_log_debug_hex_dump(
             &client->sock.local_net_addr,
             "<--",
             &client->remote_net_addr,
@@ -364,6 +364,9 @@ co_tls_on_receive_handshake(
     {
         error_code = CO_TLS_ERROR_HANDSHAKE_FAILED;
     }
+
+    co_tls_log_debug_certificate(
+        SSL_get_peer_certificate(tls->ssl));
 
     co_tls_log_info(
         &client->sock.local_net_addr,
@@ -594,7 +597,7 @@ co_tls_send(
     size_t data_size
 )
 {
-    co_tls_log_hex_dump(
+    co_tls_log_debug_hex_dump(
         &client->sock.local_net_addr,
         "-->",
         &client->remote_net_addr,
@@ -625,7 +628,7 @@ co_tls_send_async(
     size_t data_size
 )
 {
-    co_tls_log_hex_dump(
+    co_tls_log_debug_hex_dump(
         &client->sock.local_net_addr,
         "-->",
         &client->remote_net_addr,
@@ -686,7 +689,7 @@ co_tls_receive(
 
     if (ssl_result > 0)
     {
-        co_tls_log_hex_dump(
+        co_tls_log_debug_hex_dump(
             &client->sock.local_net_addr,
             "<--",
             &client->remote_net_addr,

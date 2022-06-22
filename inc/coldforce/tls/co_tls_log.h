@@ -17,6 +17,8 @@ CO_EXTERN_C_BEGIN
 
 #define CO_LOG_CATEGORY_TLS             (CO_LOG_CATEGORY_USER_MAX + 4)
 
+void co_tls_log_write_certificate(int level, X509* x509);
+
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
@@ -40,9 +42,12 @@ CO_EXTERN_C_BEGIN
     co_tls_log_write(CO_LOG_LEVEL_DEBUG, \
         addr1, text, addr2, format, ##__VA_ARGS__)
 
-#define co_tls_log_hex_dump(addr1, text, addr2, data, size, format, ...) \
+#define co_tls_log_debug_hex_dump(addr1, text, addr2, data, size, format, ...) \
     co_net_log_write_hex_dump(CO_LOG_LEVEL_DEBUG, CO_LOG_CATEGORY_TLS, \
         addr1, text, addr2, data, size, format, ##__VA_ARGS__)
+
+#define co_tls_log_debug_certificate(x509) \
+    co_tls_log_write_certificate(CO_LOG_LEVEL_DEBUG, x509)
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

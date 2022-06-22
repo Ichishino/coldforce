@@ -113,9 +113,7 @@ co_win_udp_cleanup(
 {
     if (udp->win.receive.io_ctx != NULL)
     {
-        udp->win.receive.io_ctx->sock = NULL;
-
-        co_mem_free_later(udp->win.receive.io_ctx);
+        co_win_free_io_ctx(udp->win.receive.io_ctx);
         udp->win.receive.io_ctx = NULL;
     }
 

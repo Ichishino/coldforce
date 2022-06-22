@@ -68,7 +68,7 @@ CO_NET_API void co_net_log_write_hex_dump(
     co_tcp_log_write(CO_LOG_LEVEL_DEBUG, \
         addr1, text, addr2, format, ##__VA_ARGS__)
 
-#define co_tcp_log_hex_dump(addr1, text, addr2, data, size, format, ...) \
+#define co_tcp_log_debug_hex_dump(addr1, text, addr2, data, size, format, ...) \
     co_net_log_write_hex_dump(CO_LOG_LEVEL_DEBUG, CO_LOG_CATEGORY_TCP, \
         addr1, text, addr2, data, size, format, ##__VA_ARGS__)
 
@@ -95,7 +95,7 @@ CO_NET_API void co_net_log_write_hex_dump(
     co_udp_log_write(CO_LOG_LEVEL_DEBUG, \
         addr1, text, addr2, format, ##__VA_ARGS__)
 
-#define co_udp_log_hex_dump(addr1, text, addr2, data, size, format, ...) \
+#define co_udp_log_debug_hex_dump(addr1, text, addr2, data, size, format, ...) \
     co_net_log_write_hex_dump(CO_LOG_LEVEL_DEBUG, CO_LOG_CATEGORY_UDP, \
         addr1, text, addr2, data, size, format, ##__VA_ARGS__)
 

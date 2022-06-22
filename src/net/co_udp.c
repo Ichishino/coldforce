@@ -272,7 +272,7 @@ co_udp_send(
     size_t data_size
 )
 {
-    co_udp_log_hex_dump(
+    co_udp_log_debug_hex_dump(
         &udp->sock.local_net_addr,
         "-->",
         remote_net_addr,
@@ -306,7 +306,7 @@ co_udp_send_async(
     size_t data_size
 )
 {
-    co_udp_log_hex_dump(
+    co_udp_log_debug_hex_dump(
         &udp->sock.local_net_addr,
         "-->",
         remote_net_addr,
@@ -454,7 +454,7 @@ co_udp_receive(
 
     if (result > 0)
     {
-        co_udp_log_hex_dump(
+        co_udp_log_debug_hex_dump(
             &udp->sock.local_net_addr,
             "<--",
             remote_net_addr,
