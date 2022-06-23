@@ -30,7 +30,7 @@ co_tls_log_write_certificate(
     BIO* mem = BIO_new(BIO_s_mem());
     X509_print(mem, x509);
 
-    const int length = (int)BIO_number_written(mem);
+    const int length = BIO_pending(mem);
 
     char* str =
         (char*)co_mem_alloc(length + 1);

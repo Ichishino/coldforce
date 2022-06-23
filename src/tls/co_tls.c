@@ -3,10 +3,7 @@
 #include <coldforce/tls/co_tls.h>
 #include <coldforce/tls/co_tls_log.h>
 
-#ifdef CO_CAN_USE_TLS
-#include <openssl/conf.h>
-#include <openssl/crypto.h>
-#else
+#ifndef CO_CAN_USE_TLS
 #pragma message("<<coldforce>> [WRN] <TLS> **** 'OpenSSL' not found. ****")
 #endif
 

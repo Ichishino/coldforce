@@ -60,15 +60,12 @@ co_tls_client_setup(
     tls->ssl = SSL_new(tls->ctx.ssl_ctx);
 
     SSL_set_ex_data(tls->ssl, 0, client);
+    SSL_CTX_set_info_callback(ssl_ctx, co_tls_on_info);
 
-    if (SSL_CTX_get_info_callback(ssl_ctx) == NULL)
-    {
-        SSL_CTX_set_info_callback(ssl_ctx, co_tls_on_info);
-    }
+    BIO* internal_bio = BIO_new(BIO_s_bio());
+    tls->network_bio = BIO_new(BIO_s_bio());
 
-    BIO* internal_bio = NULL;
-
-    BIO_new_bio_pair(&internal_bio, 0, &tls->network_bio, 0);
+    BIO_make_bio_pair(internal_bio, tls->network_bio);
     SSL_set_bio(tls->ssl, internal_bio, internal_bio);
 
     tls->on_connect = NULL;
@@ -365,14 +362,14 @@ co_tls_on_receive_handshake(
         error_code = CO_TLS_ERROR_HANDSHAKE_FAILED;
     }
 
-    co_tls_log_debug_certificate(
-        SSL_get_peer_certificate(tls->ssl));
-
     co_tls_log_info(
         &client->sock.local_net_addr,
         "<--",
         &client->remote_net_addr,
         "tls handshake finished (%d)", error_code);
+
+    co_tls_log_debug_certificate(
+        SSL_get_peer_certificate(tls->ssl));
 
     if (error_code == 0)
     {
