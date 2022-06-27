@@ -12,7 +12,7 @@
 #define co_ceil(n) \
     ((double)((long)((((double)n) < 0.0) ? n : (((double)n) + 0.9))))
 
-void
+static void
 co_base64_common_encode(
     const char* encoding_table,
     const uint8_t* src,
@@ -68,7 +68,7 @@ co_base64_common_encode(
 
 void
 co_base64_encode(
-    const uint8_t* src,
+    const void* src,
     size_t src_length,
     char** dest,
     size_t* dest_length,
@@ -82,7 +82,7 @@ co_base64_encode(
         "+/";
 
     co_base64_common_encode(
-        encoding_table, src, src_length, dest, dest_length, padding);
+        encoding_table, (uint8_t*)src, src_length, dest, dest_length, padding);
 }
 
 bool
@@ -122,7 +122,7 @@ co_base64_decode(
 
     for (size_t src_index = 0; src_index < src_length; ++src_index)
     {
-        unsigned char b = decoding_table[(uint8_t)src[src_index]];
+        unsigned char b = decoding_table[((uint8_t*)src)[src_index]];
 
         if (b == 0xff)
         {
@@ -166,7 +166,7 @@ co_base64_decode(
 
 void
 co_base64url_encode(
-    const uint8_t* src,
+    const void* src,
     size_t src_length,
     char** dest,
     size_t* dest_length,
@@ -180,7 +180,7 @@ co_base64url_encode(
         "-_";
 
     co_base64_common_encode(
-        encoding_table, src, src_length, dest, dest_length, padding);
+        encoding_table, (uint8_t*)src, src_length, dest, dest_length, padding);
 }
 
 bool

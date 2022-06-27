@@ -119,9 +119,18 @@ co_http_response_deserialize(
     response->status_code = (uint16_t)status_code;
     response->reason_phrase = reason_phrase;
 
-    (*index) += (new_line - data_ptr) + CO_HTTP_CRLF_LENGTH;
+    temp_index += (item_length + CO_HTTP_CRLF_LENGTH);
 
-    return co_http_message_deserialize_header(&response->message, data, index);
+    int result =
+        co_http_message_deserialize_header(
+            &response->message, data, &temp_index);
+
+    if (result == CO_HTTP_PARSE_COMPLETE)
+    {
+        (*index) = temp_index;
+    }
+
+    return result;
 }
 
 //---------------------------------------------------------------------------//

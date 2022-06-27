@@ -152,9 +152,18 @@ co_http_request_deserialize(
 
     co_string_destroy(url_str);
 
-    (*index) += (new_line - data_ptr) + CO_HTTP_CRLF_LENGTH;
+    temp_index += (item_length + CO_HTTP_CRLF_LENGTH);
 
-    return co_http_message_deserialize_header(&request->message, data, index);
+    int result =
+        co_http_message_deserialize_header(
+            &request->message, data, &temp_index);
+
+    if (result == CO_HTTP_PARSE_COMPLETE)
+    {
+        (*index) = temp_index;
+    }
+
+    return result;
 }
 
 //---------------------------------------------------------------------------//

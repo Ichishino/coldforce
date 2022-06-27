@@ -10,14 +10,14 @@ CO_EXTERN_C_BEGIN
 //---------------------------------------------------------------------------//
 
 CO_HTTP_API void co_base64_encode(
-    const uint8_t* src, size_t src_length, char** dest, size_t* dest_length,
+    const void* src, size_t src_length, char** dest, size_t* dest_length,
     bool padding);
 
 CO_HTTP_API bool co_base64_decode(
     const char* src, size_t src_length, uint8_t** dest, size_t* dest_length);
 
 CO_HTTP_API void co_base64url_encode(
-    const uint8_t* src, size_t src_length, char** dest, size_t* dest_length,
+    const void* src, size_t src_length, char** dest, size_t* dest_length,
     bool padding);
 
 CO_HTTP_API bool co_base64url_decode(
