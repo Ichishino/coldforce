@@ -105,6 +105,8 @@ void on_my_app_destroy(my_app* self)
 
 int main(int argc, char* argv[])
 {
+//    co_tcp_log_set_level(CO_LOG_LEVEL_MAX);
+
     my_app app;
 
     co_net_app_init(

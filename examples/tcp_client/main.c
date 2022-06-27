@@ -25,6 +25,11 @@ void on_my_tcp_receive(my_app* self, co_tcp_client_t* client)
     // receive
     ssize_t size = co_tcp_receive(client, buffer, sizeof(buffer));
 
+    if (size <= 0)
+    {
+        return;
+    }
+
     printf("receive %zd bytes\n", (size_t)size);
 }
 
@@ -121,6 +126,8 @@ void on_my_app_destroy(my_app* self)
 
 int main(int argc, char* argv[])
 {
+//    co_tcp_log_set_level(CO_LOG_LEVEL_MAX);
+
     my_app app;
 
     co_net_app_init(

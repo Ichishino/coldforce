@@ -29,6 +29,11 @@ void on_my_tcp_receive(my_client_thread* self, co_tcp_client_t* client)
     // receive
     ssize_t size = co_tcp_receive(client, buffer, sizeof(buffer));
 
+    if (size <= 0)
+    {
+        return;
+    }
+
     char remote_str[64];
     co_net_addr_to_string(
         co_tcp_get_remote_net_addr(client), remote_str, sizeof(remote_str));
