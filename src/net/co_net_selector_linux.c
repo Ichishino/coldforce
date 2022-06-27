@@ -230,7 +230,7 @@ co_net_selector_wait(
                     co_socket_option_get_error(sock, &error_code);
                 }
 
-                if ((e->events & EPOLLRDHUP) || (e->events & EPOLLHUP))
+                if (e->events & EPOLLHUP)
                 {
                     if (sock->type == CO_SOCKET_TYPE_TCP_CONNECTION)
                     {

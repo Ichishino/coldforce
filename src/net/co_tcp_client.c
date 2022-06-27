@@ -179,7 +179,7 @@ co_tcp_client_on_connect_complete(
             &client->sock.local_net_addr,
             "<--",
             &client->remote_net_addr,
-            "tcp connect error (%s)", error_code);
+            "tcp connect error (%d)", error_code);
     }
 
     if (client->on_connect_complete != NULL)
@@ -656,6 +656,11 @@ co_tcp_receive(
             &client->remote_net_addr,
             buffer, data_size,
             "tcp receive %zd bytes", data_size);
+    }
+    else if (data_size == 0)
+    {
+        co_thread_send_event(client->sock.owner_thread,
+            CO_NET_EVENT_ID_TCP_CLOSE, (uintptr_t)client, 0);
     }
 
     return data_size;
