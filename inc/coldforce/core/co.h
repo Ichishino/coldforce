@@ -132,14 +132,13 @@ co_mem_free_later(
 );
 
 //---------------------------------------------------------------------------//
-// macros, functions
+// public
 //---------------------------------------------------------------------------//
 
 #define co_mem_alloc        malloc
 #define co_mem_realloc      realloc
 #define co_mem_free         free
 #define co_assert           assert
-
 #define co_max(l, r)        (((l) > (r)) ? (l) : (r))
 #define co_min(l, r)        (((l) < (r)) ? (l) : (r))
 

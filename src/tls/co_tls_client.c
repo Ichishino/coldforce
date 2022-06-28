@@ -734,26 +734,26 @@ co_tls_receive_all(
     co_byte_array_t* byte_array
 )
 {
-    size_t before = co_byte_array_get_count(byte_array);
+    ssize_t total = 0;
 
     for (;;)
     {
         char buffer[8192];
 
-        ssize_t result =
+        ssize_t size =
             co_tls_receive(client, buffer, sizeof(buffer));
 
-        if (result <= 0)
+        if (size <= 0)
         {
             break;
         }
-        else
-        {
-            co_byte_array_add(byte_array, buffer, result);
-        }
+
+        co_byte_array_add(byte_array, buffer, size);
+
+        total += size;
     }
 
-    return (ssize_t)(co_byte_array_get_count(byte_array) - before);
+    return total;
 }
 
 bool

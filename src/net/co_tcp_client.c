@@ -676,13 +676,14 @@ co_tcp_receive_all(
     co_byte_array_t* byte_array
 )
 {
-    ssize_t index = 0;
+    ssize_t total = 0;
 
     for (;;)
     {
         char buffer[8192];
 
-        ssize_t size = co_tcp_receive(client, buffer, sizeof(buffer));
+        ssize_t size =
+            co_tcp_receive(client, buffer, sizeof(buffer));
 
         if (size <= 0)
         {
@@ -691,10 +692,10 @@ co_tcp_receive_all(
 
         co_byte_array_add(byte_array, buffer, size);
 
-        index += size;
+        total += size;
     }
 
-    return index;
+    return total;
 }
 
 void

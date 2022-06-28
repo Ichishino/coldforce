@@ -233,7 +233,9 @@ co_ws_client_on_receive_ready(
                 &client->tcp_client->sock.local_net_addr,
                 "<--",
                 &client->tcp_client->remote_net_addr,
-                frame->header.fin, frame->header.opcode, frame->header.payload_size,
+                frame->header.fin,
+                frame->header.opcode,
+                (size_t)frame->header.payload_size,
                 "ws receive frame");
 
             co_ws_client_on_frame(
