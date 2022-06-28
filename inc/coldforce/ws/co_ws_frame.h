@@ -47,19 +47,56 @@ typedef struct
 
 } co_ws_frame_t;
 
-int co_ws_frame_deserialize(
-    co_ws_frame_t* frame, const co_byte_array_t* data, size_t* index);
-
 //---------------------------------------------------------------------------//
+// private
 //---------------------------------------------------------------------------//
 
-CO_WS_API co_ws_frame_t* co_ws_frame_create(void);
-CO_WS_API void co_ws_frame_destroy(co_ws_frame_t* frame);
+int
+co_ws_frame_deserialize(
+    co_ws_frame_t* frame,
+    const co_byte_array_t* data,
+    size_t* index
+);
 
-CO_WS_API bool co_ws_frame_get_fin(const co_ws_frame_t* frame);
-CO_WS_API uint8_t co_ws_frame_get_opcode(const co_ws_frame_t* frame);
-CO_WS_API uint64_t co_ws_frame_get_payload_size(const co_ws_frame_t* frame);
-CO_WS_API const uint8_t* co_ws_frame_get_payload_data(const co_ws_frame_t* frame);
+//---------------------------------------------------------------------------//
+// public
+//---------------------------------------------------------------------------//
+
+CO_WS_API
+co_ws_frame_t*
+co_ws_frame_create(
+    void
+);
+
+CO_WS_API
+void
+co_ws_frame_destroy(
+    co_ws_frame_t* frame
+);
+
+CO_WS_API
+bool
+co_ws_frame_get_fin(
+    const co_ws_frame_t* frame
+);
+
+CO_WS_API
+uint8_t
+co_ws_frame_get_opcode(
+    const co_ws_frame_t* frame
+);
+
+CO_WS_API
+uint64_t
+co_ws_frame_get_payload_size(
+    const co_ws_frame_t* frame
+);
+
+CO_WS_API
+const uint8_t*
+co_ws_frame_get_payload_data(
+    const co_ws_frame_t* frame
+);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

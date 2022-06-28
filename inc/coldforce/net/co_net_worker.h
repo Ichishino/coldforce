@@ -51,51 +51,124 @@ typedef struct co_net_worker_t
 #endif
 
 //---------------------------------------------------------------------------//
+// private
 //---------------------------------------------------------------------------//
 
-co_net_worker_t* co_net_worker_create(void);
-void co_net_worker_cleanup(co_net_worker_t* net_worker);
+co_net_worker_t*
+co_net_worker_create(
+    void
+);
 
-void co_net_worker_on_destroy(co_thread_t* thread);
+void
+co_net_worker_cleanup(
+    co_net_worker_t* net_worker
+);
 
-co_wait_result_t co_net_worker_wait(
-    co_net_worker_t* net_worker, uint32_t msec);
-void co_net_worker_wake_up(co_net_worker_t* net_worker);
-bool co_net_worker_dispatch(co_net_worker_t* net_worker, co_event_t* event);
-void co_net_worker_on_idle(co_net_worker_t* net_worker);
+void
+co_net_worker_on_destroy(
+    co_thread_t* thread
+);
 
-void co_net_worker_on_tcp_transfer(
-    co_net_worker_t* net_worker, co_tcp_client_t* client);
+co_wait_result_t
+co_net_worker_wait(
+    co_net_worker_t* net_worker,
+    uint32_t msec
+);
 
-bool co_net_worker_register_tcp_server(
-    co_net_worker_t* net_worker, co_tcp_server_t* server);
-void co_net_worker_unregister_tcp_server(
-    co_net_worker_t* net_worker, co_tcp_server_t* server);
+void
+co_net_worker_wake_up(
+    co_net_worker_t* net_worker
+);
 
-bool co_net_worker_register_tcp_connector(
-    co_net_worker_t* net_worker, co_tcp_client_t* client);
-void co_net_worker_unregister_tcp_connector(
-    co_net_worker_t* net_worker, co_tcp_client_t* client);
+bool
+co_net_worker_dispatch(
+    co_net_worker_t* net_worker,
+    co_event_t* event
+);
 
-bool co_net_worker_register_tcp_connection(
-    co_net_worker_t* net_worker, co_tcp_client_t* client);
-void co_net_worker_unregister_tcp_connection(
-    co_net_worker_t* net_worker, co_tcp_client_t* client);
+void
+co_net_worker_on_idle(
+    co_net_worker_t* net_worker
+);
 
-bool co_net_worker_set_tcp_send(
-    co_net_worker_t* net_worker, co_tcp_client_t* client, bool enable);
+void
+co_net_worker_on_tcp_transfer(
+    co_net_worker_t* net_worker,
+    co_tcp_client_t* client
+);
 
-void co_net_worker_close_tcp_client_local(
-    co_net_worker_t* net_worker, co_tcp_client_t* client);
-bool co_net_worker_close_tcp_client_remote(
-    co_net_worker_t* net_worker, co_tcp_client_t* client);
+bool
+co_net_worker_register_tcp_server(
+    co_net_worker_t* net_worker,
+    co_tcp_server_t* server
+);
 
-bool co_net_worker_register_udp(
-    co_net_worker_t* net_worker, co_udp_t* udp);
-void co_net_worker_unregister_udp(
-    co_net_worker_t* net_worker, co_udp_t* udp);
-bool co_net_worker_update_udp(
-    co_net_worker_t* net_worker, co_udp_t* udp);
+void
+co_net_worker_unregister_tcp_server(
+    co_net_worker_t* net_worker,
+    co_tcp_server_t* server
+);
+
+bool
+co_net_worker_register_tcp_connector(
+    co_net_worker_t* net_worker,
+    co_tcp_client_t* client
+);
+
+void
+co_net_worker_unregister_tcp_connector(
+    co_net_worker_t* net_worker,
+    co_tcp_client_t* client
+);
+
+bool
+co_net_worker_register_tcp_connection(
+    co_net_worker_t* net_worker,
+    co_tcp_client_t* client
+);
+
+void
+co_net_worker_unregister_tcp_connection(
+    co_net_worker_t* net_worker,
+    co_tcp_client_t* client
+);
+
+bool
+co_net_worker_set_tcp_send(
+    co_net_worker_t* net_worker,
+    co_tcp_client_t* client,
+    bool enable
+);
+
+void
+co_net_worker_close_tcp_client_local(
+    co_net_worker_t* net_worker,
+    co_tcp_client_t* client
+);
+
+bool
+co_net_worker_close_tcp_client_remote(
+    co_net_worker_t* net_worker,
+    co_tcp_client_t* client
+);
+
+bool
+co_net_worker_register_udp(
+    co_net_worker_t* net_worker,
+    co_udp_t* udp
+);
+
+void
+co_net_worker_unregister_udp(
+    co_net_worker_t* net_worker,
+    co_udp_t* udp
+);
+
+bool
+co_net_worker_update_udp(
+    co_net_worker_t* net_worker,
+    co_udp_t* udp
+);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

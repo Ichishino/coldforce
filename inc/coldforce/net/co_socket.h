@@ -43,17 +43,46 @@ typedef struct
 
 } co_socket_t;
 
-void co_socket_setup(co_socket_t* sock);
-void co_socket_cleanup(co_socket_t* sock);
-
-struct co_net_worker_t* co_socket_get_net_worker(co_socket_t* sock);
-
 //---------------------------------------------------------------------------//
+// private
 //---------------------------------------------------------------------------//
 
-CO_NET_API co_socket_handle_t co_socket_get_handle(const co_socket_t* sock);
-CO_NET_API co_thread_t* co_socket_get_owner_thread(const co_socket_t* sock);
-CO_NET_API const co_net_addr_t* co_socket_get_local_net_addr(const co_socket_t* sock);
+void
+co_socket_setup(
+    co_socket_t* sock
+);
+
+void
+co_socket_cleanup(
+    co_socket_t* sock
+);
+
+struct co_net_worker_t*
+co_socket_get_net_worker(
+    co_socket_t* sock
+);
+
+//---------------------------------------------------------------------------//
+// public
+//---------------------------------------------------------------------------//
+
+CO_NET_API
+co_socket_handle_t
+co_socket_get_handle(
+    const co_socket_t* sock
+);
+
+CO_NET_API
+co_thread_t*
+co_socket_get_owner_thread(
+    const co_socket_t* sock
+);
+
+CO_NET_API
+const co_net_addr_t*
+co_socket_get_local_net_addr(
+    const co_socket_t* sock
+);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

@@ -14,15 +14,42 @@ CO_EXTERN_C_BEGIN
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-CO_NET_API void co_net_thread_init(co_thread_t* thread,
-    co_thread_create_fn create_handler, co_thread_destroy_fn destroy_handler);
+//---------------------------------------------------------------------------//
+// public
+//---------------------------------------------------------------------------//
 
-CO_NET_API void co_net_thread_cleanup(co_thread_t* thread);
+CO_NET_API
+void
+co_net_thread_init(
+    co_thread_t* thread,
+    co_thread_create_fn create_handler,
+    co_thread_destroy_fn destroy_handler
+);
 
-CO_NET_API bool co_net_thread_start(co_thread_t* thread, uintptr_t param);
+CO_NET_API
+void
+co_net_thread_cleanup(
+    co_thread_t* thread
+);
 
-CO_NET_API void co_net_thread_stop(co_thread_t* thread);
-CO_NET_API void co_net_thread_wait(co_thread_t* thread);
+CO_NET_API
+bool
+co_net_thread_start(
+    co_thread_t* thread,
+    uintptr_t param
+);
+
+CO_NET_API
+void
+co_net_thread_stop(
+    co_thread_t* thread
+);
+
+CO_NET_API
+void
+co_net_thread_wait(
+    co_thread_t* thread
+);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

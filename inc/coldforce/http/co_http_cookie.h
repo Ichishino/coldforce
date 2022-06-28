@@ -37,20 +37,50 @@ typedef struct
 
 } co_http_cookie_st;
 
-CO_HTTP_API void co_http_response_cookie_serialize(
-    const co_http_cookie_st* cookie, co_byte_array_t* buffer);
-CO_HTTP_API bool co_http_response_cookie_deserialize(
-    const char* str, co_http_cookie_st* cookie);
-
-CO_HTTP_API void co_http_request_cookie_serialize(
-    const co_http_cookie_st* cookie, size_t count, co_byte_array_t* buffer);
-CO_HTTP_API size_t co_http_request_cookie_deserialize(
-    const char* str, co_http_cookie_st* cookie, size_t count);
-
 //---------------------------------------------------------------------------//
+// private
 //---------------------------------------------------------------------------//
 
-CO_HTTP_API void co_http_cookie_cleanup(co_http_cookie_st* cookies, size_t count);
+CO_HTTP_API
+void
+co_http_response_cookie_serialize(
+    const co_http_cookie_st* cookie,
+    co_byte_array_t* buffer
+);
+
+CO_HTTP_API
+bool
+co_http_response_cookie_deserialize(
+    const char* str,
+    co_http_cookie_st* cookie
+);
+
+CO_HTTP_API
+void
+co_http_request_cookie_serialize(
+    const co_http_cookie_st* cookie,
+    size_t count,
+    co_byte_array_t* buffer
+);
+
+CO_HTTP_API
+size_t
+co_http_request_cookie_deserialize(
+    const char* str,
+    co_http_cookie_st* cookie,
+    size_t count
+);
+
+//---------------------------------------------------------------------------//
+// public
+//---------------------------------------------------------------------------//
+
+CO_HTTP_API
+void
+co_http_cookie_cleanup(
+    co_http_cookie_st* cookies,
+    size_t count
+);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

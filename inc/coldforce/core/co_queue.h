@@ -34,29 +34,91 @@ typedef struct
 } co_queue_t;
 
 //---------------------------------------------------------------------------//
+// public
 //---------------------------------------------------------------------------//
 
-CO_API co_queue_t* co_queue_create(
-    size_t element_size, const co_queue_ctx_t* ctx);
+CO_API
+co_queue_t*
+co_queue_create(
+    size_t element_size,
+    const co_queue_ctx_t* ctx
+);
 
-CO_API void co_queue_destroy(co_queue_t* queue);
+CO_API
+void
+co_queue_destroy(
+    co_queue_t* queue
+);
 
-CO_API void co_queue_clear(co_queue_t* queue);
-CO_API size_t co_queue_get_count(const co_queue_t* queue);
+CO_API
+void
+co_queue_clear(
+    co_queue_t* queue
+);
 
-CO_API bool co_queue_push(co_queue_t* queue, const void* value_address);
-CO_API bool co_queue_pop(co_queue_t* queue, void* value_address);
+CO_API
+size_t
+co_queue_get_count(
+    const co_queue_t* queue
+);
 
-CO_API bool co_queue_push_array(co_queue_t* queue, const void* value_address, size_t count);
-CO_API size_t co_queue_pop_array(co_queue_t* queue, void* value_address, size_t count);
+CO_API
+bool
+co_queue_push(
+    co_queue_t* queue,
+    const void* value_address
+);
 
-CO_API size_t co_queue_peek_array(co_queue_t* queue, void* value_address, size_t count);
-CO_API void co_queue_remove(co_queue_t* queue, size_t count);
+CO_API
+bool
+co_queue_pop(
+    co_queue_t* queue,
+    void* value_address
+);
 
-CO_API void* co_queue_peek_head(co_queue_t* queue);
+CO_API
+bool
+co_queue_push_array(
+    co_queue_t* queue,
+    const void* value_address,
+    size_t count
+);
 
-CO_API void* co_queue_find(
-    co_queue_t* queue, const void* value_address, co_item_compare_fn compare);
+CO_API
+size_t
+co_queue_pop_array(
+    co_queue_t* queue,
+    void* value_address,
+    size_t count);
+
+CO_API
+size_t
+co_queue_peek_array(
+    co_queue_t* queue,
+    void* value_address,
+    size_t count
+);
+
+CO_API
+void
+co_queue_remove(
+    co_queue_t* queue,
+    size_t count
+);
+
+CO_API
+void*
+co_queue_peek_head(
+    co_queue_t* queue
+);
+
+CO_API
+void*
+co_queue_find(
+    co_queue_t* queue,
+    const void* value_address,
+    co_item_compare_fn compare
+);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

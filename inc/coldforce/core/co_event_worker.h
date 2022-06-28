@@ -47,38 +47,93 @@ typedef struct co_event_worker_t
 } co_event_worker_t;
 
 //---------------------------------------------------------------------------//
+// private
 //---------------------------------------------------------------------------//
 
-co_event_worker_t* co_event_worker_create(void);
-void co_event_worker_destroy(co_event_worker_t* event_worker);
+co_event_worker_t*
+co_event_worker_create(
+    void
+);
 
-void co_event_worker_setup(co_event_worker_t* event_worker);
-void co_event_worker_cleanup(co_event_worker_t* event_worker);
-void co_event_worker_run(co_event_worker_t* event_worker);
+void
+co_event_worker_destroy(
+    co_event_worker_t* event_worker
+);
 
-bool co_event_worker_add(
-    co_event_worker_t* event_worker, const co_event_t* event);
-bool co_event_worker_pump(
-    co_event_worker_t* event_worker, co_event_t* event);
+void
+co_event_worker_setup(
+    co_event_worker_t* event_worker
+);
 
-bool co_event_worker_register_timer(
-    co_event_worker_t* event_worker, co_timer_t* timer);
-void co_event_worker_unregister_timer(
-    co_event_worker_t* event_worker, co_timer_t* timer);
-void co_event_worker_check_timer(
-    co_event_worker_t* event_worker);
+void
+co_event_worker_cleanup(
+    co_event_worker_t* event_worker
+);
 
-size_t co_event_worker_get_event_count(
-    co_event_worker_t* event_worker);
+void
+co_event_worker_run(
+    co_event_worker_t* event_worker
+);
 
-CO_API co_wait_result_t co_event_worker_wait(
-    co_event_worker_t* event_worker, uint32_t msec);
-CO_API void co_event_worker_wake_up(
-    co_event_worker_t* event_worker);
-CO_API bool co_event_worker_dispatch(
-    co_event_worker_t* event_worker, co_event_t* event);
-CO_API void co_event_worker_on_idle(
-    co_event_worker_t* event_worker);
+bool
+co_event_worker_add(
+    co_event_worker_t* event_worker,
+    const co_event_t* event
+);
+
+bool
+co_event_worker_pump(
+    co_event_worker_t* event_worker,
+    co_event_t* event
+);
+
+bool
+co_event_worker_register_timer(
+    co_event_worker_t* event_worker,
+    co_timer_t* timer
+);
+
+void
+co_event_worker_unregister_timer(
+    co_event_worker_t* event_worker,
+    co_timer_t* timer
+);
+
+void
+co_event_worker_check_timer(
+    co_event_worker_t* event_worker
+);
+
+size_t
+co_event_worker_get_event_count(
+    co_event_worker_t* event_worker
+);
+
+CO_API
+co_wait_result_t
+co_event_worker_wait(
+    co_event_worker_t* event_worker,
+    uint32_t msec
+);
+
+CO_API
+void
+co_event_worker_wake_up(
+    co_event_worker_t* event_worker
+);
+
+CO_API
+bool
+co_event_worker_dispatch(
+    co_event_worker_t* event_worker,
+    co_event_t* event
+);
+
+CO_API
+void
+co_event_worker_on_idle(
+    co_event_worker_t* event_worker
+);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

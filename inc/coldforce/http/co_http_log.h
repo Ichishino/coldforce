@@ -18,24 +18,33 @@ CO_EXTERN_C_BEGIN
 
 #define CO_LOG_CATEGORY_HTTP             (CO_LOG_CATEGORY_USER_MAX + 5)
 
-CO_HTTP_API void co_http_log_write_request_header(
+//---------------------------------------------------------------------------//
+// private
+//---------------------------------------------------------------------------//
+
+CO_HTTP_API
+void
+co_http_log_write_request_header(
     int level,
     const co_net_addr_t* addr1,
     const char* text,
     const co_net_addr_t* addr2,
     const co_http_request_t* request,
-    const char* format, ...);
+    const char* format,
+    ...
+);
 
-CO_HTTP_API void co_http_log_write_response_header(
+CO_HTTP_API
+void
+co_http_log_write_response_header(
     int level,
     const co_net_addr_t* addr1,
     const char* text,
     const co_net_addr_t* addr2,
     const co_http_response_t* response,
-    const char* format, ...);
-
-//---------------------------------------------------------------------------//
-//---------------------------------------------------------------------------//
+    const char* format,
+    ...
+);
 
 #define co_http_log_write(level, addr1, text, addr2, format, ...) \
     co_net_log_write(level, CO_LOG_CATEGORY_HTTP, \
@@ -66,9 +75,14 @@ CO_HTTP_API void co_http_log_write_response_header(
         addr1, text, addr2, response, format, ##__VA_ARGS__)
 
 //---------------------------------------------------------------------------//
+// public
 //---------------------------------------------------------------------------//
 
-CO_HTTP_API void co_http_log_set_level(int level);
+CO_HTTP_API
+void
+co_http_log_set_level(
+    int level
+);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

@@ -27,24 +27,58 @@ typedef struct
 } co_http_url_st;
 
 //---------------------------------------------------------------------------//
+// public
 //---------------------------------------------------------------------------//
-
-CO_HTTP_API co_http_url_st* co_http_url_create(const char* str);
-CO_HTTP_API void co_http_url_destroy(co_http_url_st* url);
-
-CO_HTTP_API char* co_http_url_create_host_and_port(const co_http_url_st* url);
-CO_HTTP_API char* co_http_url_create_path_and_query(const co_http_url_st* url);
-CO_HTTP_API char* co_http_url_create_file_name(const co_http_url_st* url);
 
 #define co_http_url_destroy_string  co_string_destroy
 
-//---------------------------------------------------------------------------//
-//---------------------------------------------------------------------------//
+CO_HTTP_API
+co_http_url_st*
+co_http_url_create(
+    const char* str
+);
 
-CO_HTTP_API bool co_http_url_component_encode(
-    const char* src, size_t src_length, char** dest, size_t* dest_length);
-CO_HTTP_API bool co_http_url_component_decode(
-    const char* src, size_t src_length, char** dest, size_t* dest_length);
+CO_HTTP_API
+void
+co_http_url_destroy(
+    co_http_url_st* url
+);
+
+CO_HTTP_API
+char*
+co_http_url_create_host_and_port(
+    const co_http_url_st* url
+);
+
+CO_HTTP_API
+char*
+co_http_url_create_path_and_query(
+    const co_http_url_st* url
+);
+
+CO_HTTP_API
+char*
+co_http_url_create_file_name(
+    const co_http_url_st* url
+);
+
+CO_HTTP_API
+bool
+co_http_url_component_encode(
+    const char* src,
+    size_t src_length,
+    char** dest,
+    size_t* dest_length
+);
+
+CO_HTTP_API
+bool
+co_http_url_component_decode(
+    const char* src,
+    size_t src_length,
+    char** dest,
+    size_t* dest_length
+);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

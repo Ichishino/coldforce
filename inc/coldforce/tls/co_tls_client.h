@@ -14,6 +14,9 @@ CO_EXTERN_C_BEGIN
 // tls client
 //---------------------------------------------------------------------------//
 
+//---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
+
 #ifdef CO_CAN_USE_TLS
 
 typedef void(*co_tls_handshake_fn)(
@@ -37,60 +40,146 @@ typedef struct
 #define co_tcp_client_get_tls(client) \
     ((co_tls_client_t*)client->sock.tls)
 
-void co_tls_client_setup(
-    co_tls_client_t* tls, co_tls_ctx_st* tls_ctx, co_tcp_client_t* client);
-void co_tls_client_cleanup(
-    co_tls_client_t* tls);
-
 //---------------------------------------------------------------------------//
+// private
 //---------------------------------------------------------------------------//
 
-CO_TLS_API co_tcp_client_t* co_tls_client_create(
+void
+co_tls_client_setup(
+    co_tls_client_t* tls,
+    co_tls_ctx_st* tls_ctx,
+    co_tcp_client_t* client
+);
+
+void
+co_tls_client_cleanup(
+    co_tls_client_t* tls
+);
+
+//---------------------------------------------------------------------------//
+// public
+//---------------------------------------------------------------------------//
+
+CO_TLS_API
+co_tcp_client_t*
+co_tls_client_create(
     const co_net_addr_t* local_net_addr,
-    co_tls_ctx_st* tls_ctx);
+    co_tls_ctx_st* tls_ctx
+);
 
-CO_TLS_API void co_tls_client_destroy(co_tcp_client_t* client);
-CO_TLS_API void co_tls_client_close(co_tcp_client_t* client);
+CO_TLS_API
+void
+co_tls_client_destroy(
+    co_tcp_client_t* client
+);
 
-CO_TLS_API bool co_tls_client_install(
-    co_tcp_client_t* client, co_tls_ctx_st* tls_ctx);
+CO_TLS_API
+void
+co_tls_client_close(
+    co_tcp_client_t* client
+);
 
-CO_TLS_API void co_tls_set_host_name(
-    co_tcp_client_t* client, const char* host_name);
-CO_TLS_API void co_tls_set_available_protocols(
-    co_tcp_client_t* client, const char* protocols[], size_t count);
-CO_TLS_API bool co_tls_get_selected_protocol(
-    const co_tcp_client_t* client, char* buffer, size_t buffer_size);
+CO_TLS_API
+void
+co_tls_set_host_name(
+    co_tcp_client_t* client,
+    const char* host_name
+);
 
-CO_TLS_API bool co_tls_connect(co_tcp_client_t* client,
-    const co_net_addr_t* remote_net_addr, co_tcp_connect_fn handler);
+CO_TLS_API
+void
+co_tls_set_available_protocols(
+    co_tcp_client_t* client,
+    const char* protocols[],
+    size_t count
+);
 
-CO_TLS_API bool co_tls_start_handshake(
-    co_tcp_client_t* client, co_tls_handshake_fn handler);
+CO_TLS_API
+bool
+co_tls_get_selected_protocol(
+    const co_tcp_client_t* client,
+    char* buffer,
+    size_t buffer_size
+);
 
-CO_TLS_API bool co_tls_send(
-    co_tcp_client_t* client, const void* data, size_t data_size);
-CO_TLS_API bool co_tls_send_async(
-    co_tcp_client_t* client, const void* data, size_t data_size);
+CO_TLS_API
+bool
+co_tls_connect(
+    co_tcp_client_t* client,
+    const co_net_addr_t* remote_net_addr,
+    co_tcp_connect_fn handler
+);
 
-CO_TLS_API ssize_t co_tls_receive(
-    co_tcp_client_t* client, void* buffer, size_t buffer_size);
-CO_TLS_API ssize_t co_tls_receive_all(
-    co_tcp_client_t* client, co_byte_array_t* byte_array);
+CO_TLS_API
+bool
+co_tls_start_handshake(
+    co_tcp_client_t* client,
+    co_tls_handshake_fn handler
+);
 
-CO_TLS_API bool co_tls_is_open(const co_tcp_client_t* client);
+CO_TLS_API
+bool
+co_tls_send(
+    co_tcp_client_t* client,
+    const void* data,
+    size_t data_size
+);
 
-CO_TLS_API void co_tls_set_send_complete_handler(
-    co_tcp_client_t* client, co_tcp_send_fn handler);
+CO_TLS_API
+bool
+co_tls_send_async(
+    co_tcp_client_t* client,
+    const void* data,
+    size_t data_size
+);
 
-CO_TLS_API void co_tls_set_receive_handler(
-    co_tcp_client_t* client, co_tcp_receive_fn handler);
+CO_TLS_API
+ssize_t
+co_tls_receive(
+    co_tcp_client_t* client,
+    void* buffer,
+    size_t buffer_size
+);
 
-CO_TLS_API void co_tls_set_close_handler(
-    co_tcp_client_t* client, co_tcp_close_fn handler);
+CO_TLS_API
+ssize_t
+co_tls_receive_all(
+    co_tcp_client_t* client,
+    co_byte_array_t* byte_array
+);
 
-CO_TLS_API const co_net_addr_t*
-    co_tls_get_remote_net_addr(const co_tcp_client_t* client);
+CO_TLS_API
+bool
+co_tls_is_open(
+    const co_tcp_client_t* client
+);
+
+CO_TLS_API
+void
+co_tls_set_send_complete_handler(
+    co_tcp_client_t* client,
+    co_tcp_send_fn handler
+);
+
+CO_TLS_API
+void
+co_tls_set_receive_handler(
+    co_tcp_client_t* client,
+    co_tcp_receive_fn handler
+);
+
+CO_TLS_API
+void
+co_tls_set_close_handler(
+    co_tcp_client_t* client,
+    co_tcp_close_fn handler
+);
+
+CO_TLS_API
+const co_net_addr_t*
+co_tls_get_remote_net_addr(
+    const co_tcp_client_t* client
+);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

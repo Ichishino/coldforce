@@ -17,6 +17,10 @@
 #define co_net_is_ipv6(net_addr)    (net_addr->sa.any.ss_family == AF_INET6)
 #define co_net_is_unix(net_addr)    (net_addr->sa.any.ss_family == AF_UNIX)
 
+//---------------------------------------------------------------------------//
+// public
+//---------------------------------------------------------------------------//
+
 void
 co_net_addr_init(
     co_net_addr_t* net_addr

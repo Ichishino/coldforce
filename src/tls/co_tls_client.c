@@ -14,6 +14,10 @@
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
+//---------------------------------------------------------------------------//
+// private
+//---------------------------------------------------------------------------//
+
 static void
 co_tls_on_info(
     const SSL* ssl,
@@ -112,6 +116,28 @@ co_tls_client_cleanup(
             tls->ctx.ssl_ctx = NULL;
         }
     }
+}
+
+static bool
+co_tls_client_install(
+    co_tcp_client_t* client,
+    co_tls_ctx_st* tls_ctx
+)
+{
+    co_tls_client_t* tls =
+        (co_tls_client_t*)co_mem_alloc(sizeof(co_tls_client_t));
+
+    if (tls == NULL)
+    {
+        return false;
+    }
+
+    co_tls_client_setup(tls, tls_ctx, client);
+    SSL_set_connect_state(tls->ssl);
+
+    client->sock.tls = tls;
+
+    return true;
 }
 
 static bool
@@ -416,6 +442,7 @@ co_tls_on_receive_handshake(
 }
 
 //---------------------------------------------------------------------------//
+// public
 //---------------------------------------------------------------------------//
 
 co_tcp_client_t*
@@ -469,28 +496,6 @@ co_tls_client_close(
     {
         co_tcp_client_close(client);
     }
-}
-
-bool
-co_tls_client_install(
-    co_tcp_client_t* client,
-    co_tls_ctx_st* tls_ctx
-)
-{
-    co_tls_client_t* tls =
-        (co_tls_client_t*)co_mem_alloc(sizeof(co_tls_client_t));
-
-    if (tls == NULL)
-    {
-        return false;
-    }
-
-    co_tls_client_setup(tls, tls_ctx, client);
-    SSL_set_connect_state(tls->ssl);
-
-    client->sock.tls = tls;
-
-    return true;
 }
 
 void

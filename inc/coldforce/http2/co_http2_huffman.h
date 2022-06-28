@@ -12,11 +12,25 @@ CO_EXTERN_C_BEGIN
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-void co_http2_huffman_encode(
-    const char* str, size_t str_length, uint8_t** dest, size_t* dest_length);
+//---------------------------------------------------------------------------//
+// private
+//---------------------------------------------------------------------------//
 
-bool co_http2_huffman_decode(
-    const uint8_t* src, size_t src_length, char** dest, size_t* dest_length);
+void
+co_http2_huffman_encode(
+    const char* str,
+    size_t str_length,
+    uint8_t** dest,
+    size_t* dest_length
+);
+
+bool
+co_http2_huffman_decode(
+    const uint8_t* src,
+    size_t src_length,
+    char** dest,
+    size_t* dest_length
+);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

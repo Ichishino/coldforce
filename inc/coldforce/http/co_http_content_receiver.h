@@ -34,25 +34,50 @@ typedef struct
 } co_http_content_receiver_t;
 
 //---------------------------------------------------------------------------//
+// private
 //---------------------------------------------------------------------------//
 
-void co_http_content_receiver_setup(co_http_content_receiver_t* receiver);
-void co_http_content_receiver_cleanup(co_http_content_receiver_t* receiver);
+void
+co_http_content_receiver_setup(
+    co_http_content_receiver_t* receiver
+);
 
-void co_http_content_receiver_clear(
-    co_http_content_receiver_t* receiver);
+void
+co_http_content_receiver_cleanup(
+    co_http_content_receiver_t* receiver
+);
 
-bool co_http_start_receive_content(
-    co_http_content_receiver_t* receiver, co_http_message_t* message,
-    size_t index, const char* file_path);
-int co_http_receive_content_data(
-    co_http_content_receiver_t* receiver, co_byte_array_t* receive_data);
+void
+co_http_content_receiver_clear(
+    co_http_content_receiver_t* receiver
+);
 
-void co_http_complete_receive_content(
-    co_http_content_receiver_t* receiver, size_t* index, co_buffer_st* buffer);
+bool
+co_http_start_receive_content(
+    co_http_content_receiver_t* receiver,
+    co_http_message_t* message,
+    size_t index,
+    const char* file_path
+);
 
-void co_http_content_more_data(
-    co_http_content_receiver_t* receiver, co_byte_array_t* receive_data);
+int
+co_http_receive_content_data(
+    co_http_content_receiver_t* receiver,
+    co_byte_array_t* receive_data
+);
+
+void
+co_http_complete_receive_content(
+    co_http_content_receiver_t* receiver,
+    size_t* index,
+    co_buffer_st* buffer
+);
+
+void
+co_http_content_more_data(
+    co_http_content_receiver_t* receiver,
+    co_byte_array_t* receive_data
+);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

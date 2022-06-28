@@ -23,21 +23,48 @@ typedef struct
 } co_http_message_t;
 
 //---------------------------------------------------------------------------//
+// private
 //---------------------------------------------------------------------------//
 
-void co_http_message_setup(co_http_message_t* message);
-void co_http_message_cleanup(co_http_message_t* message);
+void
+co_http_message_setup(
+    co_http_message_t* message
+);
 
-void co_http_message_serialize(
-    const co_http_message_t* message, co_byte_array_t* buffer);
-int co_http_message_deserialize_header(
-    co_http_message_t* message, const co_byte_array_t* data, size_t* index);
+void
+co_http_message_cleanup(
+    co_http_message_t* message
+);
 
-bool co_http_message_set_content(
-    co_http_message_t* request, const void* data, size_t data_size);
+void
+co_http_message_serialize(
+    const co_http_message_t* message,
+    co_byte_array_t* buffer
+);
 
-const void* co_http_message_get_content(const co_http_message_t* message);
-size_t co_http_message_get_content_size(const co_http_message_t* message);
+int
+co_http_message_deserialize_header(
+    co_http_message_t* message,
+    const co_byte_array_t* data,
+    size_t* index
+);
+
+bool
+co_http_message_set_content(
+    co_http_message_t* request,
+    const void* data,
+    size_t data_size
+);
+
+const void*
+co_http_message_get_content(
+    const co_http_message_t* message
+);
+
+size_t
+co_http_message_get_content_size(
+    const co_http_message_t* message
+);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

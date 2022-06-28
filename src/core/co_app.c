@@ -14,22 +14,12 @@
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
+//---------------------------------------------------------------------------//
+// private
+//---------------------------------------------------------------------------//
+
 static co_app_t* current_app = NULL;
 extern CO_THREAD_LOCAL co_thread_t* current_thread;
-
-//---------------------------------------------------------------------------//
-//---------------------------------------------------------------------------//
-
-void
-co_app_init(
-    co_app_t* app,
-    co_app_create_fn create_handler,
-    co_app_destroy_fn destroy_handler
-)
-{
-    co_app_setup(
-        app, create_handler, destroy_handler, NULL);
-}
 
 void
 co_app_setup(
@@ -56,6 +46,21 @@ co_app_setup(
 
     current_app = app;
     current_thread = (co_thread_t*)app;
+}
+
+//---------------------------------------------------------------------------//
+// public
+//---------------------------------------------------------------------------//
+
+void
+co_app_init(
+    co_app_t* app,
+    co_app_create_fn create_handler,
+    co_app_destroy_fn destroy_handler
+)
+{
+    co_app_setup(
+        app, create_handler, destroy_handler, NULL);
 }
 
 void

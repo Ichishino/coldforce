@@ -17,6 +17,10 @@
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
+//---------------------------------------------------------------------------//
+// private
+//---------------------------------------------------------------------------//
+
 void
 co_net_log_write_addresses(
     co_log_t* log,
@@ -80,35 +84,6 @@ co_net_log_write_data(
     va_end(args);
 
     fprintf((FILE*)log->output, "\n");
-}
-
-//---------------------------------------------------------------------------//
-//---------------------------------------------------------------------------//
-
-void
-co_tcp_log_set_level(
-    int level
-)
-{
-    co_log_set_level(
-        CO_LOG_CATEGORY_TCP, level);
-
-    co_log_add_category(
-        CO_LOG_CATEGORY_TCP,
-        CO_LOG_CATEGORY_NAME_TCP);
-}
-
-void
-co_udp_log_set_level(
-    int level
-)
-{
-    co_log_set_level(
-        CO_LOG_CATEGORY_UDP, level);
-
-    co_log_add_category(
-        CO_LOG_CATEGORY_UDP,
-        CO_LOG_CATEGORY_NAME_UDP);
 }
 
 void
@@ -236,4 +211,34 @@ co_net_log_write_hex_dump(
     fflush((FILE*)log->output);
 
     co_mutex_unlock(log->mutex);
+}
+
+//---------------------------------------------------------------------------//
+// public
+//---------------------------------------------------------------------------//
+
+void
+co_tcp_log_set_level(
+    int level
+)
+{
+    co_log_set_level(
+        CO_LOG_CATEGORY_TCP, level);
+
+    co_log_add_category(
+        CO_LOG_CATEGORY_TCP,
+        CO_LOG_CATEGORY_NAME_TCP);
+}
+
+void
+co_udp_log_set_level(
+    int level
+)
+{
+    co_log_set_level(
+        CO_LOG_CATEGORY_UDP, level);
+
+    co_log_add_category(
+        CO_LOG_CATEGORY_UDP,
+        CO_LOG_CATEGORY_NAME_UDP);
 }

@@ -146,67 +146,113 @@ typedef struct
 
 } co_http2_frame_t;
 
-void co_http2_frame_serialize(
-    const co_http2_frame_t* frame, co_byte_array_t* buffer);
-int co_http2_frame_deserialize(
-    const co_byte_array_t* data, size_t* index,
-    uint32_t max_frame_size, co_http2_frame_t* frame);
-
 //---------------------------------------------------------------------------//
+// private
 //---------------------------------------------------------------------------//
 
-co_http2_frame_t* co_http2_frame_create(void);
-void co_http2_frame_destroy(co_http2_frame_t* frame);
+void
+co_http2_frame_serialize(
+    const co_http2_frame_t* frame,
+    co_byte_array_t* buffer
+);
 
-co_http2_frame_t* co_http2_create_data_frame(
+int
+co_http2_frame_deserialize(
+    const co_byte_array_t* data,
+    size_t* index,
+    uint32_t max_frame_size,
+    co_http2_frame_t* frame
+);
+
+co_http2_frame_t*
+co_http2_frame_create(
+    void
+);
+
+void
+co_http2_frame_destroy(
+    co_http2_frame_t* frame
+);
+
+co_http2_frame_t*
+co_http2_create_data_frame(
     bool payload_copy,
     bool end_stream,
-    const uint8_t* data, uint32_t data_length,
-    const uint8_t* padding, uint8_t pad_length);
+    const uint8_t* data,
+    uint32_t data_length,
+    const uint8_t* padding,
+    uint8_t pad_length
+);
 
-co_http2_frame_t* co_http2_create_headers_frame(
+co_http2_frame_t*
+co_http2_create_headers_frame(
     bool payload_copy,
     bool end_stream,
     bool end_headers,
     const uint8_t* header_block_fragment,
     uint32_t header_block_fragment_length,
-    uint32_t stream_dependency, uint8_t weight,
-    const uint8_t* padding, uint8_t pad_length);
+    uint32_t stream_dependency,
+    uint8_t weight,
+    const uint8_t* padding,
+    uint8_t pad_length
+);
 
-co_http2_frame_t* co_http2_create_priority_frame(
-    uint32_t stream_dependency, uint8_t weight);
+co_http2_frame_t*
+co_http2_create_priority_frame(
+    uint32_t stream_dependency,
+    uint8_t weight
+);
 
-co_http2_frame_t* co_http2_create_rst_stream_frame(
-    uint32_t error_code);
+co_http2_frame_t*
+co_http2_create_rst_stream_frame(
+    uint32_t error_code
+);
 
-co_http2_frame_t* co_http2_create_settings_frame(
+co_http2_frame_t*
+co_http2_create_settings_frame(
     bool payload_copy, bool ack,
-    const co_http2_setting_param_st* params, uint16_t param_count);
+    const co_http2_setting_param_st* params,
+    uint16_t param_count
+);
 
-co_http2_frame_t* co_http2_create_push_promise_frame(
+co_http2_frame_t*
+co_http2_create_push_promise_frame(
     bool payload_copy,
     bool end_headers,
     uint32_t promised_stream_id,
     const uint8_t* header_block_fragment,
     uint32_t header_block_fragment_length,
-    const uint8_t* padding, uint8_t pad_length);
+    const uint8_t* padding,
+    uint8_t pad_length
+);
 
-co_http2_frame_t* co_http2_create_ping_frame(
-    bool ack, uint64_t opaque_data);
+co_http2_frame_t*
+co_http2_create_ping_frame(
+    bool ack,
+    uint64_t opaque_data
+);
 
-co_http2_frame_t* co_http2_create_goaway_frame(
+co_http2_frame_t*
+co_http2_create_goaway_frame(
     bool payload_copy,
-    uint32_t last_stream_id, uint32_t error_code,
+    uint32_t last_stream_id,
+    uint32_t error_code,
     const uint8_t* additional_debug_data,
-    uint32_t additional_debug_data_length);
+    uint32_t additional_debug_data_length
+);
 
-co_http2_frame_t* co_http2_create_window_update_frame(
-    uint32_t window_size_increment);
+co_http2_frame_t*
+co_http2_create_window_update_frame(
+    uint32_t window_size_increment
+);
 
-co_http2_frame_t* co_http2_create_continuation_frame(
-    bool payload_copy, bool end_headers,
+co_http2_frame_t*
+co_http2_create_continuation_frame(
+    bool payload_copy,
+    bool end_headers,
     const uint8_t* header_block_fragment,
-    uint32_t header_block_fragment_length);
+    uint32_t header_block_fragment_length
+);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

@@ -60,66 +60,202 @@ typedef struct co_tcp_client_t
 
 } co_tcp_client_t;
 
-co_tcp_client_t* co_tcp_client_create_with(
-    co_socket_handle_t handle, const co_net_addr_t* remote_net_addr);
-bool co_tcp_client_setup(co_tcp_client_t* client);
-void co_tcp_client_cleanup(co_tcp_client_t* client);
-
-void co_tcp_client_on_connect_complete(co_tcp_client_t* client, int error_code);
-void co_tcp_client_on_send_ready(co_tcp_client_t* client);
-void co_tcp_client_on_send_complete(co_tcp_client_t* client, size_t data_size);
-void co_tcp_client_on_receive_ready(co_tcp_client_t* client, size_t data_size);
-void co_tcp_client_on_close(co_tcp_client_t* client);
-
 //---------------------------------------------------------------------------//
+// private
 //---------------------------------------------------------------------------//
 
-CO_NET_API co_tcp_client_t* co_tcp_client_create(
-    const co_net_addr_t* local_net_addr);
+co_tcp_client_t*
+co_tcp_client_create_with(
+    co_socket_handle_t handle,
+    const co_net_addr_t* remote_net_addr
+);
 
-CO_NET_API void co_tcp_client_destroy(co_tcp_client_t* client);
-CO_NET_API void co_tcp_client_close(co_tcp_client_t* client);
+bool
+co_tcp_client_setup(
+    co_tcp_client_t* client
+);
 
-CO_NET_API bool co_tcp_connect(
-    co_tcp_client_t* client, const co_net_addr_t* remote_net_addr,
-    co_tcp_connect_fn handler);
+void
+co_tcp_client_cleanup(
+    co_tcp_client_t* client
+);
 
-CO_NET_API bool co_tcp_send(
-    co_tcp_client_t* client, const void* data, size_t data_size);
-CO_NET_API bool co_tcp_send_async(
-    co_tcp_client_t* client, const void* data, size_t data_size);
+void
+co_tcp_client_on_connect_complete(
+    co_tcp_client_t* client,
+    int error_code
+);
 
-CO_NET_API ssize_t co_tcp_receive(
-    co_tcp_client_t* client, void* buffer, size_t buffer_size);
-CO_NET_API ssize_t co_tcp_receive_all(
-    co_tcp_client_t* client, co_byte_array_t* byte_array);
+void
+co_tcp_client_on_send_ready(
+    co_tcp_client_t* client
+);
 
-CO_NET_API bool co_tcp_is_open(const co_tcp_client_t* client);
+void
+co_tcp_client_on_send_complete(
+    co_tcp_client_t* client,
+    size_t data_size
+);
 
-CO_NET_API void co_tcp_set_send_complete_handler(
-    co_tcp_client_t* client, co_tcp_send_fn handler);
+void
+co_tcp_client_on_receive_ready(
+    co_tcp_client_t* client,
+    size_t data_size
+);
 
-CO_NET_API void co_tcp_set_receive_handler(
-    co_tcp_client_t* client, co_tcp_receive_fn handler);
+void
+co_tcp_client_on_close(
+    co_tcp_client_t* client
+);
 
-CO_NET_API void co_tcp_set_close_handler(
-    co_tcp_client_t* client, co_tcp_close_fn handler);
+//---------------------------------------------------------------------------//
+// public
+//---------------------------------------------------------------------------//
 
-CO_NET_API const co_net_addr_t*
-    co_tcp_get_remote_net_addr(const co_tcp_client_t* client);
+CO_NET_API
+co_tcp_client_t*
+co_tcp_client_create(
+    const co_net_addr_t* local_net_addr
+);
 
-CO_NET_API co_socket_t* co_tcp_client_get_socket(co_tcp_client_t* client);
+CO_NET_API
+void
+co_tcp_client_destroy(
+    co_tcp_client_t* client
+);
 
-CO_NET_API bool co_tcp_set_user_data(co_tcp_client_t* client, uintptr_t user_data);
-CO_NET_API bool co_tcp_get_user_data(const co_tcp_client_t* client, uintptr_t* user_data);
+CO_NET_API
+void
+co_tcp_client_close(
+    co_tcp_client_t* client
+);
+
+CO_NET_API
+bool
+co_tcp_connect(
+    co_tcp_client_t* client,
+    const co_net_addr_t* remote_net_addr,
+    co_tcp_connect_fn handler
+);
+
+CO_NET_API
+bool
+co_tcp_send(
+    co_tcp_client_t* client,
+    const void* data,
+    size_t data_size
+);
+
+CO_NET_API
+bool
+co_tcp_send_async(
+    co_tcp_client_t* client,
+    const void* data,
+    size_t data_size
+);
+
+CO_NET_API
+ssize_t
+co_tcp_receive(
+    co_tcp_client_t* client,
+    void* buffer,
+    size_t buffer_size
+);
+
+CO_NET_API
+ssize_t
+co_tcp_receive_all(
+    co_tcp_client_t* client,
+    co_byte_array_t* byte_array
+);
+
+CO_NET_API
+bool
+co_tcp_is_open(
+    const co_tcp_client_t* client
+);
+
+CO_NET_API
+void
+co_tcp_set_send_complete_handler(
+    co_tcp_client_t* client,
+    co_tcp_send_fn handler
+);
+
+CO_NET_API
+void
+co_tcp_set_receive_handler(
+    co_tcp_client_t* client,
+    co_tcp_receive_fn handler
+);
+
+CO_NET_API
+void
+co_tcp_set_close_handler(
+    co_tcp_client_t* client,
+    co_tcp_close_fn handler
+);
+
+CO_NET_API
+const co_net_addr_t*
+co_tcp_get_remote_net_addr(
+    const co_tcp_client_t* client
+);
+
+CO_NET_API
+co_socket_t*
+co_tcp_client_get_socket(
+    co_tcp_client_t* client
+);
+
+CO_NET_API
+bool
+co_tcp_set_user_data(
+    co_tcp_client_t* client,
+    uintptr_t user_data
+);
+
+CO_NET_API
+bool
+co_tcp_get_user_data(
+    const co_tcp_client_t* client,
+    uintptr_t* user_data
+);
 
 #ifdef CO_OS_WIN
-CO_NET_API size_t co_win_tcp_get_receive_data_size(const co_tcp_client_t* client);
-CO_NET_API void co_win_tcp_set_receive_buffer_size(co_tcp_client_t* client, size_t size);
-CO_NET_API size_t co_win_tcp_get_receive_buffer_size(const co_tcp_client_t* client);
-CO_NET_API void* co_win_tcp_get_receive_buffer(co_tcp_client_t* client);
-CO_NET_API void co_win_tcp_clear_receive_buffer(co_tcp_client_t* client);
-#endif
+
+CO_NET_API
+size_t
+co_win_tcp_get_receive_data_size(
+    const co_tcp_client_t* client
+);
+
+CO_NET_API
+void
+co_win_tcp_set_receive_buffer_size(
+    co_tcp_client_t* client,
+    size_t size
+);
+
+CO_NET_API
+size_t
+co_win_tcp_get_receive_buffer_size(
+    const co_tcp_client_t* client
+);
+
+CO_NET_API
+void*
+co_win_tcp_get_receive_buffer(
+    co_tcp_client_t* client
+);
+
+CO_NET_API
+void
+co_win_tcp_clear_receive_buffer(
+    co_tcp_client_t* client
+);
+
+#endif // CO_OS_WIN
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

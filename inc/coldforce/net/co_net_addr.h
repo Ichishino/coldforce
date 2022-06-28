@@ -43,31 +43,106 @@ typedef struct
 } co_net_addr_t;
 
 //---------------------------------------------------------------------------//
+// public
 //---------------------------------------------------------------------------//
 
-CO_NET_API void co_net_addr_init(co_net_addr_t* net_addr);
+CO_NET_API
+void
+co_net_addr_init(
+    co_net_addr_t* net_addr
+);
 
-CO_NET_API void co_net_addr_set_family(co_net_addr_t* net_addr, co_address_family_t family);
-CO_NET_API co_address_family_t co_net_addr_get_family(const co_net_addr_t* net_addr);
+CO_NET_API
+void
+co_net_addr_set_family(
+    co_net_addr_t* net_addr,
+    co_address_family_t family
+);
 
-CO_NET_API bool co_net_addr_set_address(co_net_addr_t* new_addr, const char* address);
-CO_NET_API bool co_net_addr_get_address(const co_net_addr_t* net_addr, char* buffer, size_t size);
+CO_NET_API
+co_address_family_t
+co_net_addr_get_family(
+    const co_net_addr_t* net_addr
+);
 
-CO_NET_API bool co_net_addr_set_port(co_net_addr_t* net_addr, uint16_t port);
-CO_NET_API bool co_net_addr_get_port(const co_net_addr_t* net_addr, uint16_t* port);
+CO_NET_API
+bool
+co_net_addr_set_address(
+    co_net_addr_t* new_addr,
+    const char* address
+);
 
-CO_NET_API void co_net_addr_set_unix_path(co_net_addr_t* net_addr, const char* path);
-CO_NET_API bool co_net_addr_get_unix_path(const co_net_addr_t* net_addr, char* path);
+CO_NET_API
+bool
+co_net_addr_get_address(
+    const co_net_addr_t* net_addr,
+    char* buffer,
+    size_t size
+);
 
-CO_NET_API bool co_net_addr_set_scope_id(co_net_addr_t* net_addr, uint32_t scope_id);
-CO_NET_API bool co_net_addr_get_scope_id(const co_net_addr_t* net_addr, uint32_t* scope_id);
+CO_NET_API
+bool
+co_net_addr_set_port(
+    co_net_addr_t* net_addr,
+    uint16_t port
+);
 
-CO_NET_API bool co_net_addr_to_string(const co_net_addr_t* net_addr, char* buffer, size_t size);
+CO_NET_API
+bool
+co_net_addr_get_port(
+    const co_net_addr_t* net_addr,
+    uint16_t* port
+);
 
-CO_NET_API bool co_net_addr_is_equal(
-    const co_net_addr_t* net_addr1, const co_net_addr_t* net_addr2);
+CO_NET_API
+void
+co_net_addr_set_unix_path(
+    co_net_addr_t* net_addr,
+    const char* path
+);
 
-CO_NET_API bool co_net_addr_get_size(const co_net_addr_t* net_addr, size_t* size);
+CO_NET_API
+bool
+co_net_addr_get_unix_path(
+    const co_net_addr_t* net_addr,
+    char* path
+);
+
+CO_NET_API
+bool
+co_net_addr_set_scope_id(
+    co_net_addr_t* net_addr,
+    uint32_t scope_id
+);
+
+CO_NET_API
+bool
+co_net_addr_get_scope_id(
+    const co_net_addr_t* net_addr,
+    uint32_t* scope_id
+);
+
+CO_NET_API
+bool
+co_net_addr_to_string(
+    const co_net_addr_t* net_addr,
+    char* buffer,
+    size_t size
+);
+
+CO_NET_API
+bool
+co_net_addr_is_equal(
+    const co_net_addr_t* net_addr1,
+    const co_net_addr_t* net_addr2
+);
+
+CO_NET_API
+bool
+co_net_addr_get_size(
+    const co_net_addr_t* net_addr,
+    size_t* size
+);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

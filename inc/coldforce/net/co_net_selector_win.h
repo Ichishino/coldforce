@@ -58,14 +58,18 @@ typedef struct co_net_selector_t
 } co_net_selector_t;
 
 //---------------------------------------------------------------------------//
+// private
 //---------------------------------------------------------------------------//
 
-#ifdef CO_OS_WIN
-void co_win_free_io_ctx(
-    co_win_net_io_ctx_t* io_ctx);
-void co_win_try_clear_io_ctx_trash(
-    co_net_selector_t* net_selector);
-#endif
+void
+co_win_free_io_ctx(
+    co_win_net_io_ctx_t* io_ctx
+);
+
+void
+co_win_try_clear_io_ctx_trash(
+    co_net_selector_t* net_selector
+);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

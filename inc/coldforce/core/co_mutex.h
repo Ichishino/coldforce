@@ -19,13 +19,32 @@ typedef struct
 } co_mutex_t;
 
 //---------------------------------------------------------------------------//
+// public
 //---------------------------------------------------------------------------//
 
-CO_API co_mutex_t* co_mutex_create(void);
-CO_API void co_mutex_destroy(co_mutex_t* mutex);
+CO_API
+co_mutex_t*
+co_mutex_create(
+    void
+);
 
-CO_API void co_mutex_lock(co_mutex_t* mutex);
-CO_API void co_mutex_unlock(co_mutex_t* mutex);
+CO_API
+void
+co_mutex_destroy(
+    co_mutex_t* mutex
+);
+
+CO_API
+void
+co_mutex_lock(
+    co_mutex_t* mutex
+);
+
+CO_API
+void
+co_mutex_unlock(
+    co_mutex_t* mutex
+);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

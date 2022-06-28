@@ -49,71 +49,226 @@ typedef struct
 } co_list_t;
 
 //---------------------------------------------------------------------------//
+// public
 //---------------------------------------------------------------------------//
 
-CO_API co_list_t* co_list_create(const co_list_ctx_st* ctx);
-CO_API void co_list_destroy(co_list_t* list);
+CO_API
+co_list_t*
+co_list_create(
+    const co_list_ctx_st* ctx
+);
 
-CO_API void co_list_clear(co_list_t* list);
-CO_API size_t co_list_get_count(const co_list_t* list);
-CO_API bool co_list_contains(const co_list_t* list, uintptr_t value);
+CO_API
+void
+co_list_destroy(
+    co_list_t* list
+);
 
-CO_API bool co_list_add_head(co_list_t* list, uintptr_t value);
-CO_API bool co_list_add_tail(co_list_t* list, uintptr_t value);
+CO_API
+void
+co_list_clear(
+    co_list_t* list
+);
 
-CO_API co_list_data_st* co_list_get_head(co_list_t* list);
-CO_API const co_list_data_st* co_list_get_const_head(const co_list_t* list);
+CO_API
+size_t
+co_list_get_count(
+    const co_list_t* list
+);
 
-CO_API co_list_data_st* co_list_get_tail(co_list_t* list);
-CO_API const co_list_data_st* co_list_get_const_tail(const co_list_t* list);
+CO_API
+bool
+co_list_contains(
+    const co_list_t* list,
+    uintptr_t value
+);
 
-CO_API void co_list_remove_head(co_list_t* list);
-CO_API void co_list_remove_tail(co_list_t* list);
-CO_API void co_list_remove(co_list_t* list, uintptr_t value);
+CO_API
+bool
+co_list_add_head(
+    co_list_t* list,
+    uintptr_t value
+);
 
-CO_API co_list_iterator_t* co_list_get_head_iterator(co_list_t* list);
-CO_API const co_list_iterator_t* co_list_get_const_head_iterator(const co_list_t* list);
+CO_API
+bool co_list_add_tail(
+    co_list_t* list,
+    uintptr_t value
+);
 
-CO_API co_list_iterator_t* co_list_get_tail_iterator(co_list_t* list);
-CO_API const co_list_iterator_t* co_list_get_const_tail_iterator(const co_list_t* list);
+CO_API
+co_list_data_st*
+co_list_get_head(
+    co_list_t* list
+);
 
-CO_API co_list_iterator_t* co_list_get_prev_iterator(
-    co_list_t* list, co_list_iterator_t* iterator);
-CO_API const co_list_iterator_t* co_list_get_const_prev_iterator(
-    const co_list_t* list, const co_list_iterator_t* iterator);
+CO_API
+const co_list_data_st*
+co_list_get_const_head(
+    const co_list_t* list
+);
 
-CO_API co_list_iterator_t* co_list_get_next_iterator(
-    co_list_t* list, co_list_iterator_t* iterator);
-CO_API const co_list_iterator_t* co_list_get_const_next_iterator(
-    const co_list_t* list, const co_list_iterator_t* iterator);
+CO_API
+co_list_data_st*
+co_list_get_tail(
+    co_list_t* list
+);
 
-CO_API bool co_list_insert(
-    co_list_t* list, co_list_iterator_t* iterator, uintptr_t value);
+CO_API
+const co_list_data_st*
+co_list_get_const_tail(
+    const co_list_t* list
+);
 
-CO_API bool co_list_insert_after(
-    co_list_t* list, co_list_iterator_t* iterator, uintptr_t value);
+CO_API
+void
+co_list_remove_head(
+    co_list_t* list
+);
 
-CO_API void co_list_remove_at(co_list_t* list, co_list_iterator_t* iterator);
+CO_API
+void
+co_list_remove_tail(
+    co_list_t* list
+);
 
-CO_API co_list_data_st* co_list_get(
-    co_list_t* list, co_list_iterator_t* iterator);
-CO_API const co_list_data_st* co_list_get_const(
-    const co_list_t* list, const co_list_iterator_t* iterator);
+CO_API
+void
+co_list_remove(
+    co_list_t* list,
+    uintptr_t value
+);
 
-CO_API co_list_data_st* co_list_get_prev(
-    co_list_t* list, co_list_iterator_t** iterator);
-CO_API const co_list_data_st* co_list_get_const_prev(
-    const co_list_t* list, const co_list_iterator_t** iterator);
+CO_API
+co_list_iterator_t*
+co_list_get_head_iterator(
+    co_list_t* list
+);
 
-CO_API co_list_data_st* co_list_get_next(
-    co_list_t* list, co_list_iterator_t** iterator);
-CO_API const co_list_data_st* co_list_get_const_next(
-    const co_list_t* list, const co_list_iterator_t** iterator);
+CO_API
+const co_list_iterator_t*
+co_list_get_const_head_iterator(
+    const co_list_t* list
+);
 
-CO_API co_list_iterator_t* co_list_find(
-    co_list_t* list, uintptr_t value);
-CO_API const co_list_iterator_t* co_list_find_const(
-    const co_list_t* list, uintptr_t value);
+CO_API
+co_list_iterator_t*
+co_list_get_tail_iterator(
+    co_list_t* list
+);
+
+CO_API
+const co_list_iterator_t*
+co_list_get_const_tail_iterator(
+    const co_list_t* list
+);
+
+CO_API
+co_list_iterator_t*
+co_list_get_prev_iterator(
+    co_list_t* list,
+    co_list_iterator_t* iterator
+);
+
+CO_API
+const co_list_iterator_t*
+co_list_get_const_prev_iterator(
+    const co_list_t* list,
+    const co_list_iterator_t* iterator
+);
+
+CO_API
+co_list_iterator_t*
+co_list_get_next_iterator(
+    co_list_t* list,
+    co_list_iterator_t* iterator
+);
+
+CO_API
+const co_list_iterator_t*
+co_list_get_const_next_iterator(
+    const co_list_t* list,
+    const co_list_iterator_t* iterator
+);
+
+CO_API
+bool
+co_list_insert(
+    co_list_t* list,
+    co_list_iterator_t* iterator,
+    uintptr_t value
+);
+
+CO_API
+bool
+co_list_insert_after(
+    co_list_t* list,
+    co_list_iterator_t* iterator,
+    uintptr_t value
+);
+
+CO_API
+void
+co_list_remove_at(
+    co_list_t* list,
+    co_list_iterator_t* iterator
+);
+
+CO_API
+co_list_data_st*
+co_list_get(
+    co_list_t* list,
+    co_list_iterator_t* iterator
+);
+
+CO_API
+const co_list_data_st*
+co_list_get_const(
+    const co_list_t* list,
+    const co_list_iterator_t* iterator
+);
+
+CO_API
+co_list_data_st*
+co_list_get_prev(
+    co_list_t* list,
+    co_list_iterator_t** iterator
+);
+
+CO_API
+const co_list_data_st*
+co_list_get_const_prev(
+    const co_list_t* list,
+    const co_list_iterator_t** iterator
+);
+
+CO_API
+co_list_data_st*
+co_list_get_next(
+    co_list_t* list,
+    co_list_iterator_t** iterator
+);
+
+CO_API
+const co_list_data_st*
+co_list_get_const_next(
+    const co_list_t* list,
+    const co_list_iterator_t** iterator
+);
+
+CO_API
+co_list_iterator_t*
+co_list_find(
+    co_list_t* list,
+    uintptr_t value
+);
+
+CO_API
+const co_list_iterator_t*
+co_list_find_const(
+    const co_list_t* list,
+    uintptr_t value
+);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

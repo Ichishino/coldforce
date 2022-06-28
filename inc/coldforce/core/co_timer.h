@@ -31,15 +31,35 @@ typedef struct co_timer_t
 } co_timer_t;
 
 //---------------------------------------------------------------------------//
+// public
 //---------------------------------------------------------------------------//
 
-CO_API co_timer_t* co_timer_create(
-    uint32_t msec, co_timer_fn handler, bool repeat, uintptr_t user_data);
+CO_API
+co_timer_t*
+co_timer_create(
+    uint32_t msec,
+    co_timer_fn handler,
+    bool repeat,
+    uintptr_t user_data
+);
 
-CO_API void co_timer_destroy(co_timer_t* timer);
+CO_API
+void
+co_timer_destroy(
+    co_timer_t* timer
+);
 
-CO_API bool co_timer_start(co_timer_t* timer);
-CO_API void co_timer_stop(co_timer_t* timer);
+CO_API
+bool
+co_timer_start(
+    co_timer_t* timer
+);
+
+CO_API
+void
+co_timer_stop(
+    co_timer_t* timer
+);
 
 #define co_timer_set_time(timer, value) \
     (timer->msec = value)

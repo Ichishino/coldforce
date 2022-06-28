@@ -68,22 +68,80 @@ typedef struct
 } co_map_iterator_t;
 
 //---------------------------------------------------------------------------//
+// public
 //---------------------------------------------------------------------------//
 
-CO_API co_map_t* co_map_create(const co_map_ctx_st* ctx);
-CO_API void co_map_destroy(co_map_t* map);
+CO_API
+co_map_t*
+co_map_create(
+    const co_map_ctx_st* ctx
+);
 
-CO_API void co_map_clear(co_map_t* map);
-CO_API size_t co_map_get_count(const co_map_t* map);
-CO_API bool co_map_contains(const co_map_t* map, uintptr_t key);
+CO_API
+void
+co_map_destroy(
+    co_map_t* map
+);
 
-CO_API bool co_map_set(co_map_t* map, uintptr_t key, uintptr_t value);
-CO_API co_map_data_st* co_map_get(co_map_t* map, uintptr_t key);
-CO_API void co_map_remove(co_map_t* map, uintptr_t key);
+CO_API
+void
+co_map_clear(
+    co_map_t* map
+);
 
-CO_API void co_map_iterator_init(co_map_t* map, co_map_iterator_t* iterator);
-CO_API co_map_data_st* co_map_iterator_get_next(co_map_iterator_t* iterator);
-CO_API bool co_map_iterator_has_next(const co_map_iterator_t* iterator);
+CO_API
+size_t
+co_map_get_count(
+    const co_map_t* map
+);
+
+CO_API
+bool
+co_map_contains(
+    const co_map_t* map,
+    uintptr_t key
+);
+
+CO_API
+bool
+co_map_set(
+    co_map_t* map,
+    uintptr_t key,
+    uintptr_t value
+);
+
+CO_API
+co_map_data_st*
+co_map_get(
+    co_map_t* map,
+    uintptr_t key
+);
+
+CO_API
+void
+co_map_remove(
+    co_map_t* map,
+    uintptr_t key
+);
+
+CO_API
+void
+co_map_iterator_init(
+    co_map_t* map,
+    co_map_iterator_t* iterator
+);
+
+CO_API
+co_map_data_st*
+co_map_iterator_get_next(
+    co_map_iterator_t* iterator
+);
+
+CO_API
+bool
+co_map_iterator_has_next(
+    const co_map_iterator_t* iterator
+);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

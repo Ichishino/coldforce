@@ -48,25 +48,35 @@ typedef struct
 
 } co_http2_hpack_dynamic_table_t;
 
-void co_http2_hpack_dynamic_table_setup(
+//---------------------------------------------------------------------------//
+// private
+//---------------------------------------------------------------------------//
+
+void
+co_http2_hpack_dynamic_table_setup(
     co_http2_hpack_dynamic_table_t* dynamic_table,
-    uint32_t max_size);
+    uint32_t max_size
+);
 
-void co_http2_hpack_dynamic_table_cleanup(
-    co_http2_hpack_dynamic_table_t* dynamic_table);
+void
+co_http2_hpack_dynamic_table_cleanup(
+    co_http2_hpack_dynamic_table_t* dynamic_table
+);
 
-//---------------------------------------------------------------------------//
-//---------------------------------------------------------------------------//
-
-void co_http2_hpack_serialize_header(
+void
+co_http2_hpack_serialize_header(
     const struct co_http2_header_t* header,
     co_http2_hpack_dynamic_table_t* dynamic_table,
-    co_byte_array_t* buffer);
+    co_byte_array_t* buffer
+);
 
-bool co_http2_hpack_deserialize_header(
-    const uint8_t* data, size_t data_size,
+bool
+co_http2_hpack_deserialize_header(
+    const uint8_t* data,
+    size_t data_size,
     co_http2_hpack_dynamic_table_t* dynamic_table,
-    struct co_http2_header_t* header);
+    struct co_http2_header_t* header
+);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

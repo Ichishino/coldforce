@@ -27,23 +27,56 @@ typedef struct
 } co_http_config_t;
 
 //---------------------------------------------------------------------------//
+// public
 //---------------------------------------------------------------------------//
 
-CO_HTTP_API void co_http_config_set_max_receive_header_line_size(
-    size_t max_receive_header_line_size);
-CO_HTTP_API size_t co_http_config_get_max_receive_header_line_size(void);
+CO_HTTP_API
+void
+co_http_config_set_max_receive_header_line_size(
+    size_t max_receive_header_line_size
+);
 
-CO_HTTP_API void co_http_config_set_max_receive_header_field_count(
-    size_t max_receive_header_field_count);
-CO_HTTP_API size_t co_http_config_get_max_receive_header_field_count(void);
+CO_HTTP_API
+size_t
+co_http_config_get_max_receive_header_line_size(
+    void
+);
 
-CO_HTTP_API void co_http_config_set_max_receive_content_size(
-    size_t max_receive_content_size);
-CO_HTTP_API size_t co_http_config_get_max_receive_content_size(void);
+CO_HTTP_API
+void
+co_http_config_set_max_receive_header_field_count(
+    size_t max_receive_header_field_count
+);
 
-CO_HTTP_API void co_http_config_set_max_receive_wait_time(
-    uint32_t max_receive_wait_time);
-CO_HTTP_API uint32_t co_http_config_get_max_receive_wait_time(void);
+CO_HTTP_API
+size_t
+co_http_config_get_max_receive_header_field_count(
+    void
+);
+
+CO_HTTP_API
+void
+co_http_config_set_max_receive_content_size(
+    size_t max_receive_content_size
+);
+
+CO_HTTP_API
+size_t
+co_http_config_get_max_receive_content_size(
+    void
+);
+
+CO_HTTP_API
+void
+co_http_config_set_max_receive_wait_time(
+    uint32_t max_receive_wait_time
+);
+
+CO_HTTP_API
+uint32_t
+co_http_config_get_max_receive_wait_time(
+    void
+);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

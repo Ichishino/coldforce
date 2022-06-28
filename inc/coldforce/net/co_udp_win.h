@@ -45,23 +45,54 @@ typedef struct
 } co_win_udp_extension_t;
 
 //---------------------------------------------------------------------------//
+// private
 //---------------------------------------------------------------------------//
 
-co_socket_handle_t co_win_udp_socket_create(co_address_family_t family);
+co_socket_handle_t
+co_win_udp_socket_create(
+    co_address_family_t family
+);
 
-bool co_win_udp_setup(struct co_udp_t* udp, size_t receive_buffer_size);
-void co_win_udp_cleanup(struct co_udp_t* udp);
+bool
+co_win_udp_setup(
+    struct co_udp_t* udp,
+    size_t receive_buffer_size
+);
 
-bool co_win_udp_send(struct co_udp_t* udp,
-    const co_net_addr_t* remote_net_addr, const void* data, size_t data_size);
-bool co_win_udp_send_async(struct co_udp_t* udp,
-    const co_net_addr_t* remote_net_addr, const void* data, size_t data_size);
+void
+co_win_udp_cleanup(
+    struct co_udp_t* udp
+);
 
-bool co_win_udp_receive_start(struct co_udp_t* udp);
+bool
+co_win_udp_send(
+    struct co_udp_t* udp,
+    const co_net_addr_t* remote_net_addr,
+    const void* data,
+    size_t data_size
+);
 
-bool co_win_udp_receive(struct co_udp_t* udp,
-    co_net_addr_t* remote_net_addr, void* buffer, size_t buffer_size,
-    size_t* data_size);
+bool
+co_win_udp_send_async(
+    struct co_udp_t* udp,
+    const co_net_addr_t* remote_net_addr,
+    const void* data,
+    size_t data_size
+);
+
+bool
+co_win_udp_receive_start(
+    struct co_udp_t* udp
+);
+
+bool
+co_win_udp_receive(
+    struct co_udp_t* udp,
+    co_net_addr_t* remote_net_addr,
+    void* buffer,
+    size_t buffer_size,
+    size_t* data_size
+);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

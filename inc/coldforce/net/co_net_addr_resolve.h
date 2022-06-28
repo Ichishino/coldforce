@@ -24,15 +24,28 @@ typedef struct
 } co_resolve_hint_st;
 
 //---------------------------------------------------------------------------//
+// public
 //---------------------------------------------------------------------------//
 
-CO_NET_API size_t co_net_addr_resolve_name(
-    const char* node, uint16_t port, const co_resolve_hint_st* hint,
-    co_net_addr_t* net_addr, size_t count);
+CO_NET_API
+size_t
+co_net_addr_resolve_name(
+    const char* node,
+    uint16_t port,
+    const co_resolve_hint_st* hint,
+    co_net_addr_t* net_addr,
+    size_t count
+);
 
-CO_NET_API size_t co_net_addr_resolve_service(
-    const char* node, const char* service, const co_resolve_hint_st* hint,
-    co_net_addr_t* net_addr, size_t count);
+CO_NET_API
+size_t
+co_net_addr_resolve_service(
+    const char* node,
+    const char* service,
+    const co_resolve_hint_st* hint,
+    co_net_addr_t* net_addr,
+    size_t count
+);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

@@ -19,24 +19,31 @@ CO_EXTERN_C_BEGIN
 
 #define CO_LOG_CATEGORY_HTTP2             (CO_LOG_CATEGORY_USER_MAX + 6)
 
-void co_http2_log_write_frame(
+//---------------------------------------------------------------------------//
+// private
+//---------------------------------------------------------------------------//
+
+void
+co_http2_log_write_frame(
     int level,
     const co_net_addr_t* addr1,
     const char* text,
     const co_net_addr_t* addr2,
     const co_http2_frame_t* frame,
-    const char* format, ...);
+    const char* format,
+    ...
+);
 
-void co_http2_log_write_header(
+void
+co_http2_log_write_header(
     int level,
     const co_net_addr_t* addr1,
     const char* text,
     const co_net_addr_t* addr2,
     const co_http2_header_t* header,
-    const char* format, ...);
-
-//---------------------------------------------------------------------------//
-//---------------------------------------------------------------------------//
+    const char* format,
+    ...
+);
 
 #define co_http2_log_write(level, addr1, text, addr2, format, ...) \
     co_net_log_write(level, CO_LOG_CATEGORY_HTTP2, \
@@ -67,9 +74,14 @@ void co_http2_log_write_header(
         addr1, text, addr2, frame, format, ##__VA_ARGS__)
 
 //---------------------------------------------------------------------------//
+// public
 //---------------------------------------------------------------------------//
 
-CO_HTTP2_API void co_http2_log_set_level(int level);
+CO_HTTP2_API
+void
+co_http2_log_set_level(
+    int level
+);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

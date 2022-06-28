@@ -15,6 +15,10 @@ CO_EXTERN_C_BEGIN
 
 typedef co_array_t co_byte_array_t;
 
+//---------------------------------------------------------------------------//
+// public
+//---------------------------------------------------------------------------//
+
 // co_byte_array_t* co_byte_array_create(void)
 #define co_byte_array_create() \
     co_array_create(sizeof(uint8_t))

@@ -28,23 +28,45 @@ typedef struct
 } co_timer_manager_t;
 
 //---------------------------------------------------------------------------//
+// private
 //---------------------------------------------------------------------------//
 
-co_timer_manager_t* co_timer_manager_create(void);
+co_timer_manager_t*
+co_timer_manager_create(
+    void
+);
 
-void co_timer_manager_destroy(co_timer_manager_t* timer_manager);
+void
+co_timer_manager_destroy(
+    co_timer_manager_t* timer_manager
+);
 
-void co_timer_manager_clear(co_timer_manager_t* timer_manager);
+void
+co_timer_manager_clear(
+    co_timer_manager_t* timer_manager
+);
 
-uint32_t co_timer_manager_get_next_timeout(co_timer_manager_t* timer_manager);
+uint32_t
+co_timer_manager_get_next_timeout(
+    co_timer_manager_t* timer_manager
+);
 
-co_timer_t* co_timer_manager_remove_head_timer(co_timer_manager_t* timer_manager);
+co_timer_t*
+co_timer_manager_remove_head_timer(
+    co_timer_manager_t* timer_manager
+);
 
-bool co_timer_manager_register(
-    co_timer_manager_t* timer_manager, co_timer_t* timer);
+bool
+co_timer_manager_register(
+    co_timer_manager_t* timer_manager,
+    co_timer_t* timer
+);
 
-bool co_timer_manager_unregister(
-    co_timer_manager_t* timer_manager, co_timer_t* timer);
+bool
+co_timer_manager_unregister(
+    co_timer_manager_t* timer_manager,
+    co_timer_t* timer
+);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

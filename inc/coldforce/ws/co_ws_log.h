@@ -17,16 +17,22 @@ CO_EXTERN_C_BEGIN
 
 #define CO_LOG_CATEGORY_WS             (CO_LOG_CATEGORY_USER_MAX + 7)
 
-void co_ws_log_write_frame(
+//---------------------------------------------------------------------------//
+// private
+//---------------------------------------------------------------------------//
+
+void
+co_ws_log_write_frame(
     int level,
     const co_net_addr_t* addr1,
     const char* text,
     const co_net_addr_t* addr2,
-    bool fin, uint8_t opcode, size_t data_size,
-    const char* format, ...);
-
-//---------------------------------------------------------------------------//
-//---------------------------------------------------------------------------//
+    bool fin,
+    uint8_t opcode,
+    size_t data_size,
+    const char* format,
+    ...
+);
 
 #define co_ws_log_write(level, addr1, text, addr2, format, ...) \
     co_net_log_write(level, CO_LOG_CATEGORY_WS, \
@@ -53,9 +59,14 @@ void co_ws_log_write_frame(
         addr1, text, addr2, fin, opcode, data_size, format, ##__VA_ARGS__)
 
 //---------------------------------------------------------------------------//
+// public
 //---------------------------------------------------------------------------//
 
-CO_WS_API void co_ws_log_set_level(int level);
+CO_WS_API
+void
+co_ws_log_set_level(
+    int level
+);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

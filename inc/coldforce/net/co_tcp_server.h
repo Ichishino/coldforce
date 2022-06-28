@@ -40,26 +40,64 @@ typedef struct co_tcp_server_t
 
 } co_tcp_server_t;
 
-void co_tcp_server_on_accept_ready(co_tcp_server_t* server);
+//---------------------------------------------------------------------------//
+// private
+//---------------------------------------------------------------------------//
+
+void
+co_tcp_server_on_accept_ready(
+    co_tcp_server_t* server
+);
 
 //---------------------------------------------------------------------------//
+// public
 //---------------------------------------------------------------------------//
 
-CO_NET_API co_tcp_server_t* co_tcp_server_create(const co_net_addr_t* local_net_addr);
+CO_NET_API
+co_tcp_server_t*
+co_tcp_server_create(
+    const co_net_addr_t* local_net_addr
+);
 
-CO_NET_API void co_tcp_server_destroy(co_tcp_server_t* server);
-CO_NET_API void co_tcp_server_close(co_tcp_server_t* server);
+CO_NET_API
+void
+co_tcp_server_destroy(
+    co_tcp_server_t* server
+);
 
-CO_NET_API bool co_tcp_server_start(
-    co_tcp_server_t* server, co_tcp_accept_fn handler, int backlog);
+CO_NET_API
+void
+co_tcp_server_close(
+    co_tcp_server_t* server
+);
 
-CO_NET_API bool co_tcp_accept(
-    co_thread_t* owner_thread, co_tcp_client_t* client);
+CO_NET_API
+bool
+co_tcp_server_start(
+    co_tcp_server_t* server,
+    co_tcp_accept_fn handler,
+    int backlog
+);
 
-CO_NET_API void co_tcp_set_transfer_handler(
-    co_thread_t* thread, co_tcp_transfer_fn handler);
+CO_NET_API
+bool
+co_tcp_accept(
+    co_thread_t* owner_thread,
+    co_tcp_client_t* client
+);
 
-CO_NET_API co_socket_t* co_tcp_server_get_socket(co_tcp_server_t* server);
+CO_NET_API
+void
+co_tcp_set_transfer_handler(
+    co_thread_t* thread,
+    co_tcp_transfer_fn handler
+);
+
+CO_NET_API
+co_socket_t*
+co_tcp_server_get_socket(
+    co_tcp_server_t* server
+);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

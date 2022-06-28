@@ -15,10 +15,11 @@
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-CO_THREAD_LOCAL co_thread_t* current_thread = NULL;
+//---------------------------------------------------------------------------//
+// private
+//---------------------------------------------------------------------------//
 
-//---------------------------------------------------------------------------//
-//---------------------------------------------------------------------------//
+CO_THREAD_LOCAL co_thread_t* current_thread = NULL;
 
 struct co_thread_param_st
 {
@@ -79,28 +80,6 @@ co_thread_main(
 }
 
 void
-co_thread_run(
-    co_thread_t* thread
-)
-{
-    co_event_worker_run(thread->event_worker);
-}
-
-//---------------------------------------------------------------------------//
-//---------------------------------------------------------------------------//
-
-void
-co_thread_init(
-    co_thread_t* thread,
-    co_thread_create_fn create_handler,
-    co_thread_destroy_fn destroy_handler
-)
-{
-    co_thread_setup(
-        thread, create_handler, destroy_handler, NULL);
-}
-
-void
 co_thread_setup(
     co_thread_t* thread,
     co_thread_create_fn create_handler,
@@ -123,6 +102,29 @@ co_thread_setup(
     co_event_worker_setup(thread->event_worker);
 
     thread->exit_code = 0;
+}
+
+void
+co_thread_run(
+    co_thread_t* thread
+)
+{
+    co_event_worker_run(thread->event_worker);
+}
+
+//---------------------------------------------------------------------------//
+// public
+//---------------------------------------------------------------------------//
+
+void
+co_thread_init(
+    co_thread_t* thread,
+    co_thread_create_fn create_handler,
+    co_thread_destroy_fn destroy_handler
+)
+{
+    co_thread_setup(
+        thread, create_handler, destroy_handler, NULL);
 }
 
 void

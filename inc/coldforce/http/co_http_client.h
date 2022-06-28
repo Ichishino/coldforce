@@ -76,49 +76,138 @@ typedef struct co_http_client_t
 
 } co_http_client_t;
 
-void co_http_client_setup(co_http_client_t* client);
-
-bool co_http_send_raw_data(
-    co_http_client_t* client, const void* data, size_t data_size);
-
 //---------------------------------------------------------------------------//
+// private
 //---------------------------------------------------------------------------//
 
-CO_HTTP_API co_http_client_t* co_http_client_create(
-    const char* base_url, const co_net_addr_t* local_net_addr, co_tls_ctx_st* tls_ctx);
+void
+co_http_client_setup(
+    co_http_client_t* client
+);
 
-CO_HTTP_API void co_http_client_destroy(co_http_client_t* client);
-
-CO_HTTP_API bool co_http_connect(
-    co_http_client_t* client, co_http_connect_fn handler);
-
-CO_HTTP_API bool co_http_send_request(
-    co_http_client_t* client, co_http_request_t* request);
-
-CO_HTTP_API bool co_http_send_data(
-    co_http_client_t* client, const void* data, size_t data_size);
-
-CO_HTTP_API const co_http_request_t* co_http_get_request(const co_http_client_t* client);
-CO_HTTP_API const co_http_response_t* co_http_get_response(const co_http_client_t* client);
-
-CO_HTTP_API bool co_http_is_running(const co_http_client_t* client);
-
-CO_HTTP_API void co_http_set_receive_handler(
-    co_http_client_t* client, co_http_receive_fn handler);
-CO_HTTP_API void co_http_set_progress_handler(
-    co_http_client_t* client, co_http_progress_fn handler);
-CO_HTTP_API void co_http_set_close_handler(
-    co_http_client_t* client, co_http_close_fn handler);
+bool
+co_http_send_raw_data(
+    co_http_client_t* client,
+    const void* data,
+    size_t data_size
+);
 
 //---------------------------------------------------------------------------//
+// public
 //---------------------------------------------------------------------------//
 
-CO_HTTP_API const co_net_addr_t* co_http_get_remote_net_addr(const co_http_client_t* client);
-CO_HTTP_API co_socket_t* co_http_client_get_socket(co_http_client_t* client);
-CO_HTTP_API const char* co_http_get_base_url(const co_http_client_t* client);
-CO_HTTP_API bool co_http_is_open(const co_http_client_t* client);
-CO_HTTP_API bool co_http_set_user_data(co_http_client_t* client, uintptr_t user_data);
-CO_HTTP_API bool co_http_get_user_data(const co_http_client_t* client, uintptr_t* user_data);
+CO_HTTP_API
+co_http_client_t*
+co_http_client_create(
+    const char* base_url,
+    const co_net_addr_t* local_net_addr,
+    co_tls_ctx_st* tls_ctx
+);
+
+CO_HTTP_API
+void
+co_http_client_destroy(
+    co_http_client_t* client
+);
+
+CO_HTTP_API
+bool
+co_http_connect(
+    co_http_client_t* client,
+    co_http_connect_fn handler
+);
+
+CO_HTTP_API
+bool
+co_http_send_request(
+    co_http_client_t* client,
+    co_http_request_t* request
+);
+
+CO_HTTP_API
+bool
+co_http_send_data(
+    co_http_client_t* client,
+    const void* data,
+    size_t data_size
+);
+
+CO_HTTP_API
+const co_http_request_t*
+co_http_get_request(
+    const co_http_client_t* client
+);
+
+CO_HTTP_API
+const co_http_response_t*
+co_http_get_response(
+    const co_http_client_t* client
+);
+
+CO_HTTP_API
+bool
+co_http_is_running(
+    const co_http_client_t* client
+);
+
+CO_HTTP_API
+void
+co_http_set_receive_handler(
+    co_http_client_t* client,
+    co_http_receive_fn handler
+);
+
+CO_HTTP_API
+void
+co_http_set_progress_handler(
+    co_http_client_t* client,
+    co_http_progress_fn handler
+);
+
+CO_HTTP_API
+void
+co_http_set_close_handler(
+    co_http_client_t* client,
+    co_http_close_fn handler
+);
+
+CO_HTTP_API
+const co_net_addr_t*
+co_http_get_remote_net_addr(
+    const co_http_client_t* client
+);
+
+CO_HTTP_API
+co_socket_t*
+co_http_client_get_socket(
+    co_http_client_t* client
+);
+
+CO_HTTP_API
+const char*
+co_http_get_base_url(
+    const co_http_client_t* client
+);
+
+CO_HTTP_API
+bool
+co_http_is_open(
+    const co_http_client_t* client
+);
+
+CO_HTTP_API
+bool
+co_http_set_user_data(
+    co_http_client_t* client,
+    uintptr_t user_data
+);
+
+CO_HTTP_API
+bool
+co_http_get_user_data(
+    const co_http_client_t* client,
+    uintptr_t* user_data
+);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

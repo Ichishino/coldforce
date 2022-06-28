@@ -29,46 +29,132 @@ typedef struct
 
 } co_http_header_t;
 
-CO_HTTP_API void co_http_header_setup(co_http_header_t* header);
-CO_HTTP_API void co_http_header_cleanup(co_http_header_t* header);
-
-CO_HTTP_API bool co_http_header_add_field_ptr(
-    co_http_header_t* header, char* name, char* value);
-
-void co_http_header_serialize(
-    const co_http_header_t* header, co_byte_array_t* buffer);
-int co_http_header_deserialize(
-    co_http_header_t* header, const co_byte_array_t* data, size_t* index);
-
 //---------------------------------------------------------------------------//
+// private
 //---------------------------------------------------------------------------//
 
-CO_HTTP_API void co_http_header_clear(co_http_header_t* header);
+CO_HTTP_API
+void
+co_http_header_setup(
+    co_http_header_t* header
+);
 
-CO_HTTP_API size_t co_http_header_get_field_count(const co_http_header_t* header);
+CO_HTTP_API
+void
+co_http_header_cleanup(
+    co_http_header_t* header
+);
 
-CO_HTTP_API size_t co_http_header_get_value_count(const co_http_header_t* header, const char* name);
+CO_HTTP_API
+bool
+co_http_header_add_field_ptr(
+    co_http_header_t* header,
+    char* name,
+    char* value
+);
 
-CO_HTTP_API bool co_http_header_contains(const co_http_header_t* header, const char* name);
+void
+co_http_header_serialize(
+    const co_http_header_t* header,
+    co_byte_array_t* buffer
+);
 
-CO_HTTP_API void co_http_header_set_field(co_http_header_t* header, const char* key, const char* value);
-
-CO_HTTP_API const char* co_http_header_get_field(const co_http_header_t* header, const char* name);
-
-CO_HTTP_API size_t co_http_header_get_fields(
-    const co_http_header_t* header, const char* name, const char* value[], size_t count);
-
-CO_HTTP_API bool co_http_header_add_field(
-    co_http_header_t* header, const char* name, const char* value);
-
-CO_HTTP_API void co_http_header_remove_field(co_http_header_t* header, const char* name);
-CO_HTTP_API void co_http_header_remove_all_fields(co_http_header_t* header, const char* name);
+int
+co_http_header_deserialize(
+    co_http_header_t* header,
+    const co_byte_array_t* data,
+    size_t* index
+);
 
 //---------------------------------------------------------------------------//
+// public
 //---------------------------------------------------------------------------//
 
-CO_HTTP_API void co_http_header_set_content_length(co_http_header_t* header, size_t length);
-CO_HTTP_API bool co_http_header_get_content_length(const co_http_header_t* header, size_t* length);
+CO_HTTP_API
+void
+co_http_header_clear(
+    co_http_header_t* header
+);
+
+CO_HTTP_API
+size_t
+co_http_header_get_field_count(
+    const co_http_header_t* header
+);
+
+CO_HTTP_API
+size_t
+co_http_header_get_value_count(
+    const co_http_header_t* header,
+    const char* name
+);
+
+CO_HTTP_API
+bool
+co_http_header_contains(
+    const co_http_header_t* header,
+    const char* name
+);
+
+CO_HTTP_API
+void
+co_http_header_set_field(
+    co_http_header_t* header,
+    const char* key,
+    const char* value
+);
+
+CO_HTTP_API
+const char*
+co_http_header_get_field(
+    const co_http_header_t* header,
+    const char* name
+);
+
+CO_HTTP_API
+size_t
+co_http_header_get_fields(
+    const co_http_header_t* header,
+    const char* name,
+    const char* value[],
+    size_t count
+);
+
+CO_HTTP_API
+bool
+co_http_header_add_field(
+    co_http_header_t* header,
+    const char* name,
+    const char* value
+);
+
+CO_HTTP_API
+void
+co_http_header_remove_field(
+    co_http_header_t* header,
+    const char* name
+);
+
+CO_HTTP_API
+void
+co_http_header_remove_all_fields(
+    co_http_header_t* header,
+    const char* name
+);
+
+CO_HTTP_API
+void
+co_http_header_set_content_length(
+    co_http_header_t* header,
+    size_t length
+);
+
+CO_HTTP_API
+bool
+co_http_header_get_content_length(
+    const co_http_header_t* header,
+    size_t* length
+);
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
