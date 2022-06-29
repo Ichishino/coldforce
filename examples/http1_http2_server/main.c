@@ -356,9 +356,11 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     co_http_server_start(self->server,
         (co_tcp_accept_fn)on_my_tcp_accept, SOMAXCONN);
 
-    char local_str[64];
-    co_net_addr_to_string(&local_net_addr, local_str, sizeof(local_str));
-    printf("listen %s\n", local_str);
+#ifdef CO_CAN_USE_TLS
+    printf("https://127.0.0.1:%d\n", port);
+#else
+    printf("http://127.0.0.1:%d\n", port);
+#endif
 
     return true;
 }

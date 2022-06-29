@@ -388,6 +388,13 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     co_http_tls_server_set_available_protocols(
         self->server, protocols, protocol_count);
 
+#else
+
+    // http server
+    self->server = co_http_server_create(&local_net_addr);
+
+#endif // CO_CAN_USE_TLS
+
     // socket option
     co_socket_option_set_reuse_addr(
         co_http_server_get_socket(self->server), true);
@@ -396,16 +403,11 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     co_http_server_start(self->server,
         (co_tcp_accept_fn)on_my_tcp_accept, SOMAXCONN);
 
+#ifdef CO_CAN_USE_TLS
+    printf("https://127.0.0.1:%d\n", port);
 #else
-
-    // http server
-    self->server = co_http_server_create(&local_net_addr);
-
-#endif // CO_CAN_USE_TLS
-
-    char local_str[64];
-    co_net_addr_to_string(&local_net_addr, local_str, sizeof(local_str));
-    printf("listen %s\n", local_str);
+    printf("http://127.0.0.1:%d\n", port);
+#endif
 
     return true;
 }
