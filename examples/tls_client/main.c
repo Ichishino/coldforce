@@ -13,6 +13,8 @@ typedef struct
     // my app data
     co_tcp_client_t* client;
     co_timer_t* retry_timer;
+    char* server_ip_address;
+    uint16_t server_port;
 
 } my_app;
 
@@ -82,9 +84,6 @@ void on_my_retry_timer(my_app* self, co_timer_t* timer)
 
 void my_connect(my_app* self)
 {
-    const char* ip_address = "127.0.0.1";
-    uint16_t port = 9443;
-
     // local address
     co_net_addr_t local_net_addr = { 0 };
     co_net_addr_set_family(&local_net_addr, CO_ADDRESS_FAMILY_IPV4);
@@ -96,8 +95,8 @@ void my_connect(my_app* self)
 
     // remote address
     co_net_addr_t remote_net_addr = { 0 };
-    co_net_addr_set_address(&remote_net_addr, ip_address);
-    co_net_addr_set_port(&remote_net_addr, port);
+    co_net_addr_set_address(&remote_net_addr, self->server_ip_address);
+    co_net_addr_set_port(&remote_net_addr, self->server_port);
 
     // connect
     co_tls_connect(
@@ -110,7 +109,16 @@ void my_connect(my_app* self)
 
 bool on_my_app_create(my_app* self, const co_arg_st* arg)
 {
-    (void)arg;
+    if (arg->argc < 3)
+    {
+        printf("<Usage>\n");
+        printf("tls_client server_ip_address port_number\n");
+
+        return false;
+    }
+
+    self->server_ip_address = arg->argv[1];
+    self->server_port = (uint16_t)atoi(arg->argv[2]);
 
     // connect retry timer
     self->retry_timer = co_timer_create(
@@ -130,9 +138,12 @@ void on_my_app_destroy(my_app* self)
 
 int main(int argc, char* argv[])
 {
+//    co_tls_log_set_level(CO_LOG_LEVEL_MAX);
+//    co_tcp_log_set_level(CO_LOG_LEVEL_MAX);
+
     co_tls_setup();
 
-    my_app app;
+    my_app app = { 0 };
 
     co_net_app_init(
         (co_app_t*)&app,

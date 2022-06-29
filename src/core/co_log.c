@@ -55,12 +55,12 @@ co_log_setup(
     }
 
     g_log.mutex = co_mutex_create();
-    g_log.output = stdout;
 
     for (size_t index = 0; index <= CO_LOG_CATEGORY_MAX; ++index)
     {
         g_log.category[index].name = "";
         g_log.category[index].level = CO_LOG_LEVEL_NONE;
+        g_log.category[index].output = stdout;
     }
 
     g_log.category[
@@ -85,7 +85,7 @@ co_log_write_header(
     struct tm* lt = localtime(&tv.tv_sec);
 #endif
 
-    fprintf((FILE*)g_log.output,
+    fprintf((FILE*)g_log.category[category].output,
         "<<coldforce>> %d-%02d-%02d %02d:%02d:%02d:%03d [%s] <%s> ",
 #ifdef CO_OS_WIN
         st.wYear, st.wMonth, st.wDay,
@@ -143,13 +143,16 @@ co_log_write(
 
     co_log_write_header(level, category);
 
+    FILE* fp =
+        (FILE*)g_log.category[category].output;
+
     va_list args;
     va_start(args, format);
-    vfprintf((FILE*)g_log.output, format, args);
+    vfprintf(fp, format, args);
     va_end(args);
 
-    fprintf((FILE*)g_log.output, "\n");
-    fflush((FILE*)g_log.output);
+    fprintf(fp, "\n");
+    fflush(fp);
 
     co_mutex_unlock(g_log.mutex);
 }

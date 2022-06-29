@@ -154,6 +154,32 @@ co_http_url_destroy(
 }
 
 char*
+co_http_url_create_base_url(
+    const co_http_url_st* url
+)
+{
+    if (url->scheme == NULL || url->host == NULL)
+    {
+        return NULL;
+    }
+
+    size_t length = strlen(url->scheme) + 3 + strlen(url->host);
+
+    char* base_url = (char*)co_mem_alloc(length + 32);
+
+    if (url->port != 0)
+    {
+        sprintf(base_url, "%s://%s:%u", url->scheme, url->host, url->port);
+    }
+    else
+    {
+        sprintf(base_url, "%s://%s", url->scheme, url->host);
+    }
+
+    return base_url;
+}
+
+char*
 co_http_url_create_host_and_port(
     const co_http_url_st* url
 )
@@ -171,7 +197,7 @@ co_http_url_create_host_and_port(
 
     char* host_and_port = (char*)co_mem_alloc(length + 32);
 
-    sprintf(host_and_port, "%s:%hu", url->host, url->port);
+    sprintf(host_and_port, "%s:%u", url->host, url->port);
 
     return host_and_port;
 }
@@ -183,7 +209,7 @@ co_http_url_create_path_and_query(
 {
     if (url->path == NULL)
     {
-        return NULL;
+        return co_string_duplicate("/");
     }
     else if (url->query == NULL)
     {

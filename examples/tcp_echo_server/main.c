@@ -1,6 +1,7 @@
 #include <coldforce/coldforce_net.h>
 
 #include <stdio.h>
+#include <stdlib.h>
 
 // my app object
 typedef struct
@@ -66,14 +67,20 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* server, co_tcp_client_t* cl
 
 bool on_my_app_create(my_app* self, const co_arg_st* arg)
 {
-    (void)arg;
+    if (arg->argc <= 1)
+    {
+        printf("<Usage>\n");
+        printf("tcp_echo_server port_number\n");
+
+        return false;
+    }
+
+    uint16_t port = (uint16_t)atoi(arg->argv[1]);
 
     // client list
     co_list_ctx_st list_ctx = { 0 };
     list_ctx.free_value = (co_item_free_fn)co_tcp_client_destroy; // auto destroy
     self->client_list = co_list_create(&list_ctx);
-
-    uint16_t port = 9000;
 
     // local address
     co_net_addr_t local_net_addr = { 0 };
@@ -107,7 +114,7 @@ int main(int argc, char* argv[])
 {
 //    co_tcp_log_set_level(CO_LOG_LEVEL_MAX);
 
-    my_app app;
+    my_app app = { 0 };
 
     co_net_app_init(
         (co_app_t*)&app,

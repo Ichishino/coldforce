@@ -24,6 +24,7 @@
 void
 co_net_log_write_addresses(
     co_log_t* log,
+    int category,
     const co_net_addr_t* addr1,
     const char* text,
     const co_net_addr_t* addr2
@@ -47,19 +48,22 @@ co_net_log_write_addresses(
             addr2, addr2_str, sizeof(addr2_str));
     }
 
+    FILE* fp =
+        (FILE*)log->category[category].output;
+
     if (addr1 != NULL)
     {
-        fprintf((FILE*)log->output, "(%s) ", addr1_str);
+        fprintf(fp, "(%s) ", addr1_str);
     }
 
     if (text != NULL)
     {
-        fprintf((FILE*)log->output, "%s ", text);
+        fprintf(fp, "%s ", text);
     }
 
     if (addr2 != NULL)
     {
-        fprintf((FILE*)log->output, "(%s) ", addr2_str);
+        fprintf(fp, "(%s) ", addr2_str);
     }
 }
 
@@ -76,14 +80,18 @@ co_net_log_write_data(
 )
 {
     co_log_write_header(level, category);
-    co_net_log_write_addresses(log, addr1, text, addr2);
+    co_net_log_write_addresses(
+        log, category, addr1, text, addr2);
+
+    FILE* fp =
+        (FILE*)log->category[category].output;
 
     va_list args;
     va_start(args, format);
-    vfprintf((FILE*)log->output, format, args);
+    vfprintf(fp, format, args);
     va_end(args);
 
-    fprintf((FILE*)log->output, "\n");
+    fprintf(fp, "\n");
 }
 
 void
@@ -107,15 +115,19 @@ co_net_log_write(
     co_mutex_lock(log->mutex);
 
     co_log_write_header(level, category);
-    co_net_log_write_addresses(log, addr1, text, addr2);
+    co_net_log_write_addresses(
+        log, category, addr1, text, addr2);
+
+    FILE* fp =
+        (FILE*)log->category[category].output;
 
     va_list args;
     va_start(args, format);
-    vfprintf((FILE*)log->output, format, args);
+    vfprintf(fp, format, args);
     va_end(args);
 
-    fprintf((FILE*)log->output, "\n");
-    fflush((FILE*)log->output);
+    fprintf(fp, "\n");
+    fflush(fp);
 
     co_mutex_unlock(log->mutex);
 }
@@ -143,18 +155,22 @@ co_net_log_write_hex_dump(
     co_mutex_lock(log->mutex);
 
     co_log_write_header(level, category);
-    co_net_log_write_addresses(log, addr1, text, addr2);
+    co_net_log_write_addresses(
+        log, category, addr1, text, addr2);
+
+    FILE* fp =
+        (FILE*)log->category[category].output;
 
     va_list args;
     va_start(args, format);
-    vfprintf((FILE*)log->output, format, args);
+    vfprintf(fp, format, args);
     va_end(args);
 
-    fprintf((FILE*)log->output, "\n");
+    fprintf(fp, "\n");
 
     co_log_write_header(level, category);
 
-    fprintf((FILE*)log->output,
+    fprintf(fp,
         "--------------------------------------------------------------\n");
 
     const uint8_t* bytes = (const uint8_t*)data;
@@ -199,16 +215,16 @@ co_net_log_write_hex_dump(
 
         co_log_write_header(level, category);
 
-        fprintf((FILE*)log->output,
+        fprintf(fp,
             "%08zx: %-35s %s\n", index1, hex, txt);
     }
 
     co_log_write_header(level, category);
 
-    fprintf((FILE*)log->output,
+    fprintf(fp,
         "--------------------------------------------------------------\n");
 
-    fflush((FILE*)log->output);
+    fflush(fp);
 
     co_mutex_unlock(log->mutex);
 }

@@ -334,16 +334,20 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t
 
 bool on_my_app_create(my_app* self, const co_arg_st* arg)
 {
-    (void)arg;
+    if (arg->argc <= 1)
+    {
+        printf("<Usage>\n");
+        printf("http2_server port_number\n");
 
-    self->server = NULL;
+        return false;
+    }
+
+    uint16_t port = (uint16_t)atoi(arg->argv[1]);
 
     // client list
     co_list_ctx_st list_ctx = { 0 };
     list_ctx.free_value = (co_item_free_fn)co_http2_client_destroy; // auto destroy
     self->http2_clients = co_list_create(&list_ctx);
-
-    uint16_t port = 9443;
 
     // local address
     co_net_addr_t local_net_addr = { 0 };
@@ -421,7 +425,7 @@ int main(int argc, char* argv[])
 
     co_tls_setup();
 
-    my_app app;
+    my_app app = { 0 };
 
     co_net_app_init(
         (co_app_t*)&app,

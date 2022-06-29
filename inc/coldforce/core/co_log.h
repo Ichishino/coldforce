@@ -38,10 +38,10 @@ typedef struct co_log_t
     {
         int level;
         const char* name;
+        void* output;
 
     } category[CO_LOG_CATEGORY_MAX + 1];
 
-    void* output;
     co_mutex_t* mutex;
 
 } co_log_t;

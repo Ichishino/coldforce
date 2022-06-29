@@ -24,23 +24,26 @@ void on_my_tcp_receive(my_client_thread* self, co_tcp_client_t* client)
 {
     (void)self;
 
-    char buffer[1024];
-
-    // receive
-    ssize_t size = co_tcp_receive(client, buffer, sizeof(buffer));
-
-    if (size <= 0)
+    for (;;)
     {
-        return;
+        char buffer[8192];
+
+        // receive
+        ssize_t size = co_tcp_receive(client, buffer, sizeof(buffer));
+
+        if (size <= 0)
+        {
+            break;
+        }
+
+        char remote_str[64];
+        co_net_addr_to_string(
+            co_tcp_get_remote_net_addr(client), remote_str, sizeof(remote_str));
+        printf("receive %zd bytes from %s\n", (size_t)size, remote_str);
+
+        // send
+        co_tcp_send(client, buffer, (size_t)size);
     }
-
-    char remote_str[64];
-    co_net_addr_to_string(
-        co_tcp_get_remote_net_addr(client), remote_str, sizeof(remote_str));
-    printf("receive %zd bytes from %s\n", (size_t)size, remote_str);
-
-    // send
-    co_tcp_send(client, buffer, (size_t)size);
 }
 
 void on_my_tcp_close(my_client_thread* self, co_tcp_client_t* client)

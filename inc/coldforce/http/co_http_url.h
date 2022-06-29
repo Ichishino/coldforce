@@ -46,6 +46,12 @@ co_http_url_destroy(
 
 CO_HTTP_API
 char*
+co_http_url_create_base_url(
+    const co_http_url_st* url
+);
+
+CO_HTTP_API
+char*
 co_http_url_create_host_and_port(
     const co_http_url_st* url
 );

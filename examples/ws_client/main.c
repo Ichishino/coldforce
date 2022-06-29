@@ -7,6 +7,8 @@ typedef struct
 
     // my app data
     co_ws_client_t* client;
+    char* base_url;
+    char* path;
 
 } my_app;
 
@@ -113,16 +115,25 @@ void on_my_connect(my_app* self, co_ws_client_t* client, const co_http_response_
 
 bool on_my_app_create(my_app* self, const co_arg_st* arg)
 {
-    (void)arg;
+    if (arg->argc < 2)
+    {
+        printf("<Usage>\n");
+        printf("ws_client url\n");
 
-    const char* base_url = "ws://127.0.0.1:9080";
+        return false;
+    }
 
-    const char* file_path = "/";
+    co_http_url_st* url = co_http_url_create(arg->argv[1]);
+
+    self->base_url = co_http_url_create_base_url(url);
+    self->path = co_http_url_create_path_and_query(url);
+
+    co_http_url_destroy(url);
 
     co_net_addr_t local_net_addr = { 0 };
     co_net_addr_set_family(&local_net_addr, CO_ADDRESS_FAMILY_IPV4);
 
-    self->client = co_ws_client_create(base_url, &local_net_addr, NULL);
+    self->client = co_ws_client_create(self->base_url, &local_net_addr, NULL);
 
     if (self->client == NULL)
     {
@@ -134,7 +145,7 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     co_ws_set_receive_handler(self->client, (co_ws_receive_fn)on_my_ws_receive);
     co_ws_set_close_handler(self->client, (co_ws_close_fn)on_my_ws_close);
 
-    co_http_request_t* request = co_http_request_create_ws_upgrade(file_path, NULL, NULL);
+    co_http_request_t* request = co_http_request_create_ws_upgrade(self->path, NULL, NULL);
 
     // connect
     co_ws_connect(self->client, request, (co_ws_connect_fn)on_my_connect);
@@ -145,6 +156,9 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
 void on_my_app_destroy(my_app* self)
 {
     co_ws_client_destroy(self->client);
+
+    co_http_url_destroy_string(self->base_url);
+    co_http_url_destroy_string(self->path);
 }
 
 int main(int argc, char* argv[])
@@ -154,7 +168,7 @@ int main(int argc, char* argv[])
 
     co_tls_setup();
 
-    my_app app;
+    my_app app = { 0 };
 
     co_net_app_init(
         (co_app_t*)&app,

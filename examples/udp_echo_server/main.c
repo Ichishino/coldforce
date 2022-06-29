@@ -1,6 +1,7 @@
 #include <coldforce/coldforce_net.h>
 
 #include <stdio.h>
+#include <stdlib.h>
 
 // my app object
 typedef struct
@@ -41,9 +42,15 @@ void on_my_udp_receive(my_app* self, co_udp_t* udp)
 
 bool on_my_app_create(my_app* self, const co_arg_st* arg)
 {
-    (void)arg;
+    if (arg->argc <= 1)
+    {
+        printf("<Usage>\n");
+        printf("udp_echo_server port_number\n");
 
-    uint16_t port = 9001;
+        return false;
+    }
+
+    uint16_t port = (uint16_t)atoi(arg->argv[1]);
 
     // local address
     co_net_addr_t local_net_addr = { 0 };
@@ -55,9 +62,9 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     // socket option
     co_socket_option_set_reuse_addr(co_udp_get_socket(self->udp), true);
 #ifdef _WIN32
-    co_win_udp_set_receive_buffer_size(self->udp, 10000);
+    co_win_udp_set_receive_buffer_size(self->udp, 65535);
 #else
-    co_socket_option_set_receive_buffer(co_udp_get_socket(self->udp), 10000);
+    co_socket_option_set_receive_buffer(co_udp_get_socket(self->udp), 65535);
 #endif
 
     // receive start
@@ -77,7 +84,9 @@ void on_my_app_destroy(my_app* self)
 
 int main(int argc, char* argv[])
 {
-    my_app app;
+//    co_udp_log_set_level(CO_LOG_LEVEL_MAX);
+
+    my_app app = { 0 };
 
     co_net_app_init(
         (co_app_t*)&app,

@@ -41,18 +41,21 @@ co_ws_log_write_frame(
         level, CO_LOG_CATEGORY_WS);
 
     co_net_log_write_addresses(
-        log, addr1, text, addr2);
+        log, CO_LOG_CATEGORY_WS, addr1, text, addr2);
+
+    FILE* fp =
+        (FILE*)log->category[CO_LOG_CATEGORY_WS].output;
 
     va_list args;
     va_start(args, format);
-    vfprintf((FILE*)log->output, format, args);
+    vfprintf(fp, format, args);
     va_end(args);
 
-    fprintf((FILE*)log->output, "\n");
+    fprintf(fp, "\n");
 
     co_log_write_header(
         level, CO_LOG_CATEGORY_WS);
-    fprintf((FILE*)log->output,
+    fprintf(fp,
         "-------------------------------------------------------------\n");
 
     const char* opcode_str;
@@ -85,16 +88,16 @@ co_ws_log_write_frame(
     co_log_write_header(
         level, CO_LOG_CATEGORY_WS);
 
-    fprintf((FILE*)log->output,
+    fprintf(fp,
         "%s(0x%02x) fin(%d) payload_size(%zd)\n",
         opcode_str, opcode, fin, data_size);
 
     co_log_write_header(
         level, CO_LOG_CATEGORY_WS);
-    fprintf((FILE*)log->output,
+    fprintf(fp,
         "-------------------------------------------------------------\n");
 
-    fflush((FILE*)log->output);
+    fflush(fp);
 
     co_mutex_unlock(log->mutex);
 }
@@ -114,4 +117,3 @@ co_ws_log_set_level(
         CO_LOG_CATEGORY_WS,
         CO_LOG_CATEGORY_NAME_WS);
 }
-

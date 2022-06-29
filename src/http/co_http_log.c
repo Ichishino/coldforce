@@ -33,7 +33,7 @@ co_http_log_write_header(
         co_log_write_header(
             level, CO_LOG_CATEGORY_HTTP);
 
-        fprintf((FILE*)log->output,
+        fprintf((FILE*)log->category[CO_LOG_CATEGORY_HTTP].output,
             "%s: %s\n", field->name, field->value);
     }
 }
@@ -62,23 +62,26 @@ co_http_log_write_request_header(
         level, CO_LOG_CATEGORY_HTTP);
 
     co_net_log_write_addresses(
-        log, addr1, text, addr2);
+        log, CO_LOG_CATEGORY_HTTP, addr1, text, addr2);
+
+    FILE* fp =
+        (FILE*)log->category[CO_LOG_CATEGORY_HTTP].output;
 
     va_list args;
     va_start(args, format);
-    vfprintf((FILE*)log->output, format, args);
+    vfprintf(fp, format, args);
     va_end(args);
 
-    fprintf((FILE*)log->output, "\n");
+    fprintf(fp, "\n");
 
     co_log_write_header(
         level, CO_LOG_CATEGORY_HTTP);
-    fprintf((FILE*)log->output,
+    fprintf(fp,
         "-------------------------------------------------------------\n");
 
     co_log_write_header(
         level, CO_LOG_CATEGORY_HTTP);
-    fprintf((FILE*)log->output, "%s %s %s\n",
+    fprintf(fp, "%s %s %s\n",
         co_http_request_get_method(request),
         co_http_request_get_url(request)->src,
         co_http_request_get_version(request));
@@ -89,10 +92,10 @@ co_http_log_write_request_header(
 
     co_log_write_header(
         level, CO_LOG_CATEGORY_HTTP);
-    fprintf((FILE*)log->output,
+    fprintf(fp,
         "-------------------------------------------------------------\n");
 
-    fflush((FILE*)log->output);
+    fflush(fp);
 
     co_mutex_unlock(log->mutex);
 }
@@ -121,23 +124,26 @@ co_http_log_write_response_header(
         level, CO_LOG_CATEGORY_HTTP);
 
     co_net_log_write_addresses(
-        log, addr1, text, addr2);
+        log, CO_LOG_CATEGORY_HTTP, addr1, text, addr2);
+
+    FILE* fp =
+        (FILE*)log->category[CO_LOG_CATEGORY_HTTP].output;
 
     va_list args;
     va_start(args, format);
-    vfprintf((FILE*)log->output, format, args);
+    vfprintf(fp, format, args);
     va_end(args);
 
-    fprintf((FILE*)log->output, "\n");
+    fprintf(fp, "\n");
 
     co_log_write_header(
         level, CO_LOG_CATEGORY_HTTP);
-    fprintf((FILE*)log->output,
+    fprintf(fp,
         "-------------------------------------------------------------\n");
 
     co_log_write_header(
         level, CO_LOG_CATEGORY_HTTP);
-    fprintf((FILE*)log->output, "%s %d %s\n",
+    fprintf(fp, "%s %d %s\n",
         co_http_response_get_version(response),
         co_http_response_get_status_code(response),
         co_http_response_get_reason_phrase(response));
@@ -148,10 +154,10 @@ co_http_log_write_response_header(
 
     co_log_write_header(
         level, CO_LOG_CATEGORY_HTTP);
-    fprintf((FILE*)log->output,
+    fprintf(fp,
         "-------------------------------------------------------------\n");
 
-    fflush((FILE*)log->output);
+    fflush(fp);
 
     co_mutex_unlock(log->mutex);
 }

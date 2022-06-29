@@ -160,9 +160,15 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t
 
 bool on_my_app_create(my_app* self, const co_arg_st* arg)
 {
-    (void)arg;
+    if (arg->argc <= 1)
+    {
+        printf("<Usage>\n");
+        printf("http_server port_number\n");
 
-    uint16_t port = 9080;
+        return false;
+    }
+
+    uint16_t port = (uint16_t)atoi(arg->argv[1]);
 
     // local address
     co_net_addr_t local_net_addr = { 0 };
@@ -193,7 +199,10 @@ void on_my_app_destroy(my_app* self)
 
 int main(int argc, char* argv[])
 {
-    my_app app;
+//    co_http_log_set_level(CO_LOG_LEVEL_MAX);
+//    co_tcp_log_set_level(CO_LOG_LEVEL_MAX);
+
+    my_app app = { 0 };
 
     co_net_app_init(
         (co_app_t*)&app,

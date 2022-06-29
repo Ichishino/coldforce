@@ -7,6 +7,9 @@ typedef struct
 
     // my app data
     co_http_client_t* client;
+    char* base_url;
+    char* path;
+    char* save_file_path;
 
 } my_app;
 
@@ -34,7 +37,10 @@ void on_my_response(my_app* self, co_http_client_t* client,
 
         const void* content = co_http_response_get_content(response);
 
-        printf("%s\n", (const char*)content);
+        if (content != NULL)
+        {
+            printf("%s\n", (const char*)content);
+        }
     }
     else
     {
@@ -54,11 +60,15 @@ void on_my_connect(my_app* self, co_http_client_t* client, int error_code)
     {
         co_http_set_receive_handler(self->client, (co_http_receive_fn)on_my_response);
 
-        // http requests in parallel
-
         // GET request
         {
-            co_http_request_t* request = co_http_request_create_with("GET", "/index.html");
+            co_http_request_t* request = co_http_request_create_with("GET", self->path);
+
+            if (self->save_file_path != NULL)
+            {
+                // file save
+                co_http_request_set_save_file_path(request, self->save_file_path);
+            }
 
             // set header
             co_http_header_t* header = co_http_request_get_header(request);
@@ -67,10 +77,10 @@ void on_my_connect(my_app* self, co_http_client_t* client, int error_code)
             // send request
             co_http_send_request(self->client, request);
         }
-
+/*
         // POST request
         {
-            co_http_request_t* request = co_http_request_create_with("POST", "/index.html");
+            co_http_request_t* request = co_http_request_create_with("POST", self->path);
 
             // set header
             co_http_header_t* header = co_http_request_get_header(request);
@@ -86,6 +96,7 @@ void on_my_connect(my_app* self, co_http_client_t* client, int error_code)
             co_http_send_request(self->client, request);
             co_http_send_data(self->client, data, data_len);
         }
+*/
     }
     else
     {
@@ -101,18 +112,30 @@ void on_my_connect(my_app* self, co_http_client_t* client, int error_code)
 
 bool on_my_app_create(my_app* self, const co_arg_st* arg)
 {
-    (void)arg;
+    if (arg->argc < 2)
+    {
+        printf("<Usage>\n");
+        printf("http_client url [save_file_path]\n");
 
-#ifdef CO_CAN_USE_TLS
-    const char* base_url = "https://www.example.com";
-#else
-    const char* base_url = "http://www.example.com";
-#endif
+        return false;
+    }
+
+    co_http_url_st* url = co_http_url_create(arg->argv[1]);
+
+    self->base_url = co_http_url_create_base_url(url);
+    self->path = co_http_url_create_path_and_query(url);
+
+    co_http_url_destroy(url);
+
+    if (arg->argc >= 3)
+    {
+        self->save_file_path = arg->argv[2];
+    }
 
     co_net_addr_t local_net_addr = { 0 };
     co_net_addr_set_family(&local_net_addr, CO_ADDRESS_FAMILY_IPV4);
 
-    self->client = co_http_client_create(base_url, &local_net_addr, NULL);
+    self->client = co_http_client_create(self->base_url, &local_net_addr, NULL);
 
     if (self->client == NULL)
     {
@@ -130,13 +153,20 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
 void on_my_app_destroy(my_app* self)
 {
     co_http_client_destroy(self->client);
+
+    co_http_url_destroy_string(self->base_url);
+    co_http_url_destroy_string(self->path);
 }
 
 int main(int argc, char* argv[])
 {
+//    co_http_log_set_level(CO_LOG_LEVEL_MAX);
+//    co_tls_log_set_level(CO_LOG_LEVEL_MAX);
+//    co_tcp_log_set_level(CO_LOG_LEVEL_MAX);
+
     co_tls_setup();
 
-    my_app app;
+    my_app app = { 0 };
 
     co_net_app_init(
         (co_app_t*)&app,

@@ -1,6 +1,7 @@
 #include <coldforce/coldforce_net.h>
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 // my app object
@@ -12,18 +13,17 @@ typedef struct
     co_udp_t* udp;
     co_timer_t* send_timer;
     int send_counter;
+    char* peer_ip_address;
+    uint16_t peer_port;
 
 } my_app;
 
 void on_my_send_timer(my_app* self, co_timer_t* timer)
 {
-    const char* ip_address = "127.0.0.1";
-    uint16_t port = 9001;
-
     // remote address
     co_net_addr_t remote_net_addr = { 0 };
-    co_net_addr_set_address(&remote_net_addr, ip_address);
-    co_net_addr_set_port(&remote_net_addr, port);
+    co_net_addr_set_address(&remote_net_addr, self->peer_ip_address);
+    co_net_addr_set_port(&remote_net_addr, self->peer_port);
 
     // send
     const char* data = "hello";
@@ -45,7 +45,16 @@ void on_my_send_timer(my_app* self, co_timer_t* timer)
 
 bool on_my_app_create(my_app* self, const co_arg_st* arg)
 {
-    (void)arg;
+    if (arg->argc < 3)
+    {
+        printf("<Usage>\n");
+        printf("udp_sender peer_ip_address port_number\n");
+
+        return false;
+    }
+
+    self->peer_ip_address = arg->argv[1];
+    self->peer_port = (uint16_t)atoi(arg->argv[2]);
 
     // local address
     co_net_addr_t local_net_addr = { 0 };
@@ -73,7 +82,9 @@ void on_my_app_destroy(my_app* self)
 
 int main(int argc, char* argv[])
 {
-    my_app app;
+//    co_udp_log_set_level(CO_LOG_LEVEL_MAX);
+
+    my_app app = { 0 };
 
     co_net_app_init(
         (co_app_t*)&app,

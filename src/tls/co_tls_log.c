@@ -44,9 +44,12 @@ co_tls_log_write_certificate(
 
     co_mutex_lock(log->mutex);
 
+    FILE* fp =
+        (FILE*)log->category[CO_LOG_CATEGORY_TLS].output;
+
     co_log_write_header(
         level, CO_LOG_CATEGORY_TLS);
-    fprintf((FILE*)log->output,
+    fprintf(fp,
         "-------------------------------------------------------------\n");
 
     char* token = strtok(str, "\n");
@@ -56,17 +59,17 @@ co_tls_log_write_certificate(
         co_log_write_header(
             level, CO_LOG_CATEGORY_TLS);
 
-        fprintf((FILE*)log->output, "%s\n", token);
+        fprintf(fp, "%s\n", token);
 
         token = strtok(NULL, "\n");
     }
 
     co_log_write_header(
         level, CO_LOG_CATEGORY_TLS);
-    fprintf((FILE*)log->output,
+    fprintf(fp,
         "-------------------------------------------------------------\n");
 
-    fflush((FILE*)log->output);
+    fflush(fp);
 
     co_mutex_unlock(log->mutex);
 

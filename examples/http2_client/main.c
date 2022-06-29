@@ -10,7 +10,9 @@ typedef struct
 
     // my app data
     co_http2_client_t* client;
-    char* request_path;
+    char* base_url;
+    char* path;
+    char* save_file_path;
 
 } my_app;
 
@@ -135,11 +137,16 @@ void on_my_connect(my_app* self, co_http2_client_t* client, int error_code)
 
     if (error_code == 0)
     {
-        co_http2_header_t* header = co_http2_header_create_request("GET", self->request_path);
+        co_http2_header_t* header = co_http2_header_create_request("GET", self->path);
         co_http2_header_add_field(header, "accept", "text/html");
 
         // new stream per request
         co_http2_stream_t* stream = co_http2_create_stream(client);
+
+        if (self->save_file_path != NULL)
+        {
+            co_http2_stream_set_save_file_path(stream, self->save_file_path);
+        }
 
         // send request
         co_http2_stream_send_header(stream, true, header);
@@ -155,19 +162,30 @@ void on_my_connect(my_app* self, co_http2_client_t* client, int error_code)
 
 bool on_my_app_create(my_app* self, const co_arg_st* arg)
 {
-    (void)arg;
+    if (arg->argc < 2)
+    {
+        printf("<Usage>\n");
+        printf("http2_client url [save_file_path]\n");
 
-#ifdef CO_CAN_USE_TLS
-    const char* base_url = "https://127.0.0.1:9443";
-#else
-    const char* base_url = "http://127.0.0.1:9443";
-#endif
-    self->request_path = "/index.html";
+        return false;
+    }
+
+    co_http_url_st* url = co_http_url_create(arg->argv[1]);
+
+    self->base_url = co_http_url_create_base_url(url);
+    self->path = co_http_url_create_path_and_query(url);
+
+    co_http_url_destroy(url);
+
+    if (arg->argc >= 3)
+    {
+        self->save_file_path = arg->argv[2];
+    }
 
     co_net_addr_t local_net_addr = { 0 };
     co_net_addr_set_family(&local_net_addr, CO_ADDRESS_FAMILY_IPV4);
 
-    self->client = co_http2_client_create(base_url, &local_net_addr, NULL);
+    self->client = co_http2_client_create(self->base_url, &local_net_addr, NULL);
 
     if (self->client == NULL)
     {
@@ -196,16 +214,21 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
 void on_my_app_destroy(my_app* self)
 {
     co_http2_client_destroy(self->client);
+
+    co_http_url_destroy_string(self->base_url);
+    co_http_url_destroy_string(self->path);
 }
 
 int main(int argc, char* argv[])
 {
-//    co_http_log_set_level(CO_LOG_LEVEL_MAX);
 //    co_http2_log_set_level(CO_LOG_LEVEL_MAX);
+//    co_http_log_set_level(CO_LOG_LEVEL_MAX);
+//    co_tls_log_set_level(CO_LOG_LEVEL_MAX);
+//    co_tcp_log_set_level(CO_LOG_LEVEL_MAX);
 
     co_tls_setup();
 
-    my_app app;
+    my_app app = { 0 };
 
     co_net_app_init(
         (co_app_t*)&app,

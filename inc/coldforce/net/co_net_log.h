@@ -29,6 +29,7 @@ CO_NET_API
 void
 co_net_log_write_addresses(
     co_log_t* log,
+    int category,
     const co_net_addr_t* addr1,
     const char* text,
     const co_net_addr_t* addr2

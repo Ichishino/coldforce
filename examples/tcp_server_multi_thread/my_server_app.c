@@ -1,6 +1,7 @@
 #include "my_server_app.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 
 void on_my_tcp_accept(my_server_app* self, co_tcp_server_t* server, co_tcp_client_t* client)
 {
@@ -38,7 +39,15 @@ void on_my_tcp_accept(my_server_app* self, co_tcp_server_t* server, co_tcp_clien
 
 bool on_my_server_app_create(my_server_app* self, const co_arg_st* arg)
 {
-    (void)arg;
+    if (arg->argc <= 1)
+    {
+        printf("<Usage>\n");
+        printf("tcp_server_multi_thread port_number\n");
+
+        return false;
+    }
+
+    uint16_t port = (uint16_t)atoi(arg->argv[1]);
 
     printf("%d threads\n", THREAD_COUNT);
     printf("max %d clients\n", THREAD_COUNT * MAX_CLIENTS_PER_THREAD);
@@ -51,8 +60,6 @@ bool on_my_server_app_create(my_server_app* self, const co_arg_st* arg)
         init_my_client_thread(&self->client_thread[i]);
         co_net_thread_start((co_thread_t*)&self->client_thread[i], 0);
     }
-
-    uint16_t port = 9000;
 
     // local address
     co_net_addr_t local_net_addr = { 0 };

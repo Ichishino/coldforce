@@ -52,6 +52,11 @@ co_net_worker_cleanup(
     co_net_worker_t* net_worker
 )
 {
+    if (net_worker == NULL)
+    {
+        return;
+    }
+
     if (net_worker->tcp_servers != NULL)
     {
         co_list_destroy(net_worker->tcp_servers);

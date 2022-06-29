@@ -15,7 +15,7 @@ int main(int argc, char* argv[])
     // for debug
     signal(SIGINT, ctrl_c_handler);
 
-    my_server_app server_app;
+    my_server_app server_app = { 0 };
 
     init_my_server_app(&server_app);
 

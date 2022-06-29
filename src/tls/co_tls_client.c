@@ -79,7 +79,7 @@ co_tls_client_setup(
     BIO* internal_bio = BIO_new(BIO_s_bio());
     tls->network_bio = BIO_new(BIO_s_bio());
 
-    BIO_make_bio_pair(internal_bio, tls->network_bio);
+    (void)BIO_make_bio_pair(internal_bio, tls->network_bio);
     SSL_set_bio(tls->ssl, internal_bio, internal_bio);
 
     tls->on_connect = NULL;

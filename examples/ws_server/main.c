@@ -92,14 +92,20 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t
 
 bool on_my_app_create(my_app* self, const co_arg_st* arg)
 {
-    (void)arg;
+    if (arg->argc <= 1)
+    {
+        printf("<Usage>\n");
+        printf("ws_server port_number\n");
+
+        return false;
+    }
+
+    uint16_t port = (uint16_t)atoi(arg->argv[1]);
 
     // client list
     co_list_ctx_st list_ctx = { 0 };
     list_ctx.free_value = (co_item_free_fn)co_ws_client_destroy;
     self->clients = co_list_create(&list_ctx);
-
-    uint16_t port = 9080;
 
     // local address
     co_net_addr_t local_net_addr = { 0 };
@@ -134,7 +140,7 @@ int main(int argc, char* argv[])
 //    co_http_log_set_level(CO_LOG_LEVEL_MAX);
 //    co_ws_log_set_level(CO_LOG_LEVEL_MAX);
 
-    my_app app;
+    my_app app = { 0 };
 
     co_net_app_init(
         (co_app_t*)&app,
