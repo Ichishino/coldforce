@@ -22,6 +22,8 @@ typedef struct
     // my app data
     co_http_server_t* server;
     co_list_t* http2_clients;
+    uint16_t port;
+    char authority[256];
 
 } my_app;
 
@@ -51,6 +53,7 @@ void on_my_http2_stop_app_request(
     co_http2_header_add_field(response_header, "cache-control", "no-store");
 
     const char* response_content =
+        "<!DOCTYPE html>\n"
         "<html>\n"
         "<head><title>Server Stop</title></head>\n"
         "<body>OK</body>\n"
@@ -69,7 +72,6 @@ void on_my_http2_server_push_request(
     my_app* self, co_http2_client_t* http2_client, co_http2_stream_t* stream,
     const co_http2_header_t* request_header, const co_http2_data_st* receive_data)
 {
-    (void)self;
     (void)request_header;
     (void)receive_data;
 
@@ -78,8 +80,6 @@ void on_my_http2_server_push_request(
 
     if (settings->enable_push == 1)
     {
-        const char* authority = "127.0.0.1:9443";
-
         //-----------------------------------------------------------------------//
         // push "/test.css"
         //-----------------------------------------------------------------------//
@@ -87,7 +87,7 @@ void on_my_http2_server_push_request(
         // push request
 
         co_http2_header_t* request_header_1 = co_http2_header_create_request("GET", "/test.css");
-        co_http2_header_set_authority(request_header_1, authority);
+        co_http2_header_set_authority(request_header_1, self->authority);
 
         co_http2_stream_t* response_stream_1 =
             co_http2_stream_send_server_push_request(stream, request_header_1);
@@ -95,8 +95,10 @@ void on_my_http2_server_push_request(
         // push response
 
         co_http2_header_t* response_header_1 = co_http2_header_create_response(200);
+        co_http2_header_add_field(response_header_1, "content-type", "text/css");
+        co_http2_header_add_field(response_header_1, "cache-control", "no-store");
 
-        const char* response_content_1 = "h1{ font-size:20px; }";
+        const char* response_content_1 = "h1{ color:blue; }";
         uint32_t response_content_size_1 = (uint32_t)strlen(response_content_1);
 
         co_http2_stream_send_header(response_stream_1, false, response_header_1);
@@ -109,7 +111,7 @@ void on_my_http2_server_push_request(
         // push request
 
         co_http2_header_t* request_header_2 = co_http2_header_create_request("GET", "/test.js");
-        co_http2_header_set_authority(request_header_2, authority);
+        co_http2_header_set_authority(request_header_2, self->authority);
 
         co_http2_stream_t* response_stream_2 =
             co_http2_stream_send_server_push_request(stream, request_header_2);
@@ -117,6 +119,8 @@ void on_my_http2_server_push_request(
         // push response
 
         co_http2_header_t* response_header_2 = co_http2_header_create_response(200);
+        co_http2_header_add_field(response_header_2, "content-type", "text/javascript");
+        co_http2_header_add_field(response_header_2, "cache-control", "no-store");
 
         const char* response_content_2 = "document.write('Hello !!');";
         uint32_t response_content_size_2 = (uint32_t)strlen(response_content_2);
@@ -136,14 +140,15 @@ void on_my_http2_server_push_request(
 
     char response_content[8192];
     sprintf(response_content,
+        "<!DOCTYPE html>\n"
         "<html>\n"
         "<head>\n"
         "<title>Http2 Server Push Test</title>\n"
-        "<link rel='stylesheet' href='test.css'>\n"
+        "<link rel='stylesheet' type='text/css' href='/test.css' />\n"
         "</head>\n"
         "<body>\n"
         "<h1>Server Push Test OK</h1>\n"
-        "<script src='test.js'></script>\n"
+        "<script src='/test.js'></script>\n"
         "</body>\n"
         "</html>\n");
     uint32_t response_content_size = (uint32_t)strlen(response_content);
@@ -158,34 +163,98 @@ void on_my_http2_default_request(
     const co_http2_header_t* request_header, const co_http2_data_st* receive_data)
 {
     (void)self;
-    (void)http2_client;
-    (void)receive_data;
-
-    const char* method = co_http2_header_get_method(request_header);
-    const char* authority = co_http2_header_get_authority(request_header);
-    const co_http_url_st* url = co_http2_header_get_path_url(request_header);
-    const char* path = url->path;
-    const char* query = ((url->query != NULL) ? url->query : "");
 
     co_http2_header_t* response_header = co_http2_header_create_response(200);
 
     co_http2_header_add_field(response_header, "content-type", "text/html");
     co_http2_header_add_field(response_header, "cache-control", "no-store");
 
-    char response_content[8192];
-    sprintf(response_content,
+    char response_content[8192] = { 0 };
+    char temp[1024];
+
+    strcpy(response_content,
+        "<!DOCTYPE html>\n"
         "<html>\n"
         "<head>\n"
         "<title>Http2 Test</title>\n"
         "</head>\n"
-        "<body>\n"
-        "method: %s<br>\n"
-        "request url: %s<br>\n"
-        "query: %s<br>\n"
-        "authority: %s<br>\n"
-        "</body>\n"
-        "</html>\n",
-        method, path, query, authority);
+        "<body>\n");
+
+    strcat(response_content, "<h2>Client</h2>\n");
+
+    const co_net_addr_t* remote_net_addr =
+        co_http2_get_remote_net_addr(http2_client);
+    char remote_str[256];
+    co_net_addr_to_string(
+        remote_net_addr, remote_str, sizeof(remote_str));
+
+    sprintf(temp, "IP Address: %s<br>\n", remote_str);
+    strcat(response_content, temp);
+
+    strcat(response_content, "<h2>RequestHeader</h2>\n");
+
+    if (request_header->pseudo.authority != NULL)
+    {
+        sprintf(temp, ":authority: %s<br>\n",
+            request_header->pseudo.authority);
+        strcat(response_content, temp);
+    }
+
+    if (request_header->pseudo.method != NULL)
+    {
+        sprintf(temp, ":method: %s<br>\n",
+            request_header->pseudo.method);
+        strcat(response_content, temp);
+    }
+
+    if (request_header->pseudo.url != NULL)
+    {
+        sprintf(temp, ":path: %s<br>\n",
+            request_header->pseudo.url->src);
+        strcat(response_content, temp);
+    }
+
+    if (request_header->pseudo.scheme != NULL)
+    {
+        sprintf(temp, ":scheme: %s<br>\n",
+            request_header->pseudo.scheme);
+        strcat(response_content, temp);
+    }
+
+    if (request_header->pseudo.status_code != 0)
+    {
+        sprintf(temp, ":status: %u<br>\n",
+            request_header->pseudo.status_code);
+        strcat(response_content, temp);
+    }
+
+    const co_list_iterator_t* it =
+        co_list_get_const_head_iterator(request_header->field_list);
+
+    while (it != NULL)
+    {
+        const co_list_data_st* data =
+            co_list_get_const_next(request_header->field_list, &it);
+        const co_http2_header_field_t* field =
+            (const co_http2_header_field_t*)data->value;
+
+        sprintf(temp, "%s: %s<br>\n",
+            field->name, field->value);
+        strcat(response_content, temp);
+    }
+
+    strcat(response_content, "<h2>Contents</h2>\n");
+    sprintf(temp, "size: %zd<br><br>\n", receive_data->size);
+    strcat(response_content, temp);
+
+    if (receive_data->ptr != NULL)
+    {
+        strncat(response_content,
+            (const char*)receive_data->ptr, receive_data->size);
+    }
+
+    strcat(response_content, "</body>\n</html>\n");
+
     uint32_t response_content_size = (uint32_t)strlen(response_content);
 
     // send response
@@ -209,14 +278,14 @@ void on_my_http2_request(
         if (strcmp(url->path, "/stop") == 0)
         {
             // server stop request
-            // https://127.0.0.1:9443/stop
+            // http(s)://xxxxxxxxxxx/stop
 
             on_my_http2_stop_app_request(self, http2_client, stream);
         }
         else if (strcmp(url->path, "/serverpush") == 0)
         {
             // server push request
-            // https://127.0.0.1:9443/serverpush
+            // http(s)://xxxxxxxxxxx/serverpush
 
             on_my_http2_server_push_request(
                 self, http2_client, stream, request_header, request_data);
@@ -334,15 +403,18 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t
 
 bool on_my_app_create(my_app* self, const co_arg_st* arg)
 {
-    if (arg->argc <= 1)
+    if (arg->argc <= 2)
     {
         printf("<Usage>\n");
-        printf("http2_server port_number\n");
+        printf("http2_server hostname port_number\n");
+        printf("ex. http2_server localhost 8080\n");
 
         return false;
     }
 
-    uint16_t port = (uint16_t)atoi(arg->argv[1]);
+    self->port = (uint16_t)atoi(arg->argv[2]);
+
+    sprintf(self->authority, "%s:%d", arg->argv[1], self->port);
 
     // client list
     co_list_ctx_st list_ctx = { 0 };
@@ -352,7 +424,7 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     // local address
     co_net_addr_t local_net_addr = { 0 };
     co_net_addr_set_family(&local_net_addr, CO_ADDRESS_FAMILY_IPV4);
-    co_net_addr_set_port(&local_net_addr, port);
+    co_net_addr_set_port(&local_net_addr, self->port);
 
 #ifdef CO_CAN_USE_TLS
 
@@ -404,9 +476,9 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
         (co_tcp_accept_fn)on_my_tcp_accept, SOMAXCONN);
 
 #ifdef CO_CAN_USE_TLS
-    printf("https://127.0.0.1:%d\n", port);
+    printf("https://%s\n", self->authority);
 #else
-    printf("http://127.0.0.1:%d\n", port);
+    printf("http://%s\n", self->authority);
 #endif
 
     return true;

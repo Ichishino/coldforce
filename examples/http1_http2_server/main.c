@@ -121,7 +121,7 @@ void on_my_http2_request(
         if (strcmp(url->path, "/stop") == 0)
         {
             // server stop request
-            // https://127.0.0.1:9443/stop
+            // http(s)://xxxxxxxxxxx/stop
 
             on_my_http2_stop_app_request(self, http2_client, stream);
         }

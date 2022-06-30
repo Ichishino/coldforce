@@ -24,6 +24,8 @@ CO_EXTERN_C_BEGIN
 // private
 //---------------------------------------------------------------------------//
 
+#ifdef CO_CAN_USE_TLS
+
 void
 co_tls_log_write_certificate(
     int level,
@@ -56,6 +58,8 @@ co_tls_log_write_certificate(
 
 #define co_tls_log_debug_certificate(x509) \
     co_tls_log_write_certificate(CO_LOG_LEVEL_DEBUG, x509)
+
+#endif // CO_CAN_USE_TLS
 
 //---------------------------------------------------------------------------//
 // public
