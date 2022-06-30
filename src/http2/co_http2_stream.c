@@ -620,7 +620,7 @@ co_http2_stream_on_receive_frame(
             {
                 co_http2_stream_on_receive_message(stream, 0);
             }
-            else if (stream->send_header == NULL)
+            else if (frame->header.flags & CO_HTTP2_FRAME_FLAG_END_STREAM)
             {
                 co_http2_stream_on_receive_message(stream, 0);
             }
@@ -952,6 +952,11 @@ co_http2_stream_send_header(
 )
 {
     if (stream->id == 0)
+    {
+        return false;
+    }
+
+    if (stream->send_header != NULL)
     {
         return false;
     }
