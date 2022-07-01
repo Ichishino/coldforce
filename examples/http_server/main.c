@@ -139,8 +139,11 @@ void on_my_http_default_request(my_app* self, co_http_client_t* client, const co
     co_http_send_data(client, response_content, response_content_size);
 }
 
-void on_my_http_request(my_app* self, co_http_client_t* client, const co_http_request_t* request, int error_code)
+void on_my_http_request(my_app* self, co_http_client_t* client,
+    const co_http_request_t* request, const co_http_response_t* unused, int error_code)
 {
+    (void)unused;
+
     my_client_log(http, client, "request");
 
     if (error_code == 0)

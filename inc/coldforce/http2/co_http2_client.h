@@ -215,6 +215,13 @@ co_http2_create_stream(
 
 CO_HTTP2_API
 void
+co_http2_destroy_stream(
+    co_http2_client_t* client,
+    co_http2_stream_t* stream
+);
+
+CO_HTTP2_API
+void
 co_http2_set_message_handler(
     co_http2_client_t* client,
     co_http2_message_fn handler

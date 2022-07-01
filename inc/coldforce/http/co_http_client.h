@@ -30,12 +30,14 @@ typedef void(*co_http_connect_fn)(
 
 typedef void(*co_http_receive_fn)(
     co_thread_t* self, struct co_http_client_t* client,
-    const co_http_message_t* message,
+    const co_http_request_t* request,
+    const co_http_response_t* response,
     int error_code);
 
 typedef bool(*co_http_progress_fn)(
     co_thread_t* self, struct co_http_client_t* client,
-    const co_http_message_t* message,
+    const co_http_request_t* request,
+    const co_http_response_t* response,
     size_t current_content_size);
 
 typedef void(*co_http_close_fn)(
@@ -130,18 +132,6 @@ co_http_send_data(
     co_http_client_t* client,
     const void* data,
     size_t data_size
-);
-
-CO_HTTP_API
-const co_http_request_t*
-co_http_get_request(
-    const co_http_client_t* client
-);
-
-CO_HTTP_API
-const co_http_response_t*
-co_http_get_response(
-    const co_http_client_t* client
 );
 
 CO_HTTP_API

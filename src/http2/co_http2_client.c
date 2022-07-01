@@ -206,6 +206,15 @@ co_http2_create_stream(
     return stream;
 }
 
+void
+co_http2_destroy_stream(
+    co_http2_client_t* client,
+    co_http2_stream_t* stream
+)
+{
+    co_map_remove(client->stream_map, stream->id);
+}
+
 bool
 co_http2_send_raw_data(
     co_http2_client_t* client,
@@ -582,6 +591,11 @@ co_http2_client_on_tcp_receive_ready(
                         co_http2_stream_update_local_window_size(
                             client->system_stream, frame->header.length);
                     }
+                }
+
+                if (stream->state == CO_HTTP2_STREAM_STATE_CLOSED)
+                {
+                    co_http2_destroy_stream(client, stream);
                 }
             }
 

@@ -100,6 +100,8 @@ co_http2_stream_destroy(
             stream->save_data_fp = NULL;
         }
 
+        stream->state = CO_HTTP2_STREAM_STATE_CLOSED;
+
         co_mem_free_later(stream);
     }
 }
@@ -119,7 +121,7 @@ co_http2_stream_update_local_window_size(
         stream->local_window_size = 0;
     }
 
-    if ((stream->max_local_window_size * 0.0) >=
+    if ((((double)stream->max_local_window_size) * 0.2) >=
         stream->local_window_size)
     {
         if ((stream->max_local_window_size * 2) <
@@ -357,12 +359,12 @@ co_http2_stream_change_state(
         {
             if (frame_type != CO_HTTP2_FRAME_TYPE_PRIORITY)
             {
-                error_code = CO_HTTP2_STREAM_STATE_CLOSED;
+                error_code = CO_HTTP2_STREAM_ERROR_PROTOCOL_ERROR;
             }
         }
         else
         {
-            error_code = CO_HTTP2_STREAM_STATE_CLOSED;
+            error_code = CO_HTTP2_STREAM_ERROR_PROTOCOL_ERROR;
         }
 
         break;

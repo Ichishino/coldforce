@@ -32,8 +32,8 @@ co_http_server_on_request(
 
     if (client->on_receive != NULL)
     {
-        client->on_receive(thread, client,
-            (const co_http_message_t*)request, error_code);
+        client->on_receive(
+            thread, client, request, NULL, error_code);
     }
 
     co_http_request_destroy(client->request);
@@ -48,8 +48,8 @@ co_http_server_on_progress(
 {
     if (client->on_progress != NULL)
     {
-        if (!client->on_progress(thread, client,
-            (const co_http_message_t*)client->request,
+        if (!client->on_progress(
+            thread, client, client->request, NULL,
             client->content_receiver.receive_size))
         {
             co_http_server_on_request(
@@ -334,9 +334,6 @@ co_http_server_get_socket(
     return &server->tcp_server->sock;
 }
 
-//---------------------------------------------------------------------------//
-//---------------------------------------------------------------------------//
-
 #ifdef CO_CAN_USE_TLS
 
 co_http_server_t*
@@ -384,9 +381,6 @@ co_http_tls_server_set_available_protocols(
 }
 
 #endif // CO_CAN_USE_TLS
-
-//---------------------------------------------------------------------------//
-//---------------------------------------------------------------------------//
 
 bool
 co_http_send_response(

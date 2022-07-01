@@ -127,27 +127,17 @@ co_http_client_on_resopnse(
     int error_code
 )
 {
-    co_http_request_t* request = NULL;
-
     co_list_data_st* data =
         co_list_get_head(client->receive_queue);
 
-    if (data != NULL)
-    {
-        request = (co_http_request_t*)data->value;
-        co_list_remove_head(client->receive_queue);
-    }
-    else
-    {
-        return;
-    }
+    co_assert(data != NULL);
+    co_assert(
+        client->request == NULL ||
+        client->request == (co_http_request_t*)data->value);
 
-    if (client->request != NULL)
-    {
-        co_http_request_destroy(client->request);
-    }
+    client->request = (co_http_request_t*)data->value;
 
-    client->request = request;
+    co_list_remove_head(client->receive_queue);
 
     if ((client->receive_timer != NULL) &&
         (co_list_get_count(client->receive_queue) == 0 || error_code != 0))
@@ -159,8 +149,9 @@ co_http_client_on_resopnse(
     {
         if (client->on_receive != NULL)
         {
-            client->on_receive(thread, client,
-                (const co_http_message_t*)client->response, error_code);
+            client->on_receive(
+                thread, client,
+                client->request, client->response, error_code);
         }
 
         co_http_response_destroy(client->response);
@@ -177,9 +168,14 @@ co_http_client_on_resopnse(
 
         if (client->on_receive != NULL)
         {
-            client->on_receive(thread, client, NULL, error_code);
+            client->on_receive(
+                thread, client,
+                client->request, NULL, error_code);
         }
     }
+
+    co_http_request_destroy(client->request);
+    client->request = NULL;
 }
 
 static bool
@@ -188,10 +184,13 @@ co_http_client_on_progress(
     co_http_client_t* client
 )
 {
+    co_assert(client->request != NULL);
+
     if (client->on_progress != NULL)
     {
-        if (!client->on_progress(thread, client,
-            (const co_http_message_t*)client->response,
+        if (!client->on_progress(
+            thread, client,
+            client->request, client->response,
             client->content_receiver.receive_size))
         {
             co_http_client_on_resopnse(
@@ -261,19 +260,16 @@ co_http_client_on_receive_ready(
 
     while (data_size > client->receive_data_index)
     {
-        co_list_data_st* data =
-            co_list_get_head(client->receive_queue);
-
-        if (data == NULL)
+        if (co_list_get_count(client->receive_queue) == 0)
         {
             break;
         }
 
-        co_http_request_t* request =
-            (co_http_request_t*)data->value;
-
         if (client->response == NULL)
         {
+            co_list_data_st* data =
+                co_list_get_head(client->receive_queue);
+            client->request = (co_http_request_t*)data->value;
             client->response = co_http_response_create();
 
             if (client->response == NULL)
@@ -301,7 +297,7 @@ co_http_client_on_receive_ready(
                     &client->content_receiver,
                     &client->response->message,
                     client->receive_data_index,
-                    request->save_file_path))
+                    client->request->save_file_path))
                 {
                     return;
                 }
@@ -674,22 +670,6 @@ co_http_is_running(
 {
     return (client != NULL && client->tcp_client != NULL &&
         co_list_get_count(client->receive_queue) > 0);
-}
-
-const co_http_request_t*
-co_http_get_request(
-    const co_http_client_t* client
-)
-{
-    return client->request;
-}
-
-const co_http_response_t*
-co_http_get_response(
-    const co_http_client_t* client
-)
-{
-    return client->response;
 }
 
 void

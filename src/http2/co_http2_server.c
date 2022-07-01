@@ -212,6 +212,11 @@ co_http2_server_on_tcp_receive_ready(
                             client->system_stream, frame->header.length);
                     }
                 }
+
+                if (stream->state == CO_HTTP2_STREAM_STATE_CLOSED)
+                {
+                    co_http2_destroy_stream(client, stream);
+                }
             }
 
             co_http2_frame_destroy(frame);

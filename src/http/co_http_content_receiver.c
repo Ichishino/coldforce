@@ -49,7 +49,7 @@ co_http_receive_plain_data(
             }
             else
             {
-                fwrite(&data_ptr[receiver->index], 1, content_size, receiver->fp);
+                fwrite(&data_ptr[receiver->index], content_size, 1, receiver->fp);
             }
 
             receiver->receive_size += content_size;
@@ -147,7 +147,7 @@ co_http_receive_chunked_data(
             }
             else
             {
-                fwrite(&data_ptr[receiver->index], 1, content_size, receiver->fp);
+                fwrite(&data_ptr[receiver->index], content_size, 1, receiver->fp);
             }
 
             receiver->receive_size += content_size;

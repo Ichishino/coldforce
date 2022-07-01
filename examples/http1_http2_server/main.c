@@ -154,10 +154,11 @@ void on_my_http2_close(my_app* self, co_http2_client_t* http2_client, int error_
 //---------------------------------------------------------------------------//
 
 void on_my_http_request(my_app* self, co_http_client_t* http1_client,
-    const co_http_request_t* request, int error_code)
+    const co_http_request_t* request, const co_http_response_t* unused, int error_code)
 {
     (void)self;
     (void)request;
+    (void)unused;
 
     my_client_log(http, http1_client, "http1 request");
 
