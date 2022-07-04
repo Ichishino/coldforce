@@ -215,31 +215,31 @@ co_http_response_get_const_header(
 }
 
 bool
-co_http_response_set_content(
+co_http_response_set_data(
     co_http_response_t* response,
     const void* data,
     size_t data_size
 )
 {
-    return co_http_message_set_content(
+    return co_http_message_set_data(
         &response->message, data, data_size);
 }
 
 const void*
-co_http_response_get_content(
+co_http_response_get_data(
     const co_http_response_t* response
 )
 {
-    return co_http_message_get_content(
+    return co_http_message_get_data(
         &response->message);
 }
 
 size_t
-co_http_response_get_content_size(
+co_http_response_get_data_size(
     const co_http_response_t* response
 )
 {
-    return co_http_message_get_content_size(
+    return co_http_message_get_data_size(
         &response->message);
 }
 

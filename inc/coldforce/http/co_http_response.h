@@ -79,7 +79,7 @@ co_http_response_get_const_header(
 
 CO_HTTP_API
 bool
-co_http_response_set_content(
+co_http_response_set_data(
     co_http_response_t* response,
     const void* data,
     size_t data_size
@@ -87,13 +87,13 @@ co_http_response_set_content(
 
 CO_HTTP_API
 const void*
-co_http_response_get_content(
+co_http_response_get_data(
     const co_http_response_t* response
 );
 
 CO_HTTP_API
 size_t
-co_http_response_get_content_size(
+co_http_response_get_data_size(
     const co_http_response_t* response
 );
 

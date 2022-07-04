@@ -18,7 +18,7 @@ CO_EXTERN_C_BEGIN
 typedef struct
 {
     co_http_header_t header;
-    co_buffer_st content;
+    co_buffer_st data;
 
 } co_http_message_t;
 
@@ -50,19 +50,19 @@ co_http_message_deserialize_header(
 );
 
 bool
-co_http_message_set_content(
+co_http_message_set_data(
     co_http_message_t* request,
     const void* data,
     size_t data_size
 );
 
 const void*
-co_http_message_get_content(
+co_http_message_get_data(
     const co_http_message_t* message
 );
 
 size_t
-co_http_message_get_content_size(
+co_http_message_get_data_size(
     const co_http_message_t* message
 );
 

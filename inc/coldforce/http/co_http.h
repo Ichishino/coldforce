@@ -40,6 +40,7 @@ CO_EXTERN_C_BEGIN
 #define CO_HTTP_PARSE_COMPLETE      0
 #define CO_HTTP_PARSE_ERROR         -1
 #define CO_HTTP_PARSE_MORE_DATA     1
+#define CO_HTTP_PARSE_CANCEL        2
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

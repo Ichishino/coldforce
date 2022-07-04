@@ -28,17 +28,22 @@ typedef void(*co_http_connect_fn)(
     co_thread_t* self, struct co_http_client_t* client,
     int error_code);
 
-typedef void(*co_http_receive_fn)(
+typedef bool(*co_http_receive_start_fn)(
+    co_thread_t* self, struct co_http_client_t* client,
+    const co_http_request_t* request,
+    const co_http_response_t* response);
+
+typedef void(*co_http_receive_finish_fn)(
     co_thread_t* self, struct co_http_client_t* client,
     const co_http_request_t* request,
     const co_http_response_t* response,
     int error_code);
 
-typedef bool(*co_http_progress_fn)(
+typedef bool(*co_http_receive_data_fn)(
     co_thread_t* self, struct co_http_client_t* client,
     const co_http_request_t* request,
     const co_http_response_t* response,
-    size_t current_content_size);
+    const uint8_t* data_block, size_t data_block_size);
 
 typedef void(*co_http_close_fn)(
     co_thread_t* self, struct co_http_client_t* client);
@@ -54,10 +59,22 @@ typedef struct
 
 } co_tcp_client_module_t;
 
+typedef struct
+{
+    co_http_connect_fn on_connect;
+    co_http_receive_start_fn on_receive_start;
+    co_http_receive_finish_fn on_receive_finish;
+    co_http_receive_data_fn on_receive_data;
+    co_http_close_fn on_close;
+
+} co_http_callbacks_st;
+
 typedef struct co_http_client_t
 {
     co_tcp_client_t* tcp_client;
     co_tcp_client_module_t module;
+
+    co_http_callbacks_st callbacks;
 
     co_http_url_st* base_url;
     co_list_t* receive_queue;
@@ -68,11 +85,6 @@ typedef struct co_http_client_t
     co_http_request_t* request;
     co_http_response_t* response;
     co_http_content_receiver_t content_receiver;
-
-    co_http_connect_fn on_connect;
-    co_http_receive_fn on_receive;
-    co_http_progress_fn on_progress;
-    co_http_close_fn on_close;
 
     co_timer_t* receive_timer;
 
@@ -113,10 +125,15 @@ co_http_client_destroy(
 );
 
 CO_HTTP_API
+co_http_callbacks_st*
+co_http_get_callbacks(
+    co_http_client_t* client
+);
+
+CO_HTTP_API
 bool
 co_http_connect(
-    co_http_client_t* client,
-    co_http_connect_fn handler
+    co_http_client_t* client
 );
 
 CO_HTTP_API
@@ -138,27 +155,6 @@ CO_HTTP_API
 bool
 co_http_is_running(
     const co_http_client_t* client
-);
-
-CO_HTTP_API
-void
-co_http_set_receive_handler(
-    co_http_client_t* client,
-    co_http_receive_fn handler
-);
-
-CO_HTTP_API
-void
-co_http_set_progress_handler(
-    co_http_client_t* client,
-    co_http_progress_fn handler
-);
-
-CO_HTTP_API
-void
-co_http_set_close_handler(
-    co_http_client_t* client,
-    co_http_close_fn handler
 );
 
 CO_HTTP_API

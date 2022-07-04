@@ -25,8 +25,6 @@ typedef struct
     char* method;
     char* version;
 
-    char* save_file_path;
-
 } co_http_request_t;
 
 //---------------------------------------------------------------------------//
@@ -85,7 +83,7 @@ co_http_request_get_const_header(
 
 CO_HTTP_API
 bool
-co_http_request_set_content(
+co_http_request_set_data(
     co_http_request_t* request,
     const void* data,
     size_t data_size
@@ -93,13 +91,13 @@ co_http_request_set_content(
 
 CO_HTTP_API
 const void*
-co_http_request_get_content(
+co_http_request_get_data(
     const co_http_request_t* request
 );
 
 CO_HTTP_API
 size_t
-co_http_request_get_content_size(
+co_http_request_get_data_size(
     const co_http_request_t* request
 );
 
@@ -144,19 +142,6 @@ co_http_request_set_version(
 CO_HTTP_API
 const char*
 co_http_request_get_version(
-    const co_http_request_t* request
-);
-
-CO_HTTP_API
-void
-co_http_request_set_save_file_path(
-    co_http_request_t* request,
-    const char* save_file_path
-);
-
-CO_HTTP_API
-const char*
-co_http_request_get_save_file_path(
     const co_http_request_t* request
 );
 

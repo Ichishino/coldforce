@@ -20,7 +20,7 @@ typedef struct
     co_app_t base_app;
 
     // my app data
-    co_http_server_t* server;
+    co_tcp_server_t* server;
 
 } my_app;
 
@@ -129,11 +129,11 @@ void on_my_http_default_request(my_app* self, co_http_client_t* client, const co
     sprintf(temp, "size: %zd<br><br>\n", content_length);
     strcat(response_content, temp);
 
-    const char* content = (const char*)co_http_request_get_content(request);
+    const char* data = (const char*)co_http_request_get_data(request);
 
-    if (content != NULL)
+    if (data != NULL)
     {
-        strncat(response_content, content, content_length);
+        strncat(response_content, data, content_length);
     }
 
     strcat(response_content, "</body>\n</html>\n");
@@ -202,9 +202,10 @@ void on_my_tls_handshake(my_app* self, co_tcp_client_t* tcp_client, int error_co
         // create http client
         co_http_client_t* client = co_http_client_create_with(tcp_client);
 
-        // set callback
-        co_http_set_receive_handler(client, (co_http_receive_fn)on_my_http_request);
-        co_http_set_close_handler(client, (co_http_close_fn)on_my_http_close);
+        // callback
+        co_http_callbacks_st* callbacks = co_http_get_callbacks(client);
+        callbacks->on_receive_finish = (co_http_receive_finish_fn)on_my_http_request;
+        callbacks->on_close = (co_http_close_fn)on_my_http_close;
     }
     else
     {
@@ -268,21 +269,20 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
         return false;
     }
 
-    self->server = co_http_tls_server_create(&local_net_addr, &tls_ctx);
+    self->server = co_tls_server_create(&local_net_addr, &tls_ctx);
 
     // available protocols
     size_t protocol_count = 1;
     const char* protocols[] = { CO_HTTP_PROTOCOL };
-    co_http_tls_server_set_available_protocols(
+    co_tls_server_set_available_protocols(
         self->server, protocols, protocol_count);
 
     // socket option
     co_socket_option_set_reuse_addr(
-        co_http_server_get_socket(self->server), true);
+        co_tcp_server_get_socket(self->server), true);
 
     // listen start
-    co_http_server_start(self->server,
-        (co_tcp_accept_fn)on_my_tcp_accept, SOMAXCONN);
+    co_tls_server_start(self->server, (co_tcp_accept_fn)on_my_tcp_accept, SOMAXCONN);
 
     printf("https://127.0.0.1:%d\n", port);
 
@@ -291,7 +291,7 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
 
 void on_my_app_destroy(my_app* self)
 {
-    co_http_server_destroy(self->server);
+    co_tls_server_destroy(self->server);
 }
 
 int main(int argc, char* argv[])

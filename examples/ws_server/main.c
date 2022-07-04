@@ -12,7 +12,7 @@ typedef struct
     co_app_t base_app;
 
     // my app data
-    co_http_server_t* server;
+    co_tcp_server_t* server;
     co_list_t* clients;
 
 } my_app;
@@ -112,15 +112,14 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     co_net_addr_set_family(&local_net_addr, CO_ADDRESS_FAMILY_IPV4);
     co_net_addr_set_port(&local_net_addr, port);
 
-    self->server = co_http_server_create(&local_net_addr);
+    self->server = co_tcp_server_create(&local_net_addr);
 
     // socket option
     co_socket_option_set_reuse_addr(
-        co_http_server_get_socket(self->server), true);
+        co_tcp_server_get_socket(self->server), true);
 
     // listen start
-    co_http_server_start(self->server,
-        (co_tcp_accept_fn)on_my_tcp_accept, SOMAXCONN);
+    co_tcp_server_start(self->server, (co_tcp_accept_fn)on_my_tcp_accept, SOMAXCONN);
 
     printf("ws://127.0.0.1:%d\n", port);
 
@@ -129,8 +128,8 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
 
 void on_my_app_destroy(my_app* self)
 {
-    co_http_server_destroy(self->server);
     co_list_destroy(self->clients);
+    co_tcp_server_destroy(self->server);
 }
 
 int main(int argc, char* argv[])

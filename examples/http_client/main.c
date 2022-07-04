@@ -1,3 +1,7 @@
+#ifdef _WIN32
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include <coldforce/coldforce_http.h>
 
 // my app object
@@ -10,10 +14,55 @@ typedef struct
     char* base_url;
     char* path;
     char* save_file_path;
+    FILE* fp;
 
 } my_app;
 
-void on_my_response(my_app* self, co_http_client_t* client,
+bool on_my_receive_start(my_app* self, co_http_client_t* client,
+    const co_http_request_t* request, const co_http_response_t* response)
+{
+    (void)client;
+
+    const char* path = co_http_request_get_path(request);
+    printf("request path: %s\n", path);
+
+    const co_http_header_t* response_header = co_http_response_get_const_header(response);
+    size_t length = 0;
+    co_http_header_get_content_length(response_header, &length);
+
+    printf("content length: %zd\n", length);
+
+    // file open
+    self->fp = fopen(self->save_file_path, "wb");
+
+    if (self->fp == NULL)
+    {
+        // error
+        return false;
+    }
+
+    return true;
+}
+
+bool on_my_receive_data(my_app* self, co_http_client_t* client,
+    const co_http_request_t* request, const co_http_response_t* response,
+    const uint8_t* data_block, size_t data_block_size)
+{
+    (void)client;
+    (void)request;
+    (void)response;
+
+    // write data to file
+    if (fwrite(data_block, data_block_size, 1, self->fp) != 1)
+    {
+        // cancel receiving
+        return false;
+    }
+
+    return true;
+}
+
+void on_my_receive_finish(my_app* self, co_http_client_t* client,
     const co_http_request_t* request, const co_http_response_t* response,
     int error_code)
 {
@@ -24,10 +73,10 @@ void on_my_response(my_app* self, co_http_client_t* client,
     if (error_code == 0)
     {
         uint16_t status_code = co_http_response_get_status_code(response);
-        size_t content_size = co_http_response_get_content_size(response);
+        size_t data_size = co_http_response_get_data_size(response);
 
         printf("status code: %d\n", status_code);
-        printf("content size: %zu\n", content_size);
+        printf("data size: %zu\n", data_size);
 
         const co_http_header_t* header = co_http_response_get_const_header(response);
         const char* content_type = co_http_header_get_field(header, "Content-Type");
@@ -37,16 +86,22 @@ void on_my_response(my_app* self, co_http_client_t* client,
             printf("content type: %s\n", content_type);
         }
 
-        const void* content = co_http_response_get_content(response);
+        const void* data = co_http_response_get_data(response);
 
-        if (content != NULL)
+        if (data != NULL)
         {
-            printf("%s\n", (const char*)content);
+            printf("%s\n", (const char*)data);
         }
     }
     else
     {
         printf("error: %d\n", error_code);
+    }
+
+    if (self->fp != NULL)
+    {
+        fclose(self->fp);
+        self->fp = NULL;
     }
 
     if (!co_http_is_running(self->client))
@@ -60,17 +115,9 @@ void on_my_connect(my_app* self, co_http_client_t* client, int error_code)
 {
     if (error_code == 0)
     {
-        co_http_set_receive_handler(self->client, (co_http_receive_fn)on_my_response);
-
         // GET request
         {
             co_http_request_t* request = co_http_request_create_with("GET", self->path);
-
-            if (self->save_file_path != NULL)
-            {
-                // file save
-                co_http_request_set_save_file_path(request, self->save_file_path);
-            }
 
             // set header
             co_http_header_t* header = co_http_request_get_header(request);
@@ -146,8 +193,18 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
         return false;
     }
 
+    co_http_callbacks_st* callbacks = co_http_get_callbacks(self->client);
+    callbacks->on_connect = (co_http_connect_fn)on_my_connect;
+    callbacks->on_receive_finish = (co_http_receive_finish_fn)on_my_receive_finish;
+
+    if (self->save_file_path != NULL)
+    {
+        callbacks->on_receive_start = (co_http_receive_start_fn)on_my_receive_start;
+        callbacks->on_receive_data = (co_http_receive_data_fn)on_my_receive_data;
+    }
+
     // connect start
-    co_http_connect(self->client, (co_http_connect_fn)on_my_connect);
+    co_http_connect(self->client);
 
     return true;
 }
@@ -158,6 +215,11 @@ void on_my_app_destroy(my_app* self)
 
     co_http_url_destroy_string(self->base_url);
     co_http_url_destroy_string(self->path);
+
+    if (self->fp != NULL)
+    {
+        fclose(self->fp);
+    }
 }
 
 int main(int argc, char* argv[])

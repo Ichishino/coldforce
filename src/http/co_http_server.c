@@ -30,36 +30,14 @@ co_http_server_on_request(
 {
     co_http_request_t* request = client->request;
 
-    if (client->on_receive != NULL)
+    if (client->callbacks.on_receive_finish != NULL)
     {
-        client->on_receive(
+        client->callbacks.on_receive_finish(
             thread, client, request, NULL, error_code);
     }
 
     co_http_request_destroy(client->request);
     client->request = NULL;
-}
-
-static bool
-co_http_server_on_progress(
-    co_thread_t* thread,
-    co_http_client_t* client
-)
-{
-    if (client->on_progress != NULL)
-    {
-        if (!client->on_progress(
-            thread, client, client->request, NULL,
-            client->content_receiver.receive_size))
-        {
-            co_http_server_on_request(
-                thread, client, CO_HTTP_ERROR_CANCEL);
-
-            return false;
-        }
-    }
-
-    return true;
 }
 
 static void
@@ -110,8 +88,9 @@ co_http_server_on_receive_ready(
                 co_http_content_receiver_clear(&client->content_receiver);
 
                 if (!co_http_start_receive_content(
-                    &client->content_receiver, &client->request->message,
-                    client->receive_data_index, NULL))
+                    &client->content_receiver, client,
+                    &client->request->message,
+                    client->receive_data_index))
                 {
                     return;
                 }
@@ -123,11 +102,6 @@ co_http_server_on_receive_ready(
                     co_http_server_on_request(
                         thread, client, CO_HTTP_ERROR_CONTENT_TOO_BIG);
 
-                    return;
-                }
-
-                if (!co_http_server_on_progress(thread, client))
-                {
                     return;
                 }
             }
@@ -147,19 +121,14 @@ co_http_server_on_receive_ready(
         }
 
         int result = co_http_receive_content_data(
-            &client->content_receiver, client->receive_data);
+            &client->content_receiver, client, client->receive_data);
 
         if (result == CO_HTTP_PARSE_COMPLETE)
         {
-            if (!co_http_server_on_progress(thread, client))
-            {
-                return;
-            }
-
             co_http_complete_receive_content(
                 &client->content_receiver,
                 &client->receive_data_index,
-                &client->request->message.content);
+                &client->request->message.data);
 
             co_http_server_on_request(thread, client, 0);
 
@@ -173,7 +142,11 @@ co_http_server_on_receive_ready(
             co_http_content_more_data(
                 &client->content_receiver, client->receive_data);
 
-            co_http_server_on_progress(thread, client);
+            return;
+        }
+        else if (result == CO_HTTP_PARSE_CANCEL)
+        {
+            co_http_server_on_request(thread, client, CO_HTTP_ERROR_CANCEL);
 
             return;
         }
@@ -204,9 +177,9 @@ co_http_server_on_close(
             thread, client, CO_HTTP_ERROR_CONNECTION_CLOSED);
     }
 
-    if (client->on_close != NULL)
+    if (client->callbacks.on_close != NULL)
     {
-        client->on_close(thread, client);
+        client->callbacks.on_close(thread, client);
     }
 }
 
@@ -242,146 +215,6 @@ co_http_client_create_with(
     return client;
 }
 
-co_http_server_t*
-co_http_server_create(
-    const co_net_addr_t* local_net_addr
-)
-{
-    co_http_server_t* server =
-        (co_http_server_t*)co_mem_alloc(sizeof(co_http_server_t));
-
-    if (server == NULL)
-    {
-        return NULL;
-    }
-
-    server->tcp_server = co_tcp_server_create(local_net_addr);
-
-    if (server->tcp_server == NULL)
-    {
-        co_mem_free(server);
-
-        return NULL;
-    }
-
-    server->module.destroy = co_tcp_server_destroy;
-    server->module.close = co_tcp_server_close;
-    server->module.start = co_tcp_server_start;
-
-    server->tcp_server->sock.sub_class = server;
-
-    return server;
-}
-
-void
-co_http_server_destroy(
-    co_http_server_t* server
-)
-{
-    if (server != NULL)
-    {
-        co_http_server_close(server);
-
-        if (server->tcp_server != NULL)
-        {
-            server->module.destroy(server->tcp_server);
-            server->tcp_server = NULL;
-
-            co_mem_free_later(server);
-        }
-    }
-}
-
-void
-co_http_server_close(
-    co_http_server_t* server
-)
-{
-    if (server != NULL)
-    {
-        if (server->tcp_server != NULL &&
-            server->tcp_server->sock.open_local)
-        {
-            server->module.close(server->tcp_server);
-
-            co_http_log_info(
-                &server->tcp_server->sock.local_net_addr,
-                NULL, NULL, "http server closed");
-        }
-    }
-}
-
-bool
-co_http_server_start(
-    co_http_server_t* server,
-    co_tcp_accept_fn handler,
-    int backlog
-)
-{
-    co_http_log_info(
-        &server->tcp_server->sock.local_net_addr,
-        NULL, NULL, "http server start");
-
-    return server->module.start(
-        server->tcp_server, handler, backlog);
-}
-
-co_socket_t*
-co_http_server_get_socket(
-    co_http_server_t* server
-)
-{
-    return &server->tcp_server->sock;
-}
-
-#ifdef CO_CAN_USE_TLS
-
-co_http_server_t*
-co_http_tls_server_create(
-    const co_net_addr_t* local_net_addr,
-    co_tls_ctx_st* tls_ctx
-)
-{
-    co_http_server_t* server =
-        (co_http_server_t*)co_mem_alloc(sizeof(co_http_server_t));
-
-    if (server == NULL)
-    {
-        return NULL;
-    }
-
-    server->tcp_server =
-        co_tls_server_create(local_net_addr, tls_ctx);
-
-    if (server->tcp_server == NULL)
-    {
-        co_mem_free(server);
-
-        return NULL;
-    }
-
-    server->module.destroy = co_tls_server_destroy;
-    server->module.close = co_tls_server_close;
-    server->module.start = co_tls_server_start;
-
-    server->tcp_server->sock.sub_class = server;
-
-    return server;
-}
-
-void
-co_http_tls_server_set_available_protocols(
-    co_http_server_t* server,
-    const char* protocols[],
-    size_t protocol_count
-)
-{
-    co_tls_server_set_available_protocols(
-        server->tcp_server, protocols, protocol_count);
-}
-
-#endif // CO_CAN_USE_TLS
-
 bool
 co_http_send_response(
     co_http_client_t* client,
@@ -389,7 +222,7 @@ co_http_send_response(
 )
 {
     size_t content_size =
-        co_http_response_get_content_size(response);
+        co_http_response_get_data_size(response);
 
     if (content_size > 0)
     {

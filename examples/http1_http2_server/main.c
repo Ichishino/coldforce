@@ -20,7 +20,7 @@ typedef struct
     co_app_t base_app;
 
     // my app data
-    co_http_server_t* server;
+    co_tcp_server_t* server;
     co_list_t* http2_clients;
 
 } my_app;
@@ -230,8 +230,10 @@ void on_my_tls_handshake(my_app* self, co_tcp_client_t* tcp_client, int error_co
 
             co_http_client_t* http1_client = co_http_client_create_with(tcp_client);
 
-            co_http_set_receive_handler(http1_client, (co_http_receive_fn)on_my_http_request);
-            co_http_set_close_handler(http1_client, (co_http_close_fn)on_my_http_close);
+            // callback
+            co_http_callbacks_st* callbacks = co_http_get_callbacks(http1_client);
+            callbacks->on_receive_finish = (co_http_receive_finish_fn)on_my_http_request;
+            callbacks->on_close = (co_http_close_fn)on_my_http_close;
         }
     }
     else
@@ -266,18 +268,19 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t
 #else
 
     // cannot determine http protocol version
-    #if 1
+#if 1
     // http/1.1
-    co_http_client_t* client = co_http_client_create_with(tcp_client);
-    co_http_set_receive_handler(client, (co_http_receive_fn)on_my_http_request);
-    co_http_set_close_handler(client, (co_http_close_fn)on_my_http_close);
-    #else
+    co_http_client_t* http1_client = co_http_client_create_with(tcp_client);
+    co_http_callbacks_st* callbacks = co_http_get_callbacks(http1_client);
+    callbacks->on_receive_finish = (co_http_receive_finish_fn)on_my_http_request;
+    callbacks->on_close = (co_http_close_fn)on_my_http_close;
+#else
     // http/2
     co_http2_client_t* http2_client = co_http2_client_create_with(tcp_client);
     co_http2_set_message_handler(http2_client, (co_http2_message_fn)on_my_http2_request);
     co_http2_set_close_handler(http2_client, (co_http2_close_fn)on_my_http2_close);
     co_list_add_tail(self->http2_clients, (uintptr_t)http2_client);
-    #endif
+#endif
 
 #endif
 }
@@ -334,33 +337,37 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     }
 
     // https server
-    self->server = co_http_tls_server_create(&local_net_addr, &tls_ctx);
+    self->server = co_tls_server_create(&local_net_addr, &tls_ctx);
 
     // available protocols
     size_t protocol_count = 2;
     const char* protocols[] = { CO_HTTP2_PROTOCOL, CO_HTTP_PROTOCOL };
-    co_http_tls_server_set_available_protocols(
+    co_tls_server_set_available_protocols(
         self->server, protocols, protocol_count);
+
+    // socket option
+    co_socket_option_set_reuse_addr(
+        co_tcp_server_get_socket(self->server), true);
+
+    // listen start
+    co_tls_server_start(self->server, (co_tcp_accept_fn)on_my_tcp_accept, SOMAXCONN);
+
+    printf("https://127.0.0.1:%d\n", port);
 
 #else
 
     // http server
-    self->server = co_http_server_create(&local_net_addr);
-
-#endif
+    self->server = co_tcp_server_create(&local_net_addr);
 
     // socket option
     co_socket_option_set_reuse_addr(
-        co_http_server_get_socket(self->server), true);
+        co_tcp_server_get_socket(self->server), true);
 
     // listen start
-    co_http_server_start(self->server,
-        (co_tcp_accept_fn)on_my_tcp_accept, SOMAXCONN);
+    co_tcp_server_start(self->server, (co_tcp_accept_fn)on_my_tcp_accept, SOMAXCONN);
 
-#ifdef CO_CAN_USE_TLS
-    printf("https://127.0.0.1:%d\n", port);
-#else
     printf("http://127.0.0.1:%d\n", port);
+
 #endif
 
     return true;
@@ -369,7 +376,12 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
 void on_my_app_destroy(my_app* self)
 {
     co_list_destroy(self->http2_clients);
-    co_http_server_destroy(self->server);
+
+#ifdef CO_CAN_USE_TLS
+    co_tls_server_destroy(self->server);
+#else
+    co_tcp_server_destroy(self->server);
+#endif
 }
 
 int main(int argc, char* argv[])

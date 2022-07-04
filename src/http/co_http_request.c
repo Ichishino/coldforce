@@ -192,7 +192,6 @@ void
     request->url = NULL;
     request->method = NULL;
     request->version = NULL;
-    request->save_file_path = NULL;
 
     return request;
 }
@@ -225,7 +224,6 @@ co_http_request_destroy(
     {
         co_string_destroy(request->method);
         co_string_destroy(request->version);
-        co_string_destroy(request->save_file_path);
 
         co_http_url_destroy(request->url);
         co_http_message_cleanup(&request->message);
@@ -251,31 +249,31 @@ co_http_request_get_const_header(
 }
 
 bool
-co_http_request_set_content(
+co_http_request_set_data(
     co_http_request_t* request,
     const void* data,
     size_t data_size
 )
 {
-    return co_http_message_set_content(
+    return co_http_message_set_data(
         &request->message, data, data_size);
 }
 
 const void*
-co_http_request_get_content(
+co_http_request_get_data(
     const co_http_request_t* request
 )
 {
-    return co_http_message_get_content(
+    return co_http_message_get_data(
         &request->message);
 }
 
 size_t
-co_http_request_get_content_size(
+co_http_request_get_data_size(
     const co_http_request_t* request
 )
 {
-    return co_http_message_get_content_size(
+    return co_http_message_get_data_size(
         &request->message);
 }
 
@@ -372,32 +370,6 @@ co_http_request_get_version(
 )
 {
     return request->version;
-}
-
-void
-co_http_request_set_save_file_path(
-    co_http_request_t* request,
-    const char* save_file_path
-)
-{
-    co_string_destroy(request->save_file_path);
-
-    if (save_file_path != NULL)
-    {
-        request->save_file_path = co_string_duplicate(save_file_path);
-    }
-    else
-    {
-        request->save_file_path = NULL;
-    }
-}
-
-const char*
-co_http_request_get_save_file_path(
-    const co_http_request_t* request
-)
-{
-    return request->save_file_path;
 }
 
 void

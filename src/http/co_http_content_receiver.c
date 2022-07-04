@@ -20,6 +20,7 @@
 static int
 co_http_receive_plain_data(
     co_http_content_receiver_t* receiver,
+    co_http_client_t* client,
     co_byte_array_t* receive_data
 )
 {
@@ -42,14 +43,20 @@ co_http_receive_plain_data(
             co_http_log_debug(NULL, NULL, NULL,
                 "http receive data %zd bytes", content_size);
 
-            if (receiver->fp == NULL)
+            if (client->callbacks.on_receive_data == NULL)
             {
                 co_byte_array_add(
                     receiver->data, &data_ptr[receiver->index], content_size);
             }
             else
             {
-                fwrite(&data_ptr[receiver->index], content_size, 1, receiver->fp);
+                if (!client->callbacks.on_receive_data(
+                    client->tcp_client->sock.owner_thread,
+                    client, client->request, client->response,
+                    (const uint8_t*)&data_ptr[receiver->index], content_size))
+                {
+                    return CO_HTTP_PARSE_CANCEL;
+                }
             }
 
             receiver->receive_size += content_size;
@@ -68,6 +75,7 @@ co_http_receive_plain_data(
 static int
 co_http_receive_chunked_data(
     co_http_content_receiver_t* receiver,
+    co_http_client_t* client,
     co_byte_array_t* receive_data
 )
 {
@@ -140,14 +148,20 @@ co_http_receive_chunked_data(
 
         if (content_size > 0)
         {
-            if (receiver->fp == NULL)
+            if (client->callbacks.on_receive_data == NULL)
             {
                 co_byte_array_add(
                     receiver->data, &data_ptr[receiver->index], content_size);
             }
             else
             {
-                fwrite(&data_ptr[receiver->index], content_size, 1, receiver->fp);
+                if (!client->callbacks.on_receive_data(
+                    client->tcp_client->sock.owner_thread,
+                    client, client->request, client->response,
+                    (const uint8_t*)&data_ptr[receiver->index], content_size))
+                {
+                    return CO_HTTP_PARSE_CANCEL;
+                }
             }
 
             receiver->receive_size += content_size;
@@ -186,7 +200,6 @@ co_http_content_receiver_setup(
     receiver->size = 0;
     receiver->receive_size = 0;
     receiver->data = co_byte_array_create();
-    receiver->fp = NULL;
 }
 
 void
@@ -216,20 +229,14 @@ co_http_content_receiver_clear(
     receiver->receive_size = 0;
     
     co_byte_array_clear(receiver->data);
-
-    if (receiver->fp != NULL)
-    {
-        fclose(receiver->fp);
-        receiver->fp = NULL;
-    }
 }
 
 bool
 co_http_start_receive_content(
     co_http_content_receiver_t* receiver,
+    co_http_client_t* client,
     co_http_message_t* message,
-    size_t index,
-    const char* file_path
+    size_t index
 )
 {
     const char* value = co_http_header_get_field(
@@ -257,11 +264,11 @@ co_http_start_receive_content(
 
     receiver->index = index;
 
-    if (file_path != NULL)
+    if (client->callbacks.on_receive_start != NULL)
     {
-        receiver->fp = fopen(file_path, "wb");
-
-        if (receiver->fp == NULL)
+        if (!client->callbacks.on_receive_start(
+            client->tcp_client->sock.owner_thread,
+            client, client->request, client->response))
         {
             return false;
         }
@@ -273,16 +280,17 @@ co_http_start_receive_content(
 int
 co_http_receive_content_data(
     co_http_content_receiver_t* receiver,
+    co_http_client_t* client,
     co_byte_array_t* receive_data
 )
 {
     if (receiver->chunked)
     {
-        return co_http_receive_chunked_data(receiver, receive_data);
+        return co_http_receive_chunked_data(receiver, client, receive_data);
     }
     else
     {
-        return co_http_receive_plain_data(receiver, receive_data);
+        return co_http_receive_plain_data(receiver, client, receive_data);
     }
 }
 

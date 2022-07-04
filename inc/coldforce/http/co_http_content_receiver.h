@@ -10,6 +10,8 @@
 
 CO_EXTERN_C_BEGIN
 
+struct co_http_client_t;
+
 //---------------------------------------------------------------------------//
 // http content receiver
 //---------------------------------------------------------------------------//
@@ -29,7 +31,6 @@ typedef struct
     size_t receive_size;
 
     co_byte_array_t* data;
-    FILE* fp;
 
 } co_http_content_receiver_t;
 
@@ -55,14 +56,15 @@ co_http_content_receiver_clear(
 bool
 co_http_start_receive_content(
     co_http_content_receiver_t* receiver,
+    struct co_http_client_t* client,
     co_http_message_t* message,
-    size_t index,
-    const char* file_path
+    size_t index
 );
 
 int
 co_http_receive_content_data(
     co_http_content_receiver_t* receiver,
+    struct co_http_client_t* client,
     co_byte_array_t* receive_data
 );
 

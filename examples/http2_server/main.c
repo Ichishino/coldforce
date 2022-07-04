@@ -20,7 +20,7 @@ typedef struct
     co_app_t base_app;
 
     // my app data
-    co_http_server_t* server;
+    co_tcp_server_t* server;
     co_list_t* http2_clients;
     uint16_t port;
     char authority[256];
@@ -452,34 +452,38 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     }
 
     // https server
-    self->server = co_http_tls_server_create(&local_net_addr, &tls_ctx);
+    self->server = co_tls_server_create(&local_net_addr, &tls_ctx);
 
     // available protocols
     size_t protocol_count = 1;
     const char* protocols[] = { CO_HTTP2_PROTOCOL };
-    co_http_tls_server_set_available_protocols(
+    co_tls_server_set_available_protocols(
         self->server, protocols, protocol_count);
+
+    // socket option
+    co_socket_option_set_reuse_addr(
+        co_tcp_server_get_socket(self->server), true);
+
+    // listen start
+    co_tls_server_start(self->server, (co_tcp_accept_fn)on_my_tcp_accept, SOMAXCONN);
+
+    printf("https://%s\n", self->authority);
 
 #else
 
     // http server
-    self->server = co_http_server_create(&local_net_addr);
-
-#endif // CO_CAN_USE_TLS
+    self->server = co_tcp_server_create(&local_net_addr);
 
     // socket option
     co_socket_option_set_reuse_addr(
-        co_http_server_get_socket(self->server), true);
+        co_tcp_server_get_socket(self->server), true);
 
     // listen start
-    co_http_server_start(self->server,
-        (co_tcp_accept_fn)on_my_tcp_accept, SOMAXCONN);
+    co_tcp_server_start(self->server, (co_tcp_accept_fn)on_my_tcp_accept, SOMAXCONN);
 
-#ifdef CO_CAN_USE_TLS
-    printf("https://%s\n", self->authority);
-#else
     printf("http://%s\n", self->authority);
-#endif
+
+#endif // CO_CAN_USE_TLS
 
     return true;
 }
@@ -487,7 +491,12 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
 void on_my_app_destroy(my_app* self)
 {
     co_list_destroy(self->http2_clients);
-    co_http_server_destroy(self->server);
+
+#ifdef CO_CAN_USE_TLS
+    co_tls_server_destroy(self->server);
+#else
+    co_tcp_server_destroy(self->server);
+#endif
 }
 
 int main(int argc, char* argv[])
