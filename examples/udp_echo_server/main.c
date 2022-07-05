@@ -67,8 +67,12 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     co_socket_option_set_receive_buffer(co_udp_get_socket(self->udp), 65535);
 #endif
 
+    // callback
+    co_udp_callbacks_st* callbacks = co_udp_get_callbacks(self->udp);
+    callbacks->on_receive = (co_udp_receive_fn)on_my_udp_receive;
+
     // receive start
-    co_udp_receive_start(self->udp, (co_udp_receive_fn)on_my_udp_receive);
+    co_udp_receive_start(self->udp);
 
     char local_str[64];
     co_net_addr_to_string(&local_net_addr, local_str, sizeof(local_str));

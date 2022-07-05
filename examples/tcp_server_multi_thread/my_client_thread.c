@@ -63,8 +63,10 @@ void on_my_tcp_transfer(my_client_thread* self, co_tcp_client_t* client)
     // accept
     co_tcp_accept((co_thread_t*)self, client);
 
-    co_tcp_set_receive_handler(client, (co_tcp_receive_fn)on_my_tcp_receive);
-    co_tcp_set_close_handler(client, (co_tcp_close_fn)on_my_tcp_close);
+    // callback
+    co_tcp_callbacks_st* callbacks = co_tcp_get_callbacks(client);
+    callbacks->on_receive = (co_tcp_receive_fn)on_my_tcp_receive;
+    callbacks->on_close = (co_tcp_close_fn)on_my_tcp_close;
 
     co_mutex_lock(self->mutex);
     co_list_add_tail(self->client_list, (uintptr_t)client);

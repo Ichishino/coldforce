@@ -90,17 +90,19 @@ void my_connect(my_app* self)
 
     self->client = co_tls_client_create(&local_net_addr, NULL);
 
-    co_tls_set_receive_handler(self->client, (co_tcp_receive_fn)on_my_tls_receive);
-    co_tls_set_close_handler(self->client, (co_tcp_close_fn)on_my_tls_close);
-
     // remote address
     co_net_addr_t remote_net_addr = { 0 };
     co_net_addr_set_address(&remote_net_addr, self->server_ip_address);
     co_net_addr_set_port(&remote_net_addr, self->server_port);
 
+    // callback
+    co_tcp_callbacks_st* callbacks = co_tcp_get_callbacks(self->client);
+    callbacks->on_connect = (co_tcp_connect_fn)on_my_tls_connect;
+    callbacks->on_receive = (co_tcp_receive_fn)on_my_tls_receive;
+    callbacks->on_close = (co_tcp_close_fn)on_my_tls_close;
+
     // connect
-    co_tls_connect(
-        self->client, &remote_net_addr, (co_tcp_connect_fn)on_my_tls_connect);
+    co_tls_connect(self->client, &remote_net_addr);
 
     char remote_str[64];
     co_net_addr_to_string(&remote_net_addr, remote_str, sizeof(remote_str));

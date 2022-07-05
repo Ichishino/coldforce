@@ -36,15 +36,21 @@ typedef struct
 
 } co_udp_send_data_t;
 
+typedef struct
+{
+    co_udp_send_fn on_send_async;
+    co_udp_receive_fn on_receive;
+
+} co_udp_callbacks_st;
+
 typedef struct co_udp_t
 {
     co_socket_t sock;
 
+    co_udp_callbacks_st callbacks;
+
     bool bound_local_net_addr;
     uint32_t sock_event_flags;
-
-    co_udp_send_fn on_send_complete;
-    co_udp_receive_fn on_receive_ready;
 
 #ifdef CO_OS_WIN
     co_win_udp_extension_t win;
@@ -92,6 +98,12 @@ co_udp_destroy(
 );
 
 CO_NET_API
+co_udp_callbacks_st*
+co_udp_get_callbacks(
+    co_udp_t* udp
+);
+
+CO_NET_API
 void
 co_udp_close(
     co_udp_t* udp
@@ -118,8 +130,7 @@ co_udp_send_async(
 CO_NET_API
 bool
 co_udp_receive_start(
-    co_udp_t* udp,
-    co_udp_receive_fn handler
+    co_udp_t* udp
 );
 
 CO_NET_API
@@ -135,13 +146,6 @@ CO_NET_API
 bool
 co_udp_bind_local_net_addr(
     co_udp_t* udp
-);
-
-CO_NET_API
-void
-co_udp_set_send_complete_handler(
-    co_udp_t* udp,
-    co_udp_send_fn handler
 );
 
 CO_NET_API

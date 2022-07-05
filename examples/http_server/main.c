@@ -223,8 +223,12 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     co_socket_option_set_reuse_addr(
         co_tcp_server_get_socket(self->server), true);
 
+    // callback
+    co_tcp_server_callbacks_st* callbacks = co_tcp_server_get_callbacks(self->server);
+    callbacks->on_accept = (co_tcp_accept_fn)on_my_tcp_accept;
+
     // listen start
-    co_tcp_server_start(self->server, (co_tcp_accept_fn)on_my_tcp_accept, SOMAXCONN);
+    co_tcp_server_start(self->server, SOMAXCONN);
 
     printf("http://127.0.0.1:%d\n", port);
 

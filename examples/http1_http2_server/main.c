@@ -219,8 +219,10 @@ void on_my_tls_handshake(my_app* self, co_tcp_client_t* tcp_client, int error_co
 
             co_http2_client_t* http2_client = co_http2_client_create_with(tcp_client);
 
-            co_http2_set_message_handler(http2_client, (co_http2_message_fn)on_my_http2_request);
-            co_http2_set_close_handler(http2_client, (co_http2_close_fn)on_my_http2_close);
+            // callback
+            co_http2_callbacks_st* callback = co_http2_get_callbacks(http2_client);
+            callback->on_message = (co_http2_message_fn)on_my_http2_request;
+            callback->on_close = (co_http2_close_fn)on_my_http2_close;
 
             co_list_add_tail(self->http2_clients, (uintptr_t)http2_client);
         }
@@ -261,9 +263,12 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t
 
 #ifdef CO_CAN_USE_TLS
 
+    // callback
+    co_tls_callbacks_st* callbacks = co_tls_get_callbacks(tcp_client);
+    callbacks->on_handshake = (co_tls_handshake_fn)on_my_tls_handshake;
+
     // TLS handshake
-    co_tls_start_handshake(
-        tcp_client, (co_tls_handshake_fn)on_my_tls_handshake);
+    co_tls_start_handshake(tcp_client);
 
 #else
 
@@ -349,8 +354,12 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     co_socket_option_set_reuse_addr(
         co_tcp_server_get_socket(self->server), true);
 
+    // callback
+    co_tcp_server_callbacks_st* callbacks = co_tcp_server_get_callbacks(self->server);
+    callbacks->on_accept = (co_tcp_accept_fn)on_my_tcp_accept;
+
     // listen start
-    co_tls_server_start(self->server, (co_tcp_accept_fn)on_my_tcp_accept, SOMAXCONN);
+    co_tls_server_start(self->server, SOMAXCONN);
 
     printf("https://127.0.0.1:%d\n", port);
 
@@ -363,8 +372,12 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     co_socket_option_set_reuse_addr(
         co_tcp_server_get_socket(self->server), true);
 
+    // callback
+    co_tcp_server_callbacks_st* callbacks = co_tcp_server_get_callbacks(self->server);
+    callbacks->on_accept = (co_tcp_accept_fn)on_my_tcp_accept;
+
     // listen start
-    co_tcp_server_start(self->server, (co_tcp_accept_fn)on_my_tcp_accept, SOMAXCONN);
+    co_tcp_server_start(self->server, SOMAXCONN);
 
     printf("http://127.0.0.1:%d\n", port);
 

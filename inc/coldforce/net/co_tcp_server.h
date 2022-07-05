@@ -28,11 +28,17 @@ typedef void(*co_tcp_accept_fn)(
 typedef void(*co_tcp_transfer_fn)(
     co_thread_t* self, co_tcp_client_t* client);
 
+typedef struct
+{
+    co_tcp_accept_fn on_accept;
+
+} co_tcp_server_callbacks_st;
+
 typedef struct co_tcp_server_t
 {
     co_socket_t sock;
 
-    co_tcp_accept_fn on_accept_ready;
+    co_tcp_server_callbacks_st callbacks;
 
 #ifdef CO_OS_WIN
     co_win_tcp_server_extention_t win;
@@ -66,6 +72,12 @@ co_tcp_server_destroy(
 );
 
 CO_NET_API
+co_tcp_server_callbacks_st*
+co_tcp_server_get_callbacks(
+    co_tcp_server_t* server
+);
+
+CO_NET_API
 void
 co_tcp_server_close(
     co_tcp_server_t* server
@@ -75,7 +87,6 @@ CO_NET_API
 bool
 co_tcp_server_start(
     co_tcp_server_t* server,
-    co_tcp_accept_fn handler,
     int backlog
 );
 

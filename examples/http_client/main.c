@@ -193,6 +193,7 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
         return false;
     }
 
+    // callback
     co_http_callbacks_st* callbacks = co_http_get_callbacks(self->client);
     callbacks->on_connect = (co_http_connect_fn)on_my_connect;
     callbacks->on_receive_finish = (co_http_receive_finish_fn)on_my_receive_finish;

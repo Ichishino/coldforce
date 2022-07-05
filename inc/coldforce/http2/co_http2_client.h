@@ -62,10 +62,27 @@ typedef struct
 
 } co_http2_settings_st;
 
+typedef struct
+{
+    co_http2_connect_fn on_connect;
+    co_http2_upgrade_fn on_upgrade;
+    co_http2_close_fn on_close;
+    co_http2_message_fn on_message;
+    co_http2_push_request_fn on_push_request;
+    co_http2_message_fn on_push_response;
+    co_http2_priority_fn on_priority;
+    co_http2_window_update_fn on_window_update;
+    co_http2_close_stream_fn on_close_stream;
+    co_http2_ping_fn on_ping;
+
+} co_http2_callbacks_st;
+
 typedef struct co_http2_client_t
 {
     co_tcp_client_t* tcp_client;
     co_tcp_client_module_t module;
+
+    co_http2_callbacks_st callbacks;
 
     co_http_url_st* base_url;
 
@@ -79,17 +96,6 @@ typedef struct co_http2_client_t
     uint32_t new_stream_id;
 
     co_byte_array_t* upgrade_request_data;
-
-    co_http2_connect_fn on_connect;
-    co_http2_upgrade_fn on_upgrade;
-    co_http2_close_fn on_close;
-    co_http2_message_fn on_message;
-    co_http2_push_request_fn on_push_request;
-    co_http2_message_fn on_push_response;
-    co_http2_priority_fn on_priority;
-    co_http2_window_update_fn on_window_update;
-    co_http2_close_stream_fn on_close_stream;
-    co_http2_ping_fn on_ping;
 
     co_http2_settings_st local_settings;
     co_http2_settings_st remote_settings;
@@ -173,6 +179,12 @@ co_http2_client_destroy(
 );
 
 CO_HTTP2_API
+co_http2_callbacks_st*
+co_http2_get_callbacks(
+    co_http2_client_t* client
+);
+
+CO_HTTP2_API
 void
 co_http2_client_close(
     co_http2_client_t* client,
@@ -188,16 +200,14 @@ co_http2_is_running(
 CO_HTTP2_API
 bool
 co_http2_connect(
-    co_http2_client_t* client,
-    co_http2_connect_fn handler
+    co_http2_client_t* client
 );
 
 CO_HTTP2_API
 bool
 co_http2_connect_and_request_upgrade(
     co_http2_client_t* client,
-    co_http_request_t* upgrade_request,
-    co_http2_upgrade_fn handler
+    co_http_request_t* upgrade_request
 );
 
 CO_HTTP2_API
@@ -218,48 +228,6 @@ void
 co_http2_destroy_stream(
     co_http2_client_t* client,
     co_http2_stream_t* stream
-);
-
-CO_HTTP2_API
-void
-co_http2_set_message_handler(
-    co_http2_client_t* client,
-    co_http2_message_fn handler
-);
-
-CO_HTTP2_API
-void
-co_http2_set_close_handler(
-    co_http2_client_t* client,
-    co_http2_close_fn handler
-);
-
-CO_HTTP2_API
-void
-co_http2_set_server_push_request_handler(
-    co_http2_client_t* client,
-    co_http2_push_request_fn handler
-);
-
-CO_HTTP2_API
-void
-co_http2_set_server_push_response_handler(
-    co_http2_client_t* client,
-    co_http2_message_fn handler
-);
-
-CO_HTTP2_API
-void
-co_http2_set_window_update_handler(
-    co_http2_client_t* client,
-    co_http2_window_update_fn handler
-);
-
-CO_HTTP2_API
-void
-co_http2_set_close_stream_handler(
-    co_http2_client_t* client,
-    co_http2_close_stream_fn handler
 );
 
 CO_HTTP2_API

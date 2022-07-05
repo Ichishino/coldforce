@@ -35,7 +35,7 @@ co_tls_server_setup(
     tls->protocols = NULL;
     tls->protocols_length = 0;
 
-    tls->on_accept_ready = NULL;
+    tls->on_accept = NULL;
 }
 
 static void
@@ -78,9 +78,9 @@ co_tls_server_on_accept_ready(
     co_tls_client_setup(client_tls, &server_tls->ctx, client);
     SSL_set_accept_state(client_tls->ssl);
 
-    if (server_tls->on_accept_ready != NULL)
+    if (server_tls->on_accept != NULL)
     {
-        server_tls->on_accept_ready(thread, server, client);
+        server_tls->on_accept(thread, server, client);
     }
 }
 
@@ -221,16 +221,15 @@ co_tls_server_set_available_protocols(
 bool
 co_tls_server_start(
     co_tcp_server_t* server,
-    co_tcp_accept_fn handler,
     int backlog
 )
 {
     co_tls_server_t* tls = co_tcp_server_get_tls(server);
 
-    tls->on_accept_ready = handler;
+    tls->on_accept = server->callbacks.on_accept;
+    server->callbacks.on_accept = (co_tcp_accept_fn)co_tls_server_on_accept_ready;
 
-    return co_tcp_server_start(
-        server, (co_tcp_accept_fn)co_tls_server_on_accept_ready, backlog);
+    return co_tcp_server_start(server, backlog);
 }
 
 #endif // CO_CAN_USE_TLS

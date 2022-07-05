@@ -54,8 +54,10 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* server, co_tcp_client_t* cl
     // accept
     co_tcp_accept((co_thread_t*)self, client);
 
-    co_tcp_set_receive_handler(client, (co_tcp_receive_fn)on_my_tcp_receive);
-    co_tcp_set_close_handler(client, (co_tcp_close_fn)on_my_tcp_close);
+    // callback
+    co_tcp_callbacks_st* callbacks = co_tcp_get_callbacks(client);
+    callbacks->on_receive = (co_tcp_receive_fn)on_my_tcp_receive;
+    callbacks->on_close = (co_tcp_close_fn)on_my_tcp_close;
 
     co_list_add_tail(self->client_list, (uintptr_t)client);
 
@@ -93,9 +95,12 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     co_socket_option_set_reuse_addr(
         co_tcp_server_get_socket(self->server), true);
 
+    // callback
+    co_tcp_server_callbacks_st* callbacks = co_tcp_server_get_callbacks(self->server);
+    callbacks->on_accept = (co_tcp_accept_fn)on_my_tcp_accept;
+
     // listen start
-    co_tcp_server_start(self->server,
-        (co_tcp_accept_fn)on_my_tcp_accept, SOMAXCONN);
+    co_tcp_server_start(self->server, SOMAXCONN);
 
     char local_str[64];
     co_net_addr_to_string(&local_net_addr, local_str, sizeof(local_str));

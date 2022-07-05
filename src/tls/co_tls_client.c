@@ -82,9 +82,9 @@ co_tls_client_setup(
     (void)BIO_make_bio_pair(internal_bio, tls->network_bio);
     SSL_set_bio(tls->ssl, internal_bio, internal_bio);
 
+    tls->callbacks.on_handshake = NULL;
     tls->on_connect = NULL;
-    tls->on_receive_ready = NULL;
-    tls->on_handshake_complete = NULL;
+    tls->on_receive = NULL;
     tls->receive_data_queue = co_queue_create(sizeof(uint8_t), NULL);
 }
 
@@ -320,11 +320,12 @@ co_tls_on_handshake_complete(
 
     co_tls_client_t* tls = co_tcp_client_get_tls(client);
 
-    if (tls->on_connect != NULL)
-    {
-        co_tcp_connect_fn handler = tls->on_connect;
+    client->callbacks.on_connect = tls->on_connect;
+    tls->on_connect = NULL;
 
-        handler(thread, client, error_code);
+    if (client->callbacks.on_connect != NULL)
+    {
+        client->callbacks.on_connect(thread, client, error_code);
     }
 }
 
@@ -335,20 +336,23 @@ co_tls_on_connect(
     int error_code
 )
 {
+    co_tls_client_t* tls = co_tcp_client_get_tls(client);
+
     if (error_code == 0)
     {
-        co_tls_start_handshake(client,
-            (co_tls_handshake_fn)co_tls_on_handshake_complete);
+        tls->callbacks.on_handshake =
+            (co_tls_handshake_fn)co_tls_on_handshake_complete;
+
+        co_tls_start_handshake(client);
     }
     else
     {
-        co_tls_client_t* tls = co_tcp_client_get_tls(client);
+        client->callbacks.on_connect = tls->on_connect;
+        tls->on_connect = NULL;
 
-        if (tls->on_connect != NULL)
+        if (client->callbacks.on_connect != NULL)
         {
-            co_tcp_connect_fn handler = tls->on_connect;
-
-            handler(thread, client, error_code);
+            client->callbacks.on_connect(thread, client, error_code);
         }
     }
 }
@@ -432,12 +436,12 @@ co_tls_on_receive_handshake(
             0);
     }
 
-    if (tls->on_handshake_complete != NULL)
-    {
-        client->on_receive_ready = tls->on_receive_ready;
-        tls->on_receive_ready = NULL;
+    client->callbacks.on_receive = tls->on_receive;
+    tls->on_receive = NULL;
 
-        tls->on_handshake_complete(thread, client, error_code);
+    if (tls->callbacks.on_handshake != NULL)
+    {
+        tls->callbacks.on_handshake(thread, client, error_code);
     }
 }
 
@@ -485,6 +489,21 @@ co_tls_client_destroy(
 
         co_tcp_client_destroy(client);
     }
+}
+
+co_tls_callbacks_st*
+co_tls_get_callbacks(
+    co_tcp_client_t* client
+)
+{
+    co_tls_client_t* tls = co_tcp_client_get_tls(client);
+
+    if (tls != NULL)
+    {
+        return &tls->callbacks;
+    }
+
+    return NULL;
 }
 
 void
@@ -565,23 +584,20 @@ co_tls_get_selected_protocol(
 bool
 co_tls_connect(
     co_tcp_client_t* client,
-    const co_net_addr_t* remote_net_addr,
-    co_tcp_connect_fn handler
+    const co_net_addr_t* remote_net_addr
 )
 {
     co_tls_client_t* tls = co_tcp_client_get_tls(client);
 
-    tls->on_connect = handler;
+    tls->on_connect = client->callbacks.on_connect;
+    client->callbacks.on_connect = co_tls_on_connect;
 
-    return co_tcp_connect(
-        client, remote_net_addr,
-        (co_tcp_connect_fn)co_tls_on_connect);
+    return co_tcp_connect(client, remote_net_addr);
 }
 
 bool
 co_tls_start_handshake(
-    co_tcp_client_t* client,
-    co_tls_handshake_fn handler
+    co_tcp_client_t* client
 )
 {
     co_tls_log_info(
@@ -597,9 +613,8 @@ co_tls_start_handshake(
         return false;
     }
 
-    tls->on_handshake_complete = handler;
-    tls->on_receive_ready = client->on_receive_ready;
-    client->on_receive_ready =
+    tls->on_receive = client->callbacks.on_receive;
+    client->callbacks.on_receive =
         (co_tcp_receive_fn)co_tls_on_receive_handshake;
 
     int ssl_result = SSL_do_handshake(tls->ssl);
@@ -762,33 +777,6 @@ co_tls_is_open(
 )
 {
     return co_tcp_is_open(client);
-}
-
-void
-co_tls_set_send_complete_handler(
-    co_tcp_client_t* client,
-    co_tcp_send_fn handler
-)
-{
-    co_tcp_set_send_complete_handler(client, handler);
-}
-
-void
-co_tls_set_receive_handler(
-    co_tcp_client_t* client,
-    co_tcp_receive_fn handler
-)
-{
-    co_tcp_set_receive_handler(client, handler);
-}
-
-void
-co_tls_set_close_handler(
-    co_tcp_client_t* client,
-    co_tcp_close_fn handler
-)
-{
-    co_tcp_set_close_handler(client, handler);
 }
 
 const co_net_addr_t*

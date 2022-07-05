@@ -72,9 +72,12 @@ bool on_my_server_app_create(my_server_app* self, const co_arg_st* arg)
     co_socket_option_set_reuse_addr(
         co_tcp_server_get_socket(self->server), true);
 
+    // callback
+    co_tcp_server_callbacks_st* callbacks = co_tcp_server_get_callbacks(self->server);
+    callbacks->on_accept = (co_tcp_accept_fn)on_my_tcp_accept;
+
     // listen start
-    co_tcp_server_start(self->server,
-        (co_tcp_accept_fn)on_my_tcp_accept, SOMAXCONN);
+    co_tcp_server_start(self->server, SOMAXCONN);
 
     char local_str[64];
     co_net_addr_to_string(&local_net_addr, local_str, sizeof(local_str));

@@ -84,8 +84,10 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t
     // create websocket client
     co_ws_client_t* ws_client = co_ws_client_create_with(tcp_client);
 
-    co_ws_set_receive_handler(ws_client, (co_ws_receive_fn)on_my_ws_receive);
-    co_ws_set_close_handler(ws_client, (co_ws_close_fn)on_my_ws_close);
+    // callback
+    co_ws_callbacks_st* callbacks = co_ws_get_callbacks(ws_client);
+    callbacks->on_receive = (co_ws_receive_fn)on_my_ws_receive;
+    callbacks->on_close = (co_ws_close_fn)on_my_ws_close;
 
     co_list_add_tail(self->clients, (uintptr_t)ws_client);
 }
@@ -118,8 +120,12 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     co_socket_option_set_reuse_addr(
         co_tcp_server_get_socket(self->server), true);
 
+    // callback
+    co_tcp_server_callbacks_st* callbacks = co_tcp_server_get_callbacks(self->server);
+    callbacks->on_accept = (co_tcp_accept_fn)on_my_tcp_accept;
+
     // listen start
-    co_tcp_server_start(self->server, (co_tcp_accept_fn)on_my_tcp_accept, SOMAXCONN);
+    co_tcp_server_start(self->server, SOMAXCONN);
 
     printf("ws://127.0.0.1:%d\n", port);
 

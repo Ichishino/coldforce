@@ -142,13 +142,16 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
         return false;
     }
 
-    co_ws_set_receive_handler(self->client, (co_ws_receive_fn)on_my_ws_receive);
-    co_ws_set_close_handler(self->client, (co_ws_close_fn)on_my_ws_close);
+    // callback
+    co_ws_callbacks_st* callbacks = co_ws_get_callbacks(self->client);
+    callbacks->on_connect = (co_ws_connect_fn)on_my_connect;
+    callbacks->on_receive = (co_ws_receive_fn)on_my_ws_receive;
+    callbacks->on_close = (co_ws_close_fn)on_my_ws_close;
 
     co_http_request_t* request = co_http_request_create_ws_upgrade(self->path, NULL, NULL);
 
     // connect
-    co_ws_connect(self->client, request, (co_ws_connect_fn)on_my_connect);
+    co_ws_connect(self->client, request);
 
     return true;
 }

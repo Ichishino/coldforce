@@ -666,9 +666,9 @@ co_http2_stream_on_receive_frame(
     }
     case CO_HTTP2_FRAME_TYPE_PRIORITY:
     {
-        if (stream->client->on_priority != NULL)
+        if (stream->client->callbacks.on_priority != NULL)
         {
-            stream->client->on_priority(
+            stream->client->callbacks.on_priority(
                 stream->client->tcp_client->sock.owner_thread,
                 stream->client, stream,
                 frame->payload.priority.stream_dependency,
@@ -679,9 +679,9 @@ co_http2_stream_on_receive_frame(
     }
     case CO_HTTP2_FRAME_TYPE_RST_STREAM:
     {
-        if (stream->client->on_close_stream != NULL)
+        if (stream->client->callbacks.on_close_stream != NULL)
         {
-            stream->client->on_close_stream(
+            stream->client->callbacks.on_close_stream(
                 stream->client->tcp_client->sock.owner_thread,
                 stream->client, stream,
                 frame->payload.rst_stream.error_code);
@@ -771,9 +771,9 @@ co_http2_stream_on_receive_frame(
         stream->remote_window_size +=
             frame->payload.window_update.window_size_increment;
 
-        if (stream->client->on_window_update != NULL)
+        if (stream->client->callbacks.on_window_update != NULL)
         {
-            stream->client->on_window_update(
+            stream->client->callbacks.on_window_update(
                 stream->client->tcp_client->sock.owner_thread,
                 stream->client, stream);
         }

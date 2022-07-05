@@ -24,15 +24,20 @@ typedef void(*co_tls_handshake_fn)(
 
 typedef struct
 {
+    co_tls_handshake_fn on_handshake;
+
+} co_tls_callbacks_st;
+
+typedef struct
+{
     SSL* ssl;
     co_tls_ctx_st ctx;
-
-    BIO* network_bio;
+    co_tls_callbacks_st callbacks;
 
     co_tcp_connect_fn on_connect;
-    co_tcp_receive_fn on_receive_ready;
-    co_tls_handshake_fn on_handshake_complete;
+    co_tcp_receive_fn on_receive;
 
+    BIO* network_bio;
     co_queue_t* receive_data_queue;
 
 } co_tls_client_t;
@@ -74,6 +79,12 @@ co_tls_client_destroy(
 );
 
 CO_TLS_API
+co_tls_callbacks_st*
+co_tls_get_callbacks(
+    co_tcp_client_t* client
+);
+
+CO_TLS_API
 void
 co_tls_client_close(
     co_tcp_client_t* client
@@ -106,15 +117,13 @@ CO_TLS_API
 bool
 co_tls_connect(
     co_tcp_client_t* client,
-    const co_net_addr_t* remote_net_addr,
-    co_tcp_connect_fn handler
+    const co_net_addr_t* remote_net_addr
 );
 
 CO_TLS_API
 bool
 co_tls_start_handshake(
-    co_tcp_client_t* client,
-    co_tls_handshake_fn handler
+    co_tcp_client_t* client
 );
 
 CO_TLS_API
@@ -152,27 +161,6 @@ CO_TLS_API
 bool
 co_tls_is_open(
     const co_tcp_client_t* client
-);
-
-CO_TLS_API
-void
-co_tls_set_send_complete_handler(
-    co_tcp_client_t* client,
-    co_tcp_send_fn handler
-);
-
-CO_TLS_API
-void
-co_tls_set_receive_handler(
-    co_tcp_client_t* client,
-    co_tcp_receive_fn handler
-);
-
-CO_TLS_API
-void
-co_tls_set_close_handler(
-    co_tcp_client_t* client,
-    co_tcp_close_fn handler
 );
 
 CO_TLS_API

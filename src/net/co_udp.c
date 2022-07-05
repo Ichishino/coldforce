@@ -90,9 +90,9 @@ co_udp_on_send_complete(
     co_list_remove_head(udp->win.io_send_ctxs);
 #endif
 
-    if (udp->on_send_complete != NULL)
+    if (udp->callbacks.on_send_async != NULL)
     {
-        udp->on_send_complete(
+        udp->callbacks.on_send_async(
             udp->sock.owner_thread, udp, (data_size > 0));
     }
 }
@@ -115,9 +115,9 @@ co_udp_on_receive_ready(
     (void)data_size;
 #endif
 
-    if (udp->on_receive_ready != NULL)
+    if (udp->callbacks.on_receive != NULL)
     {
-        udp->on_receive_ready(udp->sock.owner_thread, udp);
+        udp->callbacks.on_receive(udp->sock.owner_thread, udp);
     }
 
 #ifdef CO_OS_WIN
@@ -153,8 +153,8 @@ co_udp_create(
 
     udp->bound_local_net_addr = false;
     udp->sock_event_flags = 0;
-    udp->on_send_complete = NULL;
-    udp->on_receive_ready = NULL;
+    udp->callbacks.on_send_async = NULL;
+    udp->callbacks.on_receive = NULL;
 
 #ifdef CO_OS_WIN
 
@@ -224,6 +224,14 @@ co_udp_destroy(
     }
 }
 
+co_udp_callbacks_st*
+co_udp_get_callbacks(
+    co_udp_t* udp
+)
+{
+    return &udp->callbacks;
+}
+
 void
 co_udp_close(
     co_udp_t* udp
@@ -244,8 +252,8 @@ co_udp_close(
 
         udp->sock.open_local = false;
 
-        udp->on_send_complete = NULL;
-        udp->on_receive_ready = NULL;
+        udp->callbacks.on_send_async = NULL;
+        udp->callbacks.on_receive = NULL;
     }
 }
 
@@ -386,8 +394,7 @@ co_udp_send_async(
 
 bool
 co_udp_receive_start(
-    co_udp_t* udp,
-    co_udp_receive_fn handler
+    co_udp_t* udp
 )
 {
     if (udp->sock_event_flags & CO_SOCKET_EVENT_RECEIVE)
@@ -407,7 +414,6 @@ co_udp_receive_start(
         "udp receive start");
 
     udp->sock_event_flags |= CO_SOCKET_EVENT_RECEIVE;
-    udp->on_receive_ready = handler;
 
 #ifdef CO_OS_WIN
 
@@ -468,15 +474,6 @@ co_udp_receive(
     }
 
     return result;
-}
-
-void
-co_udp_set_send_complete_handler(
-    co_udp_t* udp,
-    co_udp_send_fn handler
-)
-{
-    udp->on_send_complete = handler;
 }
 
 co_socket_t*

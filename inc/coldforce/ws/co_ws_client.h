@@ -27,19 +27,25 @@ typedef void(*co_ws_receive_fn)(
 typedef void(*co_ws_close_fn)(
     co_thread_t* self, struct co_ws_client_t*);
 
+typedef struct
+{
+    co_ws_connect_fn on_connect;
+    co_ws_receive_fn on_receive;
+    co_ws_close_fn on_close;
+
+} co_ws_callbacks_st;
+
 typedef struct co_ws_client_t
 {
     co_tcp_client_t* tcp_client;
     co_tcp_client_module_t module;
 
+    co_ws_callbacks_st callbacks;
+
     co_http_url_st* base_url;
 
     size_t receive_data_index;
     co_byte_array_t* receive_data;
-
-    co_ws_connect_fn on_connect;
-    co_ws_receive_fn on_receive;
-    co_ws_close_fn on_close;
 
     co_http_request_t* upgrade_request;
 
@@ -110,6 +116,12 @@ co_ws_client_destroy(
 );
 
 CO_WS_API
+co_ws_callbacks_st*
+co_ws_get_callbacks(
+    co_ws_client_t* client
+);
+
+CO_WS_API
 void
 co_ws_client_close(
     co_ws_client_t* client
@@ -119,8 +131,7 @@ CO_WS_API
 bool
 co_ws_connect(
     co_ws_client_t* client,
-    co_http_request_t* upgrade_request,
-    co_ws_connect_fn handler
+    co_http_request_t* upgrade_request
 );
 
 CO_WS_API
@@ -179,20 +190,6 @@ co_ws_send_pong(
     co_ws_client_t* client,
     const void* data,
     size_t data_size
-);
-
-CO_WS_API
-void
-co_ws_set_receive_handler(
-    co_ws_client_t* client,
-    co_ws_receive_fn handler
-);
-
-CO_WS_API
-void
-co_ws_set_close_handler(
-    co_ws_client_t* client,
-    co_ws_close_fn handler
 );
 
 CO_WS_API

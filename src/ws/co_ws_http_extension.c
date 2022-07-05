@@ -76,20 +76,17 @@ co_http_upgrade_to_ws(
 
     if (ws_client->base_url != NULL)
     {
-        co_tcp_set_receive_handler(
-            ws_client->tcp_client,
-            (co_tcp_receive_fn)co_ws_client_on_receive_ready);
+        ws_client->tcp_client->callbacks.on_receive =
+            (co_tcp_receive_fn)co_ws_client_on_receive_ready;
     }
     else
     {
-        co_tcp_set_receive_handler(
-            ws_client->tcp_client,
-            (co_tcp_receive_fn)co_ws_server_on_receive_ready);
+        ws_client->tcp_client->callbacks.on_receive =
+            (co_tcp_receive_fn)co_ws_server_on_receive_ready;
     }
-    
-    co_tcp_set_close_handler(
-        ws_client->tcp_client,
-        (co_tcp_close_fn)co_ws_client_on_close);
+
+    ws_client->tcp_client->callbacks.on_close =
+        (co_tcp_close_fn)co_ws_client_on_close;
 
     return ws_client;
 }

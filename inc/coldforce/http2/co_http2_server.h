@@ -39,15 +39,7 @@ CO_HTTP2_API
 bool
 co_http2_send_ping(
     co_http2_client_t* client,
-    uint64_t user_data,
-    co_http2_ping_fn handler
-);
-
-CO_HTTP2_API
-void
-co_http2_set_priority_handler(
-    co_http2_client_t* client,
-    co_http2_priority_fn handler
+    uint64_t user_data
 );
 
 //---------------------------------------------------------------------------//

@@ -224,9 +224,12 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t
     // accept
     co_tcp_accept((co_thread_t*)self, tcp_client);
 
+    // callback
+    co_tls_callbacks_st* callbacks = co_tls_get_callbacks(tcp_client);
+    callbacks->on_handshake = (co_tls_handshake_fn)on_my_tls_handshake;
+
     // TLS handshake
-    co_tls_start_handshake(
-        tcp_client, (co_tls_handshake_fn)on_my_tls_handshake);
+    co_tls_start_handshake(tcp_client);
 }
 
 bool on_my_app_create(my_app* self, const co_arg_st* arg)
@@ -281,8 +284,12 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     co_socket_option_set_reuse_addr(
         co_tcp_server_get_socket(self->server), true);
 
+    // callback
+    co_tcp_server_callbacks_st* callbacks = co_tcp_server_get_callbacks(self->server);
+    callbacks->on_accept = (co_tcp_accept_fn)on_my_tcp_accept;
+
     // listen start
-    co_tls_server_start(self->server, (co_tcp_accept_fn)on_my_tcp_accept, SOMAXCONN);
+    co_tls_server_start(self->server, SOMAXCONN);
 
     printf("https://127.0.0.1:%d\n", port);
 

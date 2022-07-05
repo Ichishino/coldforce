@@ -503,12 +503,10 @@ co_http_client_create(
 
     co_http_client_setup(client);
 
-    co_tcp_set_receive_handler(
-        client->tcp_client,
-        (co_tcp_receive_fn)co_http_client_on_receive_ready);
-    co_tcp_set_close_handler(
-        client->tcp_client,
-        (co_tcp_close_fn)co_http_client_on_tcp_close);
+    client->tcp_client->callbacks.on_receive =
+        (co_tcp_receive_fn)co_http_client_on_receive_ready;
+    client->tcp_client->callbacks.on_close =
+        (co_tcp_close_fn)co_http_client_on_tcp_close;
 
     return client;
 }
@@ -550,10 +548,12 @@ co_http_connect(
     co_http_client_t* client
 )
 {
+    client->tcp_client->callbacks.on_connect =
+        (co_tcp_connect_fn)co_http_client_on_tcp_connect;
+
     return client->module.connect(
         client->tcp_client,
-        &client->tcp_client->remote_net_addr,
-        (co_tcp_connect_fn)co_http_client_on_tcp_connect);
+        &client->tcp_client->remote_net_addr);
 }
 
 bool

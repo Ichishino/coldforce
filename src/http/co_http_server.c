@@ -205,12 +205,10 @@ co_http_client_create_with(
 
     co_http_client_setup(client);
 
-    co_tcp_set_receive_handler(
-        client->tcp_client,
-        (co_tcp_receive_fn)co_http_server_on_receive_ready);
-    co_tcp_set_close_handler(
-        client->tcp_client,
-        (co_tcp_close_fn)co_http_server_on_close);
+    client->tcp_client->callbacks.on_receive =
+        (co_tcp_receive_fn)co_http_server_on_receive_ready;
+    client->tcp_client->callbacks.on_close =
+        (co_tcp_close_fn)co_http_server_on_close;
 
     return client;
 }

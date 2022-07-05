@@ -20,6 +20,10 @@
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
+//---------------------------------------------------------------------------//
+// private
+//---------------------------------------------------------------------------//
+
 void
 co_ws_client_setup(
     co_ws_client_t* client,
@@ -58,9 +62,9 @@ co_ws_client_setup(
     client->receive_data_index = 0;
     client->receive_data = co_byte_array_create();
 
-    client->on_connect = NULL;
-    client->on_receive = NULL;
-    client->on_close = NULL;
+    client->callbacks.on_connect = NULL;
+    client->callbacks.on_receive = NULL;
+    client->callbacks.on_close = NULL;
 
     client->upgrade_request = NULL;
 
@@ -105,9 +109,9 @@ co_ws_client_on_frame(
             CO_WS_CLOSE_REASON_PROTOCOL_ERROR, NULL);
     }
 
-    if (client->on_receive != NULL)
+    if (client->callbacks.on_receive != NULL)
     {
-        client->on_receive(
+        client->callbacks.on_receive(
             thread, client, frame, error_code);
     }
 
@@ -184,12 +188,10 @@ co_ws_client_on_connect(
         co_http_request_destroy(client->upgrade_request);
         client->upgrade_request = NULL;
 
-        if (client->on_connect != NULL)
+        if (client->callbacks.on_connect != NULL)
         {
-            co_ws_connect_fn handler = client->on_connect;
-            client->on_connect = NULL;
-
-            handler(thread, client, NULL, error_code);
+            client->callbacks.on_connect(
+                thread, client, NULL, error_code);
         }
     }
 }
@@ -258,11 +260,8 @@ co_ws_client_on_receive_ready(
         {
             co_ws_frame_destroy(frame);
 
-            if (client->on_connect != NULL)
+            if (client->callbacks.on_connect != NULL)
             {
-                co_ws_connect_fn handler = client->on_connect;
-                client->on_connect = NULL;
-
                 co_http_response_t* response = co_http_response_create();
 
                 if (co_http_response_deserialize(response,
@@ -282,7 +281,7 @@ co_ws_client_on_receive_ready(
                         &client->tcp_client->remote_net_addr,
                         "ws receive upgrade response");
 
-                    handler(thread, client, response, 0);
+                    client->callbacks.on_connect(thread, client, response, 0);
 
                     co_http_response_destroy(response);
                     co_http_request_destroy(client->upgrade_request);
@@ -299,8 +298,8 @@ co_ws_client_on_receive_ready(
                 {
                     co_http_response_destroy(response);
 
-                    handler(thread, client, NULL,
-                        CO_WS_ERROR_INVALID_RESPONSE);
+                    client->callbacks.on_connect(
+                        thread, client, NULL, CO_WS_ERROR_INVALID_RESPONSE);
 
                     return;
                 }
@@ -326,9 +325,9 @@ co_ws_client_on_close(
     co_ws_client_t* client =
         (co_ws_client_t*)tcp_client->sock.sub_class;
 
-    if (client->on_close != NULL)
+    if (client->callbacks.on_close != NULL)
     {
-        client->on_close(thread, client);
+        client->callbacks.on_close(thread, client);
     }
 }
 
@@ -344,6 +343,7 @@ co_ws_send_raw_data(
 }
 
 //---------------------------------------------------------------------------//
+// public
 //---------------------------------------------------------------------------//
 
 co_ws_client_t*
@@ -485,12 +485,10 @@ co_ws_client_create(
 
     client->mask = true;
 
-    co_tcp_set_receive_handler(
-        client->tcp_client,
-        (co_tcp_receive_fn)co_ws_client_on_receive_ready);
-    co_tcp_set_close_handler(
-        client->tcp_client,
-        (co_tcp_close_fn)co_ws_client_on_close);
+    client->tcp_client->callbacks.on_receive =
+        (co_tcp_receive_fn)co_ws_client_on_receive_ready;
+    client->tcp_client->callbacks.on_close =
+        (co_tcp_close_fn)co_ws_client_on_close;
 
     return client;
 }
@@ -516,6 +514,14 @@ co_ws_client_destroy(
     }
 }
 
+co_ws_callbacks_st*
+co_ws_get_callbacks(
+    co_ws_client_t* client
+)
+{
+    return &client->callbacks;
+}
+
 void
 co_ws_client_close(
     co_ws_client_t* client
@@ -533,19 +539,18 @@ co_ws_client_close(
 bool
 co_ws_connect(
     co_ws_client_t* client,
-    co_http_request_t* upgrade_request,
-    co_ws_connect_fn handler
+    co_http_request_t* upgrade_request
 )
 {
-    client->on_connect = handler;
-
     co_http_request_destroy(client->upgrade_request);
     client->upgrade_request = upgrade_request;
 
+    client->tcp_client->callbacks.on_connect =
+        (co_tcp_connect_fn)co_ws_client_on_connect;
+
     bool result =  client->module.connect(
         client->tcp_client,
-        &client->tcp_client->remote_net_addr,
-        (co_tcp_connect_fn)co_ws_client_on_connect);
+        &client->tcp_client->remote_net_addr);
 
     if (result)
     {
@@ -769,24 +774,6 @@ co_ws_send_pong(
 {
     return co_ws_send(client,
         true, CO_WS_OPCODE_PONG, data, data_size);
-}
-
-void
-co_ws_set_receive_handler(
-    co_ws_client_t* client,
-    co_ws_receive_fn handler
-)
-{
-    client->on_receive = handler;
-}
-
-void
-co_ws_set_close_handler(
-    co_ws_client_t* client,
-    co_ws_close_fn handler
-)
-{
-    client->on_close = handler;
 }
 
 void

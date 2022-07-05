@@ -48,9 +48,9 @@ co_tcp_server_on_accept_ready(
 
     if ((co_net_addr_get_family(
             &win_client->remote_net_addr) != AF_UNSPEC) &&
-        (server->on_accept_ready != NULL))
+        (server->callbacks.on_accept != NULL))
     {
-        server->on_accept_ready(
+        server->callbacks.on_accept(
             server->sock.owner_thread, server, win_client);
     }
 
@@ -89,9 +89,9 @@ co_tcp_server_on_accept_ready(
             &client->remote_net_addr,
             "tcp accept");
 
-        if (server->on_accept_ready != NULL)
+        if (server->callbacks.on_accept != NULL)
         {
-            server->on_accept_ready(
+            server->callbacks.on_accept(
                 server->sock.owner_thread, server, client);
         }
     }
@@ -127,7 +127,7 @@ co_tcp_server_create(
     memcpy(&server->sock.local_net_addr,
         local_net_addr, sizeof(co_net_addr_t));
 
-    server->on_accept_ready = NULL;
+    server->callbacks.on_accept = NULL;
 
 #ifdef CO_OS_WIN
     if (!co_win_tcp_server_setup(server))
@@ -156,10 +156,17 @@ co_tcp_server_destroy(
     }
 }
 
+co_tcp_server_callbacks_st*
+co_tcp_server_get_callbacks(
+    co_tcp_server_t* server
+)
+{
+    return &server->callbacks;
+}
+
 bool
 co_tcp_server_start(
     co_tcp_server_t* server,
-    co_tcp_accept_fn handler,
     int backlog
 )
 {
@@ -187,8 +194,6 @@ co_tcp_server_start(
 
     co_socket_handle_get_local_net_addr(
         server->sock.handle, &server->sock.local_net_addr);
-
-    server->on_accept_ready = handler;
 
 #ifdef CO_OS_WIN
     co_win_tcp_server_accept_start(server);
@@ -233,7 +238,7 @@ co_tcp_server_close (
     co_win_tcp_server_cleanup(server);
 #endif
 
-    server->on_accept_ready = NULL;
+    server->callbacks.on_accept = NULL;
 
     co_socket_handle_close(server->sock.handle);
     server->sock.handle = CO_SOCKET_INVALID_HANDLE;

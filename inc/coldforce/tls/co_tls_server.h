@@ -23,7 +23,7 @@ typedef struct
     size_t protocols_length;
     uint8_t* protocols;
 
-    co_tcp_accept_fn on_accept_ready;
+    co_tcp_accept_fn on_accept;
 
 } co_tls_server_t;
 
@@ -65,7 +65,6 @@ CO_TLS_API
 bool
 co_tls_server_start(
     co_tcp_server_t* server,
-    co_tcp_accept_fn handler,
     int backlog
 );
 

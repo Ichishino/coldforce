@@ -37,18 +37,24 @@ typedef void(*co_tcp_receive_fn)(
 typedef void(*co_tcp_connect_fn)(
     co_thread_t* self, struct co_tcp_client_t* client, int error_code);
 
+typedef struct
+{
+    co_tcp_connect_fn on_connect;
+    co_tcp_send_fn on_send_async;
+    co_tcp_receive_fn on_receive;
+    co_tcp_close_fn on_close;
+
+} co_tcp_callbacks_st;
+
 typedef struct co_tcp_client_t
 {
     co_socket_t sock;
 
+    co_tcp_callbacks_st callbacks;
+
     co_net_addr_t remote_net_addr;
     bool open_remote;
     bool destroy_later;
-
-    co_tcp_connect_fn on_connect_complete;
-    co_tcp_send_fn on_send_complete;
-    co_tcp_receive_fn on_receive_ready;
-    co_tcp_close_fn on_close;
 
     co_timer_t* close_timer;
 
@@ -125,6 +131,12 @@ co_tcp_client_destroy(
 );
 
 CO_NET_API
+co_tcp_callbacks_st*
+co_tcp_get_callbacks(
+    co_tcp_client_t* client
+);
+
+CO_NET_API
 void
 co_tcp_client_close(
     co_tcp_client_t* client
@@ -134,8 +146,7 @@ CO_NET_API
 bool
 co_tcp_connect(
     co_tcp_client_t* client,
-    const co_net_addr_t* remote_net_addr,
-    co_tcp_connect_fn handler
+    const co_net_addr_t* remote_net_addr
 );
 
 CO_NET_API
@@ -173,27 +184,6 @@ CO_NET_API
 bool
 co_tcp_is_open(
     const co_tcp_client_t* client
-);
-
-CO_NET_API
-void
-co_tcp_set_send_complete_handler(
-    co_tcp_client_t* client,
-    co_tcp_send_fn handler
-);
-
-CO_NET_API
-void
-co_tcp_set_receive_handler(
-    co_tcp_client_t* client,
-    co_tcp_receive_fn handler
-);
-
-CO_NET_API
-void
-co_tcp_set_close_handler(
-    co_tcp_client_t* client,
-    co_tcp_close_fn handler
 );
 
 CO_NET_API

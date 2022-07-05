@@ -62,16 +62,16 @@ co_http2_client_setup(
 
     client->upgrade_request_data = NULL;
 
-    client->on_connect = NULL;
-    client->on_upgrade = NULL;
-    client->on_close = NULL;
-    client->on_message = NULL;
-    client->on_push_request = NULL;
-    client->on_push_response = NULL;
-    client->on_priority = NULL;
-    client->on_window_update = NULL;
-    client->on_close_stream = NULL;
-    client->on_ping = NULL;
+    client->callbacks.on_connect = NULL;
+    client->callbacks.on_upgrade = NULL;
+    client->callbacks.on_close = NULL;
+    client->callbacks.on_message = NULL;
+    client->callbacks.on_push_request = NULL;
+    client->callbacks.on_push_response = NULL;
+    client->callbacks.on_priority = NULL;
+    client->callbacks.on_window_update = NULL;
+    client->callbacks.on_close_stream = NULL;
+    client->callbacks.on_ping = NULL;
 
     co_map_ctx_st map_ctx = { 0 };
     map_ctx.free_value = (co_item_free_fn)co_http2_stream_destroy;
@@ -198,7 +198,7 @@ co_http2_create_stream(
     client->new_stream_id += 2;
 
     co_http2_stream_t* stream = co_http2_stream_create(
-        client->new_stream_id, client, client->on_message);
+        client->new_stream_id, client, client->callbacks.on_message);
 
     co_map_set(client->stream_map,
         client->new_stream_id, (uintptr_t)stream);
@@ -234,9 +234,9 @@ co_http2_client_on_close(
 {
     client->module.close(client->tcp_client);
 
-    if (client->on_close != NULL)
+    if (client->callbacks.on_close != NULL)
     {
-        client->on_close(
+        client->callbacks.on_close(
             client->tcp_client->sock.owner_thread,
             client, error_code);
     }
@@ -254,10 +254,10 @@ co_http2_client_on_receive_system_frame(
     {
         if (frame->header.flags != 0)
         {
-            if (client->on_connect != NULL)
+            if (client->callbacks.on_connect != NULL)
             {
-                co_http2_connect_fn handler = client->on_connect;
-                client->on_connect = NULL;
+                co_http2_connect_fn handler = client->callbacks.on_connect;
+                client->callbacks.on_connect = NULL;
 
                 handler(
                     client->tcp_client->sock.owner_thread,
@@ -289,12 +289,9 @@ co_http2_client_on_receive_system_frame(
     {
         if (frame->header.flags & CO_HTTP2_FRAME_FLAG_ACK)
         {
-            if (client->on_ping != NULL)
+            if (client->callbacks.on_ping != NULL)
             {
-                co_http2_ping_fn handler = client->on_ping;
-                client->on_ping = NULL;
-
-                handler(
+                client->callbacks.on_ping(
                     client->tcp_client->sock.owner_thread,
                     client, frame->payload.ping.opaque_data);
             }
@@ -336,9 +333,9 @@ co_http2_client_on_receive_system_frame(
         client->system_stream->remote_window_size +=
             frame->payload.window_update.window_size_increment;
 
-        if (client->on_window_update != NULL)
+        if (client->callbacks.on_window_update != NULL)
         {
-            client->on_window_update(
+            client->callbacks.on_window_update(
                 client->tcp_client->sock.owner_thread,
                 client, client->system_stream);
         }
@@ -362,7 +359,7 @@ co_http2_client_on_push_promise(
 {
     co_http2_stream_t* promised_stream =
         co_http2_stream_create(promised_id,
-            client, client->on_push_response);
+            client, client->callbacks.on_push_response);
     co_map_set(client->stream_map,
         promised_id, (uintptr_t)promised_stream);
 
@@ -374,9 +371,9 @@ co_http2_client_on_push_promise(
     promised_stream->send_header = header;
     promised_stream->state = CO_HTTP2_STREAM_STATE_RESERVED_REMOTE;
 
-    if (client->on_push_request != NULL)
+    if (client->callbacks.on_push_request != NULL)
     {
-        if (!client->on_push_request(
+        if (!client->callbacks.on_push_request(
             client->tcp_client->sock.owner_thread,
             client, stream, promised_stream, header))
         {
@@ -421,18 +418,17 @@ co_http2_client_on_upgrade_response(
     uint16_t status_code =
         co_http_response_get_status_code(response);
 
-    if (client->on_upgrade != NULL)
+    if (client->callbacks.on_upgrade != NULL)
     {
-        co_http2_upgrade_fn handler = client->on_upgrade;
-        client->on_upgrade = NULL;
-
         if (status_code == 101)
         {
-            handler(thread, client, response, 0);
+            client->callbacks.on_upgrade(
+                thread, client, response, 0);
         }
         else
         {
-            handler(thread, client, response,
+            client->callbacks.on_upgrade(
+                thread, client, response,
                 CO_HTTP2_ERROR_UPGRADE_FAILED);
         }
     }
@@ -481,12 +477,10 @@ co_http2_client_on_tcp_connect(
             "http2 connect error (%d)",
             error_code);
 
-        if (client->on_connect != NULL)
+        if (client->callbacks.on_connect != NULL)
         {
-            co_http2_connect_fn handler = client->on_connect;
-            client->on_connect = NULL;
-
-            handler(thread, client, error_code);
+            client->callbacks.on_connect(
+                thread, client, error_code);
         }
     }
 }
@@ -517,12 +511,10 @@ co_http2_client_on_tcp_connect_and_upgrade(
         co_byte_array_destroy(client->upgrade_request_data);
         client->upgrade_request_data = NULL;
 
-        if (client->on_upgrade != NULL)
+        if (client->callbacks.on_upgrade != NULL)
         {
-            co_http2_upgrade_fn handler = client->on_upgrade;
-            client->on_upgrade = NULL;
-
-            handler(thread, client, NULL, error_code);
+            client->callbacks.on_upgrade(
+                thread, client, NULL, error_code);
         }
     }
 }
@@ -821,12 +813,10 @@ co_http2_client_create(
 
     client->new_stream_id = UINT32_MAX;
 
-    co_tcp_set_receive_handler(
-        client->tcp_client,
-        (co_tcp_receive_fn)co_http2_client_on_tcp_receive_ready);
-    co_tcp_set_close_handler(
-        client->tcp_client,
-        (co_tcp_close_fn)co_http2_client_on_tcp_close);
+    client->tcp_client->callbacks.on_receive =
+        (co_tcp_receive_fn)co_http2_client_on_tcp_receive_ready;
+    client->tcp_client->callbacks.on_close =
+        (co_tcp_close_fn)co_http2_client_on_tcp_close;
 
     return client;
 }
@@ -853,6 +843,14 @@ co_http2_client_destroy(
             co_mem_free_later(client);
         }
     }
+}
+
+co_http2_callbacks_st*
+co_http2_get_callbacks(
+    co_http2_client_t* client
+)
+{
+    return &client->callbacks;
 }
 
 void
@@ -908,16 +906,15 @@ co_http2_is_running(
 
 bool
 co_http2_connect(
-    co_http2_client_t* client,
-    co_http2_connect_fn handler
+    co_http2_client_t* client
 )
 {
-    client->on_connect = handler;
+    client->tcp_client->callbacks.on_connect =
+        (co_tcp_connect_fn)co_http2_client_on_tcp_connect;
 
     bool result = client->module.connect(
         client->tcp_client,
-        &client->tcp_client->remote_net_addr,
-        (co_tcp_connect_fn)co_http2_client_on_tcp_connect);
+        &client->tcp_client->remote_net_addr);
 
     if (result)
     {
@@ -935,11 +932,9 @@ co_http2_connect(
 bool
 co_http2_connect_and_request_upgrade(
     co_http2_client_t* client,
-    co_http_request_t* upgrade_request,
-    co_http2_upgrade_fn handler
+    co_http_request_t* upgrade_request
 )
 {
-    client->on_upgrade = handler;
     client->upgrade_request_data = co_byte_array_create();
 
     co_http_request_serialize(
@@ -947,10 +942,12 @@ co_http2_connect_and_request_upgrade(
 
     co_http_request_destroy(upgrade_request);
 
+    client->tcp_client->callbacks.on_connect =
+        (co_tcp_connect_fn)co_http2_client_on_tcp_connect_and_upgrade;
+
     return client->module.connect(
         client->tcp_client,
-        &client->tcp_client->remote_net_addr,
-        (co_tcp_connect_fn)co_http2_client_on_tcp_connect_and_upgrade);
+        &client->tcp_client->remote_net_addr);
 }
 
 co_http2_stream_t*
@@ -977,60 +974,6 @@ co_http2_get_stream(
     }
 
     return stream;
-}
-
-void
-co_http2_set_message_handler(
-    co_http2_client_t* client,
-    co_http2_message_fn handler
-)
-{
-    client->on_message = handler;
-}
-
-void
-co_http2_set_close_handler(
-    co_http2_client_t* client,
-    co_http2_close_fn handler
-)
-{
-    client->on_close = handler;
-}
-
-void
-co_http2_set_server_push_request_handler(
-    co_http2_client_t* client,
-    co_http2_push_request_fn handler
-)
-{
-    client->on_push_request = handler;
-}
-
-void
-co_http2_set_server_push_response_handler(
-    co_http2_client_t* client,
-    co_http2_message_fn handler
-)
-{
-    client->on_push_response = handler;
-}
-
-void
-co_http2_set_window_update_handler(
-    co_http2_client_t* client,
-    co_http2_window_update_fn handler
-)
-{
-    client->on_window_update = handler;
-}
-
-void
-co_http2_set_close_stream_handler(
-    co_http2_client_t* client,
-    co_http2_close_stream_fn handler
-)
-{
-    client->on_close_stream = handler;
 }
 
 bool

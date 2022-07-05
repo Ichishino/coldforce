@@ -81,11 +81,10 @@ co_http_upgrade_to_http2(
             http2_settings, strlen(http2_settings), settings);
     }
 
-    co_tcp_set_receive_handler(
-        http2_client->tcp_client, receive_handler);
-    co_tcp_set_close_handler(
-        http2_client->tcp_client,
-        (co_tcp_close_fn)co_http2_client_on_tcp_close);
+    http2_client->tcp_client->callbacks.on_receive =
+        receive_handler;
+    http2_client->tcp_client->callbacks.on_close =
+        (co_tcp_close_fn)co_http2_client_on_tcp_close;
 
     co_http_client_destroy(http_client);
 

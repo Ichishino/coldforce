@@ -52,8 +52,7 @@ typedef struct
 {
     void (*destroy)(co_tcp_client_t*);
     void (*close)(co_tcp_client_t*);
-    bool (*connect)(co_tcp_client_t*,
-        const co_net_addr_t*, co_tcp_connect_fn);
+    bool (*connect)(co_tcp_client_t*, const co_net_addr_t*);
     bool (*send)(co_tcp_client_t*, const void*, size_t);
     ssize_t (*receive_all)(co_tcp_client_t*, co_byte_array_t*);
 

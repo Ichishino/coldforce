@@ -172,7 +172,7 @@ co_http2_server_on_tcp_receive_ready(
                 }
 
                 stream = co_http2_stream_create(
-                    frame->header.stream_id, client, client->on_message);
+                    frame->header.stream_id, client, client->callbacks.on_message);
                 co_map_set(client->stream_map,
                     frame->header.stream_id, (uintptr_t)stream);
 
@@ -276,34 +276,20 @@ co_http2_client_create_with(
 
     co_http2_client_setup(client);
 
-    co_tcp_set_receive_handler(
-        client->tcp_client,
-        (co_tcp_receive_fn)co_http2_server_on_tcp_receive_ready);
-    co_tcp_set_close_handler(
-        client->tcp_client,
-        (co_tcp_close_fn)co_http2_client_on_tcp_close);
+    client->tcp_client->callbacks.on_receive =
+        (co_tcp_receive_fn)co_http2_server_on_tcp_receive_ready;
+    client->tcp_client->callbacks.on_close =
+        (co_tcp_close_fn)co_http2_client_on_tcp_close;
 
     return client;
-}
-
-void
-co_http2_set_priority_handler(
-    co_http2_client_t* client,
-    co_http2_priority_fn handler
-)
-{
-    client->on_priority = handler;
 }
 
 bool
 co_http2_send_ping(
     co_http2_client_t* client,
-    uint64_t user_data,
-    co_http2_ping_fn handler
+    uint64_t user_data
 )
 {
-    client->on_ping = handler;
-
     co_http2_frame_t* ping_frame =
         co_http2_create_ping_frame(false, user_data);
 

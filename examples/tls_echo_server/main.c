@@ -76,12 +76,17 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* server, co_tcp_client_t* cl
     // accept
     co_tcp_accept((co_thread_t*)self, client);
 
-    co_tls_set_receive_handler(client, (co_tcp_receive_fn)on_my_tls_receive);
-    co_tls_set_close_handler(client, (co_tcp_close_fn)on_my_tls_close);
+    // tcp callback
+    co_tcp_callbacks_st* tcp_callbacks = co_tcp_get_callbacks(client);
+    tcp_callbacks->on_receive = (co_tcp_receive_fn)on_my_tls_receive;
+    tcp_callbacks->on_close = (co_tcp_close_fn)on_my_tls_close;
+
+    // tls callback
+    co_tls_callbacks_st* tls_callbacks = co_tls_get_callbacks(client);
+    tls_callbacks->on_handshake = (co_tls_handshake_fn)on_my_tls_handshake;
 
     // TLS handshake
-    co_tls_start_handshake(
-        client, (co_tls_handshake_fn)on_my_tls_handshake);
+    co_tls_start_handshake(client);
 
     co_list_add_tail(self->client_list, (uintptr_t)client);
 
@@ -142,9 +147,12 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     co_socket_option_set_reuse_addr(
         co_tcp_server_get_socket(self->server), true);
 
+    // callback
+    co_tcp_server_callbacks_st* callbacks = co_tcp_server_get_callbacks(self->server);
+    callbacks->on_accept = (co_tcp_accept_fn)on_my_tcp_accept;
+
     // listen start
-    co_tls_server_start(self->server,
-        (co_tcp_accept_fn)on_my_tcp_accept, SOMAXCONN);
+    co_tls_server_start(self->server, SOMAXCONN);
 
     char local_str[64];
     co_net_addr_to_string(&local_net_addr, local_str, sizeof(local_str));

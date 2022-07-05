@@ -199,14 +199,16 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     params[0].value = CO_HTTP2_SETTING_MAX_WINDOW_SIZE;
     co_http2_init_settings(self->client, params, 1);
 
-    // set callback handler
-    co_http2_set_message_handler(self->client, (co_http2_message_fn)on_my_response);
-    co_http2_set_close_handler(self->client, (co_http2_close_fn)on_my_close);
-    co_http2_set_server_push_request_handler(self->client, (co_http2_push_request_fn)on_my_push_request);
-    co_http2_set_server_push_response_handler(self->client, (co_http2_push_response_fn)on_my_push_response);
+    // callback
+    co_http2_callbacks_st* callback = co_http2_get_callbacks(self->client);
+    callback->on_connect = (co_http2_connect_fn)on_my_connect;
+    callback->on_message = (co_http2_message_fn)on_my_response;
+    callback->on_close = (co_http2_close_fn)on_my_close;
+    callback->on_push_request = (co_http2_push_request_fn)on_my_push_request;
+    callback->on_push_response = (co_http2_push_response_fn)on_my_push_response;
 
     // connect 
-    co_http2_connect(self->client, (co_http2_connect_fn)on_my_connect);
+    co_http2_connect(self->client);
 
     return true;
 }
