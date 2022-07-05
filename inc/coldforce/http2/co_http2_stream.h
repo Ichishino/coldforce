@@ -10,6 +10,8 @@
 
 CO_EXTERN_C_BEGIN
 
+struct co_thread_t;
+
 //---------------------------------------------------------------------------//
 // http2 stream
 //---------------------------------------------------------------------------//
@@ -43,8 +45,16 @@ CO_EXTERN_C_BEGIN
 struct co_http2_client_t;
 struct co_http2_stream_t;
 
-typedef void(*co_http2_message_fn)(
-    void* self, struct co_http2_client_t* client, struct co_http2_stream_t* stream,
+typedef bool(*co_http2_receive_start_fn)(
+    struct co_thread_t* self, struct co_http2_client_t* client, struct co_http2_stream_t* stream,
+    const co_http2_header_t* receive_header);
+
+typedef bool(*co_http2_receive_data_fn)(
+    struct co_thread_t* self, struct co_http2_client_t* client, struct co_http2_stream_t* stream,
+    const co_http2_header_t* receive_header, const co_http2_data_st* receive_data);
+
+typedef void(*co_http2_receive_finish_fn)(
+    struct co_thread_t* self, struct co_http2_client_t* client, struct co_http2_stream_t* stream,
     const co_http2_header_t* receive_header, const co_http2_data_st* receive_data,
     int error_code);
 
@@ -59,7 +69,9 @@ typedef struct co_http2_stream_t
     co_http2_header_t* receive_header;
     co_http2_data_st receive_data;
 
-    co_http2_message_fn on_message;
+    co_http2_receive_start_fn on_receive_start;
+    co_http2_receive_finish_fn on_receive_finish;
+    co_http2_receive_data_fn on_receive_data;
 
     struct co_http2_header_block_pool_t
     {
@@ -76,7 +88,7 @@ typedef struct co_http2_stream_t
 
     uint32_t promised_stream_id;
 
-    FILE* save_data_fp;
+    uintptr_t user_data;
 
 } co_http2_stream_t;
 
@@ -88,7 +100,9 @@ co_http2_stream_t*
 co_http2_stream_create(
     uint32_t id,
     struct co_http2_client_t* client,
-    co_http2_message_fn message_handler
+    co_http2_receive_start_fn start_handler,
+    co_http2_receive_finish_fn finish_handler,
+    co_http2_receive_data_fn data_handler
 );
 
 void
@@ -202,9 +216,15 @@ co_http2_stream_get_sendable_data_size(
 
 CO_HTTP2_API
 void
-co_http2_stream_set_save_file_path(
+co_http2_stream_set_user_data(
     co_http2_stream_t* stream,
-    const char* file_path
+    uintptr_t user_data
+);
+
+CO_HTTP2_API
+uintptr_t
+co_http2_stream_get_user_data(
+    const co_http2_stream_t* stream
 );
 
 //---------------------------------------------------------------------------//

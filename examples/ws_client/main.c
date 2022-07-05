@@ -160,8 +160,8 @@ void on_my_app_destroy(my_app* self)
 {
     co_ws_client_destroy(self->client);
 
-    co_http_url_destroy_string(self->base_url);
-    co_http_url_destroy_string(self->path);
+    co_string_destroy(self->base_url);
+    co_string_destroy(self->path);
 }
 
 int main(int argc, char* argv[])

@@ -97,3 +97,87 @@ co_timer_stop(
 
     timer->running = false;
 }
+
+void
+co_timer_set_time(
+    co_timer_t* timer,
+    uint32_t msec
+)
+{
+    timer->msec = msec;
+}
+
+uint32_t
+co_timer_get_time(
+    const co_timer_t* timer
+)
+{
+    return timer->msec;
+}
+
+void
+co_timer_set_handler(
+    co_timer_t* timer,
+    co_timer_fn handler
+)
+{
+    timer->handler = handler;
+}
+
+co_timer_fn
+co_timer_get_handler(
+    const co_timer_t* timer
+)
+{
+    return timer->handler;
+}
+
+void
+co_timer_set_user_data(
+    co_timer_t* timer,
+    uintptr_t user_data
+)
+{
+    timer->user_data = user_data;
+}
+
+uintptr_t
+co_timer_get_user_data(
+    const co_timer_t* timer
+)
+{
+    return timer->user_data;
+}
+
+void
+co_timer_set_repeat(
+    co_timer_t* timer,
+    bool repeat
+)
+{
+    timer->repeat = repeat;
+}
+
+bool
+co_timer_get_repeat(
+    const co_timer_t* timer
+)
+{
+    return timer->repeat;
+}
+
+bool
+co_timer_is_running(
+    const co_timer_t* timer
+)
+{
+    return timer->running;
+}
+
+bool
+co_timer_is_queued(
+    const co_timer_t* timer
+)
+{
+    return timer->queued;
+}

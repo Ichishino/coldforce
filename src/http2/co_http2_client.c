@@ -65,9 +65,13 @@ co_http2_client_setup(
     client->callbacks.on_connect = NULL;
     client->callbacks.on_upgrade = NULL;
     client->callbacks.on_close = NULL;
-    client->callbacks.on_message = NULL;
+    client->callbacks.on_receive_start = NULL;
+    client->callbacks.on_receive_finish = NULL;
+    client->callbacks.on_receive_data = NULL;
     client->callbacks.on_push_request = NULL;
-    client->callbacks.on_push_response = NULL;
+    client->callbacks.on_push_start = NULL;
+    client->callbacks.on_push_finish = NULL;
+    client->callbacks.on_push_data = NULL;
     client->callbacks.on_priority = NULL;
     client->callbacks.on_window_update = NULL;
     client->callbacks.on_close_stream = NULL;
@@ -113,7 +117,7 @@ co_http2_client_setup(
         &client->remote_dynamic_table,
         client->remote_settings.max_header_list_size);
 
-    client->system_stream = co_http2_stream_create(0, client, NULL);
+    client->system_stream = co_http2_stream_create(0, client, NULL, NULL, NULL);
 }
 
 void
@@ -198,7 +202,10 @@ co_http2_create_stream(
     client->new_stream_id += 2;
 
     co_http2_stream_t* stream = co_http2_stream_create(
-        client->new_stream_id, client, client->callbacks.on_message);
+        client->new_stream_id, client,
+        client->callbacks.on_receive_start,
+        client->callbacks.on_receive_finish,
+        client->callbacks.on_receive_data);
 
     co_map_set(client->stream_map,
         client->new_stream_id, (uintptr_t)stream);
@@ -358,8 +365,12 @@ co_http2_client_on_push_promise(
 )
 {
     co_http2_stream_t* promised_stream =
-        co_http2_stream_create(promised_id,
-            client, client->callbacks.on_push_response);
+        co_http2_stream_create(
+            promised_id, client,
+            client->callbacks.on_push_start,
+            client->callbacks.on_push_finish,
+            client->callbacks.on_push_data);
+
     co_map_set(client->stream_map,
         promised_id, (uintptr_t)promised_stream);
 

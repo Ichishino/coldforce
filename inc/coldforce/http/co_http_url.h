@@ -30,8 +30,6 @@ typedef struct
 // public
 //---------------------------------------------------------------------------//
 
-#define co_http_url_destroy_string  co_string_destroy
-
 CO_HTTP_API
 co_http_url_st*
 co_http_url_create(

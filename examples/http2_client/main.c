@@ -12,7 +12,7 @@ typedef struct
     co_http2_client_t* client;
     char* base_url;
     char* path;
-    char* save_file_path;
+    FILE* fp;
 
 } my_app;
 
@@ -41,16 +41,32 @@ bool on_my_push_request(
     sprintf(local_save_path, "./%s", file_name);
     printf("local_save_path: %s\n", local_save_path);
 
-    // save to file (optional)
-    co_http2_stream_set_save_file_path(push_response_stream, local_save_path);
+    FILE* fp = fopen(local_save_path, "wb");
 
-    co_http_url_destroy_string(file_name);
+    co_http2_stream_set_user_data(push_response_stream, (uintptr_t)fp);
+
+    co_string_destroy(file_name);
 
     return true;
 }
 
-void on_my_push_response(
-    my_app* self, co_http2_client_t* http2_client, const co_http2_stream_t* push_response_stream,
+bool on_my_push_data(
+    my_app* self, co_http2_client_t* http2_client, co_http2_stream_t* push_response_stream,
+    const co_http2_header_t* push_response_header, const co_http2_data_st* push_response_data)
+{
+    (void)self;
+    (void)http2_client;
+    (void)push_response_header;
+
+    FILE* fp = (FILE*)co_http2_stream_get_user_data(push_response_stream);
+
+    fwrite(push_response_data->ptr, push_response_data->size, 1, fp);
+
+    return true;
+}
+
+void on_my_push_finish(
+    my_app* self, co_http2_client_t* http2_client, co_http2_stream_t* push_response_stream,
     const co_http2_header_t* push_response_header, const co_http2_data_st* push_response_data,
     int error_code)
 {
@@ -70,6 +86,13 @@ void on_my_push_response(
         printf("content size: %zu\n", push_response_data->size);
     }
 
+    FILE* fp = (FILE*)co_http2_stream_get_user_data(push_response_stream);
+
+    if (fp != NULL)
+    {
+        fclose(fp);
+    }
+
     if (!co_http2_is_running(http2_client))
     {
         // quit app
@@ -77,7 +100,21 @@ void on_my_push_response(
     }
 }
 
-void on_my_response(
+bool on_my_receive_data(
+    my_app* self, co_http2_client_t* http2_client, co_http2_stream_t* stream,
+    const co_http2_header_t* response_header, const co_http2_data_st* response_data
+)
+{
+    (void)http2_client;
+    (void)stream;
+    (void)response_header;
+
+    fwrite(response_data->ptr, response_data->size, 1, self->fp);
+
+    return true;
+}
+
+void on_my_receive_finish(
     my_app* self, co_http2_client_t* http2_client, co_http2_stream_t* stream,
     const co_http2_header_t* response_header, const co_http2_data_st* response_data,
     int error_code)
@@ -95,7 +132,6 @@ void on_my_response(
 
         printf("request path: %s\n", request_path);
         printf("status code: %d\n", status_code);
-        printf("content size: %zu\n", response_data->size);
 
         const char* content_type = co_http2_header_get_field(response_header, "content-type");
 
@@ -104,10 +140,18 @@ void on_my_response(
             printf("content type: %s\n", content_type);
         }
 
+        printf("content size: %zu\n", response_data->size);
+
         if (response_data->ptr != NULL)
         {
             printf("%s\n", (const char*)response_data->ptr);
         }
+    }
+
+    if (self->fp != NULL)
+    {
+        fclose(self->fp);
+        self->fp = NULL;
     }
 
     if (!co_http2_is_running(http2_client))
@@ -143,11 +187,6 @@ void on_my_connect(my_app* self, co_http2_client_t* client, int error_code)
         // new stream per request
         co_http2_stream_t* stream = co_http2_create_stream(client);
 
-        if (self->save_file_path != NULL)
-        {
-            co_http2_stream_set_save_file_path(stream, self->save_file_path);
-        }
-
         // send request
         co_http2_stream_send_header(stream, true, header);
     }
@@ -177,9 +216,11 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
 
     co_http_url_destroy(url);
 
+    const char* save_file_path = NULL;
+
     if (arg->argc >= 3)
     {
-        self->save_file_path = arg->argv[2];
+        save_file_path = arg->argv[2];
     }
 
     co_net_addr_t local_net_addr = { 0 };
@@ -202,10 +243,18 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     // callback
     co_http2_callbacks_st* callback = co_http2_get_callbacks(self->client);
     callback->on_connect = (co_http2_connect_fn)on_my_connect;
-    callback->on_message = (co_http2_message_fn)on_my_response;
+    callback->on_receive_finish = (co_http2_receive_finish_fn)on_my_receive_finish;
     callback->on_close = (co_http2_close_fn)on_my_close;
     callback->on_push_request = (co_http2_push_request_fn)on_my_push_request;
-    callback->on_push_response = (co_http2_push_response_fn)on_my_push_response;
+    callback->on_push_finish = (co_http2_receive_finish_fn)on_my_push_finish;
+    callback->on_push_data = (co_http2_receive_data_fn)on_my_push_data;
+
+    if (save_file_path != NULL)
+    {
+        self->fp = fopen(save_file_path, "wb");
+
+        callback->on_receive_data = (co_http2_receive_data_fn)on_my_receive_data;
+    }
 
     // connect 
     co_http2_connect(self->client);
@@ -217,8 +266,14 @@ void on_my_app_destroy(my_app* self)
 {
     co_http2_client_destroy(self->client);
 
-    co_http_url_destroy_string(self->base_url);
-    co_http_url_destroy_string(self->path);
+    co_string_destroy(self->base_url);
+    co_string_destroy(self->path);
+
+    if (self->fp != NULL)
+    {
+        fclose(self->fp);
+        self->fp = NULL;
+    }
 }
 
 int main(int argc, char* argv[])

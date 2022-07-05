@@ -46,8 +46,6 @@ typedef bool(*co_http2_push_request_fn)(
     const co_http2_stream_t* request_stream, co_http2_stream_t* response_stream,
     const co_http2_header_t* request_header);
 
-typedef co_http2_message_fn co_http2_push_response_fn;
-
 typedef void(*co_http2_ping_fn)(
     co_thread_t* self, struct co_http2_client_t* client, uint64_t user_data);
 
@@ -67,9 +65,13 @@ typedef struct
     co_http2_connect_fn on_connect;
     co_http2_upgrade_fn on_upgrade;
     co_http2_close_fn on_close;
-    co_http2_message_fn on_message;
+    co_http2_receive_start_fn on_receive_start;
+    co_http2_receive_finish_fn on_receive_finish;
+    co_http2_receive_data_fn on_receive_data;
     co_http2_push_request_fn on_push_request;
-    co_http2_message_fn on_push_response;
+    co_http2_receive_start_fn on_push_start;
+    co_http2_receive_finish_fn on_push_finish;
+    co_http2_receive_data_fn on_push_data;
     co_http2_priority_fn on_priority;
     co_http2_window_update_fn on_window_update;
     co_http2_close_stream_fn on_close_stream;

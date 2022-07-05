@@ -229,7 +229,7 @@ co_event_worker_dispatch(
             timer->running = false;
             timer->queued = false;
 
-            if (co_timer_is_repeat(timer))
+            if (co_timer_get_repeat(timer))
             {
                 co_timer_start(timer);
             }

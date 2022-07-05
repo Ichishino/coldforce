@@ -22,8 +22,6 @@ typedef struct co_http2_data_st
     uint8_t* ptr;
     size_t size;
 
-    char* file_path;
-
 } co_http2_data_st;
 
 typedef struct co_http2_pseudo_header_t

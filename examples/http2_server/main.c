@@ -341,7 +341,7 @@ void on_my_tls_handshake(my_app* self, co_tcp_client_t* tcp_client, int error_co
 
         // callback
         co_http2_callbacks_st* callback = co_http2_get_callbacks(http2_client);
-        callback->on_message = (co_http2_message_fn)on_my_http2_request;
+        callback->on_receive_finish = (co_http2_receive_finish_fn)on_my_http2_request;
         callback->on_close = (co_http2_close_fn)on_my_http2_close;
 
         co_list_add_tail(self->http2_clients, (uintptr_t)http2_client);

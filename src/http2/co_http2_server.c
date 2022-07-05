@@ -172,7 +172,10 @@ co_http2_server_on_tcp_receive_ready(
                 }
 
                 stream = co_http2_stream_create(
-                    frame->header.stream_id, client, client->callbacks.on_message);
+                    frame->header.stream_id, client,
+                    client->callbacks.on_receive_start,
+                    client->callbacks.on_receive_finish,
+                    client->callbacks.on_receive_data);
                 co_map_set(client->stream_map,
                     frame->header.stream_id, (uintptr_t)stream);
 

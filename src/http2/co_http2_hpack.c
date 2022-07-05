@@ -634,7 +634,7 @@ co_http2_hpack_serialize_header(
             co_http2_hpack_serialize_header_field(
                 ":path", path_and_query, dynamic_table, buffer);
 
-            co_http_url_destroy_string(path_and_query);
+            co_string_destroy(path_and_query);
         }
     }
 

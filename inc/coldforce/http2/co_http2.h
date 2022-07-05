@@ -27,6 +27,7 @@ CO_EXTERN_C_BEGIN
 #define CO_HTTP2_ERROR_PARSE_ERROR          -6102
 #define CO_HTTP2_ERROR_MAX_STREAMS          -6103
 #define CO_HTTP2_ERROR_UPGRADE_FAILED       -6104
+#define CO_HTTP2_ERROR_CANCEL               -6105
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

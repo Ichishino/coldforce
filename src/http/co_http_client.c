@@ -573,7 +573,7 @@ co_http_send_request(
             &request->message.header,
             CO_HTTP_HEADER_HOST, host);
 
-        co_http_url_destroy_string(host);
+        co_string_destroy(host);
     }
 
     if ((request->message.data.size > 0) &&

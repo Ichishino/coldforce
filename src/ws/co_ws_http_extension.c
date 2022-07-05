@@ -150,7 +150,7 @@ co_http_request_validate_ws_upgrade(
         return false;
     }
 
-    co_base64_destroy(nonce);
+    co_mem_free(nonce);
 
     if (nonce_length != 16)
     {
@@ -234,12 +234,12 @@ co_http_response_validate_ws_upgrade(
 
     if (strcmp(response_key, request_key) != 0)
     {
-        co_base64_destroy(request_key);
+        co_string_destroy(request_key);
 
         return false;
     }
 
-    co_base64_destroy(request_key);
+    co_string_destroy(request_key);
 
     uint16_t status_code =
         co_http_response_get_status_code(response);
@@ -279,7 +279,7 @@ co_http_request_create_ws_upgrade(
     co_http_header_add_field(
         header, CO_HTTP_HEADER_SEC_WS_KEY, base64_data);
 
-    co_base64_destroy(base64_data);
+    co_string_destroy(base64_data);
 
     co_http_header_add_field(
         header, CO_HTTP_HEADER_SEC_WS_VERSION, "13");
@@ -334,7 +334,7 @@ co_http_response_create_ws_upgrade(
     co_http_header_add_field(
         header, CO_HTTP_HEADER_SEC_WS_ACCEPT, accept_key);
 
-    co_base64_destroy(accept_key);
+    co_string_destroy(accept_key);
 
     if (protocol != NULL)
     {

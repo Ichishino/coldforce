@@ -150,7 +150,7 @@ co_ws_client_on_connect(
             co_http_header_add_field(
                 header, CO_HTTP_HEADER_HOST, host);
 
-            co_http_url_destroy_string(host);
+            co_string_destroy(host);
         }
 
         co_ws_log_info(

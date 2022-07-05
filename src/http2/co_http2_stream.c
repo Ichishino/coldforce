@@ -21,7 +21,9 @@ co_http2_stream_t*
 co_http2_stream_create(
     uint32_t id,
     co_http2_client_t* client,
-    co_http2_message_fn message_handler
+    co_http2_receive_start_fn start_handler,
+    co_http2_receive_finish_fn finish_handler,
+    co_http2_receive_data_fn data_handler
 )
 {
     co_http2_stream_t* stream =
@@ -41,9 +43,10 @@ co_http2_stream_create(
 
     stream->receive_data.ptr = NULL;
     stream->receive_data.size = 0;
-    stream->receive_data.file_path = NULL;
 
-    stream->on_message = message_handler;
+    stream->on_receive_start = start_handler;
+    stream->on_receive_finish = finish_handler;
+    stream->on_receive_data = data_handler;
 
     stream->header_block_pool.type = 0;
     stream->header_block_pool.data = NULL;
@@ -57,8 +60,6 @@ co_http2_stream_create(
     stream->local_window_size = stream->max_local_window_size;
 
     stream->promised_stream_id = 0;
-
-    stream->save_data_fp = NULL;
 
     return stream;
 }
@@ -86,18 +87,6 @@ co_http2_stream_destroy(
         {
             co_mem_free(stream->receive_data.ptr);
             stream->receive_data.ptr = NULL;
-        }
-
-        if (stream->receive_data.file_path != NULL)
-        {
-            co_string_destroy(stream->receive_data.file_path);
-            stream->receive_data.file_path = NULL;
-        }
-
-        if (stream->save_data_fp != NULL)
-        {
-            fclose(stream->save_data_fp);
-            stream->save_data_fp = NULL;
         }
 
         stream->state = CO_HTTP2_STREAM_STATE_CLOSED;
@@ -439,15 +428,15 @@ co_http2_stream_send_frame(
     return result;
 }
 
-void
-co_http2_stream_on_receive_message(
+static void
+co_http2_stream_on_receive_finish(
     co_http2_stream_t* stream,
     int error_code
 )
 {
-    if (stream->on_message != NULL)
+    if (stream->on_receive_finish != NULL)
     {
-        stream->on_message(
+        stream->on_receive_finish(
             stream->client->tcp_client->sock.owner_thread,
             stream->client, stream,
             stream->receive_header, &stream->receive_data,
@@ -456,9 +445,6 @@ co_http2_stream_on_receive_message(
 
     co_mem_free(stream->receive_data.ptr);
     stream->receive_data.ptr = NULL;
-
-    co_string_destroy(stream->receive_data.file_path);
-    stream->receive_data.file_path = NULL;
 }
 
 bool
@@ -500,24 +486,35 @@ co_http2_stream_on_receive_frame(
 
         co_http2_stream_update_local_window_size(stream, frame->header.length);
 
-        if (stream->save_data_fp != NULL)
+        if (stream->on_receive_data != NULL)
         {
             if (frame->payload.data.data_length > 0)
             {
-                fwrite(frame->payload.data.data, 1,
-                    frame->payload.data.data_length,
-                    stream->save_data_fp);
+                if (stream->on_receive_data != NULL)
+                {
+                    co_http2_data_st data;
+                    data.ptr = frame->payload.data.data;
+                    data.size = frame->payload.data.data_length;
 
-                stream->receive_data.size +=
-                    frame->payload.data.data_length;
+                    if (!stream->on_receive_data(
+                        stream->client->tcp_client->sock.owner_thread,
+                        stream->client, stream,
+                        stream->receive_header, &data))
+                    {
+                        co_http2_stream_send_rst_stream(
+                            stream, CO_HTTP2_STREAM_ERROR_CANCEL);
+
+                        co_http2_stream_on_receive_finish(
+                            stream, CO_HTTP2_ERROR_CANCEL);
+
+                        return false;
+                    }
+                }
             }
 
             if (frame->header.flags & CO_HTTP2_FRAME_FLAG_END_STREAM)
             {
-                fclose(stream->save_data_fp);
-                stream->save_data_fp = NULL;
-
-                co_http2_stream_on_receive_message(stream, 0);
+                co_http2_stream_on_receive_finish(stream, 0);
             }
         }
         else if (frame->header.flags & CO_HTTP2_FRAME_FLAG_END_STREAM)
@@ -559,7 +556,7 @@ co_http2_stream_on_receive_frame(
                 }
             }
 
-            co_http2_stream_on_receive_message(stream, 0);
+            co_http2_stream_on_receive_finish(stream, 0);
         }
         else
         {
@@ -620,26 +617,28 @@ co_http2_stream_on_receive_frame(
 
             if (stream->state == CO_HTTP2_STREAM_STATE_REMOTE_CLOSED)
             {
-                co_http2_stream_on_receive_message(stream, 0);
+                co_http2_stream_on_receive_finish(stream, 0);
             }
             else if (frame->header.flags & CO_HTTP2_FRAME_FLAG_END_STREAM)
             {
-                co_http2_stream_on_receive_message(stream, 0);
+                co_http2_stream_on_receive_finish(stream, 0);
             }
             else
             {
-                if (stream->receive_data.file_path != NULL)
+                if (stream->on_receive_start != NULL)
                 {
-                    stream->save_data_fp =
-                        fopen(stream->receive_data.file_path, "wb");
-
-                    if (stream->save_data_fp == NULL)
+                    if (!stream->on_receive_start(
+                        stream->client->tcp_client->sock.owner_thread,
+                        stream->client, stream,
+                        stream->receive_header))
                     {
                         co_http2_stream_send_rst_stream(
-                            stream, CO_HTTP2_STREAM_ERROR_INTERNAL_ERROR);
+                            stream, CO_HTTP2_STREAM_ERROR_CANCEL);
 
-                        co_http2_stream_on_receive_message(
-                            stream, CO_HTTP2_ERROR_FILE_IO);
+                        co_http2_stream_on_receive_finish(
+                            stream, CO_HTTP2_ERROR_CANCEL);
+
+                        return false;
                     }
                 }
             }
@@ -692,7 +691,7 @@ co_http2_stream_on_receive_frame(
             (frame->payload.rst_stream.error_code !=
                 CO_HTTP2_STREAM_ERROR_REFUSED_STREAM))
         {
-            co_http2_stream_on_receive_message(stream,
+            co_http2_stream_on_receive_finish(stream,
                 (CO_HTTP2_ERROR_STREAM_CLOSED -
                     frame->payload.rst_stream.error_code));
         }
@@ -839,7 +838,7 @@ co_http2_stream_on_receive_frame(
             }
             else if (stream->state == CO_HTTP2_STREAM_STATE_REMOTE_CLOSED)
             {
-                co_http2_stream_on_receive_message(stream, 0);
+                co_http2_stream_on_receive_finish(stream, 0);
             }
 
             stream->header_block_pool.type = 0;
@@ -1301,19 +1300,18 @@ co_http2_stream_get_sendable_data_size(
 }
 
 void
-co_http2_stream_set_save_file_path(
+co_http2_stream_set_user_data(
     co_http2_stream_t* stream,
-    const char* file_path
+    uintptr_t user_data
 )
 {
-    co_string_destroy(stream->receive_data.file_path);
+    stream->user_data = user_data;
+}
 
-    if (file_path != NULL)
-    {
-        stream->receive_data.file_path = co_string_duplicate(file_path);
-    }
-    else
-    {
-        stream->receive_data.file_path = NULL;
-    }
+uintptr_t
+co_http2_stream_get_user_data(
+    const co_http2_stream_t* stream
+)
+{
+    return stream->user_data;
 }
