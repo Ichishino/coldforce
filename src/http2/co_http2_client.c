@@ -384,14 +384,16 @@ co_http2_client_on_push_promise(
 
     if (client->callbacks.on_push_request != NULL)
     {
-        if (!client->callbacks.on_push_request(
+        if (client->callbacks.on_push_request(
             client->tcp_client->sock.owner_thread,
             client, stream, promised_stream, header))
         {
-            co_http2_stream_send_rst_stream(
-                promised_stream, CO_HTTP2_STREAM_ERROR_CANCEL);
+            return;
         }
     }
+
+    co_http2_stream_send_rst_stream(
+        promised_stream, CO_HTTP2_STREAM_ERROR_CANCEL);
 }
 
 static bool
