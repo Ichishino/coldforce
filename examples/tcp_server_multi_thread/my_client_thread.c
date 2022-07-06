@@ -2,6 +2,8 @@
 #include "my_server_app.h"
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 bool add_client(my_client_thread* self)
 {

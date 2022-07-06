@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 void on_my_tcp_accept(my_server_app* self, co_tcp_server_t* server, co_tcp_client_t* client)
 {

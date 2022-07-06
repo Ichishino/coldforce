@@ -4,6 +4,8 @@
 
 #include <coldforce/coldforce_http.h>
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #ifdef CO_CAN_USE_TLS

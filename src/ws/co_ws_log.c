@@ -3,11 +3,6 @@
 #include <coldforce/ws/co_ws_frame.h>
 #include <coldforce/ws/co_ws_log.h>
 
-#ifdef CO_OS_WIN
-#else
-#include <stdarg.h>
-#endif
-
 //---------------------------------------------------------------------------//
 // websocket log
 //---------------------------------------------------------------------------//

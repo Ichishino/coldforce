@@ -6,7 +6,6 @@
 
 #ifdef CO_OS_WIN
 #else
-#include <stdarg.h>
 #include <ctype.h>
 #endif
 
