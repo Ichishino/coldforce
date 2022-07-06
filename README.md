@@ -1,91 +1,46 @@
 Coldforce
 ========
 
-Coldforce は C言語で作られた、さまざまなネットワークプロトコルに対応したフレームワークです。  
-現在対応しているネットワークプロトコルは以下となります。  
-全てクライアント、サーバー（マルチクライアント）に対応しております。
+Coldforce is a framework written in C that supports various network protocols.  
+With the asynchronous API of this framework
+You can easily create event-driven network applications.  
+The currently supported protocols are as follows.
+All of these support clients and servers (C10K, multi-client).
 * TCP/UDP
-* TLS(TCP)
+* TLS
 * HTTP/1.1
 * HTTP/2
 * WebSocket
 
-### 対応OS
+### Platforms
 * Windows
 * Linux
 * macOS
 
-### ビルド要件
-* C99対応コンパイラ
-* pthread (-lpthread) オプション
-* TLS, HTTP/1.1, HTTP/2機能を使用する場合は、OpenSSL(-lssl -lcrypto) が必要となります。
+### Requirements
+* C99 or later
+* OpenSSL (only when using TLS, https, wss)
 
-### モジュール構成
-* **co_core** - アプリケーション基本機能
-* **co_net** - ネットワーク基本機能及び、TCP/UDP機能
-* **co_tls** - TLS機能
-* **co_http** - HTTP/1.1機能
-* **co_http2** - HTTP/2機能
-* **co_ws** - WebSocket機能
+### Modules
+* co_core - Application core
+* co_net - TCP,UDP
+* co_tls - TLS
+* co_http - HTTP/1.1
+* co_http2 - HTTP/2
+* co_ws - WebSocket
 
-### ビルド方法
+### Builds
 * Windows  
-Visual Studio のプロジェクトファイル (prj/vs19/coldforce.sln) を使用してください。
+Visual Studio ([prj/vs19/coldforce.sln](https://github.com/Ichishino/coldforce/tree/master/prj/vs19/coldforce))
 * Linux  
-CMake を使用してください。
+cmake
 ```shellsession
 $ cd build
 $ cmake ..
 $ make
 ```
 * macOS  
-XCode のプロジェクトファイルを使用してください。
+XCode ([prj/xcode/coldforce.xcworkspace](https://github.com/Ichishino/coldforce/tree/master/prj/xcode))
 
-### 実装サンプル
-* 実装の基本構成は以下の様になります。
-```C
-// app object
-typedef struct
-{
-    co_app_t base_app;
-
-    // Your app data here.
-
-} my_app;
-
-bool on_my_app_create(my_app* self, const co_arg_st* arg)
-{
-    // Your initialization code here.
-
-    return true;
-}
-
-void on_my_app_destroy(my_app* self)
-{
-    // Your deinitialization code here.
-}
-
-int main(int argc, char* argv[])
-{
-    my_app app;
-
-    co_net_app_init(
-        (co_app_t*)&app,
-        (co_app_create_fn)on_my_app_create,
-        (co_app_destroy_fn)on_my_app_destroy);
-
-    // app start
-    int exit_code = co_net_app_start((co_app_t*)&app, argc, argv);
-
-    return exit_code;
-}
-```
-
-* 詳細は [examples](https://github.com/Ichishino/coldforce/tree/master/examples) を参照してください。
-
-### 今後の予定
-* DTLS
-* QUIC?
-* HTTP/3?
-* WebTransport?
-* その他
+### Code Examples
+* [examples here](https://github.com/Ichishino/coldforce/tree/master/examples) 
