@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		4A23C2C625F2548100D3E910 /* co_http_config.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A23C2C525F2548100D3E910 /* co_http_config.c */; };
 		4A23C2D025F254D900D3E910 /* co_sha1.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A23C2CF25F254D900D3E910 /* co_sha1.c */; };
+		4AA4ACAB2875A32B006DE558 /* co_http_log.c in Sources */ = {isa = PBXBuildFile; fileRef = 4AA4ACAA2875A32B006DE558 /* co_http_log.c */; };
 		4AFA7E9925B5E54F006D1AD7 /* co_http_url.c in Sources */ = {isa = PBXBuildFile; fileRef = 4AFA7E8D25B5E54E006D1AD7 /* co_http_url.c */; };
 		4AFA7E9A25B5E54F006D1AD7 /* co_http_response.c in Sources */ = {isa = PBXBuildFile; fileRef = 4AFA7E8E25B5E54E006D1AD7 /* co_http_response.c */; };
 		4AFA7E9B25B5E54F006D1AD7 /* co_base64.c in Sources */ = {isa = PBXBuildFile; fileRef = 4AFA7E8F25B5E54E006D1AD7 /* co_base64.c */; };
@@ -27,6 +28,7 @@
 		4A23C25A25F250AD00D3E910 /* common_config.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = common_config.xcconfig; path = ../common_config.xcconfig; sourceTree = "<group>"; };
 		4A23C2C525F2548100D3E910 /* co_http_config.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = co_http_config.c; path = ../../../src/http/co_http_config.c; sourceTree = "<group>"; };
 		4A23C2CF25F254D900D3E910 /* co_sha1.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = co_sha1.c; path = ../../../src/http/co_sha1.c; sourceTree = "<group>"; };
+		4AA4ACAA2875A32B006DE558 /* co_http_log.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = co_http_log.c; path = ../../../src/http/co_http_log.c; sourceTree = "<group>"; };
 		4AFA7E8325B5E500006D1AD7 /* libco_http.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libco_http.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		4AFA7E8D25B5E54E006D1AD7 /* co_http_url.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = co_http_url.c; path = ../../../src/http/co_http_url.c; sourceTree = "<group>"; };
 		4AFA7E8E25B5E54E006D1AD7 /* co_http_response.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = co_http_response.c; path = ../../../src/http/co_http_response.c; sourceTree = "<group>"; };
@@ -83,6 +85,7 @@
 		4AFA7E8C25B5E52A006D1AD7 /* Source Files */ = {
 			isa = PBXGroup;
 			children = (
+				4AA4ACAA2875A32B006DE558 /* co_http_log.c */,
 				4A23C2CF25F254D900D3E910 /* co_sha1.c */,
 				4A23C2C525F2548100D3E910 /* co_http_config.c */,
 				4AFA7E8F25B5E54E006D1AD7 /* co_base64.c */,
@@ -168,6 +171,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4AFA7EA125B5E54F006D1AD7 /* co_http_string_list.c in Sources */,
+				4AA4ACAB2875A32B006DE558 /* co_http_log.c in Sources */,
 				4AFA7EA225B5E54F006D1AD7 /* co_http_message.c in Sources */,
 				4AFA7EA025B5E54F006D1AD7 /* co_http_server.c in Sources */,
 				4AFA7EA425B5E54F006D1AD7 /* co_http.c in Sources */,

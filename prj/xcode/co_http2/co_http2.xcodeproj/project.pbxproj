@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		4A23C23725F249A100D3E910 /* co_http2_http_extension.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A23C23625F249A100D3E910 /* co_http2_http_extension.c */; };
+		4AA4ACAE2875A346006DE558 /* co_http2_log.c in Sources */ = {isa = PBXBuildFile; fileRef = 4AA4ACAD2875A346006DE558 /* co_http2_log.c */; };
 		4AFA7EC525B5E693006D1AD7 /* co_http2_server.c in Sources */ = {isa = PBXBuildFile; fileRef = 4AFA7EBD25B5E692006D1AD7 /* co_http2_server.c */; };
 		4AFA7EC625B5E693006D1AD7 /* co_http2_frame.c in Sources */ = {isa = PBXBuildFile; fileRef = 4AFA7EBE25B5E692006D1AD7 /* co_http2_frame.c */; };
 		4AFA7EC725B5E693006D1AD7 /* co_http2_header.c in Sources */ = {isa = PBXBuildFile; fileRef = 4AFA7EBF25B5E692006D1AD7 /* co_http2_header.c */; };
@@ -21,6 +22,7 @@
 /* Begin PBXFileReference section */
 		4A23C23625F249A100D3E910 /* co_http2_http_extension.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = co_http2_http_extension.c; path = ../../../src/http2/co_http2_http_extension.c; sourceTree = "<group>"; };
 		4A23C25D25F2512800D3E910 /* common_config.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = common_config.xcconfig; path = ../common_config.xcconfig; sourceTree = "<group>"; };
+		4AA4ACAD2875A346006DE558 /* co_http2_log.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = co_http2_log.c; path = ../../../src/http2/co_http2_log.c; sourceTree = "<group>"; };
 		4AFA7EB325B5E64B006D1AD7 /* libco_http2.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libco_http2.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		4AFA7EBD25B5E692006D1AD7 /* co_http2_server.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = co_http2_server.c; path = ../../../src/http2/co_http2_server.c; sourceTree = "<group>"; };
 		4AFA7EBE25B5E692006D1AD7 /* co_http2_frame.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = co_http2_frame.c; path = ../../../src/http2/co_http2_frame.c; sourceTree = "<group>"; };
@@ -65,6 +67,7 @@
 		4AFA7EBB25B5E656006D1AD7 /* Source Files */ = {
 			isa = PBXGroup;
 			children = (
+				4AA4ACAD2875A346006DE558 /* co_http2_log.c */,
 				4A23C23625F249A100D3E910 /* co_http2_http_extension.c */,
 				4AFA7EC225B5E693006D1AD7 /* co_http2_client.c */,
 				4AFA7EBE25B5E692006D1AD7 /* co_http2_frame.c */,
@@ -155,6 +158,7 @@
 				4AFA7EC625B5E693006D1AD7 /* co_http2_frame.c in Sources */,
 				4AFA7EC525B5E693006D1AD7 /* co_http2_server.c in Sources */,
 				4AFA7ECC25B5E693006D1AD7 /* co_http2_hpack.c in Sources */,
+				4AA4ACAE2875A346006DE558 /* co_http2_log.c in Sources */,
 				4AFA7EC825B5E693006D1AD7 /* co_http2_huffman.c in Sources */,
 				4AFA7ECA25B5E693006D1AD7 /* co_http2_client.c in Sources */,
 				4AFA7EC725B5E693006D1AD7 /* co_http2_header.c in Sources */,

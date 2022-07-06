@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4AA4ACA82875A310006DE558 /* co_tls_log.c in Sources */ = {isa = PBXBuildFile; fileRef = 4AA4ACA72875A310006DE558 /* co_tls_log.c */; };
 		4ACE0B1925B5D24100674D6C /* co_tls.c in Sources */ = {isa = PBXBuildFile; fileRef = 4ACE0B1625B5D24000674D6C /* co_tls.c */; };
 		4ACF4BB325F498AE00C45318 /* co_tls_server.c in Sources */ = {isa = PBXBuildFile; fileRef = 4ACF4BB125F498AE00C45318 /* co_tls_server.c */; };
 		4ACF4BB425F498AE00C45318 /* co_tls_client.c in Sources */ = {isa = PBXBuildFile; fileRef = 4ACF4BB225F498AE00C45318 /* co_tls_client.c */; };
@@ -14,6 +15,7 @@
 
 /* Begin PBXFileReference section */
 		4A23C25525F24E1000D3E910 /* common_config.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = common_config.xcconfig; path = ../common_config.xcconfig; sourceTree = "<group>"; };
+		4AA4ACA72875A310006DE558 /* co_tls_log.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = co_tls_log.c; path = ../../../src/tls/co_tls_log.c; sourceTree = "<group>"; };
 		4ACE0B0C25B5D1BC00674D6C /* libco_tls.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libco_tls.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		4ACE0B1625B5D24000674D6C /* co_tls.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = co_tls.c; path = ../../../src/tls/co_tls.c; sourceTree = "<group>"; };
 		4ACF4BB125F498AE00C45318 /* co_tls_server.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = co_tls_server.c; path = ../../../src/tls/co_tls_server.c; sourceTree = "<group>"; };
@@ -53,6 +55,7 @@
 		4ACE0B1425B5D20400674D6C /* Source Files */ = {
 			isa = PBXGroup;
 			children = (
+				4AA4ACA72875A310006DE558 /* co_tls_log.c */,
 				4ACF4BB225F498AE00C45318 /* co_tls_client.c */,
 				4ACF4BB125F498AE00C45318 /* co_tls_server.c */,
 				4ACE0B1625B5D24000674D6C /* co_tls.c */,
@@ -136,6 +139,7 @@
 			files = (
 				4ACF4BB325F498AE00C45318 /* co_tls_server.c in Sources */,
 				4ACE0B1925B5D24100674D6C /* co_tls.c in Sources */,
+				4AA4ACA82875A310006DE558 /* co_tls_log.c in Sources */,
 				4ACF4BB425F498AE00C45318 /* co_tls_client.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

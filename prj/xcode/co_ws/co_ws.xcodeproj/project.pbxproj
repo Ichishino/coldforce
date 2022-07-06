@@ -14,6 +14,7 @@
 		4A23C24625F249F600D3E910 /* co_ws_server.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A23C23F25F249F600D3E910 /* co_ws_server.c */; };
 		4A23C24725F249F600D3E910 /* co_ws_client.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A23C24025F249F600D3E910 /* co_ws_client.c */; };
 		4A23C24825F249F600D3E910 /* co_ws_frame.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A23C24125F249F600D3E910 /* co_ws_frame.c */; };
+		4AA4ACB12875A362006DE558 /* co_ws_log.c in Sources */ = {isa = PBXBuildFile; fileRef = 4AA4ACB02875A362006DE558 /* co_ws_log.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,6 +28,7 @@
 		4A23C24125F249F600D3E910 /* co_ws_frame.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = co_ws_frame.c; path = ../../../src/ws/co_ws_frame.c; sourceTree = "<group>"; };
 		4A23C24A25F24A0D00D3E910 /* ws */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ws; path = ../../../inc/coldforce/ws; sourceTree = "<group>"; };
 		4A23C25125F24D0000D3E910 /* common_config.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = common_config.xcconfig; path = ../common_config.xcconfig; sourceTree = "<group>"; };
+		4AA4ACB02875A362006DE558 /* co_ws_log.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = co_ws_log.c; path = ../../../src/ws/co_ws_log.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -69,6 +71,7 @@
 		4A23C23A25F249D500D3E910 /* Source Files */ = {
 			isa = PBXGroup;
 			children = (
+				4AA4ACB02875A362006DE558 /* co_ws_log.c */,
 				4A23C23C25F249F600D3E910 /* co_random.c */,
 				4A23C24025F249F600D3E910 /* co_ws_client.c */,
 				4A23C23B25F249F600D3E910 /* co_ws_config.c */,
@@ -146,6 +149,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4AA4ACB12875A362006DE558 /* co_ws_log.c in Sources */,
 				4A23C24725F249F600D3E910 /* co_ws_client.c in Sources */,
 				4A23C24325F249F600D3E910 /* co_random.c in Sources */,
 				4A23C24825F249F600D3E910 /* co_ws_frame.c in Sources */,

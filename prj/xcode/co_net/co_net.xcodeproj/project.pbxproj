@@ -21,6 +21,7 @@
 		4A09F40325AABEEB00AC987D /* co_net_win.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A09F3F225AABEEB00AC987D /* co_net_win.c */; };
 		4A09F40425AABEEB00AC987D /* co_net_worker.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A09F3F325AABEEB00AC987D /* co_net_worker.c */; };
 		4A09FD3525AACB9400AC987D /* co_net_selector_mac.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A09FD3425AACB9400AC987D /* co_net_selector_mac.c */; };
+		4AA4ACA52875A2F2006DE558 /* co_net_log.c in Sources */ = {isa = PBXBuildFile; fileRef = 4AA4ACA42875A2F2006DE558 /* co_net_log.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -41,6 +42,7 @@
 		4A09FD3225AACB7000AC987D /* net */ = {isa = PBXFileReference; lastKnownFileType = folder; name = net; path = ../../../inc/coldforce/net; sourceTree = "<group>"; };
 		4A09FD3425AACB9400AC987D /* co_net_selector_mac.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = co_net_selector_mac.c; path = ../../../src/net/co_net_selector_mac.c; sourceTree = "<group>"; };
 		4A23C26225F2516200D3E910 /* common_config.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = common_config.xcconfig; path = ../common_config.xcconfig; sourceTree = "<group>"; };
+		4AA4ACA42875A2F2006DE558 /* co_net_log.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = co_net_log.c; path = ../../../src/net/co_net_log.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -75,6 +77,7 @@
 		4A09FD3025AACB3900AC987D /* Source Files */ = {
 			isa = PBXGroup;
 			children = (
+				4AA4ACA42875A2F2006DE558 /* co_net_log.c */,
 				4A09FD3425AACB9400AC987D /* co_net_selector_mac.c */,
 				4A09F3E825AABEEB00AC987D /* co_net_addr_resolve.c */,
 				4A09F3F025AABEEB00AC987D /* co_net_addr.c */,
@@ -167,6 +170,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4AA4ACA52875A2F2006DE558 /* co_net_log.c in Sources */,
 				4A09F3F425AABEEB00AC987D /* co_udp.c in Sources */,
 				4A09F3F525AABEEB00AC987D /* co_net_app.c in Sources */,
 				4A09F3F725AABEEB00AC987D /* co_socket_option.c in Sources */,

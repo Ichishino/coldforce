@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4AA4ACA22875A2B7006DE558 /* co_log.c in Sources */ = {isa = PBXBuildFile; fileRef = 4AA4ACA12875A2B7006DE558 /* co_log.c */; };
 		4AFA7EF825B5E8C0006D1AD7 /* co_string.c in Sources */ = {isa = PBXBuildFile; fileRef = 4AFA7EE825B5E8C0006D1AD7 /* co_string.c */; };
 		4AFA7EF925B5E8C0006D1AD7 /* co_list.c in Sources */ = {isa = PBXBuildFile; fileRef = 4AFA7EE925B5E8C0006D1AD7 /* co_list.c */; };
 		4AFA7EFA25B5E8C0006D1AD7 /* co_time.c in Sources */ = {isa = PBXBuildFile; fileRef = 4AFA7EEA25B5E8C0006D1AD7 /* co_time.c */; };
@@ -27,6 +28,7 @@
 
 /* Begin PBXFileReference section */
 		4A23C25625F24EEE00D3E910 /* common_config.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = common_config.xcconfig; path = ../common_config.xcconfig; sourceTree = "<group>"; };
+		4AA4ACA12875A2B7006DE558 /* co_log.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = co_log.c; path = ../../../src/core/co_log.c; sourceTree = "<group>"; };
 		4AFA7EDE25B5E88F006D1AD7 /* libco_core.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libco_core.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		4AFA7EE825B5E8C0006D1AD7 /* co_string.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = co_string.c; path = ../../../src/core/co_string.c; sourceTree = "<group>"; };
 		4AFA7EE925B5E8C0006D1AD7 /* co_list.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = co_list.c; path = ../../../src/core/co_list.c; sourceTree = "<group>"; };
@@ -79,6 +81,7 @@
 		4AFA7EE625B5E894006D1AD7 /* Source Files */ = {
 			isa = PBXGroup;
 			children = (
+				4AA4ACA12875A2B7006DE558 /* co_log.c */,
 				4AFA7EF725B5E8C0006D1AD7 /* co_app.c */,
 				4AFA7EED25B5E8C0006D1AD7 /* co_array.c */,
 				4AFA7EF225B5E8C0006D1AD7 /* co_config.c */,
@@ -175,6 +178,7 @@
 			files = (
 				4AFA7EFC25B5E8C0006D1AD7 /* co_timer.c in Sources */,
 				4AFA7F0025B5E8C0006D1AD7 /* co_mutex.c in Sources */,
+				4AA4ACA22875A2B7006DE558 /* co_log.c in Sources */,
 				4AFA7EFD25B5E8C0006D1AD7 /* co_array.c in Sources */,
 				4AFA7EFA25B5E8C0006D1AD7 /* co_time.c in Sources */,
 				4AFA7EF825B5E8C0006D1AD7 /* co_string.c in Sources */,
