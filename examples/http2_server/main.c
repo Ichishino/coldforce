@@ -394,9 +394,10 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t
     params[1].value = 200;
     co_http2_init_settings(http2_client, params, 2);
 
-    // set callback
-    co_http2_set_message_handler(http2_client, (co_http2_message_fn)on_my_http2_request);
-    co_http2_set_close_handler(http2_client, (co_http2_close_fn)on_my_http2_close);
+    // callback
+    co_http2_callbacks_st* callback = co_http2_get_callbacks(http2_client);
+    callback->on_receive_finish = (co_http2_receive_finish_fn)on_my_http2_request;
+    callback->on_close = (co_http2_close_fn)on_my_http2_close;
 
     co_list_add_tail(self->http2_clients, (uintptr_t)http2_client);
 
