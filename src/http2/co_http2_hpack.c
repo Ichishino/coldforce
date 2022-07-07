@@ -309,7 +309,7 @@ co_http2_hpack_deserialize_string(
 }
 
 static void
-co_http2_hpack_dynamic_table_item_free(
+co_http2_hpack_dynamic_table_item_destroy(
     co_http2_hpack_dynamic_table_item_t* item
 )
 {
@@ -328,8 +328,8 @@ co_http2_hpack_dynamic_table_setup(
     dynamic_table->total_size = 0;
 
     co_list_ctx_st ctx = { 0 };
-    ctx.free_value =
-        (co_item_free_fn)co_http2_hpack_dynamic_table_item_free;
+    ctx.destroy_value =
+        (co_item_destroy_fn)co_http2_hpack_dynamic_table_item_destroy;
     dynamic_table->items = co_list_create(&ctx);
 }
 

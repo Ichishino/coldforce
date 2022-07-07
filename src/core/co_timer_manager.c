@@ -27,7 +27,7 @@ co_timer_manager_create(
     }
 
     co_list_ctx_st ctx = { 0 };
-    ctx.free_value = (co_item_free_fn)co_mem_free;
+    ctx.destroy_value = (co_item_destroy_fn)co_mem_free;
 
     timer_manager->timers = co_list_create(&ctx);
 

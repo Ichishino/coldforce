@@ -28,8 +28,8 @@ typedef co_map_iterator_t   co_ss_map_iterator_t;
     { \
         .hash_size = CO_MAP_DEFAULT_HASH_SIZE, \
         .hash_key = (co_item_hash_fn)co_string_hash, \
-        .free_key = (co_item_free_fn)co_string_destroy, \
-        .free_value = (co_item_free_fn)co_string_destroy, \
+        .destroy_key = (co_item_destroy_fn)co_string_destroy, \
+        .destroy_value = (co_item_destroy_fn)co_string_destroy, \
         .duplicate_key = (co_item_duplicate_fn)co_string_duplicate, \
         .duplicate_value = (co_item_duplicate_fn)co_string_duplicate, \
         .compare_keys = (co_item_compare_fn)strcmp \

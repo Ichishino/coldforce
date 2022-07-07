@@ -425,7 +425,7 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
 
     // client list
     co_list_ctx_st list_ctx = { 0 };
-    list_ctx.free_value = (co_item_free_fn)co_http2_client_destroy; // auto destroy
+    list_ctx.destroy_value = (co_item_destroy_fn)co_http2_client_destroy; // auto destroy
     self->http2_clients = co_list_create(&list_ctx);
 
     // local address

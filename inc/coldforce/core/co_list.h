@@ -14,7 +14,7 @@ CO_EXTERN_C_BEGIN
 
 typedef struct
 {
-    co_item_free_fn free_value;
+    co_item_destroy_fn destroy_value;
     co_item_duplicate_fn duplicate_value;
     co_item_compare_fn compare_values;
 
@@ -42,7 +42,7 @@ typedef struct
     co_list_item_t* head;
     co_list_item_t* tail;
 
-    co_item_free_fn free_value;
+    co_item_destroy_fn destroy_value;
     co_item_compare_fn compare_values;
     co_item_duplicate_fn duplicate_value;
 

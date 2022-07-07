@@ -21,7 +21,7 @@ co_map_default_hash_key(
 }
 
 static void
-co_map_default_free(
+co_map_default_destroy(
     uintptr_t key_or_value
 )
 {
@@ -67,8 +67,8 @@ co_map_create(
     {
         map->hash_size = ctx->hash_size;
         map->hash_key = ctx->hash_key;
-        map->free_key = ctx->free_key;
-        map->free_value = ctx->free_value;
+        map->destroy_key = ctx->destroy_key;
+        map->destroy_value = ctx->destroy_value;
         map->duplicate_key = ctx->duplicate_key;
         map->duplicate_value = ctx->duplicate_value;
         map->compare_keys = ctx->compare_keys;
@@ -77,8 +77,8 @@ co_map_create(
     {
         map->hash_size = 0;
         map->hash_key = NULL;
-        map->free_key = NULL;
-        map->free_value = NULL;
+        map->destroy_key = NULL;
+        map->destroy_value = NULL;
         map->duplicate_key = NULL;
         map->duplicate_value = NULL;
         map->compare_keys = NULL;
@@ -94,14 +94,14 @@ co_map_create(
         map->hash_key = co_map_default_hash_key;
     }
 
-    if (map->free_key == NULL)
+    if (map->destroy_key == NULL)
     {
-        map->free_key = co_map_default_free;
+        map->destroy_key = co_map_default_destroy;
     }
 
-    if (map->free_value == NULL)
+    if (map->destroy_value == NULL)
     {
-        map->free_value = co_map_default_free;
+        map->destroy_value = co_map_default_destroy;
     }
 
     if (map->duplicate_key == NULL)
@@ -164,8 +164,8 @@ co_map_clear(
 
             do
             {
-                map->free_key(item->data.key);
-                map->free_value(item->data.value);
+                map->destroy_key(item->data.key);
+                map->destroy_value(item->data.value);
 
                 co_map_item_t* temp = item;
                 item = item->next;
@@ -225,7 +225,7 @@ co_map_set(
     {
         if (map->compare_keys((*item)->data.key, key) == 0)
         {
-            map->free_value((*item)->data.value);
+            map->destroy_value((*item)->data.value);
             (*item)->data.value = map->duplicate_value(value);
 
             return true;
@@ -298,8 +298,8 @@ co_map_remove(
                 map->items[index] = NULL;
             }
 
-            map->free_key(item->data.key);
-            map->free_value(item->data.value);
+            map->destroy_key(item->data.key);
+            map->destroy_value(item->data.value);
 
             co_mem_free(item);
 

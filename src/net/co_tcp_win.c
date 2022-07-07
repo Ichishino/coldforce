@@ -126,7 +126,7 @@ co_win_tcp_server_cleanup(
     co_tcp_server_t* server
 )
 {
-    co_win_free_io_ctx(server->win.accept_io_ctx);
+    co_win_destroy_io_ctx(server->win.accept_io_ctx);
     server->win.accept_io_ctx = NULL;
 }
 
@@ -227,7 +227,7 @@ co_win_tcp_client_cleanup(
 {
     if (client->win.receive.io_ctx != NULL)
     {   
-        co_win_free_io_ctx(client->win.receive.io_ctx);
+        co_win_destroy_io_ctx(client->win.receive.io_ctx);
         client->win.receive.io_ctx = NULL;
     }
 
@@ -283,7 +283,7 @@ co_win_tcp_client_connector_cleanup(
 {
     if (client->win.io_connect_ctx != NULL)
     {
-        co_win_free_io_ctx(client->win.io_connect_ctx);
+        co_win_destroy_io_ctx(client->win.io_connect_ctx);
         client->win.io_connect_ctx = NULL;
     }
 }
@@ -324,7 +324,7 @@ co_win_tcp_client_send_async(
     if (client->win.io_send_ctxs == NULL)
     {
         co_list_ctx_st list_ctx = { 0 };
-        list_ctx.free_value = (co_item_free_fn)co_win_free_io_ctx;
+        list_ctx.destroy_value = (co_item_destroy_fn)co_win_destroy_io_ctx;
         client->win.io_send_ctxs = co_list_create(&list_ctx);
     }
 

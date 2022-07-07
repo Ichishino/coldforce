@@ -75,8 +75,8 @@ co_http2_header_create(
     memset(&header->pseudo, 0x00, sizeof(co_http2_pseudo_header_t));
 
     co_list_ctx_st list_ctx = { 0 };
-    list_ctx.free_value =
-        (co_item_free_fn)co_http2_header_field_destroy;
+    list_ctx.destroy_value =
+        (co_item_destroy_fn)co_http2_header_field_destroy;
     list_ctx.compare_values =
         (co_item_compare_fn)co_http2_header_field_compare;
 

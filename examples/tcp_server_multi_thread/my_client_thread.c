@@ -90,7 +90,7 @@ bool on_my_client_thread_create(my_client_thread* self, uintptr_t param)
 
     // client list
     co_list_ctx_st list_ctx = { 0 };
-    list_ctx.free_value = (co_item_free_fn)co_tcp_client_destroy; // auto destroy
+    list_ctx.destroy_value = (co_item_destroy_fn)co_tcp_client_destroy; // auto destroy
     self->client_list = co_list_create(&list_ctx);
 
     // transfer handler

@@ -67,7 +67,7 @@ co_event_worker_setup(
     event_worker->timer_manager = co_timer_manager_create();
 
     co_list_ctx_st list_ctx = { 0 };
-    list_ctx.free_value = (co_item_free_fn)co_mem_free;
+    list_ctx.destroy_value = (co_item_destroy_fn)co_mem_free;
     event_worker->mem_trash = co_list_create(&list_ctx);
 
     if (event_worker->wait == NULL)

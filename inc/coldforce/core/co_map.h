@@ -19,8 +19,8 @@ typedef struct
     size_t hash_size;
 
     co_item_hash_fn hash_key;
-    co_item_free_fn free_key;
-    co_item_free_fn free_value;
+    co_item_destroy_fn destroy_key;
+    co_item_destroy_fn destroy_value;
     co_item_duplicate_fn duplicate_key;
     co_item_duplicate_fn duplicate_value;
     co_item_compare_fn compare_keys;
@@ -50,8 +50,8 @@ typedef struct
     co_map_item_t** items;
 
     co_item_hash_fn hash_key;
-    co_item_free_fn free_key;
-    co_item_free_fn free_value;
+    co_item_destroy_fn destroy_key;
+    co_item_destroy_fn destroy_value;
     co_item_duplicate_fn duplicate_key;
     co_item_duplicate_fn duplicate_value;
     co_item_compare_fn compare_keys;

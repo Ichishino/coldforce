@@ -13,7 +13,7 @@
 //---------------------------------------------------------------------------//
 
 void
-co_list_default_free_value(
+co_list_default_destroy_value(
     uintptr_t value
 )
 {
@@ -60,20 +60,20 @@ co_list_create(
 
     if (ctx != NULL)
     {
-        list->free_value = ctx->free_value;
+        list->destroy_value = ctx->destroy_value;
         list->duplicate_value = ctx->duplicate_value;
         list->compare_values = ctx->compare_values;
     }
     else
     {
-        list->free_value = NULL;
+        list->destroy_value = NULL;
         list->duplicate_value = NULL;
         list->compare_values = NULL;
     }
 
-    if (list->free_value == NULL)
+    if (list->destroy_value == NULL)
     {
-        list->free_value = co_list_default_free_value;
+        list->destroy_value = co_list_default_destroy_value;
     }
 
     if (list->duplicate_value == NULL)
@@ -113,7 +113,7 @@ co_list_clear(
         co_list_item_t* temp = item;
         item = item->next;
 
-        list->free_value(temp->data.value);
+        list->destroy_value(temp->data.value);
 
         co_mem_free(temp);
     }
@@ -264,7 +264,7 @@ co_list_remove_head(
         co_list_item_t* item = list->head;
 
         list->head = item->next;
-        list->free_value(item->data.value);
+        list->destroy_value(item->data.value);
 
         if (list->head != NULL)
         {
@@ -293,7 +293,7 @@ co_list_remove_tail(
         co_list_item_t* item = list->tail;
 
         list->tail = item->prev;
-        list->free_value(item->data.value);
+        list->destroy_value(item->data.value);
 
         if (list->tail != NULL)
         {
@@ -345,7 +345,7 @@ co_list_remove_at(
         iterator->prev->next = iterator->next;
         iterator->next->prev = iterator->prev;
 
-        list->free_value(iterator->data.value);
+        list->destroy_value(iterator->data.value);
 
         co_mem_free(iterator);
 

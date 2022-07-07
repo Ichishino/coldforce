@@ -62,7 +62,7 @@ typedef struct co_net_selector_t
 //---------------------------------------------------------------------------//
 
 void
-co_win_free_io_ctx(
+co_win_destroy_io_ctx(
     co_win_net_io_ctx_t* io_ctx
 );
 
