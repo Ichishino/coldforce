@@ -2,11 +2,11 @@ cmake_minimum_required(VERSION 2.8)
 
 project(http2_server C)
 
-include_directories(../../inc)
-
 add_executable(${PROJECT_NAME} main.c)
 
 target_compile_options(${PROJECT_NAME} PUBLIC -Wall)
+
+target_include_directories(${PROJECT_NAME} PUBLIC ../../inc)
 
 target_link_libraries(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/../../build/libco_http2.a)
 target_link_libraries(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/../../build/libco_http.a)
@@ -14,9 +14,13 @@ target_link_libraries(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/../../build/li
 target_link_libraries(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/../../build/libco_net.a)
 target_link_libraries(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/../../build/libco_core.a)
 
-target_link_libraries(${PROJECT_NAME} -lssl)
-target_link_libraries(${PROJECT_NAME} -lcrypto)
 target_link_libraries(${PROJECT_NAME} -lpthread)
+
+find_package(OpenSSL)
+if (OPENSSL_FOUND)
+    target_include_directories(${PROJECT_NAME} PUBLIC ${OPENSSL_INCLUDE_DIR})
+    target_link_libraries(${PROJECT_NAME} ${OPENSSL_LIBRARIES})
+endif()
 
 add_custom_command(
     TARGET ${PROJECT_NAME} POST_BUILD
