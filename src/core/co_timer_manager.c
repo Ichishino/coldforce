@@ -27,8 +27,14 @@ co_timer_manager_create(
     }
 
     co_list_ctx_st ctx = { 0 };
+#if (__GNUC__ >= 8)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
     ctx.destroy_value = (co_item_destroy_fn)co_mem_free;
-
+#if (__GNUC__ >= 8)
+#pragma GCC diagnostic pop
+#endif
     timer_manager->timers = co_list_create(&ctx);
 
     return timer_manager;

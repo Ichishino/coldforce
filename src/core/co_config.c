@@ -26,7 +26,14 @@ co_config_read_file(
         return NULL;
     }
 
+#if (__GNUC__ >= 8)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
     co_map_ctx_st ctx = CO_SS_MAP_CTX;
+#if (__GNUC__ >= 8)
+#pragma GCC diagnostic pop
+#endif
     co_ss_map_t* config_map = co_map_create(&ctx);
 
     char line[CO_CONFIG_LINE_MAX_LENGTH];

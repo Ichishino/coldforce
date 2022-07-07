@@ -78,7 +78,14 @@ co_http2_client_setup(
     client->callbacks.on_ping = NULL;
 
     co_map_ctx_st map_ctx = { 0 };
+#if (__GNUC__ >= 8)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
     map_ctx.destroy_value = (co_item_destroy_fn)co_http2_stream_destroy;
+#if (__GNUC__ >= 8)
+#pragma GCC diagnostic pop
+#endif
     client->stream_map = co_map_create(&map_ctx);
 
     client->last_stream_id = 0;

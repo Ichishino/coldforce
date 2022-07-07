@@ -214,11 +214,17 @@ co_http_header_setup(
 )
 {
     co_list_ctx_st list_ctx = { 0 };
+#if (__GNUC__ >= 8)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
     list_ctx.destroy_value =
         (co_item_destroy_fn)co_http_header_field_destroy;
     list_ctx.compare_values =
         (co_item_compare_fn)co_http_header_field_compare;
-
+#if (__GNUC__ >= 8)
+#pragma GCC diagnostic pop
+#endif
     header->field_list = co_list_create(&list_ctx);
 }
 

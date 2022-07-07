@@ -67,7 +67,14 @@ co_event_worker_setup(
     event_worker->timer_manager = co_timer_manager_create();
 
     co_list_ctx_st list_ctx = { 0 };
+#if (__GNUC__ >= 8)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
     list_ctx.destroy_value = (co_item_destroy_fn)co_mem_free;
+#if (__GNUC__ >= 8)
+#pragma GCC diagnostic pop
+#endif
     event_worker->mem_trash = co_list_create(&list_ctx);
 
     if (event_worker->wait == NULL)
@@ -369,9 +376,16 @@ co_event_worker_unregister_timer(
         co_event_t timer_event = {
             CO_EVENT_ID_TIMER, (uintptr_t)timer, true };
 
+#if (__GNUC__ >= 8)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
         co_event_t* queued_event = (co_event_t*)
             co_queue_find(event_worker->event_queue,
                 &timer_event, (co_item_compare_fn)co_compare_event);
+#if (__GNUC__ >= 8)
+#pragma GCC diagnostic pop
+#endif
         co_assert(queued_event != NULL);
 
         queued_event->param2 = false;
