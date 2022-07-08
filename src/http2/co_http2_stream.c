@@ -1302,13 +1302,13 @@ co_http2_stream_get_sendable_data_size(
 void
 co_http2_stream_set_user_data(
     co_http2_stream_t* stream,
-    uintptr_t user_data
+    void* user_data
 )
 {
     stream->user_data = user_data;
 }
 
-uintptr_t
+void*
 co_http2_stream_get_user_data(
     const co_http2_stream_t* stream
 )

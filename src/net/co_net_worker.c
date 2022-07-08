@@ -260,7 +260,7 @@ co_net_worker_register_tcp_server(
     }
 
     co_list_add_tail(
-        net_worker->tcp_servers, (uintptr_t)server);
+        net_worker->tcp_servers, server);
 
     return true;
 }
@@ -277,7 +277,7 @@ co_net_worker_unregister_tcp_server(
     }
 
     co_list_iterator_t* it =
-        co_list_find(net_worker->tcp_servers, (uintptr_t)server);
+        co_list_find(net_worker->tcp_servers, server);
 
     if (it == NULL)
     {
@@ -302,7 +302,7 @@ co_net_worker_register_tcp_connector(
     }
 
     if (co_list_contains(
-        net_worker->tcp_clients, (uintptr_t)client))
+        net_worker->tcp_clients, client))
     {
         return true;
     }
@@ -315,7 +315,7 @@ co_net_worker_register_tcp_connector(
     }
 
     co_list_add_tail(
-        net_worker->tcp_clients, (uintptr_t)client);
+        net_worker->tcp_clients, client);
 
     return true;
 }
@@ -332,7 +332,7 @@ co_net_worker_unregister_tcp_connector(
     }
 
     co_list_iterator_t* it =
-        co_list_find(net_worker->tcp_clients, (uintptr_t)client);
+        co_list_find(net_worker->tcp_clients, client);
 
     if (it == NULL)
     {
@@ -357,7 +357,7 @@ co_net_worker_register_tcp_connection(
     }
 
     if (co_list_contains(
-        net_worker->tcp_clients, (uintptr_t)client))
+        net_worker->tcp_clients, client))
     {
         return true;
     }
@@ -370,7 +370,7 @@ co_net_worker_register_tcp_connection(
     }
 
     co_list_add_tail(
-        net_worker->tcp_clients, (uintptr_t)client);
+        net_worker->tcp_clients, client);
 
     return true;
 }
@@ -383,7 +383,7 @@ co_net_worker_unregister_tcp_connection(
     if (net_worker->tcp_clients != NULL)
     {
         co_list_iterator_t* it =
-            co_list_find(net_worker->tcp_clients, (uintptr_t)client);
+            co_list_find(net_worker->tcp_clients, client);
 
         if (it != NULL)
         {
@@ -472,7 +472,7 @@ co_net_worker_close_tcp_client_local(
 
         client->close_timer = co_timer_create((30 * 1000),
             (co_timer_fn)co_net_worker_tcp_client_close_timer,
-            false, (uintptr_t)client);
+            false, client);
 
         co_timer_start(client->close_timer);
     }
@@ -489,7 +489,7 @@ co_net_worker_close_tcp_client_remote(
 )
 {
     if (!co_list_contains(
-        net_worker->tcp_clients, (uintptr_t)client))
+        net_worker->tcp_clients, client))
     {
         return false;
     }
@@ -523,8 +523,7 @@ co_net_worker_register_udp(
         return false;
     }
 
-    co_list_add_tail(
-        net_worker->udps, (uintptr_t)udp);
+    co_list_add_tail(net_worker->udps, udp);
 
     return true;
 }
@@ -541,7 +540,7 @@ co_net_worker_unregister_udp(
     }
 
     co_list_iterator_t* it =
-        co_list_find(net_worker->udps, (uintptr_t)udp);
+        co_list_find(net_worker->udps, udp);
 
     if (it == NULL)
     {
@@ -562,7 +561,7 @@ co_net_worker_update_udp(
 {
     if (net_worker->udps != NULL)
     {
-        if (co_list_contains(net_worker->udps, (uintptr_t)udp))
+        if (co_list_contains(net_worker->udps, udp))
         {
             return co_net_selector_update(
                 net_worker->net_selector, &udp->sock, udp->sock_event_flags);

@@ -88,7 +88,7 @@ typedef struct co_http2_stream_t
 
     uint32_t promised_stream_id;
 
-    uintptr_t user_data;
+    void* user_data;
 
 } co_http2_stream_t;
 
@@ -218,11 +218,11 @@ CO_HTTP2_API
 void
 co_http2_stream_set_user_data(
     co_http2_stream_t* stream,
-    uintptr_t user_data
+    void* user_data
 );
 
 CO_HTTP2_API
-uintptr_t
+void*
 co_http2_stream_get_user_data(
     const co_http2_stream_t* stream
 );

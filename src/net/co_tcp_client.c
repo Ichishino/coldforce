@@ -752,34 +752,27 @@ co_tcp_client_get_socket(
     return &client->sock;
 }
 
-bool
+void
 co_tcp_set_user_data(
     co_tcp_client_t* client,
-    uintptr_t user_data
+    void* user_data
 )
 {
     if (client != NULL)
     {
         client->sock.user_data = user_data;
-
-        return true;
     }
-
-    return false;
 }
 
-bool
+void*
 co_tcp_get_user_data(
-    const co_tcp_client_t* client,
-    uintptr_t* user_data
+    const co_tcp_client_t* client
 )
 {
     if (client != NULL)
     {
-        *user_data = client->sock.user_data;
-
-        return true;
+        return client->sock.user_data;
     }
 
-    return false;
+    return NULL;
 }

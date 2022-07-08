@@ -181,17 +181,16 @@ co_http_is_open(
 );
 
 CO_HTTP_API
-bool
+void
 co_http_set_user_data(
     co_http_client_t* client,
-    uintptr_t user_data
+    void* user_data
 );
 
 CO_HTTP_API
-bool
+void*
 co_http_get_user_data(
-    const co_http_client_t* client,
-    uintptr_t* user_data
+    const co_http_client_t* client
 );
 
 //---------------------------------------------------------------------------//

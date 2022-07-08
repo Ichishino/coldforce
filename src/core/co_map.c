@@ -14,7 +14,7 @@
 
 static size_t
 co_map_default_hash_key(
-    uintptr_t key
+    const void* key
 )
 {
     return (size_t)key;
@@ -22,27 +22,27 @@ co_map_default_hash_key(
 
 static void
 co_map_default_destroy(
-    uintptr_t key_or_value
+    void* key_or_value
 )
 {
     (void)key_or_value;
 }
 
-static uintptr_t
+static void*
 co_map_default_duplicate(
-    uintptr_t key_or_value
+    const void* key_or_value
 )
 {
-    return key_or_value;
+    return (void*)key_or_value;
 }
 
-static intptr_t
+static int
 co_map_default_compare_keys(
-    uintptr_t key1,
-    uintptr_t key2
+    const void* key1,
+    const void* key2
 )
 {
-    return (((intptr_t)key1) - ((intptr_t)key2));
+    return (int)(((intptr_t)key1) - ((intptr_t)key2));
 }
 
 //---------------------------------------------------------------------------//
@@ -190,7 +190,7 @@ co_map_get_count(
 bool
 co_map_contains(
     const co_map_t* map,
-    uintptr_t key
+    const void* key
 )
 {
     size_t index = map->hash_key(key) % map->hash_size;
@@ -213,8 +213,8 @@ co_map_contains(
 bool
 co_map_set(
     co_map_t* map,
-    uintptr_t key,
-    uintptr_t value
+    void* key,
+    void* value
 )
 {
     size_t index = map->hash_key(key) % map->hash_size;
@@ -254,7 +254,7 @@ co_map_set(
 co_map_data_st*
 co_map_get(
     co_map_t* map,
-    uintptr_t key
+    const void* key
 )
 {
     size_t index = map->hash_key(key) % map->hash_size;
@@ -277,7 +277,7 @@ co_map_get(
 void
 co_map_remove(
     co_map_t* map,
-    uintptr_t key
+    const void* key
 )
 {
     size_t index = map->hash_key(key) % map->hash_size;

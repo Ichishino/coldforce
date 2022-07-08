@@ -199,17 +199,16 @@ co_tcp_client_get_socket(
 );
 
 CO_NET_API
-bool
+void
 co_tcp_set_user_data(
     co_tcp_client_t* client,
-    uintptr_t user_data
+    void* user_data
 );
 
 CO_NET_API
-bool
+void*
 co_tcp_get_user_data(
-    const co_tcp_client_t* client,
-    uintptr_t* user_data
+    const co_tcp_client_t* client
 );
 
 #ifdef CO_OS_WIN

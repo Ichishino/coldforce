@@ -155,17 +155,16 @@ co_udp_get_socket(
 );
 
 CO_NET_API
-bool
+void
 co_udp_set_user_data(
     co_udp_t* udp,
-    uintptr_t user_data
+    void* user_data
 );
 
 CO_NET_API
-bool
+void*
 co_udp_get_user_data(
-    const co_udp_t* udp,
-    uintptr_t* user_data
+    const co_udp_t* udp
 );
 
 #ifdef CO_OS_WIN

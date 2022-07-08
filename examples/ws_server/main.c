@@ -64,7 +64,7 @@ void on_my_ws_receive(my_app* self, co_ws_client_t* client, const co_ws_frame_t*
         my_client_log(ws, client, "close (received invalid data)");
 
         // close
-        co_list_remove(self->clients, (uintptr_t)client);
+        co_list_remove(self->clients, client);
     }
 }
 
@@ -72,7 +72,7 @@ void on_my_ws_close(my_app* self, co_ws_client_t* client)
 {
     my_client_log(ws, client, "close");
 
-    co_list_remove(self->clients, (uintptr_t)client);
+    co_list_remove(self->clients, client);
 }
 
 void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t* tcp_client)
@@ -91,7 +91,7 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t
     callbacks->on_receive = (co_ws_receive_fn)on_my_ws_receive;
     callbacks->on_close = (co_ws_close_fn)on_my_ws_close;
 
-    co_list_add_tail(self->clients, (uintptr_t)ws_client);
+    co_list_add_tail(self->clients, ws_client);
 }
 
 bool on_my_app_create(my_app* self, const co_arg_st* arg)

@@ -24,7 +24,7 @@ co_http2_header_field_destroy(
     co_mem_free(field);
 }
 
-intptr_t
+static int
 co_http2_header_field_compare(
     const co_http2_header_field_t* field1,
     const co_http2_header_field_t* field2
@@ -52,7 +52,7 @@ co_http2_header_add_field_ptr(
     field->name = name;
     field->value = value;
 
-    return co_list_add_tail(header->field_list, (uintptr_t)field);
+    return co_list_add_tail(header->field_list, field);
 }
 
 //---------------------------------------------------------------------------//
@@ -75,17 +75,11 @@ co_http2_header_create(
     memset(&header->pseudo, 0x00, sizeof(co_http2_pseudo_header_t));
 
     co_list_ctx_st list_ctx = { 0 };
-#if (__GNUC__ >= 8)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wcast-function-type"
-#endif
     list_ctx.destroy_value =
         (co_item_destroy_fn)co_http2_header_field_destroy;
     list_ctx.compare_values =
         (co_item_compare_fn)co_http2_header_field_compare;
-#if (__GNUC__ >= 8)
-#pragma GCC diagnostic pop
-#endif
+
     header->field_list = co_list_create(&list_ctx);
 
     header->stream_dependency = 0;
@@ -376,7 +370,7 @@ co_http2_header_contains(
     const co_http2_header_field_t find_field = { (char*)name, NULL };
 
     const co_list_iterator_t* it =
-        co_list_find_const(header->field_list, (uintptr_t)&find_field);
+        co_list_find_const(header->field_list, &find_field);
 
     return (it != NULL);
 }
@@ -391,7 +385,7 @@ co_http2_header_set_field(
     const co_http2_header_field_t find_field = { (char*)name, NULL };
 
     co_list_iterator_t* it =
-        co_list_find(header->field_list, (uintptr_t)&find_field);
+        co_list_find(header->field_list, &find_field);
 
     if (it != NULL)
     {
@@ -417,7 +411,7 @@ co_http2_header_get_field(
     const co_http2_header_field_t find_field = { (char*)name, NULL };
 
     const co_list_iterator_t* it =
-        co_list_find_const(header->field_list, (uintptr_t)&find_field);
+        co_list_find_const(header->field_list, &find_field);
 
     if (it != NULL)
     {
@@ -497,7 +491,7 @@ co_http2_header_add_field(
         return false;
     }
 
-    return co_list_add_tail(header->field_list, (uintptr_t)field);
+    return co_list_add_tail(header->field_list, field);
 }
 
 void
@@ -508,7 +502,7 @@ co_http2_header_remove_field(
 {
     co_http2_header_field_t find_field = { (char*)name, NULL };
 
-    co_list_remove(header->field_list, (uintptr_t)&find_field);
+    co_list_remove(header->field_list, &find_field);
 }
 
 void

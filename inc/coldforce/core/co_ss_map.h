@@ -44,16 +44,16 @@ typedef co_map_iterator_t   co_ss_map_iterator_t;
 #define co_ss_map_get_size      co_map_get_size
 
 #define co_ss_map_contains(map, key) \
-    co_map_contains(map, (uintptr_t)key)
+    co_map_contains(map, (const void*)key)
 
 #define co_ss_map_set(map, key, value) \
-    co_map_set(map, (uintptr_t)key, (uintptr_t)value)
+    co_map_set(map, (void*)key, (void*)value)
 
 #define co_ss_map_get(map, key) \
-    ((co_ss_map_data_st*)co_map_get(map, (uintptr_t)key))
+    ((co_ss_map_data_st*)co_map_get(map, (const void*)key))
 
 #define co_ss_map_remove(map, key) \
-    co_map_remove(map, (uintptr_t)key)
+    co_map_remove(map, (const void*)key)
 
 #define co_ss_map_iterator_init co_map_iterator_init
 

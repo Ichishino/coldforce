@@ -14,27 +14,27 @@
 
 void
 co_list_default_destroy_value(
-    uintptr_t value
+    void* value
 )
 {
     (void)value;
 }
 
-uintptr_t
+void*
 co_list_default_duplicate_value(
-    uintptr_t value
+    const void* value
 )
 {
-    return value;
+    return (void*)value;
 }
 
-intptr_t
+int
 co_list_default_compare_values(
-    uintptr_t value1,
-    uintptr_t value2
+    const void* value1,
+    const void* value2
 )
 {
-    return (((intptr_t)value1) - ((intptr_t)value2));
+    return (int)((intptr_t)value1 - (intptr_t)value2);
 }
 
 //---------------------------------------------------------------------------//
@@ -134,7 +134,7 @@ co_list_get_count(
 bool
 co_list_contains(
     const co_list_t* list,
-    uintptr_t value
+    const void* value
 )
 {
     const co_list_item_t* item = list->head;
@@ -155,7 +155,7 @@ co_list_contains(
 bool
 co_list_add_head(
     co_list_t* list,
-    uintptr_t value
+    void* value
 )
 {
     co_list_item_t* new_item =
@@ -190,7 +190,7 @@ co_list_add_head(
 bool
 co_list_add_tail(
     co_list_t* list,
-    uintptr_t value
+    void* value
 )
 {
     co_list_item_t* new_item =
@@ -315,7 +315,7 @@ co_list_remove_tail(
 void
 co_list_remove(
     co_list_t* list,
-    uintptr_t value
+    const void* value
 )
 {
     co_list_iterator_t* it = co_list_find(list, value);
@@ -433,7 +433,7 @@ bool
 co_list_insert(
     co_list_t* list,
     co_list_iterator_t* iterator,
-    uintptr_t value
+    void* value
 )
 {
     co_list_item_t* new_item =
@@ -468,7 +468,7 @@ bool
 co_list_insert_after(
     co_list_t* list,
     co_list_iterator_t* iterator,
-    uintptr_t value
+    void* value
 )
 {
     co_list_item_t* new_item =
@@ -584,7 +584,7 @@ co_list_get_const_next(
 co_list_iterator_t*
 co_list_find(
     co_list_t* list,
-    uintptr_t value
+    const void* value
 )
 {
     co_list_item_t* item = list->head;
@@ -605,7 +605,7 @@ co_list_find(
 const co_list_iterator_t*
 co_list_find_const(
     const co_list_t* list,
-    uintptr_t value
+    const void* value
 )
 {
     const co_list_item_t* item = list->head;

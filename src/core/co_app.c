@@ -85,7 +85,7 @@ co_app_run(
     if (app->main_thread.on_create != NULL)
     {
         create_result =
-            app->main_thread.on_create(app, (uintptr_t)arg);
+            app->main_thread.on_create(app, arg);
     }
 
     if (create_result)

@@ -29,8 +29,8 @@ typedef struct
 
 typedef struct
 {
-    uintptr_t key;
-    uintptr_t value;
+    void* key;
+    void* value;
 
 } co_map_data_st;
 
@@ -99,29 +99,29 @@ CO_API
 bool
 co_map_contains(
     const co_map_t* map,
-    uintptr_t key
+    const void* key
 );
 
 CO_API
 bool
 co_map_set(
     co_map_t* map,
-    uintptr_t key,
-    uintptr_t value
+    void* key,
+    void* value
 );
 
 CO_API
 co_map_data_st*
 co_map_get(
     co_map_t* map,
-    uintptr_t key
+    const void* key
 );
 
 CO_API
 void
 co_map_remove(
     co_map_t* map,
-    uintptr_t key
+    const void* key
 );
 
 CO_API

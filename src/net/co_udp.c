@@ -484,34 +484,27 @@ co_udp_get_socket(
     return &udp->sock;
 }
 
-bool
+void
 co_udp_set_user_data(
     co_udp_t* udp,
-    uintptr_t user_data
+    void* user_data
 )
 {
     if (udp != NULL)
     {
         udp->sock.user_data = user_data;
-
-        return true;
     }
-
-    return false;
 }
 
-bool
+void*
 co_udp_get_user_data(
-    const co_udp_t* udp,
-    uintptr_t* user_data
+    const co_udp_t* udp
 )
 {
     if (udp != NULL)
     {
-        *user_data = udp->sock.user_data;
-
-        return true;
+        return udp->sock.user_data;
     }
 
-    return false;
+    return NULL;
 }

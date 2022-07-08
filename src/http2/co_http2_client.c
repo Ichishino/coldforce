@@ -78,14 +78,8 @@ co_http2_client_setup(
     client->callbacks.on_ping = NULL;
 
     co_map_ctx_st map_ctx = { 0 };
-#if (__GNUC__ >= 8)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wcast-function-type"
-#endif
     map_ctx.destroy_value = (co_item_destroy_fn)co_http2_stream_destroy;
-#if (__GNUC__ >= 8)
-#pragma GCC diagnostic pop
-#endif
+
     client->stream_map = co_map_create(&map_ctx);
 
     client->last_stream_id = 0;
@@ -215,7 +209,7 @@ co_http2_create_stream(
         client->callbacks.on_receive_data);
 
     co_map_set(client->stream_map,
-        client->new_stream_id, (uintptr_t)stream);
+        (void*)(uintptr_t)client->new_stream_id, stream);
 
     return stream;
 }
@@ -226,7 +220,8 @@ co_http2_destroy_stream(
     co_http2_stream_t* stream
 )
 {
-    co_map_remove(client->stream_map, stream->id);
+    co_map_remove(
+        client->stream_map, (void*)(uintptr_t)stream->id);
 }
 
 bool
@@ -379,7 +374,7 @@ co_http2_client_on_push_promise(
             client->callbacks.on_push_data);
 
     co_map_set(client->stream_map,
-        promised_id, (uintptr_t)promised_stream);
+        (void*)(uintptr_t)promised_id, promised_stream);
 
     if (client->last_stream_id < promised_id)
     {
@@ -981,7 +976,7 @@ co_http2_get_stream(
     if (stream_id != 0)
     {
         co_map_data_st* data =
-            co_map_get(client->stream_map, (uintptr_t)stream_id);
+            co_map_get(client->stream_map, (void*)(uintptr_t)stream_id);
 
         if (data != NULL)
         {
@@ -1172,31 +1167,21 @@ co_http2_is_open(
         co_tcp_is_open(client->tcp_client) : false);
 }
 
-bool
+void
 co_http2_set_user_data(
     co_http2_client_t* client,
-    uintptr_t user_data
+    void* user_data
 )
 {
-    if (client != NULL)
-    {
-        return co_tcp_set_user_data(
-            client->tcp_client, user_data);
-    }
-
-    return false;
+    co_tcp_set_user_data(
+        client->tcp_client, user_data);
 }
 
-bool
+void*
 co_http2_get_user_data(
-    const co_http2_client_t* client,
-    uintptr_t* user_data
+    const co_http2_client_t* client
 )
 {
-    if (client != NULL)
-    {
-        return co_tcp_get_user_data(client->tcp_client, user_data);
-    }
-
-    return false;
+    return co_tcp_get_user_data(
+        client->tcp_client);
 }

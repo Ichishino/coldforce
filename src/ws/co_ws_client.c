@@ -855,32 +855,21 @@ co_ws_is_open(
         co_tcp_is_open(client->tcp_client) : false);
 }
 
-bool
+void
 co_ws_set_user_data(
     co_ws_client_t* client,
-    uintptr_t user_data
+    void* user_data
 )
 {
-    if (client != NULL)
-    {
-        return co_tcp_set_user_data(
-            client->tcp_client, user_data);
-    }
-
-    return false;
+    co_tcp_set_user_data(
+        client->tcp_client, user_data);
 }
 
-bool
+void*
 co_ws_get_user_data(
-    const co_ws_client_t* client,
-    uintptr_t* user_data
+    const co_ws_client_t* client
 )
 {
-    if (client != NULL)
-    {
-        return co_tcp_get_user_data(
-            client->tcp_client, user_data);
-    }
-
-    return false;
+    return co_tcp_get_user_data(
+        client->tcp_client);
 }

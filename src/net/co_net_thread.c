@@ -45,7 +45,7 @@ co_net_thread_cleanup(
 bool
 co_net_thread_start(
     co_thread_t* thread,
-    uintptr_t param
+    void* param
 )
 {
     return co_thread_start(thread, param);

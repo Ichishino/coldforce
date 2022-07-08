@@ -18,7 +18,7 @@ co_timer_create(
     uint32_t msec,
     co_timer_fn handler,
     bool repeat,
-    uintptr_t user_data
+    void* user_data
 )
 {
     co_timer_t* timer =
@@ -135,13 +135,13 @@ co_timer_get_handler(
 void
 co_timer_set_user_data(
     co_timer_t* timer,
-    uintptr_t user_data
+    void* user_data
 )
 {
     timer->user_data = user_data;
 }
 
-uintptr_t
+void*
 co_timer_get_user_data(
     const co_timer_t* timer
 )

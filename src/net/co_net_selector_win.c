@@ -319,8 +319,7 @@ co_win_destroy_io_ctx(
     {
         co_list_add_tail(
             co_socket_get_net_worker(
-                io_ctx->sock)->net_selector->io_ctx_trash,
-            (uintptr_t)io_ctx);
+                io_ctx->sock)->net_selector->io_ctx_trash, io_ctx);
 
         io_ctx->sock = NULL;
     }

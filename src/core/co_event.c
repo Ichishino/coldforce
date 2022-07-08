@@ -22,7 +22,7 @@ co_thread_set_event_handler(
 {
     co_map_set(
         thread->event_worker->event_handler_map,
-        event_id, (uintptr_t)handler);
+        (void*)(uintptr_t)event_id, (void*)handler);
 }
 
 co_event_fn
@@ -33,7 +33,8 @@ co_thread_get_event_handler(
 )
 {
     co_map_data_st* data =
-        co_map_get(thread->event_worker->event_handler_map, event_id);
+        co_map_get(thread->event_worker->event_handler_map,
+            (void*)(uintptr_t)event_id);
 
     return ((data != NULL) ? (co_event_fn)data->value : NULL);
 }
@@ -45,7 +46,8 @@ co_thread_remove_event_handler(
 )
 {
     co_map_remove(
-        thread->event_worker->event_handler_map, event_id);
+        thread->event_worker->event_handler_map,
+        (void*)(uintptr_t)event_id);
 }
 
 bool

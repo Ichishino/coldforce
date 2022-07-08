@@ -203,7 +203,7 @@ co_win_udp_send_async(
     }
 
     co_list_add_tail(
-        udp->win.io_send_ctxs, (uintptr_t)io_ctx);
+        udp->win.io_send_ctxs, io_ctx);
 
     return true;
 }

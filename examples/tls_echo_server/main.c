@@ -35,7 +35,7 @@ void on_my_tls_handshake(my_app* self, co_tcp_client_t* client, int error_code)
     {
         printf("handshake failed\n");
 
-        co_list_remove(self->client_list, (uintptr_t)client);
+        co_list_remove(self->client_list, client);
     }
 }
 
@@ -68,7 +68,7 @@ void on_my_tls_close(my_app* self, co_tcp_client_t* client)
         co_tcp_get_remote_net_addr(client), remote_str, sizeof(remote_str));
     printf("close %s\n", remote_str);
 
-    co_list_remove(self->client_list, (uintptr_t)client);
+    co_list_remove(self->client_list, client);
 }
 
 void on_my_tcp_accept(my_app* self, co_tcp_server_t* server, co_tcp_client_t* client)
@@ -90,7 +90,7 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* server, co_tcp_client_t* cl
     // TLS handshake
     co_tls_start_handshake(client);
 
-    co_list_add_tail(self->client_list, (uintptr_t)client);
+    co_list_add_tail(self->client_list, client);
 
     char remote_str[64];
     co_net_addr_to_string(

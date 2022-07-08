@@ -56,7 +56,7 @@ void on_my_tcp_close(my_client_thread* self, co_tcp_client_t* client)
     printf("close %s\n", remote_str);
 
     co_mutex_lock(self->mutex);
-    co_list_remove(self->client_list, (uintptr_t)client);
+    co_list_remove(self->client_list, client);
     co_mutex_unlock(self->mutex);
 }
 
@@ -71,7 +71,7 @@ void on_my_tcp_transfer(my_client_thread* self, co_tcp_client_t* client)
     callbacks->on_close = (co_tcp_close_fn)on_my_tcp_close;
 
     co_mutex_lock(self->mutex);
-    co_list_add_tail(self->client_list, (uintptr_t)client);
+    co_list_add_tail(self->client_list, client);
     --self->reserve;
     co_mutex_unlock(self->mutex);
 
@@ -81,7 +81,7 @@ void on_my_tcp_transfer(my_client_thread* self, co_tcp_client_t* client)
     printf("accept %s\n", remote_str);
 }
 
-bool on_my_client_thread_create(my_client_thread* self, uintptr_t param)
+bool on_my_client_thread_create(my_client_thread* self, void* param)
 {
     (void)param;
 

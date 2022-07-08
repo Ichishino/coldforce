@@ -301,7 +301,7 @@ void on_my_http2_request(
     else
     {
         // close
-        co_list_remove(self->http2_clients, (uintptr_t)http2_client);
+        co_list_remove(self->http2_clients, http2_client);
     }
 }
 
@@ -313,7 +313,7 @@ void on_my_http2_close(my_app* self, co_http2_client_t* http2_client, int error_
     my_client_log(http2, http2_client, "http2 close");
 
     // close
-    co_list_remove(self->http2_clients, (uintptr_t)http2_client);
+    co_list_remove(self->http2_clients, http2_client);
 }
 
 //---------------------------------------------------------------------------//
@@ -346,7 +346,7 @@ void on_my_tls_handshake(my_app* self, co_tcp_client_t* tcp_client, int error_co
         callback->on_receive_finish = (co_http2_receive_finish_fn)on_my_http2_request;
         callback->on_close = (co_http2_close_fn)on_my_http2_close;
 
-        co_list_add_tail(self->http2_clients, (uintptr_t)http2_client);
+        co_list_add_tail(self->http2_clients, http2_client);
     }
     else
     {
@@ -399,7 +399,7 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t
     callback->on_receive_finish = (co_http2_receive_finish_fn)on_my_http2_request;
     callback->on_close = (co_http2_close_fn)on_my_http2_close;
 
-    co_list_add_tail(self->http2_clients, (uintptr_t)http2_client);
+    co_list_add_tail(self->http2_clients, http2_client);
 
 #endif // CO_CAN_USE_TLS
 }

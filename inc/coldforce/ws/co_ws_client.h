@@ -224,17 +224,16 @@ co_ws_is_open(
 );
 
 CO_WS_API
-bool
+void
 co_ws_set_user_data(
     co_ws_client_t* client,
-    uintptr_t user_data
+    void* user_data
 );
 
 CO_WS_API
-bool
+void*
 co_ws_get_user_data(
-    const co_ws_client_t* client,
-    uintptr_t* user_data
+    const co_ws_client_t* client
 );
 
 //---------------------------------------------------------------------------//

@@ -328,15 +328,9 @@ co_http2_hpack_dynamic_table_setup(
     dynamic_table->total_size = 0;
 
     co_list_ctx_st ctx = { 0 };
-#if (__GNUC__ >= 8)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wcast-function-type"
-#endif
     ctx.destroy_value =
         (co_item_destroy_fn)co_http2_hpack_dynamic_table_item_destroy;
-#if (__GNUC__ >= 8)
-#pragma GCC diagnostic pop
-#endif
+
     dynamic_table->items = co_list_create(&ctx);
 }
 
@@ -421,7 +415,7 @@ co_http2_hpack_dynamic_table_add_item(
 
     item->size = (uint32_t)(name_length + value_length + 32);
 
-    if (!co_list_add_head(dynamic_table->items, (uintptr_t)item))
+    if (!co_list_add_head(dynamic_table->items, item))
     {
         co_string_destroy(item->name);
         co_string_destroy(item->value);

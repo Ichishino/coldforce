@@ -608,7 +608,7 @@ co_http_send_request(
             uint32_t msec = co_http_config_get_max_receive_wait_time();
 
             client->receive_timer = co_timer_create(
-                msec, (co_timer_fn)co_http_client_on_receive_timer, false, (uintptr_t)client);
+                msec, (co_timer_fn)co_http_client_on_receive_timer, false, client);
         }
 
         if (co_list_get_count(client->receive_queue) == 0)
@@ -616,7 +616,7 @@ co_http_send_request(
             co_timer_start(client->receive_timer);
         }
 
-        co_list_add_tail(client->receive_queue, (uintptr_t)request);
+        co_list_add_tail(client->receive_queue, request);
     }
 
     return result;
@@ -684,32 +684,21 @@ co_http_is_open(
         co_tcp_is_open(client->tcp_client) : false);
 }
 
-bool
+void
 co_http_set_user_data(
     co_http_client_t* client,
-    uintptr_t user_data
+    void* user_data
 )
 {
-    if (client != NULL)
-    {
-        return co_tcp_set_user_data(
-            client->tcp_client, user_data);
-    }
-
-    return false;
+    co_tcp_set_user_data(
+        client->tcp_client, user_data);
 }
 
-bool
+void*
 co_http_get_user_data(
-    const co_http_client_t* client,
-    uintptr_t* user_data
+    const co_http_client_t* client
 )
 {
-    if (client != NULL)
-    {
-        return co_tcp_get_user_data(
-            client->tcp_client, user_data);
-    }
-
-    return false;
+    return co_tcp_get_user_data(
+        client->tcp_client);
 }

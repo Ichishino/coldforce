@@ -13,7 +13,7 @@ CO_EXTERN_C_BEGIN
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-typedef bool(*co_thread_create_fn)(void* self, uintptr_t param);
+typedef bool(*co_thread_create_fn)(void* self, void* param);
 typedef void(*co_thread_destroy_fn)(void* self);
 
 typedef struct
@@ -74,7 +74,7 @@ CO_API
 bool
 co_thread_start(
     co_thread_t* thread,
-    uintptr_t param
+    void* param
 );
 
 CO_API

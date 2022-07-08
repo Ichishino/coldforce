@@ -44,13 +44,13 @@ typedef co_list_iterator_t   co_str_list_iterator_t;
     co_list_get_count(list)
 
 #define co_str_list_contains(list, str) \
-    co_list_contains(list, (uintptr_t)str)
+    co_list_contains(list, str)
 
 #define co_str_list_add_head(list, str) \
-    co_list_add_head(list, (uintptr_t)str)
+    co_list_add_head(list, str)
 
 #define co_str_list_add_tail(list, str) \
-    co_list_add_tail(list, (uintptr_t)str)
+    co_list_add_tail(list, str)
 
 #define co_str_list_get_head(list) \
     ((co_str_list_data_st*)co_list_get_head(list))
@@ -89,10 +89,10 @@ typedef co_list_iterator_t   co_str_list_iterator_t;
     co_list_get_const_next_iterator(list, it)
 
 #define co_str_list_insert(list, it, str) \
-    co_list_insert(list, it, (uintptr_t)str)
+    co_list_insert(list, it, str)
 
 #define co_str_list_insert_after(list, it, str) \
-    co_list_insert_after(list, it, (uintptr_t)str)
+    co_list_insert_after(list, it, str)
 
 #define co_str_list_remove(list, it) \
     co_list_remove(list, it)
@@ -113,9 +113,9 @@ typedef co_list_iterator_t   co_str_list_iterator_t;
     ((const co_str_list_data_st*)co_list_get_const_next(list, it))
 
 #define co_str_list_find(list, str) \
-    co_list_find(list, (uintptr_t)str)
+    co_list_find(list, str)
 #define co_str_list_find_const(list, str) \
-    co_list_find_const(list, (uintptr_t)str)
+    co_list_find_const(list, str)
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

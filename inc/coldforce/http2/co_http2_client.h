@@ -291,17 +291,16 @@ co_http2_is_open(
 );
 
 CO_HTTP2_API
-bool
+void
 co_http2_set_user_data(
     co_http2_client_t* client,
-    uintptr_t user_data
+    void* user_data
 );
 
 CO_HTTP2_API
-bool
+void*
 co_http2_get_user_data(
-    const co_http2_client_t* client,
-    uintptr_t* user_data
+    const co_http2_client_t* client
 );
 
 //---------------------------------------------------------------------------//

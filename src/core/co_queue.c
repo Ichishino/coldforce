@@ -360,8 +360,7 @@ co_queue_find(
         void* buffer_address =
             &queue->buffer[index * queue->element_size];
 
-        if (compare(
-            (uintptr_t)value_address, (uintptr_t)buffer_address) == 0)
+        if (compare(value_address, buffer_address) == 0)
         {
             return buffer_address;
         }
@@ -376,8 +375,7 @@ co_queue_find(
             void* buffer_address =
                 &queue->buffer[index * queue->element_size];
 
-            if (compare(
-                (uintptr_t)value_address, (uintptr_t)buffer_address) == 0)
+            if (compare(value_address, buffer_address) == 0)
             {
                 return buffer_address;
             }

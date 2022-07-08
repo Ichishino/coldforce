@@ -36,7 +36,7 @@ CO_NET_API
 bool
 co_net_thread_start(
     co_thread_t* thread,
-    uintptr_t param
+    void* param
 );
 
 CO_NET_API

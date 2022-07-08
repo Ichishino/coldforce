@@ -25,7 +25,7 @@ struct co_thread_param_st
 {
     co_thread_t* thread;
     co_semaphore_t* semaphore;
-    uintptr_t param;
+    void* param;
     bool create_result;
 };
 
@@ -162,7 +162,7 @@ co_thread_get_current(
 bool
 co_thread_start(
     co_thread_t* thread,
-    uintptr_t param
+    void* param
 )
 {
     thread->parent = co_thread_get_current();

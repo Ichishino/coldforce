@@ -67,14 +67,8 @@ co_event_worker_setup(
     event_worker->timer_manager = co_timer_manager_create();
 
     co_list_ctx_st list_ctx = { 0 };
-#if (__GNUC__ >= 8)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wcast-function-type"
-#endif
     list_ctx.destroy_value = (co_item_destroy_fn)co_mem_free;
-#if (__GNUC__ >= 8)
-#pragma GCC diagnostic pop
-#endif
+
     event_worker->mem_trash = co_list_create(&list_ctx);
 
     if (event_worker->wait == NULL)
@@ -140,7 +134,7 @@ co_mem_free_later(
     if (thread != NULL)
     {
         co_list_add_tail(
-            thread->event_worker->mem_trash, (uintptr_t)mem);
+            thread->event_worker->mem_trash, mem);
     }
     else
     {
@@ -266,8 +260,10 @@ co_event_worker_dispatch(
     }
     default:
     {
-        const co_map_data_st* data = co_map_get(
-            event_worker->event_handler_map, event->event_id);
+        const co_map_data_st* data =
+            co_map_get(
+                event_worker->event_handler_map,
+                (void*)(uintptr_t)event->event_id);
 
         if (data == NULL)
         {
@@ -353,7 +349,7 @@ co_event_worker_register_timer(
         event_worker->timer_manager, timer);
 }
 
-intptr_t
+static int
 co_compare_event(
     const co_event_t* event1,
     const co_event_t* event2
@@ -376,16 +372,9 @@ co_event_worker_unregister_timer(
         co_event_t timer_event = {
             CO_EVENT_ID_TIMER, (uintptr_t)timer, true };
 
-#if (__GNUC__ >= 8)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wcast-function-type"
-#endif
         co_event_t* queued_event = (co_event_t*)
             co_queue_find(event_worker->event_queue,
                 &timer_event, (co_item_compare_fn)co_compare_event);
-#if (__GNUC__ >= 8)
-#pragma GCC diagnostic pop
-#endif
         co_assert(queued_event != NULL);
 
         queued_event->param2 = false;

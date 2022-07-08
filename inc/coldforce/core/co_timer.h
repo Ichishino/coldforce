@@ -26,7 +26,7 @@ typedef struct co_timer_t
 
     uint32_t msec;
     co_timer_fn handler;
-    uintptr_t user_data;
+    void* user_data;
 
 } co_timer_t;
 
@@ -40,7 +40,7 @@ co_timer_create(
     uint32_t msec,
     co_timer_fn handler,
     bool repeat,
-    uintptr_t user_data
+    void* user_data
 );
 
 CO_API
@@ -91,11 +91,11 @@ CO_API
 void
 co_timer_set_user_data(
     co_timer_t* timer,
-    uintptr_t user_data
+    void* user_data
 );
 
 CO_API
-uintptr_t
+void*
 co_timer_get_user_data(
     const co_timer_t* timer
 );

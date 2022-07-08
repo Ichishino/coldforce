@@ -27,14 +27,8 @@ co_timer_manager_create(
     }
 
     co_list_ctx_st ctx = { 0 };
-#if (__GNUC__ >= 8)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wcast-function-type"
-#endif
     ctx.destroy_value = (co_item_destroy_fn)co_mem_free;
-#if (__GNUC__ >= 8)
-#pragma GCC diagnostic pop
-#endif
+
     timer_manager->timers = co_list_create(&ctx);
 
     return timer_manager;
@@ -87,7 +81,7 @@ co_timer_manager_register(
         if (((co_timer_item_t*)data->value)->end > new_item->end)
         {
             co_list_insert(
-                timer_manager->timers, it, (uintptr_t)new_item);
+                timer_manager->timers, it, new_item);
 
             return true;
         }
@@ -95,7 +89,7 @@ co_timer_manager_register(
         it = co_list_get_next_iterator(timer_manager->timers, it);
     }
 
-    co_list_add_tail(timer_manager->timers, (uintptr_t)new_item);
+    co_list_add_tail(timer_manager->timers, new_item);
 
     return true;
 }

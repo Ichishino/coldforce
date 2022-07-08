@@ -363,7 +363,7 @@ co_win_tcp_client_send_async(
     }
 
     co_list_add_tail(
-        client->win.io_send_ctxs, (uintptr_t)io_ctx);
+        client->win.io_send_ctxs, io_ctx);
 
     return true;
 }

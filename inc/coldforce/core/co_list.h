@@ -22,7 +22,7 @@ typedef struct
 
 typedef struct
 {
-    uintptr_t value;
+    void* value;
 
 } co_list_data_st;
 
@@ -80,20 +80,20 @@ CO_API
 bool
 co_list_contains(
     const co_list_t* list,
-    uintptr_t value
+    const void* value
 );
 
 CO_API
 bool
 co_list_add_head(
     co_list_t* list,
-    uintptr_t value
+    void* value
 );
 
 CO_API
 bool co_list_add_tail(
     co_list_t* list,
-    uintptr_t value
+    void* value
 );
 
 CO_API
@@ -136,7 +136,7 @@ CO_API
 void
 co_list_remove(
     co_list_t* list,
-    uintptr_t value
+    const void* value
 );
 
 CO_API
@@ -196,7 +196,7 @@ bool
 co_list_insert(
     co_list_t* list,
     co_list_iterator_t* iterator,
-    uintptr_t value
+    void* value
 );
 
 CO_API
@@ -204,7 +204,7 @@ bool
 co_list_insert_after(
     co_list_t* list,
     co_list_iterator_t* iterator,
-    uintptr_t value
+    void* value
 );
 
 CO_API
@@ -260,14 +260,14 @@ CO_API
 co_list_iterator_t*
 co_list_find(
     co_list_t* list,
-    uintptr_t value
+    const void* value
 );
 
 CO_API
 const co_list_iterator_t*
 co_list_find_const(
     const co_list_t* list,
-    uintptr_t value
+    const void* value
 );
 
 //---------------------------------------------------------------------------//

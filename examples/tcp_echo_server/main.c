@@ -45,7 +45,7 @@ void on_my_tcp_close(my_app* self, co_tcp_client_t* client)
         co_tcp_get_remote_net_addr(client), remote_str, sizeof(remote_str));
     printf("close %s\n", remote_str);
 
-    co_list_remove(self->client_list, (uintptr_t)client);
+    co_list_remove(self->client_list, client);
 }
 
 void on_my_tcp_accept(my_app* self, co_tcp_server_t* server, co_tcp_client_t* client)
@@ -60,7 +60,7 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* server, co_tcp_client_t* cl
     callbacks->on_receive = (co_tcp_receive_fn)on_my_tcp_receive;
     callbacks->on_close = (co_tcp_close_fn)on_my_tcp_close;
 
-    co_list_add_tail(self->client_list, (uintptr_t)client);
+    co_list_add_tail(self->client_list, client);
 
     char remote_str[64];
     co_net_addr_to_string(
