@@ -39,7 +39,7 @@ co_http2_frame_serialize(
     uint16_t u16;
     uint32_t u32;
 
-    co_http2_frame_length_t length24 = { 0 };
+    co_http2_frame_length_t length24;
     length24.value.u32 =
         co_byte_order_32_host_to_network(frame->header.length);
 
@@ -227,7 +227,7 @@ co_http2_frame_deserialize(
         co_byte_array_get_const_ptr(data, (*index));
     const uint8_t* data_ptr = data_head;
 
-    co_http2_frame_length_t length24 = { 0 };
+    co_http2_frame_length_t length24;
 
 #ifdef CO_LITTLE_ENDIAN
     length24.value.u8[2] = data_ptr[0];

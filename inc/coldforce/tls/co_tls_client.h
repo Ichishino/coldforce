@@ -86,7 +86,7 @@ co_tls_get_callbacks(
 
 CO_TLS_API
 void
-co_tls_client_close(
+co_tls_close(
     co_tcp_client_t* client
 );
 

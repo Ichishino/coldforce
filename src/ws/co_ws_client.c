@@ -37,7 +37,7 @@ co_ws_client_setup(
     if (client->tcp_client->sock.tls != NULL)
     {
         client->module.destroy = co_tls_client_destroy;
-        client->module.close = co_tls_client_close;
+        client->module.close = co_tls_close;
         client->module.connect = co_tls_connect;
         client->module.send = co_tls_send;
         client->module.receive_all = co_tls_receive_all;
@@ -46,7 +46,7 @@ co_ws_client_setup(
     {
 #endif
         client->module.destroy = co_tcp_client_destroy;
-        client->module.close = co_tcp_client_close;
+        client->module.close = co_tcp_close;
         client->module.connect = co_tcp_connect;
         client->module.send = co_tcp_send;
         client->module.receive_all = co_tcp_receive_all;
@@ -396,7 +396,8 @@ co_ws_client_create(
     int address_family =
         co_net_addr_get_family(local_net_addr);
 
-    co_net_addr_t remote_net_addr = { 0 };
+    co_net_addr_t remote_net_addr;
+    co_net_addr_init(&remote_net_addr);
 
     if (!co_net_addr_set_address(
         &remote_net_addr, url->host))
@@ -522,20 +523,6 @@ co_ws_get_callbacks(
     return &client->callbacks;
 }
 
-void
-co_ws_client_close(
-    co_ws_client_t* client
-)
-{
-    if (client != NULL)
-    {
-        if (client->tcp_client != NULL)
-        {
-            client->module.close(client->tcp_client);
-        }
-    }
-}
-
 bool
 co_ws_connect(
     co_ws_client_t* client,
@@ -562,6 +549,19 @@ co_ws_connect(
     }
 
     return result;
+}
+
+void
+co_ws_close(
+    co_ws_client_t* client
+)
+{
+    if ((client != NULL) &&
+        (client->tcp_client != NULL) &&
+        (co_tcp_is_open(client->tcp_client)))
+    {
+        client->module.close(client->tcp_client);
+    }
 }
 
 bool
@@ -815,9 +815,6 @@ co_ws_default_handler(
         break;
     }
 }
-
-//---------------------------------------------------------------------------//
-//---------------------------------------------------------------------------//
 
 const co_net_addr_t*
 co_ws_get_remote_net_addr(

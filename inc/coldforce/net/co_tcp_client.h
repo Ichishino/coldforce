@@ -138,7 +138,7 @@ co_tcp_get_callbacks(
 
 CO_NET_API
 void
-co_tcp_client_close(
+co_tcp_close(
     co_tcp_client_t* client
 );
 

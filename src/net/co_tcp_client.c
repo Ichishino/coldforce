@@ -437,7 +437,7 @@ co_tcp_client_destroy(
         return;
     }
 
-    co_tcp_client_close(client);
+    co_tcp_close(client);
 
     if (!client->sock.open_local && !client->open_remote)
     {
@@ -704,7 +704,7 @@ co_tcp_get_callbacks(
 }
 
 void
-co_tcp_client_close(
+co_tcp_close(
     co_tcp_client_t* client
 )
 {

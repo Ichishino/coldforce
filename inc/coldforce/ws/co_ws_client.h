@@ -122,16 +122,16 @@ co_ws_get_callbacks(
 );
 
 CO_WS_API
-void
-co_ws_client_close(
-    co_ws_client_t* client
-);
-
-CO_WS_API
 bool
 co_ws_connect(
     co_ws_client_t* client,
     co_http_request_t* upgrade_request
+);
+
+CO_WS_API
+void
+co_ws_close(
+    co_ws_client_t* client
 );
 
 CO_WS_API

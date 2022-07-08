@@ -315,7 +315,7 @@ co_tls_on_handshake_complete(
 {
     if (error_code != 0)
     {
-        co_tls_client_close(client);
+        co_tls_close(client);
     }
 
     co_tls_client_t* tls = co_tcp_client_get_tls(client);
@@ -507,13 +507,13 @@ co_tls_get_callbacks(
 }
 
 void
-co_tls_client_close(
+co_tls_close(
     co_tcp_client_t* client
 )
 {
     if (client != NULL)
     {
-        co_tcp_client_close(client);
+        co_tcp_close(client);
     }
 }
 

@@ -37,7 +37,7 @@ co_http2_client_setup(
     if (client->tcp_client->sock.tls != NULL)
     {
         client->module.destroy = co_tls_client_destroy;
-        client->module.close = co_tls_client_close;
+        client->module.close = co_tls_close;
         client->module.connect = co_tls_connect;
         client->module.send = co_tls_send;
         client->module.receive_all = co_tls_receive_all;
@@ -46,7 +46,7 @@ co_http2_client_setup(
     {
 #endif
         client->module.destroy = co_tcp_client_destroy;
-        client->module.close = co_tcp_client_close;
+        client->module.close = co_tcp_close;
         client->module.connect = co_tcp_connect;
         client->module.send = co_tcp_send;
         client->module.receive_all = co_tcp_receive_all;
@@ -331,7 +331,7 @@ co_http2_client_on_receive_system_frame(
             frame->payload.window_update.window_size_increment) >
             CO_HTTP2_SETTING_MAX_WINDOW_SIZE)
         {
-            co_http2_client_close(
+            co_http2_close(
                 client, CO_HTTP2_STREAM_ERROR_FLOW_CONTROL_ERROR);
             co_http2_client_on_close(
                 client, CO_HTTP2_STREAM_ERROR_FLOW_CONTROL_ERROR);
@@ -623,7 +623,7 @@ co_http2_client_on_tcp_receive_ready(
                 continue;
             }
 
-            co_http2_client_close(
+            co_http2_close(
                 client, CO_HTTP2_STREAM_ERROR_FRAME_SIZE_ERROR);
             co_http2_client_on_close(
                 client, CO_HTTP2_STREAM_ERROR_FRAME_SIZE_ERROR);
@@ -738,7 +738,8 @@ co_http2_client_create(
     int address_family =
         co_net_addr_get_family(local_net_addr);
 
-    co_net_addr_t remote_net_addr = { 0 };
+    co_net_addr_t remote_net_addr;
+    co_net_addr_init(&remote_net_addr);
 
     if (!co_net_addr_set_address(
         &remote_net_addr, client->base_url->host))
@@ -843,7 +844,7 @@ co_http2_client_destroy(
 {
     if (client != NULL)
     {
-        co_http2_client_close(client, 0);
+        co_http2_close(client, 0);
 
         co_http2_client_cleanup(client);
 
@@ -866,33 +867,6 @@ co_http2_get_callbacks(
 )
 {
     return &client->callbacks;
-}
-
-void
-co_http2_client_close(
-    co_http2_client_t* client,
-    int error_code
-)
-{
-    if ((client != NULL) &&
-        (client->tcp_client != NULL) &&
-        (co_tcp_is_open(client->tcp_client)))
-    {
-        if ((client->system_stream != NULL) &&
-            (client->system_stream->state !=
-                CO_HTTP2_STREAM_STATE_CLOSED))
-        {
-            co_http2_frame_t* goaway_frame =
-                co_http2_create_goaway_frame(
-                    false, client->last_stream_id, error_code,
-                    NULL, 0);
-
-            co_http2_stream_send_frame(
-                client->system_stream, goaway_frame);
-        }
-
-        client->module.close(client->tcp_client);
-    }
 }
 
 bool
@@ -942,6 +916,33 @@ co_http2_connect(
     }
 
     return result;
+}
+
+void
+co_http2_close(
+    co_http2_client_t* client,
+    int error_code
+)
+{
+    if ((client != NULL) &&
+        (client->tcp_client != NULL) &&
+        (co_tcp_is_open(client->tcp_client)))
+    {
+        if ((client->system_stream != NULL) &&
+            (client->system_stream->state !=
+                CO_HTTP2_STREAM_STATE_CLOSED))
+        {
+            co_http2_frame_t* goaway_frame =
+                co_http2_create_goaway_frame(
+                    false, client->last_stream_id, error_code,
+                    NULL, 0);
+
+            co_http2_stream_send_frame(
+                client->system_stream, goaway_frame);
+        }
+
+        client->module.close(client->tcp_client);
+    }
 }
 
 bool

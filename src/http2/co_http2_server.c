@@ -163,7 +163,7 @@ co_http2_server_on_tcp_receive_ready(
                 if (co_map_get_count(client->stream_map) >=
                     client->local_settings.max_concurrent_streams)
                 {
-                    co_http2_client_close(
+                    co_http2_close(
                         client, CO_HTTP2_STREAM_ERROR_REFUSED_STREAM);
                     co_http2_client_on_close(
                         client, CO_HTTP2_ERROR_MAX_STREAMS);
@@ -193,7 +193,7 @@ co_http2_server_on_tcp_receive_ready(
 
             if (frame->header.type == CO_HTTP2_FRAME_TYPE_PUSH_PROMISE)
             {
-                co_http2_client_close(
+                co_http2_close(
                     client, CO_HTTP2_STREAM_ERROR_PROTOCOL_ERROR);
                 co_http2_client_on_close(
                     client, CO_HTTP2_STREAM_ERROR_PROTOCOL_ERROR);
@@ -244,7 +244,7 @@ co_http2_server_on_tcp_receive_ready(
                 continue;
             }
 
-            co_http2_client_close(
+            co_http2_close(
                 client, CO_HTTP2_STREAM_ERROR_FRAME_SIZE_ERROR);
             co_http2_client_on_close(
                 client, CO_HTTP2_STREAM_ERROR_FRAME_SIZE_ERROR);

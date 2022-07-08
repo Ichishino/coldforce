@@ -187,13 +187,6 @@ co_http2_get_callbacks(
 );
 
 CO_HTTP2_API
-void
-co_http2_client_close(
-    co_http2_client_t* client,
-    int error_code
-);
-
-CO_HTTP2_API
 bool
 co_http2_is_running(
     const co_http2_client_t* client
@@ -203,6 +196,13 @@ CO_HTTP2_API
 bool
 co_http2_connect(
     co_http2_client_t* client
+);
+
+CO_HTTP2_API
+void
+co_http2_close(
+    co_http2_client_t* client,
+    int error_code
 );
 
 CO_HTTP2_API

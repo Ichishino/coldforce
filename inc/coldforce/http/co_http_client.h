@@ -136,6 +136,12 @@ co_http_connect(
 );
 
 CO_HTTP_API
+void
+co_http_close(
+    co_http_client_t* client
+);
+
+CO_HTTP_API
 bool
 co_http_send_request(
     co_http_client_t* client,
