@@ -1,4 +1,4 @@
-#include <coldforce/coldforce_tls.h>
+#include <coldforce.h>
 
 #include <stdio.h>
 #include <stdlib.h>

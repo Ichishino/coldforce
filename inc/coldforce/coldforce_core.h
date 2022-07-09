@@ -1,5 +1,5 @@
-#ifndef COLDFORCE_H_INCLUDED
-#define COLDFORCE_H_INCLUDED
+#ifndef COLDFORCE_CORE_H_INCLUDED
+#define COLDFORCE_CORE_H_INCLUDED
 
 //---------------------------------------------------------------------------//
 // headers
@@ -24,4 +24,4 @@
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-#endif // COLDFORCE_H_INCLUDED
+#endif // COLDFORCE_CORE_H_INCLUDED

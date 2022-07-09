@@ -1,6 +1,6 @@
 #pragma once
 
-#include <coldforce/coldforce_net.h>
+#include <coldforce.h>
 
 // my client thread object
 typedef struct

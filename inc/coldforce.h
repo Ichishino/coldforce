@@ -1,5 +1,5 @@
-#ifndef COLDFORCE_TLS_H_INCLUDED
-#define COLDFORCE_TLS_H_INCLUDED
+#ifndef COLDFORCE_H_INCLUDED
+#define COLDFORCE_H_INCLUDED
 
 //---------------------------------------------------------------------------//
 // headers
@@ -7,13 +7,12 @@
 
 #include <coldforce/coldforce_core.h>
 #include <coldforce/coldforce_net.h>
-
-#include <coldforce/tls/co_tls.h>
-#include <coldforce/tls/co_tls_client.h>
-#include <coldforce/tls/co_tls_server.h>
-#include <coldforce/tls/co_tls_log.h>
+#include <coldforce/coldforce_tls.h>
+#include <coldforce/coldforce_http.h>
+#include <coldforce/coldforce_http2.h>
+#include <coldforce/coldforce_ws.h>
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-#endif // COLDFORCE_TLS_H_INCLUDED
+#endif // COLDFORCE_H_INCLUDED

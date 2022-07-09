@@ -5,7 +5,7 @@
 // headers
 //---------------------------------------------------------------------------//
 
-#include <coldforce/coldforce.h>
+#include <coldforce/coldforce_core.h>
 #include <coldforce/coldforce_net.h>
 #include <coldforce/coldforce_tls.h>
 #include <coldforce/coldforce_http.h>

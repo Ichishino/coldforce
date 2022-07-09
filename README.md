@@ -20,6 +20,7 @@ All of these support clients and servers (multi-client, C10K).
 ### Requirements
 * C99 or later
 * OpenSSL (only when using TLS, https, wss)
+* -pthread -lm
 
 ### Modules
 * co_core - Application core

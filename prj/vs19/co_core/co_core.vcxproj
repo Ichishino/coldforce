@@ -301,6 +301,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\inc\coldforce\coldforce_core.h" />
     <ClInclude Include="..\..\..\inc\coldforce\core\co.h" />
     <ClInclude Include="..\..\..\inc\coldforce\core\co_app.h" />
     <ClInclude Include="..\..\..\inc\coldforce\core\co_array.h" />

@@ -77,6 +77,9 @@
     <ClInclude Include="..\..\..\inc\coldforce\core\co_log.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\inc\coldforce\coldforce_core.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\core\co.c">

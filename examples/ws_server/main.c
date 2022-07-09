@@ -2,7 +2,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
-#include <coldforce/coldforce_ws.h>
+#include <coldforce.h>
 
 #include <stdio.h>
 #include <stdlib.h>
