@@ -5,7 +5,7 @@ Coldforce is a framework written in C that supports various network protocols.
 With the asynchronous API of this framework
 You can easily create event-driven network applications.  
 The currently supported protocols are as follows.
-All of these support clients and servers (C10K, multi-client).
+All of these support clients and servers (multi-client, C10K).
 * TCP/UDP
 * TLS
 * HTTP/1.1
@@ -40,7 +40,8 @@ $ cmake ..
 $ make
 ```
 * macOS  
-XCode ([prj/xcode/coldforce.xcworkspace](https://github.com/Ichishino/coldforce/tree/master/prj/xcode))
+cmake (same way as Linux)
+XCode (coming soon)
 
 ### Code Examples
 * [examples here](https://github.com/Ichishino/coldforce/tree/master/examples) 
