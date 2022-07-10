@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8...3.13)
 
 project(coldforce_examples)
 
@@ -17,4 +17,3 @@ add_subdirectory(udp_echo_server)
 add_subdirectory(udp_sender)
 add_subdirectory(ws_client)
 add_subdirectory(ws_server)
-

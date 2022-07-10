@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8...3.13)
 
 project(co_tls C)
 
@@ -11,6 +11,11 @@ add_library(${PROJECT_NAME} STATIC
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC ../../inc)
+
+if (APPLE)
+    target_include_directories(${PROJECT_NAME} PUBLIC /usr/local/opt/openssl/include)
+endif()
+
 target_compile_options(${PROJECT_NAME} PUBLIC -Wall -Wextra)
 
 add_custom_command(

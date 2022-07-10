@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8...3.13)
 
 project(co_core C)
 
@@ -32,4 +32,3 @@ add_custom_command(
         ${CMAKE_CURRENT_BINARY_DIR}/lib*.*
         ${CMAKE_BINARY_DIR}/
 )
-
