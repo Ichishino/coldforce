@@ -43,7 +43,7 @@ bool on_my_server_app_create(my_server_app* self, const co_arg_st* arg)
     if (arg->argc <= 1)
     {
         printf("<Usage>\n");
-        printf("tcp_server_multi_thread port_number\n");
+        printf("tcp_server_multi_thread <port_number>\n");
 
         return false;
     }

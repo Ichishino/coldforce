@@ -168,7 +168,7 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     if (arg->argc < 2)
     {
         printf("<Usage>\n");
-        printf("http_client url [save_file_path]\n");
+        printf("http_client <url> [save_file_path]\n");
 
         return false;
     }

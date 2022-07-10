@@ -103,7 +103,7 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     if (arg->argc <= 1)
     {
         printf("<Usage>\n");
-        printf("tls_echo_server port_number\n");
+        printf("tls_echo_server <port_number>\n");
 
         return false;
     }

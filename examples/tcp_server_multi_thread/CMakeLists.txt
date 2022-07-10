@@ -16,6 +16,6 @@ target_link_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../..
 
 target_link_libraries(${PROJECT_NAME} -pthread -lm)
 target_link_libraries(${PROJECT_NAME}
-    libco_core.a
     libco_net.a
+    libco_core.a
 )

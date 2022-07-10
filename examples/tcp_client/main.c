@@ -114,7 +114,7 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     if (arg->argc < 3)
     {
         printf("<Usage>\n");
-        printf("tcp_client server_ip_address port_number\n");
+        printf("tcp_client <server_ip_address> <port_number>\n");
 
         return false;
     }

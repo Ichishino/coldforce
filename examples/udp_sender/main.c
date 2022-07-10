@@ -48,7 +48,7 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     if (arg->argc < 3)
     {
         printf("<Usage>\n");
-        printf("udp_sender peer_ip_address port_number\n");
+        printf("udp_sender <peer_ip_address> <port_number>\n");
 
         return false;
     }

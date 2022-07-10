@@ -413,7 +413,7 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
     if (arg->argc <= 2)
     {
         printf("<Usage>\n");
-        printf("http2_server hostname port_number\n");
+        printf("http2_server <hostname> <port_number>\n");
         printf("ex. http2_server localhost 8080\n");
 
         return false;
