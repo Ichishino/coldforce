@@ -1,0 +1,32 @@
+name: Build
+
+on: [pull_request, push]
+
+jobs:
+  build-on-windows:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v1.1    
+    - name: Build
+      run: |
+        msbuild examples/all_examples/prj/vs19/all_examples.sln /t:build /p:Configuration=Release /p:Platform=x64
+  build-on-ubuntu:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build
+      run: |
+        cd build
+        cmake ..
+        make
+  build-on-macos:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build
+      run: |
+        cd build
+        cmake ..
+        make

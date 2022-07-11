@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 2.8...3.13)
 
 project(coldforce_examples)
 
+#TODO
+link_directories(/usr/local/opt/openssl/lib)
+
 add_subdirectory(http1_http2_server)
 add_subdirectory(http2_client)
 add_subdirectory(http2_server)

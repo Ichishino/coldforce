@@ -5,7 +5,6 @@ if (OPENSSL_FOUND)
     target_link_libraries(${PROJECT_NAME} ${OPENSSL_LIBRARIES})
 elseif (APPLE)
     target_include_directories(${PROJECT_NAME} PUBLIC /usr/local/opt/openssl/include)
-    link_directories(/usr/local/opt/openssl/lib)
     target_link_libraries(${PROJECT_NAME} -lssl -lcrypto)
 endif()
 
