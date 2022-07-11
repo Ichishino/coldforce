@@ -21,7 +21,7 @@ All of these support clients and servers (multi-client, C10K).
 ### Requirements
 * C99 or later
 * OpenSSL (only when using TLS, https, wss)
-* -pthread -lm
+* Use `-pthread` `-lm`
 
 ### Modules
 * co_core - Application core
@@ -43,10 +43,9 @@ $ make
 ```
 * macOS  
 cmake (same way as Linux)
-XCode (coming soon)
 
 ### Code Examples
-* simple http server http://127.0.0.1:8080
+* simple http server -> http://127.0.0.1:8080
 ```C++
 #include <coldforce.h>
 
