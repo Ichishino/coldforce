@@ -228,6 +228,7 @@ co_http2_frame_deserialize(
     const uint8_t* data_ptr = data_head;
 
     co_http2_frame_length_t length24;
+    length24.value.u32 = 0;
 
 #ifdef CO_LITTLE_ENDIAN
     length24.value.u8[2] = data_ptr[0];
