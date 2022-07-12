@@ -136,9 +136,6 @@ co_ws_client_on_connect(
             &client->tcp_client->remote_net_addr,
             "ws connect success");
 
-        co_http_request_set_version(
-            client->upgrade_request, CO_HTTP_VERSION_1_1);
-
         co_http_header_t* header =
             co_http_request_get_header(client->upgrade_request);
 

@@ -211,6 +211,7 @@ co_http_request_create_with(
 
     co_http_request_set_method(request, method);    
     co_http_request_set_path(request, path);
+    co_http_request_set_version(request, CO_HTTP_VERSION_1_1);
 
     return request;
 }

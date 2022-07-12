@@ -576,8 +576,6 @@ co_http_send_request(
     co_http_request_t* request
 )
 {    
-    co_http_request_set_version(request, CO_HTTP_VERSION_1_1);
-
     if (!co_http_header_contains(
         &request->message.header, CO_HTTP_HEADER_HOST))
     {

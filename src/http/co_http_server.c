@@ -232,8 +232,6 @@ co_http_send_response(
         }
     }
 
-    co_http_response_set_version(response, CO_HTTP_VERSION_1_1);
-
     co_http_log_debug_response_header(
         &client->tcp_client->sock.local_net_addr, "-->",
         &client->tcp_client->remote_net_addr,
@@ -298,27 +296,7 @@ co_http_begin_chunked_response(
         co_http_string_list_cleanup(items, count);
     }
 
-    co_http_response_set_version(response, CO_HTTP_VERSION_1_1);
-
-    co_http_log_debug_response_header(
-        &client->tcp_client->sock.local_net_addr, "-->",
-        &client->tcp_client->remote_net_addr,
-        response, "http send response");
-
-    co_byte_array_t* buffer = co_byte_array_create();
-
-    co_http_response_serialize(response, buffer);
-
-    bool result =
-        co_http_send_raw_data(client,
-            co_byte_array_get_ptr(buffer, 0),
-            co_byte_array_get_count(buffer));
-
-    co_byte_array_destroy(buffer);
-
-    co_http_response_destroy(response);
-
-    return result;
+    return co_http_send_response(client, response);
 }
 
 bool

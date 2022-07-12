@@ -178,6 +178,7 @@ co_http_response_create_with(
 
     co_http_response_set_status_code(response, status_code);
     co_http_response_set_reason_phrase(response, reason_phrase);
+    co_http_response_set_version(response, CO_HTTP_VERSION_1_1);
 
     return response;
 }

@@ -202,8 +202,6 @@ co_http_request_create_http2_upgrade(
     co_http_header_t* header =
         co_http_request_get_header(request);
 
-    co_http_request_set_version(request, CO_HTTP_VERSION_1_1);
-
     char* host_and_port =
         co_http_url_create_host_and_port(client->base_url);
 
@@ -242,8 +240,6 @@ co_http_response_create_http2_upgrade(
         co_http_header_add_field(header,
             CO_HTTP_HEADER_CONNECTION, CO_HTTP_HEADER_UPGRADE);
     }
-
-    co_http_response_set_version(response, CO_HTTP_VERSION_1_1);
 
     return response;
 }

@@ -102,8 +102,6 @@ co_ws_server_on_receive_ready(
                     co_http_response_t* response =
                         co_http_response_create_ws_upgrade(
                             request, NULL, NULL);
-                    co_http_response_set_version(
-                        response, CO_HTTP_VERSION_1_1);
 
                     co_http_log_debug_response_header(
                         &client->tcp_client->sock.local_net_addr,
