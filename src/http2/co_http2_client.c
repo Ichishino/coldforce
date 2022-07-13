@@ -700,7 +700,7 @@ co_http2_client_create(
         co_http2_log_error(NULL, NULL, NULL,
             "OpenSSL is not installed");
 
-        co_http_url_destroy(client->base_url);
+        co_http_url_destroy(client->conn.base_url);
         co_mem_free(client);
 
         return NULL;
