@@ -594,8 +594,8 @@ co_http_send_data(
         &client->conn.tcp_client->remote_net_addr,
         "http send data %zd bytes", data_size);
 
-    return client->conn.module.send(
-        client->conn.tcp_client, data, data_size);
+    return co_http_connection_send_data(
+        &client->conn, data, data_size);
 }
 
 bool
