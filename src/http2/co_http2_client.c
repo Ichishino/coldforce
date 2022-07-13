@@ -25,8 +25,11 @@
 // private
 //---------------------------------------------------------------------------//
 
-void co_http2_server_on_tcp_receive_ready(
-    co_thread_t* thread, co_tcp_client_t* tcp_client);
+void
+co_http2_server_on_tcp_receive_ready(
+    co_thread_t* thread,
+    co_tcp_client_t* tcp_client
+);
 
 void
 co_http2_client_setup(
@@ -34,31 +37,31 @@ co_http2_client_setup(
 )
 {
 #ifdef CO_CAN_USE_TLS
-    if (client->tcp_client->sock.tls != NULL)
+    if (client->conn.tcp_client->sock.tls != NULL)
     {
-        client->module.destroy = co_tls_client_destroy;
-        client->module.close = co_tls_close;
-        client->module.connect = co_tls_connect;
-        client->module.send = co_tls_send;
-        client->module.receive_all = co_tls_receive_all;
+        client->conn.module.destroy = co_tls_client_destroy;
+        client->conn.module.close = co_tls_close;
+        client->conn.module.connect = co_tls_connect;
+        client->conn.module.send = co_tls_send;
+        client->conn.module.receive_all = co_tls_receive_all;
     }
     else
     {
 #endif
-        client->module.destroy = co_tcp_client_destroy;
-        client->module.close = co_tcp_close;
-        client->module.connect = co_tcp_connect;
-        client->module.send = co_tcp_send;
-        client->module.receive_all = co_tcp_receive_all;
+        client->conn.module.destroy = co_tcp_client_destroy;
+        client->conn.module.close = co_tcp_close;
+        client->conn.module.connect = co_tcp_connect;
+        client->conn.module.send = co_tcp_send;
+        client->conn.module.receive_all = co_tcp_receive_all;
 
 #ifdef CO_CAN_USE_TLS
     }
 #endif
-
-    client->tcp_client->sock.sub_class = client;
-
-    client->receive_data_index = 0;
-    client->receive_data = co_byte_array_create();
+    client->conn.tcp_client->sock.sub_class = client;
+    client->conn.receive_data.index = 0;
+    client->conn.receive_data.ptr = co_byte_array_create();
+    client->conn.request_queue = NULL;
+    client->conn.receive_timer = NULL;
 
     client->callbacks.on_connect = NULL;
     client->callbacks.on_close = NULL;
@@ -125,8 +128,8 @@ co_http2_client_cleanup(
 {
     if (client != NULL)
     {
-        co_byte_array_destroy(client->receive_data);
-        client->receive_data = NULL;
+        co_byte_array_destroy(client->conn.receive_data.ptr);
+        client->conn.receive_data.ptr = NULL;
 
         co_http2_stream_destroy(client->system_stream);
         client->system_stream = NULL;
@@ -218,29 +221,18 @@ co_http2_destroy_stream(
         client->stream_map, (void*)(uintptr_t)stream->id);
 }
 
-bool
-co_http2_send_raw_data(
-    co_http2_client_t* client,
-    const void* data,
-    size_t data_size
-)
-{
-    return client->module.send(
-        client->tcp_client, data, data_size);
-}
-
 void
 co_http2_client_on_close(
     co_http2_client_t* client,
     int error_code
 )
 {
-    client->module.close(client->tcp_client);
+    client->conn.module.close(client->conn.tcp_client);
 
     if (client->callbacks.on_close != NULL)
     {
         client->callbacks.on_close(
-            client->tcp_client->sock.owner_thread,
+            client->conn.tcp_client->sock.owner_thread,
             client, error_code);
     }
 }
@@ -263,7 +255,7 @@ co_http2_client_on_receive_system_frame(
                 client->callbacks.on_connect = NULL;
 
                 handler(
-                    client->tcp_client->sock.owner_thread,
+                    client->conn.tcp_client->sock.owner_thread,
                     client, 0);
             }
 
@@ -295,7 +287,7 @@ co_http2_client_on_receive_system_frame(
             if (client->callbacks.on_ping != NULL)
             {
                 client->callbacks.on_ping(
-                    client->tcp_client->sock.owner_thread,
+                    client->conn.tcp_client->sock.owner_thread,
                     client, frame->payload.ping.opaque_data);
             }
         }
@@ -314,7 +306,7 @@ co_http2_client_on_receive_system_frame(
     case CO_HTTP2_FRAME_TYPE_GOAWAY:
     {
         co_http2_client_on_close(
-            (co_http2_client_t*)client->tcp_client->sock.sub_class,
+            (co_http2_client_t*)client->conn.tcp_client->sock.sub_class,
             CO_HTTP2_ERROR_STREAM_CLOSED - frame->payload.goaway.error_code);
 
         break;
@@ -339,7 +331,7 @@ co_http2_client_on_receive_system_frame(
         if (client->callbacks.on_window_update != NULL)
         {
             client->callbacks.on_window_update(
-                client->tcp_client->sock.owner_thread,
+                client->conn.tcp_client->sock.owner_thread,
                 client, client->system_stream);
         }
 
@@ -381,7 +373,7 @@ co_http2_client_on_push_promise(
     if (client->callbacks.on_push_request != NULL)
     {
         if (client->callbacks.on_push_request(
-            client->tcp_client->sock.owner_thread,
+            client->conn.tcp_client->sock.owner_thread,
             client, stream, promised_stream, header))
         {
             return;
@@ -405,18 +397,19 @@ co_http2_client_on_tcp_connect(
     if (error_code == 0)
     {
         co_http2_log_info(
-            &client->tcp_client->sock.local_net_addr,
+            &client->conn.tcp_client->sock.local_net_addr,
             "<--",
-            &client->tcp_client->remote_net_addr,
+            &client->conn.tcp_client->remote_net_addr,
             "http2 connect success");
 
         co_http2_log_info(
-            &client->tcp_client->sock.local_net_addr,
+            &client->conn.tcp_client->sock.local_net_addr,
             "-->",
-            &client->tcp_client->remote_net_addr,
+            &client->conn.tcp_client->remote_net_addr,
             "http2 send connection preface");
 
-        co_http2_send_raw_data(client,
+        co_http_connection_send_data(
+            &client->conn,
             CO_HTTP2_CONNECTION_PREFACE,
             CO_HTTP2_CONNECTION_PREFACE_LENGTH);
 
@@ -425,9 +418,9 @@ co_http2_client_on_tcp_connect(
     else
     {
         co_http2_log_error(
-            &client->tcp_client->sock.local_net_addr,
+            &client->conn.tcp_client->sock.local_net_addr,
             "<--",
-            &client->tcp_client->remote_net_addr,
+            &client->conn.tcp_client->remote_net_addr,
             "http2 connect error (%d)",
             error_code);
 
@@ -450,8 +443,10 @@ co_http2_client_on_tcp_receive_ready(
     co_http2_client_t* client =
         (co_http2_client_t*)tcp_client->sock.sub_class;
 
-    ssize_t receive_result = client->module.receive_all(
-        client->tcp_client, client->receive_data);
+    ssize_t receive_result =
+        client->conn.module.receive_all(
+            client->conn.tcp_client,
+            client->conn.receive_data.ptr);
 
     if (receive_result <= 0)
     {
@@ -459,17 +454,18 @@ co_http2_client_on_tcp_receive_ready(
     }
 
     size_t data_size =
-        co_byte_array_get_count(client->receive_data);
+        co_byte_array_get_count(client->conn.receive_data.ptr);
 
-    while (data_size > client->receive_data_index)
+    while (data_size > client->conn.receive_data.index)
     {
         co_http2_frame_t* frame = co_http2_frame_create();
 
         int result = co_http2_frame_deserialize(
-            client->receive_data, &client->receive_data_index,
+            client->conn.receive_data.ptr,
+            &client->conn.receive_data.index,
             client->local_settings.max_frame_size, frame);
 
-        co_assert(data_size >= client->receive_data_index);
+        co_assert(data_size >= client->conn.receive_data.index);
 
         if (result == CO_HTTP_PARSE_COMPLETE)
         {
@@ -485,8 +481,8 @@ co_http2_client_on_tcp_receive_ready(
             }
 
             co_http2_log_debug_frame(
-                &stream->client->tcp_client->sock.local_net_addr, "<--",
-                &stream->client->tcp_client->remote_net_addr,
+                &client->conn.tcp_client->sock.local_net_addr, "<--",
+                &client->conn.tcp_client->remote_net_addr,
                 frame,
                 "http2 receive frame");
 
@@ -532,8 +528,8 @@ co_http2_client_on_tcp_receive_ready(
         }
     }
 
-    client->receive_data_index = 0;
-    co_byte_array_clear(client->receive_data);
+    client->conn.receive_data.index = 0;
+    co_byte_array_clear(client->conn.receive_data.ptr);
 }
 
 void
@@ -612,25 +608,25 @@ co_http2_client_create(
         return NULL;
     }
 
-    client->base_url = co_http_url_create(base_url);
+    client->conn.base_url = co_http_url_create(base_url);
 
-    if (client->base_url->host == NULL)
+    if (client->conn.base_url->host == NULL)
     {
-        co_http_url_destroy(client->base_url);
+        co_http_url_destroy(client->conn.base_url);
         co_mem_free(client);
 
         return NULL;
     }
 
-    if (client->base_url->scheme == NULL)
+    if (client->conn.base_url->scheme == NULL)
     {
-        client->base_url->scheme = co_string_duplicate("http");
+        client->conn.base_url->scheme = co_string_duplicate("http");
     }
 
     bool secure = false;
 
     if (co_string_case_compare(
-        client->base_url->scheme, "https") == 0)
+        client->conn.base_url->scheme, "https") == 0)
     {
         secure = true;
     }
@@ -642,19 +638,20 @@ co_http2_client_create(
     co_net_addr_init(&remote_net_addr);
 
     if (!co_net_addr_set_address(
-        &remote_net_addr, client->base_url->host))
+        &remote_net_addr, client->conn.base_url->host))
     {
         co_resolve_hint_st hint = { 0 };
         hint.family = address_family;
 
         if (co_net_addr_resolve_service(
-            client->base_url->host, client->base_url->scheme,
+            client->conn.base_url->host,
+            client->conn.base_url->scheme,
             &hint, &remote_net_addr, 1) == 0)
         {
             co_http2_log_error(NULL, NULL, NULL,
                 "failed to resolve hostname (%s)", base_url);
 
-            co_http_url_destroy(client->base_url);
+            co_http_url_destroy(client->conn.base_url);
             co_mem_free(client);
 
             return NULL;
@@ -662,7 +659,7 @@ co_http2_client_create(
     }
     else
     {
-        uint16_t port = client->base_url->port;
+        uint16_t port = client->conn.base_url->port;
 
         if (port == 0)
         {
@@ -683,18 +680,19 @@ co_http2_client_create(
     if (secure)
     {
 #ifdef CO_CAN_USE_TLS
-        client->tcp_client =
+        client->conn.tcp_client =
             co_tls_client_create(local_net_addr, tls_ctx);
 
-        if (client->tcp_client != NULL)
+        if (client->conn.tcp_client != NULL)
         {
             co_tls_set_host_name(
-                client->tcp_client, client->base_url->host);
+                client->conn.tcp_client,
+                client->conn.base_url->host);
 
             const char* protocol = CO_HTTP2_PROTOCOL;
 
             co_tls_set_available_protocols(
-                client->tcp_client, &protocol, 1);
+                client->conn.tcp_client, &protocol, 1);
         }
 #else
         (void)tls_ctx;
@@ -710,28 +708,28 @@ co_http2_client_create(
     }
     else
     {
-        client->tcp_client =
+        client->conn.tcp_client =
             co_tcp_client_create(local_net_addr);
     }
 
-    if (client->tcp_client == NULL)
+    if (client->conn.tcp_client == NULL)
     {
-        co_http_url_destroy(client->base_url);
+        co_http_url_destroy(client->conn.base_url);
         co_mem_free(client);
 
         return NULL;
     }
 
-    memcpy(&client->tcp_client->remote_net_addr,
+    memcpy(&client->conn.tcp_client->remote_net_addr,
         &remote_net_addr, sizeof(co_net_addr_t));
 
     co_http2_client_setup(client);
 
     client->new_stream_id = UINT32_MAX;
 
-    client->tcp_client->callbacks.on_receive =
+    client->conn.tcp_client->callbacks.on_receive =
         (co_tcp_receive_fn)co_http2_client_on_tcp_receive_ready;
-    client->tcp_client->callbacks.on_close =
+    client->conn.tcp_client->callbacks.on_close =
         (co_tcp_close_fn)co_http2_client_on_tcp_close;
 
     return client;
@@ -748,13 +746,13 @@ co_http2_client_destroy(
 
         co_http2_client_cleanup(client);
 
-        co_http_url_destroy(client->base_url);
-        client->base_url = NULL;
+        co_http_url_destroy(client->conn.base_url);
+        client->conn.base_url = NULL;
 
-        if (client->tcp_client != NULL)
+        if (client->conn.tcp_client != NULL)
         {
-            client->module.destroy(client->tcp_client);
-            client->tcp_client = NULL;
+            client->conn.module.destroy(client->conn.tcp_client);
+            client->conn.tcp_client = NULL;
 
             co_mem_free_later(client);
         }
@@ -798,21 +796,21 @@ co_http2_connect(
     co_http2_client_t* client
 )
 {
-    client->tcp_client->callbacks.on_connect =
+    client->conn.tcp_client->callbacks.on_connect =
         (co_tcp_connect_fn)co_http2_client_on_tcp_connect;
 
-    bool result = client->module.connect(
-        client->tcp_client,
-        &client->tcp_client->remote_net_addr);
+    bool result = client->conn.module.connect(
+        client->conn.tcp_client,
+        &client->conn.tcp_client->remote_net_addr);
 
     if (result)
     {
         co_http2_log_info(
-            &client->tcp_client->sock.local_net_addr,
+            &client->conn.tcp_client->sock.local_net_addr,
             "-->",
-            &client->tcp_client->remote_net_addr,
+            &client->conn.tcp_client->remote_net_addr,
             "http2 connect start (%s)",
-            client->base_url->src);
+            client->conn.base_url->src);
     }
 
     return result;
@@ -825,8 +823,8 @@ co_http2_close(
 )
 {
     if ((client != NULL) &&
-        (client->tcp_client != NULL) &&
-        (co_tcp_is_open(client->tcp_client)))
+        (client->conn.tcp_client != NULL) &&
+        (co_tcp_is_open(client->conn.tcp_client)))
     {
         if ((client->system_stream != NULL) &&
             (client->system_stream->state !=
@@ -841,7 +839,7 @@ co_http2_close(
                 client->system_stream, goaway_frame);
         }
 
-        client->module.close(client->tcp_client);
+        client->conn.module.close(client->conn.tcp_client);
     }
 }
 
@@ -1016,8 +1014,8 @@ co_http2_get_remote_net_addr(
     const co_http2_client_t* client
 )
 {
-    return ((client->tcp_client != NULL) ?
-        &client->tcp_client->remote_net_addr : NULL);
+    return ((client->conn.tcp_client != NULL) ?
+        &client->conn.tcp_client->remote_net_addr : NULL);
 }
 
 co_socket_t*
@@ -1025,8 +1023,8 @@ co_http2_client_get_socket(
     co_http2_client_t* client
 )
 {
-    return ((client->tcp_client != NULL) ?
-        &client->tcp_client->sock : NULL);
+    return ((client->conn.tcp_client != NULL) ?
+        &client->conn.tcp_client->sock : NULL);
 }
 
 const char*
@@ -1034,8 +1032,8 @@ co_http2_get_base_url(
     const co_http2_client_t* client
 )
 {
-    return ((client->base_url != NULL) ?
-        client->base_url->src : NULL);
+    return ((client->conn.base_url != NULL) ?
+        client->conn.base_url->src : NULL);
 }
 
 bool
@@ -1043,8 +1041,8 @@ co_http2_is_open(
     const co_http2_client_t* client
 )
 {
-    return ((client->tcp_client != NULL) ?
-        co_tcp_is_open(client->tcp_client) : false);
+    return ((client->conn.tcp_client != NULL) ?
+        co_tcp_is_open(client->conn.tcp_client) : false);
 }
 
 void
@@ -1054,7 +1052,7 @@ co_http2_set_user_data(
 )
 {
     co_tcp_set_user_data(
-        client->tcp_client, user_data);
+        client->conn.tcp_client, user_data);
 }
 
 void*
@@ -1063,5 +1061,5 @@ co_http2_get_user_data(
 )
 {
     return co_tcp_get_user_data(
-        client->tcp_client);
+        client->conn.tcp_client);
 }

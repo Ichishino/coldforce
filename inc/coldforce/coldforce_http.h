@@ -16,6 +16,7 @@
 #include <coldforce/http/co_http_header.h>
 #include <coldforce/http/co_http_request.h>
 #include <coldforce/http/co_http_response.h>
+#include <coldforce/http/co_http_connection.h>
 #include <coldforce/http/co_http_server.h>
 #include <coldforce/http/co_http_client.h>
 #include <coldforce/http/co_http_log.h>

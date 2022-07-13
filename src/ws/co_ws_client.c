@@ -31,43 +31,43 @@ co_ws_client_setup(
     co_http_url_st* base_url
 )
 {
-    client->tcp_client = tcp_client;
+    client->conn.tcp_client = tcp_client;
 
 #ifdef CO_CAN_USE_TLS
-    if (client->tcp_client->sock.tls != NULL)
+    if (client->conn.tcp_client->sock.tls != NULL)
     {
-        client->module.destroy = co_tls_client_destroy;
-        client->module.close = co_tls_close;
-        client->module.connect = co_tls_connect;
-        client->module.send = co_tls_send;
-        client->module.receive_all = co_tls_receive_all;
+        client->conn.module.destroy = co_tls_client_destroy;
+        client->conn.module.close = co_tls_close;
+        client->conn.module.connect = co_tls_connect;
+        client->conn.module.send = co_tls_send;
+        client->conn.module.receive_all = co_tls_receive_all;
     }
     else
     {
 #endif
-        client->module.destroy = co_tcp_client_destroy;
-        client->module.close = co_tcp_close;
-        client->module.connect = co_tcp_connect;
-        client->module.send = co_tcp_send;
-        client->module.receive_all = co_tcp_receive_all;
+        client->conn.module.destroy = co_tcp_client_destroy;
+        client->conn.module.close = co_tcp_close;
+        client->conn.module.connect = co_tcp_connect;
+        client->conn.module.send = co_tcp_send;
+        client->conn.module.receive_all = co_tcp_receive_all;
 
 #ifdef CO_CAN_USE_TLS
     }
 #endif
-
-    client->tcp_client->sock.sub_class = client;
-
-    client->base_url = base_url;
-
-    client->receive_data_index = 0;
-    client->receive_data = co_byte_array_create();
+    client->conn.tcp_client->sock.sub_class = client;
+    client->conn.base_url = base_url;
+    client->conn.receive_data.index = 0;
+    client->conn.receive_data.ptr = co_byte_array_create();
+    client->conn.request_queue = NULL;
+    client->conn.receive_timer = NULL;
 
     client->callbacks.on_connect = NULL;
     client->callbacks.on_upgrade = NULL;
     client->callbacks.on_receive = NULL;
     client->callbacks.on_close = NULL;
 
-    client->upgrade_request = NULL;
+    client->upgrade.request = NULL;
+    client->upgrade.key = NULL;
 
     client->mask = false;
     client->closed = false;
@@ -80,14 +80,17 @@ co_ws_client_cleanup(
 {
     if (client != NULL)
     {
-        co_http_url_destroy(client->base_url);
-        client->base_url = NULL;
+        co_http_url_destroy(client->conn.base_url);
+        client->conn.base_url = NULL;
 
-        co_byte_array_destroy(client->receive_data);
-        client->receive_data = NULL;
+        co_byte_array_destroy(client->conn.receive_data.ptr);
+        client->conn.receive_data.ptr = NULL;
 
-        co_http_request_destroy(client->upgrade_request);
-        client->upgrade_request = NULL;
+        co_http_request_destroy(client->upgrade.request);
+        client->upgrade.request = NULL;
+
+        co_string_destroy(client->upgrade.key);
+        client->upgrade.key = NULL;
     }
 }
 
@@ -132,59 +135,38 @@ co_ws_client_on_connect(
     if (error_code == 0)
     {
         co_ws_log_info(
-            &client->tcp_client->sock.local_net_addr,
+            &client->conn.tcp_client->sock.local_net_addr,
             "<--",
-            &client->tcp_client->remote_net_addr,
+            &client->conn.tcp_client->remote_net_addr,
             "ws connect success");
 
-        co_http_header_t* header =
-            co_http_request_get_header(client->upgrade_request);
-
-        if (!co_http_header_contains(header, CO_HTTP_HEADER_HOST))
-        {
-            char* host =
-                co_http_url_create_host_and_port(client->base_url);
-
-            co_http_header_add_field(
-                header, CO_HTTP_HEADER_HOST, host);
-
-            co_string_destroy(host);
-        }
-
         co_ws_log_info(
-            &client->tcp_client->sock.local_net_addr,
+            &client->conn.tcp_client->sock.local_net_addr,
             "-->",
-            &client->tcp_client->remote_net_addr,
+            &client->conn.tcp_client->remote_net_addr,
             "ws send upgrade request");
 
-        co_http_log_debug_request_header(
-            &client->tcp_client->sock.local_net_addr,
-            "-->",
-            &client->tcp_client->remote_net_addr,
-            client->upgrade_request,
-            "http send request");
+        const co_http_header_t* request_header =
+            co_http_request_get_const_header(client->upgrade.request);
+        const char* key = co_http_header_get_field(
+            request_header, CO_HTTP_HEADER_SEC_WS_KEY);
+        client->upgrade.key = co_string_duplicate(key);
 
-        co_byte_array_t* buffer = co_byte_array_create();
+        co_http_connection_send_request(
+            (co_http_connection_t*)client, client->upgrade.request);
 
-        co_http_request_serialize(
-            client->upgrade_request, buffer);
-
-        co_ws_send_raw_data(client,
-            co_byte_array_get_ptr(buffer, 0),
-            co_byte_array_get_count(buffer));
-
-        co_byte_array_destroy(buffer);
+        client->upgrade.request = NULL;
     }
     else
     {
         co_ws_log_error(
-            &client->tcp_client->sock.local_net_addr,
+            &client->conn.tcp_client->sock.local_net_addr,
             "<--",
-            &client->tcp_client->remote_net_addr,
+            &client->conn.tcp_client->remote_net_addr,
             "ws connect error (%d)", error_code);
 
-        co_http_request_destroy(client->upgrade_request);
-        client->upgrade_request = NULL;
+        co_http_request_destroy(client->upgrade.request);
+        client->upgrade.request = NULL;
 
         if (client->callbacks.on_connect != NULL)
         {
@@ -203,8 +185,10 @@ co_ws_client_on_receive_ready(
     co_ws_client_t* client =
         (co_ws_client_t*)tcp_client->sock.sub_class;
 
-    ssize_t receive_result = client->module.receive_all(
-        client->tcp_client, client->receive_data);
+    ssize_t receive_result =
+        client->conn.module.receive_all(
+            client->conn.tcp_client,
+            client->conn.receive_data.ptr);
 
     if (receive_result <= 0)
     {
@@ -212,11 +196,11 @@ co_ws_client_on_receive_ready(
     }
 
     size_t data_size =
-        co_byte_array_get_count(client->receive_data);
+        co_byte_array_get_count(client->conn.receive_data.ptr);
 
-    while (data_size > client->receive_data_index)
+    while (data_size > client->conn.receive_data.index)
     {
-        if ((data_size - client->receive_data_index) <
+        if ((data_size - client->conn.receive_data.index) <
             CO_WS_FRAME_HEADER_MIN_SIZE)
         {
             return;
@@ -225,14 +209,15 @@ co_ws_client_on_receive_ready(
         co_ws_frame_t* frame = co_ws_frame_create();
 
         int result = co_ws_frame_deserialize(frame,
-            client->receive_data, &client->receive_data_index);
+            client->conn.receive_data.ptr,
+            &client->conn.receive_data.index);
 
         if (result == CO_WS_PARSE_COMPLETE)
         {
             co_ws_log_debug_frame(
-                &client->tcp_client->sock.local_net_addr,
+                &client->conn.tcp_client->sock.local_net_addr,
                 "<--",
-                &client->tcp_client->remote_net_addr,
+                &client->conn.tcp_client->remote_net_addr,
                 frame->header.fin,
                 frame->header.opcode,
                 (size_t)frame->header.payload_size,
@@ -241,7 +226,7 @@ co_ws_client_on_receive_ready(
             co_ws_client_on_frame(
                 thread, client, frame, 0);
 
-            if (client->tcp_client == NULL)
+            if (client->conn.tcp_client == NULL)
             {
                 return;
             }
@@ -263,29 +248,28 @@ co_ws_client_on_receive_ready(
                 co_http_response_t* response = co_http_response_create();
 
                 if (co_http_response_deserialize(response,
-                    client->receive_data, &client->receive_data_index) ==
+                    client->conn.receive_data.ptr,
+                    &client->conn.receive_data.index) ==
                     CO_HTTP_PARSE_COMPLETE)
                 {
                     co_http_log_debug_response_header(
-                        &client->tcp_client->sock.local_net_addr,
+                        &client->conn.tcp_client->sock.local_net_addr,
                         "<--",
-                        &client->tcp_client->remote_net_addr,
+                        &client->conn.tcp_client->remote_net_addr,
                         response,
                         "http receive response");
 
                     co_ws_log_info(
-                        &client->tcp_client->sock.local_net_addr,
+                        &client->conn.tcp_client->sock.local_net_addr,
                         "<--",
-                        &client->tcp_client->remote_net_addr,
+                        &client->conn.tcp_client->remote_net_addr,
                         "ws receive upgrade response");
 
                     client->callbacks.on_connect(thread, client, response, 0);
 
                     co_http_response_destroy(response);
-                    co_http_request_destroy(client->upgrade_request);
-                    client->upgrade_request = NULL;
 
-                    if (client->tcp_client == NULL)
+                    if (client->conn.tcp_client == NULL)
                     {
                         return;
                     }
@@ -310,8 +294,8 @@ co_ws_client_on_receive_ready(
         }
     }
 
-    client->receive_data_index = 0;
-    co_byte_array_clear(client->receive_data);
+    client->conn.receive_data.index = 0;
+    co_byte_array_clear(client->conn.receive_data.ptr);
 }
 
 void
@@ -327,17 +311,6 @@ co_ws_client_on_close(
     {
         client->callbacks.on_close(thread, client);
     }
-}
-
-bool
-co_ws_send_raw_data(
-    co_ws_client_t* client,
-    const void* data,
-    size_t data_size
-)
-{
-    return client->module.send(
-        client->tcp_client, data, data_size);
 }
 
 //---------------------------------------------------------------------------//
@@ -371,7 +344,7 @@ co_ws_client_create(
 
     if (url->scheme == NULL)
     {
-        client->base_url->scheme = co_string_duplicate("http");
+        client->conn.base_url->scheme = co_string_duplicate("http");
     }
     else if (co_string_case_compare(url->scheme, "wss") == 0)
     {
@@ -484,9 +457,9 @@ co_ws_client_create(
 
     client->mask = true;
 
-    client->tcp_client->callbacks.on_receive =
+    client->conn.tcp_client->callbacks.on_receive =
         (co_tcp_receive_fn)co_ws_client_on_receive_ready;
-    client->tcp_client->callbacks.on_close =
+    client->conn.tcp_client->callbacks.on_close =
         (co_tcp_close_fn)co_ws_client_on_close;
 
     return client;
@@ -499,13 +472,13 @@ co_ws_client_destroy(
 {
     if (client != NULL)
     {
-        if (client->tcp_client != NULL)
+        if (client->conn.tcp_client != NULL)
         {
             co_ws_send_close(
                 client, CO_WS_CLOSE_REASON_NORMAL, NULL);
 
-            client->module.destroy(client->tcp_client);
-            client->tcp_client = NULL;
+            client->conn.module.destroy(client->conn.tcp_client);
+            client->conn.tcp_client = NULL;
         }
 
         co_ws_client_cleanup(client);
@@ -527,22 +500,25 @@ co_ws_connect(
     co_http_request_t* upgrade_request
 )
 {
-    co_http_request_destroy(client->upgrade_request);
-    client->upgrade_request = upgrade_request;
+    co_http_request_destroy(client->upgrade.request);
+    client->upgrade.request = upgrade_request;
 
-    client->tcp_client->callbacks.on_connect =
+    co_string_destroy(client->upgrade.key);
+    client->upgrade.key = NULL;
+
+    client->conn.tcp_client->callbacks.on_connect =
         (co_tcp_connect_fn)co_ws_client_on_connect;
 
-    bool result =  client->module.connect(
-        client->tcp_client,
-        &client->tcp_client->remote_net_addr);
+    bool result =  client->conn.module.connect(
+        client->conn.tcp_client,
+        &client->conn.tcp_client->remote_net_addr);
 
     if (result)
     {
         co_ws_log_info(
-            &client->tcp_client->sock.local_net_addr,
+            &client->conn.tcp_client->sock.local_net_addr,
             "-->",
-            &client->tcp_client->remote_net_addr,
+            &client->conn.tcp_client->remote_net_addr,
             "ws connect start");
     }
 
@@ -555,10 +531,10 @@ co_ws_close(
 )
 {
     if ((client != NULL) &&
-        (client->tcp_client != NULL) &&
-        (co_tcp_is_open(client->tcp_client)))
+        (client->conn.tcp_client != NULL) &&
+        (co_tcp_is_open(client->conn.tcp_client)))
     {
-        client->module.close(client->tcp_client);
+        client->conn.module.close(client->conn.tcp_client);
     }
 }
 
@@ -572,9 +548,9 @@ co_ws_send(
 )
 {
     co_ws_log_debug_frame(
-        &client->tcp_client->sock.local_net_addr,
+        &client->conn.tcp_client->sock.local_net_addr,
         "-->",
-        &client->tcp_client->remote_net_addr,
+        &client->conn.tcp_client->remote_net_addr,
         fin, opcode, data_size,
         "ws send frame");
 
@@ -648,26 +624,30 @@ co_ws_send(
                 mask_key[index % CO_WS_FRAME_MASK_SIZE];
         }
 
-        result = co_ws_send_raw_data(
-            client, header, header_size);
+        result =
+            co_http_connection_send_data(
+                &client->conn, header, header_size);
 
         if (result && (data_size > 0))
         {
-            result = co_ws_send_raw_data(
-                client, masked_data, data_size);
+            result =
+                co_http_connection_send_data(
+                    &client->conn, masked_data, data_size);
         }
 
         co_mem_free(masked_data);
     }
     else
     {
-        result = co_ws_send_raw_data(
-            client, header, header_size);
+        result =
+            co_http_connection_send_data(
+                &client->conn, header, header_size);
 
         if (result && (data_size > 0))
         {
-            result = co_ws_send_raw_data(
-                client, data, data_size);
+            result =
+                co_http_connection_send_data(
+                    &client->conn, data, data_size);
         }
     }
 
@@ -819,8 +799,8 @@ co_ws_get_remote_net_addr(
     const co_ws_client_t* client
 )
 {
-    return ((client->tcp_client != NULL) ?
-        &client->tcp_client->remote_net_addr : NULL);
+    return ((client->conn.tcp_client != NULL) ?
+        &client->conn.tcp_client->remote_net_addr : NULL);
 }
 
 co_socket_t*
@@ -828,8 +808,8 @@ co_ws_client_get_socket(
     co_ws_client_t* client
 )
 {
-    return ((client->tcp_client != NULL) ?
-        &client->tcp_client->sock : NULL);
+    return ((client->conn.tcp_client != NULL) ?
+        &client->conn.tcp_client->sock : NULL);
 }
 
 const char*
@@ -837,8 +817,8 @@ co_ws_get_base_url(
     const co_ws_client_t* client
 )
 {
-    return ((client->base_url != NULL) ?
-        client->base_url->src : NULL);
+    return ((client->conn.base_url != NULL) ?
+        client->conn.base_url->src : NULL);
 }
 
 bool
@@ -846,8 +826,8 @@ co_ws_is_open(
     const co_ws_client_t* client
 )
 {
-    return (!client->closed) && ((client->tcp_client != NULL) ?
-        co_tcp_is_open(client->tcp_client) : false);
+    return (!client->closed) && ((client->conn.tcp_client != NULL) ?
+        co_tcp_is_open(client->conn.tcp_client) : false);
 }
 
 void
@@ -857,7 +837,7 @@ co_ws_set_user_data(
 )
 {
     co_tcp_set_user_data(
-        client->tcp_client, user_data);
+        client->conn.tcp_client, user_data);
 }
 
 void*
@@ -866,5 +846,5 @@ co_ws_get_user_data(
 )
 {
     return co_tcp_get_user_data(
-        client->tcp_client);
+        client->conn.tcp_client);
 }

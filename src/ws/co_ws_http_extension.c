@@ -65,27 +65,27 @@ co_http_upgrade_to_ws(
     }
 
     co_ws_client_setup(ws_client,
-        http_client->tcp_client, http_client->base_url);
+        http_client->conn.tcp_client, http_client->conn.base_url);
 
-    ws_client->mask = (ws_client->base_url != NULL);
+    ws_client->mask = (ws_client->conn.base_url != NULL);
 
-    http_client->tcp_client = NULL;
-    http_client->base_url = NULL;
+    http_client->conn.tcp_client = NULL;
+    http_client->conn.base_url = NULL;
 
     co_http_client_destroy(http_client);
 
-    if (ws_client->base_url != NULL)
+    if (ws_client->conn.base_url != NULL)
     {
-        ws_client->tcp_client->callbacks.on_receive =
+        ws_client->conn.tcp_client->callbacks.on_receive =
             (co_tcp_receive_fn)co_ws_client_on_receive_ready;
     }
     else
     {
-        ws_client->tcp_client->callbacks.on_receive =
+        ws_client->conn.tcp_client->callbacks.on_receive =
             (co_tcp_receive_fn)co_ws_server_on_receive_ready;
     }
 
-    ws_client->tcp_client->callbacks.on_close =
+    ws_client->conn.tcp_client->callbacks.on_close =
         (co_tcp_close_fn)co_ws_client_on_close;
 
     return ws_client;
@@ -225,12 +225,8 @@ co_http_response_validate_ws_upgrade(
         return false;
     }
 
-    const co_http_header_t* request_header =
-        co_http_request_get_const_header(client->upgrade_request);
-    const char* ws_key = 
-        co_http_header_get_field(request_header, CO_HTTP_HEADER_SEC_WS_KEY);
-
-    char* request_key = co_ws_create_base64_accept_key(ws_key);
+    char* request_key =
+        co_ws_create_base64_accept_key(client->upgrade.key);
 
     if (strcmp(response_key, request_key) != 0)
     {

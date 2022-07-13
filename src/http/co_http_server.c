@@ -49,8 +49,10 @@ co_http_server_on_receive_ready(
     co_http_client_t* client =
         (co_http_client_t*)tcp_client->sock.sub_class;
 
-    ssize_t receive_result = client->module.receive_all(
-        client->tcp_client, client->receive_data);
+    ssize_t receive_result =
+        client->conn.module.receive_all(
+            client->conn.tcp_client,
+            client->conn.receive_data.ptr);
 
     if (receive_result <= 0)
     {
@@ -58,9 +60,9 @@ co_http_server_on_receive_ready(
     }
 
     size_t data_size =
-        co_byte_array_get_count(client->receive_data);
+        co_byte_array_get_count(client->conn.receive_data.ptr);
 
-    while (data_size > client->receive_data_index)
+    while (data_size > client->conn.receive_data.index)
     {
         if (client->request == NULL)
         {
@@ -75,14 +77,15 @@ co_http_server_on_receive_ready(
             }
 
             int result = co_http_request_deserialize(
-                client->request, client->receive_data,
-                &client->receive_data_index);
+                client->request,
+                client->conn.receive_data.ptr,
+                &client->conn.receive_data.index);
 
             if (result == CO_HTTP_PARSE_COMPLETE)
             {
                 co_http_log_debug_request_header(
-                    &client->tcp_client->sock.local_net_addr, "<--",
-                    &client->tcp_client->remote_net_addr,
+                    &client->conn.tcp_client->sock.local_net_addr, "<--",
+                    &client->conn.tcp_client->remote_net_addr,
                     client->request, "http receive request");
 
                 co_http_content_receiver_clear(&client->content_receiver);
@@ -90,7 +93,7 @@ co_http_server_on_receive_ready(
                 if (!co_http_start_receive_content(
                     &client->content_receiver, client,
                     &client->request->message,
-                    client->receive_data_index))
+                    client->conn.receive_data.index))
                 {
                     return;
                 }
@@ -121,18 +124,18 @@ co_http_server_on_receive_ready(
         }
 
         int result = co_http_receive_content_data(
-            &client->content_receiver, client, client->receive_data);
+            &client->content_receiver, client, client->conn.receive_data.ptr);
 
         if (result == CO_HTTP_PARSE_COMPLETE)
         {
             co_http_complete_receive_content(
                 &client->content_receiver,
-                &client->receive_data_index,
+                &client->conn.receive_data.index,
                 &client->request->message.data);
 
             co_http_server_on_request(thread, client, 0);
 
-            if (client->tcp_client == NULL)
+            if (client->conn.tcp_client == NULL)
             {
                 return;
             }
@@ -140,7 +143,8 @@ co_http_server_on_receive_ready(
         else if (result == CO_HTTP_PARSE_MORE_DATA)
         {
             co_http_content_more_data(
-                &client->content_receiver, client->receive_data);
+                &client->content_receiver,
+                client->conn.receive_data.ptr);
 
             return;
         }
@@ -158,8 +162,8 @@ co_http_server_on_receive_ready(
         }
     }
 
-    client->receive_data_index = 0;
-    co_byte_array_clear(client->receive_data);
+    client->conn.receive_data.index = 0;
+    co_byte_array_clear(client->conn.receive_data.ptr);
 }
 
 static void
@@ -200,14 +204,14 @@ co_http_client_create_with(
         return NULL;
     }
 
-    client->base_url = NULL;
-    client->tcp_client = tcp_client;
+    client->conn.base_url = NULL;
+    client->conn.tcp_client = tcp_client;
 
     co_http_client_setup(client);
 
-    client->tcp_client->callbacks.on_receive =
+    client->conn.tcp_client->callbacks.on_receive =
         (co_tcp_receive_fn)co_http_server_on_receive_ready;
-    client->tcp_client->callbacks.on_close =
+    client->conn.tcp_client->callbacks.on_close =
         (co_tcp_close_fn)co_http_server_on_close;
 
     return client;
@@ -219,38 +223,8 @@ co_http_send_response(
     co_http_response_t* response
 )
 {
-    size_t content_size =
-        co_http_response_get_data_size(response);
-
-    if (content_size > 0)
-    {
-        if (!co_http_header_contains(
-            &response->message.header, CO_HTTP_HEADER_CONTENT_LENGTH))
-        {
-            co_http_header_set_content_length(
-                &response->message.header, content_size);
-        }
-    }
-
-    co_http_log_debug_response_header(
-        &client->tcp_client->sock.local_net_addr, "-->",
-        &client->tcp_client->remote_net_addr,
-        response, "http send response");
-
-    co_byte_array_t* buffer = co_byte_array_create();
-
-    co_http_response_serialize(response, buffer);
-
-    bool result = 
-        co_http_send_raw_data(client,
-            co_byte_array_get_ptr(buffer, 0),
-            co_byte_array_get_count(buffer));
-
-    co_byte_array_destroy(buffer);
-
-    co_http_response_destroy(response);
-
-    return result;
+    return co_http_connection_send_response(
+        &client->conn, response);
 }
 
 bool
@@ -324,7 +298,8 @@ co_http_send_chunked_response(
         "http send chunked data %zd", data_length);
 
     bool result =
-        co_http_send_raw_data(client,
+        co_http_connection_send_data(
+            &client->conn,
             co_byte_array_get_ptr(buffer, 0),
             co_byte_array_get_count(buffer));
 

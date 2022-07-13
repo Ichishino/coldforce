@@ -8,6 +8,7 @@ add_library(${PROJECT_NAME} STATIC
     co_http.c
     co_http_client.c
     co_http_config.c
+    co_http_connection.c
     co_http_content_receiver.c
     co_http_cookie.c
     co_http_header.c

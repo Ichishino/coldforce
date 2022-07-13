@@ -369,8 +369,9 @@ co_http2_stream_change_state(
     if (error_code != CO_HTTP2_STREAM_ERROR_NO_ERROR)
     {
         co_http2_log_error(
-            &stream->client->tcp_client->sock.local_net_addr, (send ? "-->" : "<--"),
-            &stream->client->tcp_client->remote_net_addr,
+            &stream->client->conn.tcp_client->sock.local_net_addr,
+            (send ? "-->" : "<--"),
+            &stream->client->conn.tcp_client->remote_net_addr,
             "stream-%u *** state error: %d state(%d) frame(%d)",
             stream->id, error_code, stream->state, frame->header.type);
     }
@@ -398,8 +399,8 @@ co_http2_stream_send_frame(
     frame->header.stream_id = stream->id;
 
     co_http2_log_debug_frame(
-        &stream->client->tcp_client->sock.local_net_addr, "-->",
-        &stream->client->tcp_client->remote_net_addr,
+        &stream->client->conn.tcp_client->sock.local_net_addr, "-->",
+        &stream->client->conn.tcp_client->remote_net_addr,
         frame,
         "http2 send frame");
 
@@ -408,7 +409,8 @@ co_http2_stream_send_frame(
     co_http2_frame_serialize(frame, buffer);
 
     bool result =
-        co_http2_send_raw_data(stream->client,
+        co_http_connection_send_data(
+            &stream->client->conn,
             co_byte_array_get_ptr(buffer, 0),
             co_byte_array_get_count(buffer));
 
@@ -437,7 +439,7 @@ co_http2_stream_on_receive_finish(
     if (stream->on_receive_finish != NULL)
     {
         stream->on_receive_finish(
-            stream->client->tcp_client->sock.owner_thread,
+            stream->client->conn.tcp_client->sock.owner_thread,
             stream->client, stream,
             stream->receive_header, &stream->receive_data,
             error_code);
@@ -497,7 +499,7 @@ co_http2_stream_on_receive_frame(
                     data.size = frame->payload.data.data_length;
 
                     if (!stream->on_receive_data(
-                        stream->client->tcp_client->sock.owner_thread,
+                        stream->client->conn.tcp_client->sock.owner_thread,
                         stream->client, stream,
                         stream->receive_header, &data))
                     {
@@ -608,8 +610,8 @@ co_http2_stream_on_receive_frame(
             }
 
             co_http2_log_debug_header(
-                &stream->client->tcp_client->sock.local_net_addr, "<--",
-                &stream->client->tcp_client->remote_net_addr,
+                &stream->client->conn.tcp_client->sock.local_net_addr, "<--",
+                &stream->client->conn.tcp_client->remote_net_addr,
                 stream->receive_header,
                 "http2 receive header");
 
@@ -628,7 +630,7 @@ co_http2_stream_on_receive_frame(
                 if (stream->on_receive_start != NULL)
                 {
                     if (!stream->on_receive_start(
-                        stream->client->tcp_client->sock.owner_thread,
+                        stream->client->conn.tcp_client->sock.owner_thread,
                         stream->client, stream,
                         stream->receive_header))
                     {
@@ -668,7 +670,7 @@ co_http2_stream_on_receive_frame(
         if (stream->client->callbacks.on_priority != NULL)
         {
             stream->client->callbacks.on_priority(
-                stream->client->tcp_client->sock.owner_thread,
+                stream->client->conn.tcp_client->sock.owner_thread,
                 stream->client, stream,
                 frame->payload.priority.stream_dependency,
                 frame->payload.priority.weight);
@@ -681,7 +683,7 @@ co_http2_stream_on_receive_frame(
         if (stream->client->callbacks.on_close_stream != NULL)
         {
             stream->client->callbacks.on_close_stream(
-                stream->client->tcp_client->sock.owner_thread,
+                stream->client->conn.tcp_client->sock.owner_thread,
                 stream->client, stream,
                 frame->payload.rst_stream.error_code);
         }
@@ -727,8 +729,8 @@ co_http2_stream_on_receive_frame(
             }
 
             co_http2_log_debug_header(
-                &stream->client->tcp_client->sock.local_net_addr, "<--",
-                &stream->client->tcp_client->remote_net_addr,
+                &stream->client->conn.tcp_client->sock.local_net_addr, "<--",
+                &stream->client->conn.tcp_client->remote_net_addr,
                 header,
                 "http2 receive header (push-promise)");
 
@@ -773,7 +775,7 @@ co_http2_stream_on_receive_frame(
         if (stream->client->callbacks.on_window_update != NULL)
         {
             stream->client->callbacks.on_window_update(
-                stream->client->tcp_client->sock.owner_thread,
+                stream->client->conn.tcp_client->sock.owner_thread,
                 stream->client, stream);
         }
 
@@ -964,24 +966,26 @@ co_http2_stream_send_header(
 
     stream->send_header = header;
 
-    if (stream->client->base_url != NULL)
+    if (stream->client->conn.base_url != NULL)
     {
         if (header->pseudo.authority == NULL)
         {
             header->pseudo.authority =
-                co_http_url_create_host_and_port(stream->client->base_url);
+                co_http_url_create_host_and_port(
+                    stream->client->conn.base_url);
         }
 
         if (header->pseudo.scheme == NULL)
         {
             header->pseudo.scheme =
-                co_string_duplicate(stream->client->base_url->scheme);
+                co_string_duplicate(
+                    stream->client->conn.base_url->scheme);
         }
     }
 
     co_http2_log_debug_header(
-        &stream->client->tcp_client->sock.local_net_addr, "-->",
-        &stream->client->tcp_client->remote_net_addr,
+        &stream->client->conn.tcp_client->sock.local_net_addr, "-->",
+        &stream->client->conn.tcp_client->remote_net_addr,
         header,
         "http2 send header");
 
@@ -1087,7 +1091,7 @@ co_http2_stream_send_server_push_request(
 
     if (co_http2_header_get_scheme(header) == NULL)
     {
-        if (stream->client->tcp_client->sock.tls == NULL)
+        if (stream->client->conn.tcp_client->sock.tls == NULL)
         {
             co_http2_header_set_scheme(header, "http");
         }
@@ -1098,8 +1102,8 @@ co_http2_stream_send_server_push_request(
     }
 
     co_http2_log_debug_header(
-        &stream->client->tcp_client->sock.local_net_addr, "-->",
-        &stream->client->tcp_client->remote_net_addr,
+        &stream->client->conn.tcp_client->sock.local_net_addr, "-->",
+        &stream->client->conn.tcp_client->remote_net_addr,
         header,
         "http2 send push-promise");
 

@@ -51,7 +51,7 @@ co_http_receive_plain_data(
             else
             {
                 if (!client->callbacks.on_receive_data(
-                    client->tcp_client->sock.owner_thread,
+                    client->conn.tcp_client->sock.owner_thread,
                     client, client->request, client->response,
                     (const uint8_t*)&data_ptr[receiver->index], content_size))
                 {
@@ -156,7 +156,7 @@ co_http_receive_chunked_data(
             else
             {
                 if (!client->callbacks.on_receive_data(
-                    client->tcp_client->sock.owner_thread,
+                    client->conn.tcp_client->sock.owner_thread,
                     client, client->request, client->response,
                     (const uint8_t*)&data_ptr[receiver->index], content_size))
                 {
@@ -267,7 +267,7 @@ co_http_start_receive_content(
     if (client->callbacks.on_receive_start != NULL)
     {
         if (!client->callbacks.on_receive_start(
-            client->tcp_client->sock.owner_thread,
+            client->conn.tcp_client->sock.owner_thread,
             client, client->request, client->response))
         {
             return false;

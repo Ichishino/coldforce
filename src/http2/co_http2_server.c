@@ -26,27 +26,27 @@ co_http2_server_on_upgrade_request(
 )
 {
     size_t data_size =
-        co_byte_array_get_count(client->receive_data);
+        co_byte_array_get_count(client->conn.receive_data.ptr);
 
-    if ((data_size - client->receive_data_index) >=
+    if ((data_size - client->conn.receive_data.index) >=
         CO_HTTP2_CONNECTION_PREFACE_LENGTH)
     {
         const uint8_t* data =
             co_byte_array_get_const_ptr(
-                client->receive_data,
-                client->receive_data_index);
+                client->conn.receive_data.ptr,
+                client->conn.receive_data.index);
 
         if (memcmp(data,
             CO_HTTP2_CONNECTION_PREFACE,
             CO_HTTP2_CONNECTION_PREFACE_LENGTH) == 0)
         {
             co_http2_log_debug(
-                &client->tcp_client->sock.local_net_addr,
+                &client->conn.tcp_client->sock.local_net_addr,
                 "<--",
-                &client->tcp_client->remote_net_addr,
+                &client->conn.tcp_client->remote_net_addr,
                 "http2 receive connection preface");
 
-            client->receive_data_index +=
+            client->conn.receive_data.index +=
                 CO_HTTP2_CONNECTION_PREFACE_LENGTH;
 
             co_http2_send_initial_settings(client);
@@ -58,8 +58,8 @@ co_http2_server_on_upgrade_request(
     co_http_request_t* request = co_http_request_create();
 
     if (co_http_request_deserialize(
-        request, client->receive_data,
-        &client->receive_data_index) !=
+        request, client->conn.receive_data.ptr,
+        &client->conn.receive_data.index) !=
         CO_HTTP_PARSE_COMPLETE)
     {
         co_http_request_destroy(request);
@@ -68,9 +68,9 @@ co_http2_server_on_upgrade_request(
     }
 
     co_http_log_debug_request_header(
-        &client->tcp_client->sock.local_net_addr,
+        &client->conn.tcp_client->sock.local_net_addr,
         "<--",
-        &client->tcp_client->remote_net_addr,
+        &client->conn.tcp_client->remote_net_addr,
         request,
         "http receive request");
 
@@ -99,22 +99,8 @@ co_http2_server_on_upgrade_request(
     co_http_response_t* response =
         co_http_response_create_http2_upgrade(101, "Switching Protocols");
 
-    co_http_log_debug_response_header(
-        &client->tcp_client->sock.local_net_addr,
-        "-->",
-        &client->tcp_client->remote_net_addr,
-        response,
-        "http send response");
-
-    co_byte_array_t* buffer = co_byte_array_create();
-    co_http_response_serialize(response, buffer);
-
-    co_http2_send_raw_data(client,
-        co_byte_array_get_ptr(buffer, 0),
-        co_byte_array_get_count(buffer));
-
-    co_byte_array_destroy(buffer);
-    co_http_response_destroy(response);
+    co_http_connection_send_response(
+        (co_http_connection_t*)client, response);
 
     co_http2_send_initial_settings(client);
 
@@ -132,26 +118,29 @@ co_http2_server_on_tcp_receive_ready(
     co_http2_client_t* client =
         (co_http2_client_t*)tcp_client->sock.sub_class;
 
-    client->module.receive_all(
-        client->tcp_client, client->receive_data);
+    client->conn.module.receive_all(
+        client->conn.tcp_client,
+        client->conn.receive_data.ptr);
 
     size_t data_size =
-        co_byte_array_get_count(client->receive_data);
+        co_byte_array_get_count(client->conn.receive_data.ptr);
 
     if (data_size == 0)
     {
         return;
     }
 
-    while (data_size > client->receive_data_index)
+    while (data_size > client->conn.receive_data.index)
     {
         co_http2_frame_t* frame = co_http2_frame_create();
 
         int result = co_http2_frame_deserialize(
-            client->receive_data, &client->receive_data_index,
-            client->local_settings.max_frame_size, frame);
+            client->conn.receive_data.ptr,
+            &client->conn.receive_data.index,
+            client->local_settings.max_frame_size,
+            frame);
 
-        co_assert(data_size >= client->receive_data_index);
+        co_assert(data_size >= client->conn.receive_data.index);
 
         if (result == CO_HTTP_PARSE_COMPLETE)
         {
@@ -186,8 +175,8 @@ co_http2_server_on_tcp_receive_ready(
             }
 
             co_http2_log_debug_frame(
-                &stream->client->tcp_client->sock.local_net_addr, "<--",
-                &stream->client->tcp_client->remote_net_addr,
+                &client->conn.tcp_client->sock.local_net_addr, "<--",
+                &client->conn.tcp_client->remote_net_addr,
                 frame,
                 "http2 receive frame");
 
@@ -224,7 +213,7 @@ co_http2_server_on_tcp_receive_ready(
 
             co_http2_frame_destroy(frame);
 
-            if (client->tcp_client == NULL)
+            if (client->conn.tcp_client == NULL)
             {
                 return;
             }
@@ -253,8 +242,8 @@ co_http2_server_on_tcp_receive_ready(
         }
     }
 
-    client->receive_data_index = 0;
-    co_byte_array_clear(client->receive_data);
+    client->conn.receive_data.index = 0;
+    co_byte_array_clear(client->conn.receive_data.ptr);
 }
 
 //---------------------------------------------------------------------------//
@@ -274,14 +263,14 @@ co_http2_client_create_with(
         return NULL;
     }
 
-    client->base_url = NULL;
-    client->tcp_client = tcp_client;
+    client->conn.base_url = NULL;
+    client->conn.tcp_client = tcp_client;
 
     co_http2_client_setup(client);
 
-    client->tcp_client->callbacks.on_receive =
+    client->conn.tcp_client->callbacks.on_receive =
         (co_tcp_receive_fn)co_http2_server_on_tcp_receive_ready;
-    client->tcp_client->callbacks.on_close =
+    client->conn.tcp_client->callbacks.on_close =
         (co_tcp_close_fn)co_http2_client_on_tcp_close;
 
     return client;

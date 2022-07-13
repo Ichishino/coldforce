@@ -76,15 +76,8 @@ typedef struct
 
 typedef struct co_http2_client_t
 {
-    co_tcp_client_t* tcp_client;
-    co_tcp_client_module_t module;
-
+    co_http_connection_t conn;
     co_http2_callbacks_st callbacks;
-
-    co_http_url_st* base_url;
-
-    size_t receive_data_index;
-    co_byte_array_t* receive_data;
 
     co_http2_stream_t* system_stream;
     co_map_t* stream_map;
@@ -119,13 +112,6 @@ void
 co_http2_client_on_tcp_close(
     co_thread_t* thread,
     co_tcp_client_t* tcp_client
-);
-
-bool
-co_http2_send_raw_data(
-    co_http2_client_t* client,
-    const void* data,
-    size_t data_size
 );
 
 void

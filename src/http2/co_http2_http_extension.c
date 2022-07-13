@@ -37,7 +37,7 @@ co_http_upgrade_to_http2(
     co_http2_settings_st* settings = NULL;
     uint32_t new_stream_id = 0;
 
-    if (http_client->base_url != NULL)
+    if (http_client->conn.base_url != NULL)
     {
         new_stream_id = UINT32_MAX;
 
@@ -54,18 +54,18 @@ co_http_upgrade_to_http2(
         settings = &http2_client->remote_settings;
     }
 
-    http2_client->base_url = http_client->base_url;
-    http_client->base_url = NULL;
+    http2_client->conn.base_url = http_client->conn.base_url;
+    http_client->conn.base_url = NULL;
 
-    http2_client->tcp_client = http_client->tcp_client;
-    http_client->tcp_client = NULL;
+    http2_client->conn.tcp_client = http_client->conn.tcp_client;
+    http_client->conn.tcp_client = NULL;
 
     co_http2_client_setup(http2_client);
 
-    co_byte_array_t* receive_data = http2_client->receive_data;
-    http2_client->receive_data = http_client->receive_data;
-    http2_client->receive_data_index = http_client->receive_data_index;
-    http_client->receive_data = receive_data;
+    co_byte_array_t* receive_data_ptr = http2_client->conn.receive_data.ptr;
+    http2_client->conn.receive_data.ptr = http_client->conn.receive_data.ptr;
+    http2_client->conn.receive_data.index = http_client->conn.receive_data.index;
+    http_client->conn.receive_data.ptr = receive_data_ptr;
 
     http2_client->new_stream_id = new_stream_id;
 
@@ -81,9 +81,9 @@ co_http_upgrade_to_http2(
             http2_settings, strlen(http2_settings), settings);
     }
 
-    http2_client->tcp_client->callbacks.on_receive =
+    http2_client->conn.tcp_client->callbacks.on_receive =
         receive_handler;
-    http2_client->tcp_client->callbacks.on_close =
+    http2_client->conn.tcp_client->callbacks.on_close =
         (co_tcp_close_fn)co_http2_client_on_tcp_close;
 
     co_http_client_destroy(http_client);
@@ -203,7 +203,7 @@ co_http_request_create_http2_upgrade(
         co_http_request_get_header(request);
 
     char* host_and_port =
-        co_http_url_create_host_and_port(client->base_url);
+        co_http_url_create_host_and_port(client->conn.base_url);
 
     co_http_header_add_field_ptr(
         header, co_string_duplicate(CO_HTTP_HEADER_HOST), host_and_port);
