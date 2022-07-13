@@ -14,6 +14,10 @@
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
+//---------------------------------------------------------------------------//
+// private
+//---------------------------------------------------------------------------//
+
 void
 co_ws_server_on_receive_ready(
     co_thread_t* thread,
@@ -99,27 +103,43 @@ co_ws_server_on_receive_ready(
                         &client->tcp_client->remote_net_addr,
                         "ws receive upgrade request");
 
-                    co_http_response_t* response =
-                        co_http_response_create_ws_upgrade(
-                            request, NULL, NULL);
+                    if (client->callbacks.on_upgrade != NULL)
+                    {
+                        client->callbacks.on_upgrade(
+                            client->tcp_client->sock.owner_thread, client, request);
 
-                    co_http_log_debug_response_header(
-                        &client->tcp_client->sock.local_net_addr,
-                        "-->",
-                        &client->tcp_client->remote_net_addr,
-                        response,
-                        "http send response");
+                        co_http_request_destroy(request);
 
-                    co_byte_array_t* buffer = co_byte_array_create();
-                    co_http_response_serialize(response, buffer);
+                        if (client->tcp_client == NULL)
+                        {
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        co_http_response_t* response =
+                            co_http_response_create_ws_upgrade(
+                                request, NULL, NULL);
 
-                    co_ws_send_raw_data(client,
-                        co_byte_array_get_ptr(buffer, 0),
-                        co_byte_array_get_count(buffer));
+                        co_http_log_debug_response_header(
+                            &client->tcp_client->sock.local_net_addr,
+                            "-->",
+                            &client->tcp_client->remote_net_addr,
+                            response,
+                            "http send response");
 
-                    co_byte_array_destroy(buffer);
-                    co_http_response_destroy(response);
-                    co_http_request_destroy(request);
+                        co_byte_array_t* buffer = co_byte_array_create();
+                        co_http_response_serialize(response, buffer);
+
+                        co_ws_send_raw_data(client,
+                            co_byte_array_get_ptr(buffer, 0),
+                            co_byte_array_get_count(buffer));
+
+                        co_byte_array_destroy(buffer);
+                        co_http_response_destroy(response);
+
+                        co_http_request_destroy(request);
+                    }
 
                     continue;
                 }
@@ -139,6 +159,7 @@ co_ws_server_on_receive_ready(
 }
 
 //---------------------------------------------------------------------------//
+// public
 //---------------------------------------------------------------------------//
 
 co_ws_client_t*

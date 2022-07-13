@@ -24,10 +24,6 @@ struct co_http2_client_t;
 typedef void(*co_http2_connect_fn)(
     co_thread_t* self, struct co_http2_client_t* client, int error_code);
 
-typedef void(*co_http2_upgrade_fn)(
-    co_thread_t* self, struct co_http2_client_t* client,
-    const co_http_response_t* response, int error_code);
-
 typedef void(*co_http2_close_fn)(
     co_thread_t* self, struct co_http2_client_t* client, int error_code);
 
@@ -63,7 +59,6 @@ typedef struct
 typedef struct
 {
     co_http2_connect_fn on_connect;
-    co_http2_upgrade_fn on_upgrade;
     co_http2_close_fn on_close;
     co_http2_receive_start_fn on_receive_start;
     co_http2_receive_finish_fn on_receive_finish;
@@ -96,8 +91,6 @@ typedef struct co_http2_client_t
 
     uint32_t last_stream_id;
     uint32_t new_stream_id;
-
-    co_byte_array_t* upgrade_request_data;
 
     co_http2_settings_st local_settings;
     co_http2_settings_st remote_settings;
@@ -203,13 +196,6 @@ void
 co_http2_close(
     co_http2_client_t* client,
     int error_code
-);
-
-CO_HTTP2_API
-bool
-co_http2_connect_and_request_upgrade(
-    co_http2_client_t* client,
-    co_http_request_t* upgrade_request
 );
 
 CO_HTTP2_API

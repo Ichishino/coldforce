@@ -21,6 +21,10 @@ typedef void(*co_ws_connect_fn)(
     co_thread_t* self, struct co_ws_client_t*,
     const co_http_response_t* response, int error_code);
 
+typedef void(*co_ws_upgrade_fn)(
+    co_thread_t* self, struct co_ws_client_t*,
+    const co_http_request_t* request);
+
 typedef void(*co_ws_receive_fn)(
     co_thread_t* self, struct co_ws_client_t*, const co_ws_frame_t*, int error_code);
 
@@ -30,6 +34,7 @@ typedef void(*co_ws_close_fn)(
 typedef struct
 {
     co_ws_connect_fn on_connect;
+    co_ws_upgrade_fn on_upgrade;
     co_ws_receive_fn on_receive;
     co_ws_close_fn on_close;
 

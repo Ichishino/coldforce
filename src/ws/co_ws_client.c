@@ -63,6 +63,7 @@ co_ws_client_setup(
     client->receive_data = co_byte_array_create();
 
     client->callbacks.on_connect = NULL;
+    client->callbacks.on_upgrade = NULL;
     client->callbacks.on_receive = NULL;
     client->callbacks.on_close = NULL;
 

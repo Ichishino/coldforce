@@ -60,10 +60,7 @@ co_http2_client_setup(
     client->receive_data_index = 0;
     client->receive_data = co_byte_array_create();
 
-    client->upgrade_request_data = NULL;
-
     client->callbacks.on_connect = NULL;
-    client->callbacks.on_upgrade = NULL;
     client->callbacks.on_close = NULL;
     client->callbacks.on_receive_start = NULL;
     client->callbacks.on_receive_finish = NULL;
@@ -130,9 +127,6 @@ co_http2_client_cleanup(
     {
         co_byte_array_destroy(client->receive_data);
         client->receive_data = NULL;
-
-        co_byte_array_destroy(client->upgrade_request_data);
-        client->upgrade_request_data = NULL;
 
         co_http2_stream_destroy(client->system_stream);
         client->system_stream = NULL;
@@ -398,61 +392,6 @@ co_http2_client_on_push_promise(
         promised_stream, CO_HTTP2_STREAM_ERROR_CANCEL);
 }
 
-static bool
-co_http2_client_on_upgrade_response(
-    co_thread_t* thread,
-    co_http2_client_t* client
-)
-{
-    co_http_response_t* response = co_http_response_create();
-
-    if (co_http_response_deserialize(
-        response, client->receive_data,
-        &client->receive_data_index) !=
-        CO_HTTP_PARSE_COMPLETE)
-    {
-        co_http_response_destroy(response);
-
-        return false;
-    }
-
-    const co_http_header_t* response_header =
-        co_http_response_get_header(response);
-    const char* upgrade =
-        co_http_header_get_field(
-            response_header, CO_HTTP_HEADER_UPGRADE);
-
-    if ((upgrade == NULL) ||
-        (strcmp(upgrade, CO_HTTP2_UPGRADE) != 0))
-    {
-        co_http_response_destroy(response);
-
-        return false;
-    }
-
-    uint16_t status_code =
-        co_http_response_get_status_code(response);
-
-    if (client->callbacks.on_upgrade != NULL)
-    {
-        if (status_code == 101)
-        {
-            client->callbacks.on_upgrade(
-                thread, client, response, 0);
-        }
-        else
-        {
-            client->callbacks.on_upgrade(
-                thread, client, response,
-                CO_HTTP2_ERROR_UPGRADE_FAILED);
-        }
-    }
-
-    co_http_response_destroy(response);
-
-    return true;
-}
-
 static void
 co_http2_client_on_tcp_connect(
     co_thread_t* thread,
@@ -496,40 +435,6 @@ co_http2_client_on_tcp_connect(
         {
             client->callbacks.on_connect(
                 thread, client, error_code);
-        }
-    }
-}
-
-static void
-co_http2_client_on_tcp_connect_and_upgrade(
-    co_thread_t* thread,
-    co_tcp_client_t* tcp_client,
-    int error_code
-)
-{
-    co_http2_client_t* client =
-        (co_http2_client_t*)tcp_client->sock.sub_class;
-
-    if (error_code == 0)
-    {
-        co_http2_send_raw_data(client,
-            co_byte_array_get_const_ptr(
-                client->upgrade_request_data, 0),
-            co_byte_array_get_count(
-                client->upgrade_request_data));
-
-        co_byte_array_destroy(client->upgrade_request_data);
-        client->upgrade_request_data = NULL;
-    }
-    else
-    {
-        co_byte_array_destroy(client->upgrade_request_data);
-        client->upgrade_request_data = NULL;
-
-        if (client->callbacks.on_upgrade != NULL)
-        {
-            client->callbacks.on_upgrade(
-                thread, client, NULL, error_code);
         }
     }
 }
@@ -617,11 +522,6 @@ co_http2_client_on_tcp_receive_ready(
         else
         {
             co_http2_frame_destroy(frame);
-
-            if (co_http2_client_on_upgrade_response(thread, client))
-            {
-                continue;
-            }
 
             co_http2_close(
                 client, CO_HTTP2_STREAM_ERROR_FRAME_SIZE_ERROR);
@@ -943,27 +843,6 @@ co_http2_close(
 
         client->module.close(client->tcp_client);
     }
-}
-
-bool
-co_http2_connect_and_request_upgrade(
-    co_http2_client_t* client,
-    co_http_request_t* upgrade_request
-)
-{
-    client->upgrade_request_data = co_byte_array_create();
-
-    co_http_request_serialize(
-        upgrade_request, client->upgrade_request_data);
-
-    co_http_request_destroy(upgrade_request);
-
-    client->tcp_client->callbacks.on_connect =
-        (co_tcp_connect_fn)co_http2_client_on_tcp_connect_and_upgrade;
-
-    return client->module.connect(
-        client->tcp_client,
-        &client->tcp_client->remote_net_addr);
 }
 
 co_http2_stream_t*
