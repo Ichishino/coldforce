@@ -340,6 +340,7 @@
     <ClCompile Include="..\..\..\src\http\co_http_response.c" />
     <ClCompile Include="..\..\..\src\http\co_http_server.c" />
     <ClCompile Include="..\..\..\src\http\co_http_string_list.c" />
+    <ClCompile Include="..\..\..\src\http\co_http_sync.c" />
     <ClCompile Include="..\..\..\src\http\co_http_url.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug_static|Win32'">NotUsing</PrecompiledHeader>

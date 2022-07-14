@@ -311,8 +311,6 @@ int main(int argc, char* argv[])
 //    co_tls_log_set_level(CO_LOG_LEVEL_MAX);
 //    co_tcp_log_set_level(CO_LOG_LEVEL_MAX);
 
-    co_tls_setup();
-
     my_app app = { 0 };
 
     co_net_app_init(
@@ -326,8 +324,6 @@ int main(int argc, char* argv[])
 
     co_net_app_cleanup((co_app_t*)&app);
 
-    co_tls_cleanup();
-
     return exit_code;
 }
 
@@ -337,9 +333,6 @@ int main(int argc, char* argv[])
 {
     (void)argc;
     (void)argv;
-
-    co_tls_setup();
-    co_tls_cleanup();
 
     return 0;
 }
