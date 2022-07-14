@@ -98,7 +98,7 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t
 }
 
 // create app
-bool on_my_app_create(my_app* self, const co_arg_st* arg)
+bool on_my_app_create(my_app* self)
 {
     uint16_t port = 8080;
 
@@ -128,10 +128,17 @@ int main(int argc, char* argv[])
     co_net_app_init(
         (co_app_t*)&app,
         (co_app_create_fn)on_my_app_create,
-        (co_app_destroy_fn)on_my_app_destroy);
+        (co_app_destroy_fn)on_my_app_destroy,
+        argc, argv);
 
-    return co_net_app_start((co_app_t*)&app, argc, argv);
+    // run
+    co_app_run((co_app_t*)&app);
+
+    co_net_app_cleanup((co_app_t*)&app);
+
+    return 0;
 }
 ```
 
 * [more examples here](https://github.com/Ichishino/coldforce/tree/master/examples)
+
