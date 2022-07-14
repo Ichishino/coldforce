@@ -19,4 +19,4 @@ typedef struct
 
 } my_server_app;
 
-void init_my_server_app(my_server_app* server_app);
+int my_server_run(int argc, char** argv);

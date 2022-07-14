@@ -324,6 +324,11 @@ co_ws_client_create(
     co_tls_ctx_st* tls_ctx
 )
 {
+    if (base_url == NULL)
+    {
+        return NULL;
+    }
+
     co_ws_client_t* client =
         (co_ws_client_t*)co_mem_alloc(sizeof(co_ws_client_t));
 

@@ -21,6 +21,11 @@ co_http_url_create(
     const char* str
 )
 {
+    if (str == NULL)
+    {
+        return NULL;
+    }
+
     co_http_url_st* url =
         (co_http_url_st*)co_mem_alloc(sizeof(co_http_url_st));
 

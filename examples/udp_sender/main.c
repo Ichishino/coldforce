@@ -13,7 +13,7 @@ typedef struct
     co_udp_t* udp;
     co_timer_t* send_timer;
     int send_counter;
-    char* peer_ip_address;
+    const char* peer_ip_address;
     uint16_t peer_port;
 
 } my_app;
@@ -39,13 +39,15 @@ void on_my_send_timer(my_app* self, co_timer_t* timer)
     if (self->send_counter == 10)
     {
         co_timer_stop(timer);
-        co_net_app_stop();
+        co_app_stop();
     }
 }
 
-bool on_my_app_create(my_app* self, const co_arg_st* arg)
+bool on_my_app_create(my_app* self)
 {
-    if (arg->argc < 3)
+    const co_args_st* args = co_app_get_args((co_app_t*)self);
+
+    if (args->count < 3)
     {
         printf("<Usage>\n");
         printf("udp_sender <peer_ip_address> <port_number>\n");
@@ -53,8 +55,8 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
         return false;
     }
 
-    self->peer_ip_address = arg->argv[1];
-    self->peer_port = (uint16_t)atoi(arg->argv[2]);
+    self->peer_ip_address = args->values[1];
+    self->peer_port = (uint16_t)atoi(args->values[2]);
 
     // local address
     co_net_addr_t local_net_addr = { 0 };
@@ -89,8 +91,13 @@ int main(int argc, char* argv[])
     co_net_app_init(
         (co_app_t*)&app,
         (co_app_create_fn)on_my_app_create,
-        (co_app_destroy_fn)on_my_app_destroy);
+        (co_app_destroy_fn)on_my_app_destroy,
+        argc, argv);
 
-    // app start
-    return co_net_app_start((co_app_t*)&app, argc, argv);
+    // run
+    int exit_code = co_app_run((co_app_t*)&app);
+
+    co_net_app_cleanup((co_app_t*)&app);
+
+    return exit_code;
 }

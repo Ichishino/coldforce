@@ -41,28 +41,3 @@ co_net_thread_cleanup(
 
     co_thread_cleanup(thread);
 }
-
-bool
-co_net_thread_start(
-    co_thread_t* thread,
-    void* param
-)
-{
-    return co_thread_start(thread, param);
-}
-
-void
-co_net_thread_stop(
-    co_thread_t* thread
-)
-{
-    co_thread_stop(thread);
-}
-
-void
-co_net_thread_wait(
-    co_thread_t* thread
-)
-{
-    co_thread_wait(thread);
-}

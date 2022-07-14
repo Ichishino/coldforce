@@ -25,7 +25,6 @@ struct co_thread_param_st
 {
     co_thread_t* thread;
     co_semaphore_t* semaphore;
-    void* param;
     bool create_result;
 };
 
@@ -50,8 +49,7 @@ co_thread_main(
 
     if (thread->on_create != NULL)
     {
-        create_result =
-            thread->on_create(thread, thread_param->param);
+        create_result = thread->on_create(thread);
 
         if (!create_result)
         {
@@ -161,8 +159,7 @@ co_thread_get_current(
 
 bool
 co_thread_start(
-    co_thread_t* thread,
-    void* param
+    co_thread_t* thread
 )
 {
     thread->parent = co_thread_get_current();
@@ -170,7 +167,6 @@ co_thread_start(
     struct co_thread_param_st thread_param;
     thread_param.thread = thread;
     thread_param.semaphore = co_semaphore_create(0);
-    thread_param.param = param;
 
 #ifdef CO_OS_WIN
     thread->handle = (HANDLE)_beginthreadex(

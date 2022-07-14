@@ -176,7 +176,7 @@ co_http_request_deserialize(
 
 co_http_request_t*
 co_http_request_create(
-void
+    void
 )
 {
     co_http_request_t* request =

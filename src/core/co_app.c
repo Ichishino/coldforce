@@ -26,7 +26,9 @@ co_app_setup(
     co_app_t* app,
     co_app_create_fn create_handler,
     co_app_destroy_fn destroy_handler,
-    co_event_worker_t* event_worker
+    co_event_worker_t* event_worker,
+    int argc,
+    char** argv
 )
 {
     co_assert(current_app == NULL);
@@ -44,6 +46,9 @@ co_app_setup(
     app->main_thread.handle = (co_thread_handle_t*)pthread;
 #endif
 
+    app->args.count = argc;
+    app->args.values = argv;
+
     current_app = app;
     current_thread = (co_thread_t*)app;
 }
@@ -56,11 +61,14 @@ void
 co_app_init(
     co_app_t* app,
     co_app_create_fn create_handler,
-    co_app_destroy_fn destroy_handler
+    co_app_destroy_fn destroy_handler,
+    int argc,
+    char** argv
 )
 {
     co_app_setup(
-        app, create_handler, destroy_handler, NULL);
+        app, create_handler, destroy_handler, NULL,
+        argc, argv);
 }
 
 void
@@ -76,8 +84,7 @@ co_app_cleanup(
 
 int
 co_app_run(
-    co_app_t* app,
-    co_arg_st* arg
+    co_app_t* app
 )
 {
     bool create_result = true;
@@ -85,17 +92,17 @@ co_app_run(
     if (app->main_thread.on_create != NULL)
     {
         create_result =
-            app->main_thread.on_create(app, arg);
+            app->main_thread.on_create((co_thread_t*)app);
     }
 
     if (create_result)
     {
-        co_thread_run(&app->main_thread);
+        co_thread_run((co_thread_t*)app);
     }
 
     if (app->main_thread.on_destroy != NULL)
     {
-        app->main_thread.on_destroy(app);
+        app->main_thread.on_destroy((co_thread_t*)app);
     }
 
     return app->main_thread.exit_code;
@@ -103,16 +110,10 @@ co_app_run(
 
 int
 co_app_start(
-    co_app_t* app,
-    int argc,
-    char** argv
+    co_app_t* app
 )
 {
-    co_arg_st arg = { 0 };
-    arg.argc = argc;
-    arg.argv = argv;
-
-    int exit_code = co_app_run(app, &arg);
+    int exit_code = co_app_run(app);
 
     co_app_cleanup(app);
 
@@ -130,6 +131,14 @@ co_app_stop(
     {
         co_thread_stop(&app->main_thread);
     }
+}
+
+const co_args_st*
+co_app_get_args(
+    const co_app_t* app
+)
+{
+    return &app->args;
 }
 
 co_app_t*

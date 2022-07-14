@@ -67,7 +67,7 @@ void on_my_http2_stop_app_request(
     co_http2_stream_send_data(stream, true, response_content, response_content_size);
 
     // quit app
-    co_net_app_stop();
+    co_app_stop();
 }
 
 void on_my_http2_server_push_request(
@@ -408,9 +408,11 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t
 // app
 //---------------------------------------------------------------------------//
 
-bool on_my_app_create(my_app* self, const co_arg_st* arg)
+bool on_my_app_create(my_app* self)
 {
-    if (arg->argc <= 2)
+    const co_args_st* args = co_app_get_args((co_app_t*)self);
+
+    if (args->count <= 2)
     {
         printf("<Usage>\n");
         printf("http2_server <hostname> <port_number>\n");
@@ -419,9 +421,9 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
         return false;
     }
 
-    self->port = (uint16_t)atoi(arg->argv[2]);
+    self->port = (uint16_t)atoi(args->values[2]);
 
-    sprintf(self->authority, "%s:%d", arg->argv[1], self->port);
+    sprintf(self->authority, "%s:%d", args->values[1], self->port);
 
     // client list
     co_list_ctx_st list_ctx = { 0 };
@@ -528,10 +530,13 @@ int main(int argc, char* argv[])
     co_net_app_init(
         (co_app_t*)&app,
         (co_app_create_fn)on_my_app_create,
-        (co_app_destroy_fn)on_my_app_destroy);
+        (co_app_destroy_fn)on_my_app_destroy,
+        argc, argv);
 
-    // app start
-    int exit_code = co_net_app_start((co_app_t*)&app, argc, argv);
+    // run
+    int exit_code = co_app_run((co_app_t*)&app);
+
+    co_net_app_cleanup((co_app_t*)&app);
 
     co_tls_cleanup();
 

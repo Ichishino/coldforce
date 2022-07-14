@@ -53,7 +53,7 @@ void on_my_http_stop_app_request(my_app* self, co_http_client_t* client)
     co_http_send_data(client, response_content, response_content_size);
 
     // quit app
-    co_net_app_stop();
+    co_app_stop();
 }
 
 void on_my_http_default_request(my_app* self, co_http_client_t* client, const co_http_request_t* request)
@@ -203,9 +203,11 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t
     callbacks->on_close = (co_http_close_fn)on_my_http_close;
 }
 
-bool on_my_app_create(my_app* self, const co_arg_st* arg)
+bool on_my_app_create(my_app* self)
 {
-    if (arg->argc <= 1)
+    const co_args_st* args = co_app_get_args((co_app_t*)self);
+
+    if (args->count <= 1)
     {
         printf("<Usage>\n");
         printf("http_server <port_number>\n");
@@ -213,7 +215,7 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
         return false;
     }
 
-    uint16_t port = (uint16_t)atoi(arg->argv[1]);
+    uint16_t port = (uint16_t)atoi(args->values[1]);
 
     // local address
     co_net_addr_t local_net_addr = { 0 };
@@ -253,10 +255,13 @@ int main(int argc, char* argv[])
     co_net_app_init(
         (co_app_t*)&app,
         (co_app_create_fn)on_my_app_create,
-        (co_app_destroy_fn)on_my_app_destroy);
+        (co_app_destroy_fn)on_my_app_destroy,
+        argc, argv);
 
-    // app start
-    int exit_code = co_net_app_start((co_app_t*)&app, argc, argv);
+    // run
+    int exit_code = co_app_run((co_app_t*)&app);
+
+    co_net_app_cleanup((co_app_t*)&app);
 
     return exit_code;
 }

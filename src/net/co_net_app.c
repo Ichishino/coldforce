@@ -20,7 +20,9 @@ bool
 co_net_app_init(
     co_app_t* app,
     co_app_create_fn create_handler,
-    co_app_destroy_fn destroy_handler
+    co_app_destroy_fn destroy_handler,
+    int argc,
+    char** argv
 )
 {
     if (!co_net_setup())
@@ -34,7 +36,8 @@ co_net_app_init(
 
     co_app_setup(app,
         create_handler, (co_app_destroy_fn)co_net_worker_on_destroy,
-        (co_event_worker_t*)net_worker);
+        (co_event_worker_t*)net_worker,
+        argc, argv);
 
     return true;
 }
@@ -54,28 +57,3 @@ co_net_app_cleanup(
     }
 }
 
-int
-co_net_app_start(
-    co_app_t* app,
-    int argc,
-    char** argv
-)
-{
-    co_arg_st arg = { 0 };
-    arg.argc = argc;
-    arg.argv = argv;
-
-    int exit_code = co_app_run(app, &arg);
-
-    co_net_app_cleanup(app);
-
-    return exit_code;
-}
-
-void
-co_net_app_stop(
-    void
-)
-{
-    co_app_stop();
-}

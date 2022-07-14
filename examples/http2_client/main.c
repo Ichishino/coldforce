@@ -90,7 +90,7 @@ void on_my_receive_finish(
     if (!co_http2_is_running(http2_client))
     {
         // quit app
-        co_net_app_stop();
+        co_app_stop();
     }
 }
 
@@ -102,7 +102,7 @@ void on_my_close(my_app* self, co_http2_client_t* client, int error_code)
     printf("=== close(%d) ===\n", error_code);
 
     // quit app
-    co_net_app_stop();
+    co_app_stop();
 }
 
 void on_my_connect(my_app* self, co_http2_client_t* client, int error_code)
@@ -128,13 +128,15 @@ void on_my_connect(my_app* self, co_http2_client_t* client, int error_code)
         printf("*** connect failed ***\n");
 
         // quit app
-        co_net_app_stop();
+        co_app_stop();
     }
 }
 
-bool on_my_app_create(my_app* self, const co_arg_st* arg)
+bool on_my_app_create(my_app* self)
 {
-    if (arg->argc < 2)
+    const co_args_st* args = co_app_get_args((co_app_t*)self);
+
+    if (args->count < 2)
     {
         printf("<Usage>\n");
         printf("http2_client <url> [save_file_path]\n");
@@ -142,16 +144,16 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
         return false;
     }
 
-    co_http_url_st* url = co_http_url_create(arg->argv[1]);
+    co_http_url_st* url = co_http_url_create(args->values[1]);
 
     self->base_url = co_http_url_create_base_url(url);
     self->path = co_http_url_create_path_and_query(url);
 
     co_http_url_destroy(url);
 
-    if (arg->argc >= 3)
+    if (args->count >= 3)
     {
-        self->save_file_path = arg->argv[2];
+        self->save_file_path = args->values[2];
     }
 
     co_net_addr_t local_net_addr = { 0 };
@@ -217,10 +219,13 @@ int main(int argc, char* argv[])
     co_net_app_init(
         (co_app_t*)&app,
         (co_app_create_fn)on_my_app_create,
-        (co_app_destroy_fn)on_my_app_destroy);
+        (co_app_destroy_fn)on_my_app_destroy,
+        argc, argv);
 
-    // app start
-    int exit_code = co_net_app_start((co_app_t*)&app, argc, argv);
+    // run
+    int exit_code = co_app_run((co_app_t*)&app);
+
+    co_net_app_cleanup((co_app_t*)&app);
 
     co_tls_cleanup();
 

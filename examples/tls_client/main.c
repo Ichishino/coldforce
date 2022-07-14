@@ -14,7 +14,7 @@ typedef struct
     // my app data
     co_tcp_client_t* client;
     co_timer_t* retry_timer;
-    char* server_ip_address;
+    const char* server_ip_address;
     uint16_t server_port;
 
 } my_app;
@@ -50,7 +50,7 @@ void on_my_tls_close(my_app* self, co_tcp_client_t* client)
     self->client = NULL;
 
     // quit app
-    co_net_app_stop();
+    co_app_stop();
 }
 
 void on_my_tls_connect(my_app* self, co_tcp_client_t* client, int error_code)
@@ -110,9 +110,11 @@ void my_connect(my_app* self)
     printf("connect to %s\n", remote_str);
 }
 
-bool on_my_app_create(my_app* self, const co_arg_st* arg)
+bool on_my_app_create(my_app* self)
 {
-    if (arg->argc < 3)
+    const co_args_st* args = co_app_get_args((co_app_t*)self);
+
+    if (args->count < 3)
     {
         printf("<Usage>\n");
         printf("tls_client <server_ip_address> <port_number>\n");
@@ -120,8 +122,8 @@ bool on_my_app_create(my_app* self, const co_arg_st* arg)
         return false;
     }
 
-    self->server_ip_address = arg->argv[1];
-    self->server_port = (uint16_t)atoi(arg->argv[2]);
+    self->server_ip_address = args->values[1];
+    self->server_port = (uint16_t)atoi(args->values[2]);
 
     // connect retry timer
     self->retry_timer = co_timer_create(
@@ -151,12 +153,13 @@ int main(int argc, char* argv[])
     co_net_app_init(
         (co_app_t*)&app,
         (co_app_create_fn)on_my_app_create,
-        (co_app_destroy_fn)on_my_app_destroy);
+        (co_app_destroy_fn)on_my_app_destroy,
+        argc, argv);
 
-    // app start
-    int exit_code = co_net_app_start((co_app_t*)&app, argc, argv);
+    // run
+    int exit_code = co_app_run((co_app_t*)&app);
 
-    co_tls_cleanup();
+    co_net_app_cleanup((co_app_t*)&app);
 
     return exit_code;
 }

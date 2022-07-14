@@ -174,6 +174,16 @@ co_http_get_user_data(
     const co_http_client_t* client
 );
 
+CO_HTTP_API
+co_http_response_t*
+co_http_sync_request(
+    const char* url,
+    co_http_request_t* request,
+    const char* save_file_name,
+    const co_net_addr_t* local_net_addr,
+    co_tls_ctx_st* tls_ctx
+);
+
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 

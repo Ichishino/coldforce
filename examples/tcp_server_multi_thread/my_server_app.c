@@ -38,9 +38,11 @@ void on_my_tcp_accept(my_server_app* self, co_tcp_server_t* server, co_tcp_clien
     co_tcp_client_destroy(client);
 }
 
-bool on_my_server_app_create(my_server_app* self, const co_arg_st* arg)
+bool on_my_server_app_create(my_server_app* self)
 {
-    if (arg->argc <= 1)
+    const co_args_st* args = co_app_get_args((co_app_t*)self);
+
+    if (args->count <= 1)
     {
         printf("<Usage>\n");
         printf("tcp_server_multi_thread <port_number>\n");
@@ -48,7 +50,7 @@ bool on_my_server_app_create(my_server_app* self, const co_arg_st* arg)
         return false;
     }
 
-    uint16_t port = (uint16_t)atoi(arg->argv[1]);
+    uint16_t port = (uint16_t)atoi(args->values[1]);
 
     printf("%d threads\n", THREAD_COUNT);
     printf("max %d clients\n", THREAD_COUNT * MAX_CLIENTS_PER_THREAD);
@@ -59,7 +61,7 @@ bool on_my_server_app_create(my_server_app* self, const co_arg_st* arg)
     for (int i = 0; i < THREAD_COUNT; ++i)
     {
         init_my_client_thread(&self->client_thread[i]);
-        co_net_thread_start((co_thread_t*)&self->client_thread[i], 0);
+        co_thread_start((co_thread_t*)&self->client_thread[i]);
     }
 
     // local address
@@ -92,12 +94,12 @@ void on_my_server_app_destroy(my_server_app* self)
     // stop and cleanup my client threads
     for (int i = 0; i < THREAD_COUNT; ++i)
     {
-        co_net_thread_stop((co_thread_t*)&self->client_thread[i]);
+        co_thread_stop((co_thread_t*)&self->client_thread[i]);
     }
     for (int i = 0; i < THREAD_COUNT; ++i)
     {
-        co_net_thread_wait((co_thread_t*)&self->client_thread[i]);
-        co_net_thread_cleanup((co_thread_t*)&self->client_thread[i]);
+        co_thread_wait((co_thread_t*)&self->client_thread[i]);
+        co_thread_cleanup((co_thread_t*)&self->client_thread[i]);
     }
 
     co_tcp_server_destroy(self->server);
@@ -105,10 +107,19 @@ void on_my_server_app_destroy(my_server_app* self)
     printf("\napp has finished\n");
 }
 
-void init_my_server_app(my_server_app* server_app)
+int my_server_run(int argc, char** argv)
 {
+    my_server_app server_app = { 0 };
+
     co_net_app_init(
-        (co_app_t*)server_app,
+        (co_app_t*)&server_app,
         (co_app_create_fn)on_my_server_app_create,
-        (co_app_destroy_fn)on_my_server_app_destroy);
+        (co_app_destroy_fn)on_my_server_app_destroy,
+        argc, argv);
+
+    int exit_code = co_app_run((co_app_t*)&server_app);
+
+    co_net_app_cleanup((co_app_t*)&server_app);
+
+    return exit_code;
 }
