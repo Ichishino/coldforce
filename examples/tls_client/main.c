@@ -169,9 +169,6 @@ int main(int argc, char* argv[])
     (void)argc;
     (void)argv;
 
-    co_tls_setup();
-    co_tls_cleanup();
-
     return 0;
 }
 
