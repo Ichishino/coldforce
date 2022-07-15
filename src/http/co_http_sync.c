@@ -18,8 +18,7 @@
 
 typedef struct
 {
-    co_thread_t base;
-    co_semaphore_t* sem;
+    co_thread_t thread;
 
     char* base_url;
     co_net_addr_t local_net_addr;
@@ -128,8 +127,6 @@ co_http_thread_on_create(
         return false;
     }
 
-    self->tls_ctx = NULL;
-
     co_http_callbacks_st* callbacks =
         co_http_get_callbacks(self->client);
 
@@ -156,9 +153,7 @@ co_http_thread_on_destroy(
 {
     co_http_request_destroy(self->request);
     co_http_client_destroy(self->client);
-
     co_string_destroy(self->base_url);
-    co_semaphore_post(self->sem);
 
     if (self->fp != NULL)
     {
@@ -196,8 +191,6 @@ co_http_sync_request(
         co_http_request_set_version(request, CO_HTTP_VERSION_1_1);
     }
 
-    http_thread.sem = co_semaphore_create(0);
-
     if (local_net_addr != NULL)
     {
         memcpy(&http_thread.local_net_addr,
@@ -220,9 +213,6 @@ co_http_sync_request(
 
     // thread start
     co_thread_start((co_thread_t*)&http_thread);
-
-    co_semaphore_wait(http_thread.sem, CO_INFINITE);
-    co_semaphore_destroy(http_thread.sem);
 
     // wait
     co_thread_wait((co_thread_t*)&http_thread);

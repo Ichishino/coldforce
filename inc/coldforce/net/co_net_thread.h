@@ -19,7 +19,7 @@ CO_EXTERN_C_BEGIN
 //---------------------------------------------------------------------------//
 
 CO_NET_API
-void
+bool
 co_net_thread_init(
     co_thread_t* thread,
     co_thread_create_fn create_handler,
