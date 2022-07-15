@@ -27,7 +27,7 @@ typedef struct
         printf("%s: %s\n", str, remote_str); \
     } while(0)
 
-void on_my_ws_receive(my_app* self, co_ws_client_t* client, const co_ws_frame_t* frame, int error_code)
+void on_my_ws_receive_frame(my_app* self, co_ws_client_t* client, const co_ws_frame_t* frame, int error_code)
 {
     my_client_log(ws, client, "receive");
 
@@ -88,7 +88,7 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t
 
     // callback
     co_ws_callbacks_st* callbacks = co_ws_get_callbacks(ws_client);
-    callbacks->on_receive = (co_ws_receive_fn)on_my_ws_receive;
+    callbacks->on_receive_frame = (co_ws_receive_frame_fn)on_my_ws_receive_frame;
     callbacks->on_close = (co_ws_close_fn)on_my_ws_close;
 
     co_list_add_tail(self->clients, ws_client);

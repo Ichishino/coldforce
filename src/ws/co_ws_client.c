@@ -61,9 +61,8 @@ co_ws_client_setup(
     client->conn.request_queue = NULL;
     client->conn.receive_timer = NULL;
 
-    client->callbacks.on_connect = NULL;
-    client->callbacks.on_upgrade = NULL;
-    client->callbacks.on_receive = NULL;
+    client->callbacks.on_handshake = NULL;
+    client->callbacks.on_receive_frame = NULL;
     client->callbacks.on_close = NULL;
 
     client->upgrade.request = NULL;
@@ -113,9 +112,9 @@ co_ws_client_on_frame(
             CO_WS_CLOSE_REASON_PROTOCOL_ERROR, NULL);
     }
 
-    if (client->callbacks.on_receive != NULL)
+    if (client->callbacks.on_receive_frame != NULL)
     {
-        client->callbacks.on_receive(
+        client->callbacks.on_receive_frame(
             thread, client, frame, error_code);
     }
 
@@ -168,12 +167,63 @@ co_ws_client_on_connect(
         co_http_request_destroy(client->upgrade.request);
         client->upgrade.request = NULL;
 
-        if (client->callbacks.on_connect != NULL)
+        if (client->callbacks.on_handshake != NULL)
         {
-            client->callbacks.on_connect(
+            client->callbacks.on_handshake(
                 thread, client, NULL, error_code);
         }
     }
+}
+
+static bool
+co_ws_client_on_receive_http_response(
+    co_thread_t* thread,
+    co_ws_client_t* client
+)
+{
+    co_http_response_t* response = co_http_response_create();
+
+    int result =
+        co_http_response_deserialize(response,
+            client->conn.receive_data.ptr,
+            &client->conn.receive_data.index);
+
+    if (result == CO_HTTP_PARSE_MORE_DATA)
+    {
+        co_http_response_destroy(response);
+
+        return true;
+    }
+    else if (result != CO_HTTP_PARSE_COMPLETE)
+    {
+        co_http_response_destroy(response);
+
+        return false;
+    }
+
+    co_http_log_debug_response_header(
+        &client->conn.tcp_client->sock.local_net_addr,
+        "<--",
+        &client->conn.tcp_client->remote_net_addr,
+        response,
+        "http receive response");
+
+    if (client->callbacks.on_handshake == NULL)
+    {
+        co_http_response_destroy(response);
+
+        return false;
+    }
+
+    co_ws_handshake_fn handler = client->callbacks.on_handshake;
+    client->callbacks.on_handshake = NULL;
+
+    handler(thread, client,
+        (co_http_message_t*)response, 0);
+
+    co_http_response_destroy(response);
+
+    return true;
 }
 
 void
@@ -243,52 +293,26 @@ co_ws_client_on_receive_ready(
         {
             co_ws_frame_destroy(frame);
 
-            if (client->callbacks.on_connect != NULL)
+            if (co_ws_client_on_receive_http_response(thread, client))
             {
-                co_http_response_t* response = co_http_response_create();
-
-                if (co_http_response_deserialize(response,
-                    client->conn.receive_data.ptr,
-                    &client->conn.receive_data.index) ==
-                    CO_HTTP_PARSE_COMPLETE)
+                if (client->conn.tcp_client != NULL)
                 {
-                    co_http_log_debug_response_header(
-                        &client->conn.tcp_client->sock.local_net_addr,
-                        "<--",
-                        &client->conn.tcp_client->remote_net_addr,
-                        response,
-                        "http receive response");
-
-                    co_ws_log_info(
-                        &client->conn.tcp_client->sock.local_net_addr,
-                        "<--",
-                        &client->conn.tcp_client->remote_net_addr,
-                        "ws receive upgrade response");
-
-                    client->callbacks.on_connect(thread, client, response, 0);
-
-                    co_http_response_destroy(response);
-
-                    if (client->conn.tcp_client == NULL)
-                    {
-                        return;
-                    }
-
                     continue;
                 }
-                else
-                {
-                    co_http_response_destroy(response);
-
-                    client->callbacks.on_connect(
-                        thread, client, NULL, CO_WS_ERROR_INVALID_RESPONSE);
-
-                    return;
-                }
             }
+            else if (client->callbacks.on_handshake != NULL)
+            {
+                co_ws_handshake_fn handler = client->callbacks.on_handshake;
+                client->callbacks.on_handshake = NULL;
 
-            co_ws_client_on_frame(
-                thread, client, NULL, result);
+                handler(thread, client,
+                    NULL, CO_WS_ERROR_INVALID_RESPONSE);
+            }
+            else
+            {
+                co_ws_client_on_frame(
+                    thread, client, NULL, result);
+            }
 
             return;
         }
@@ -500,7 +524,7 @@ co_ws_get_callbacks(
 }
 
 bool
-co_ws_connect(
+co_ws_start_handshake(
     co_ws_client_t* client,
     co_http_request_t* upgrade_request
 )

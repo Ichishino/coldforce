@@ -18,6 +18,68 @@
 // private
 //---------------------------------------------------------------------------//
 
+static bool
+co_ws_server_on_receive_http_request(
+    co_thread_t* thread,
+    co_ws_client_t* client
+)
+{
+    co_http_request_t* request = co_http_request_create();
+
+    int result =
+        co_http_request_deserialize(request,
+            client->conn.receive_data.ptr,
+            &client->conn.receive_data.index);
+
+    if (result == CO_HTTP_PARSE_MORE_DATA)
+    {
+        co_http_request_destroy(request);
+
+        return true;
+    }
+    else if (result != CO_HTTP_PARSE_COMPLETE)
+    {
+        co_http_request_destroy(request);
+
+        return false;
+    }
+
+    co_http_log_debug_request_header(
+        &client->conn.tcp_client->sock.local_net_addr,
+        "<--",
+        &client->conn.tcp_client->remote_net_addr,
+        request,
+        "http receive request");
+
+    if (client->callbacks.on_handshake != NULL)
+    {
+        client->callbacks.on_handshake(
+            thread, client, (co_http_message_t*)request, 0);
+
+        co_http_request_destroy(request);
+
+        return true;
+    }
+    else
+    {
+        if (co_http_request_validate_ws_upgrade(request))
+        {
+            co_http_response_t* response =
+                co_http_response_create_ws_upgrade(
+                    request, NULL, NULL);
+
+            co_http_connection_send_response(
+                (co_http_connection_t*)client, response);
+
+            co_http_request_destroy(request);
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void
 co_ws_server_on_receive_ready(
     co_thread_t* thread,
@@ -85,61 +147,18 @@ co_ws_server_on_receive_ready(
         {
             co_ws_frame_destroy(frame);
 
-            co_http_request_t* request = co_http_request_create();
-
-            if (co_http_request_deserialize(request,
-                client->conn.receive_data.ptr,
-                &client->conn.receive_data.index) ==
-                CO_HTTP_PARSE_COMPLETE)
+            if (co_ws_server_on_receive_http_request(thread, client))
             {
-                co_http_log_debug_request_header(
-                    &client->conn.tcp_client->sock.local_net_addr,
-                    "<--",
-                    &client->conn.tcp_client->remote_net_addr,
-                    request,
-                    "http receive request");
-
-                if (co_http_request_validate_ws_upgrade(request))
+                if (client->conn.tcp_client != NULL)
                 {
-                    co_ws_log_info(
-                        &client->conn.tcp_client->sock.local_net_addr,
-                        "<--",
-                        &client->conn.tcp_client->remote_net_addr,
-                        "ws receive upgrade request");
-
-                    if (client->callbacks.on_upgrade != NULL)
-                    {
-                        client->callbacks.on_upgrade(
-                            client->conn.tcp_client->sock.owner_thread,
-                            client, request);
-
-                        co_http_request_destroy(request);
-
-                        if (client->conn.tcp_client == NULL)
-                        {
-                            return;
-                        }
-                    }
-                    else
-                    {
-                        co_http_response_t* response =
-                            co_http_response_create_ws_upgrade(
-                                request, NULL, NULL);
-
-                        co_http_connection_send_response(
-                            (co_http_connection_t*)client, response);
-
-                        co_http_request_destroy(request);
-                    }
-
                     continue;
                 }
             }
-
-            co_http_request_destroy(request);
-
-            co_ws_client_on_frame(
-                thread, client, NULL, result);
+            else
+            {
+                co_ws_client_on_frame(
+                    thread, client, NULL, result);
+            }
 
             return;
         }
