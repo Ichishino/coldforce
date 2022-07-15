@@ -179,12 +179,15 @@ co_http_sync_request(
     co_http_url_st* http_url = co_http_url_create(url);
 
     http_thread.base_url = co_http_url_create_base_url(http_url);
-    char* path = co_http_url_create_path_and_query(http_url);
+
+    if (co_http_request_get_path(request) == NULL)
+    {
+        char* path = co_http_url_create_path_and_query(http_url);
+        co_http_request_set_path(request, path);
+        co_string_destroy(path);
+    }
 
     co_http_url_destroy(http_url);
-
-    co_http_request_set_path(request, path);
-    co_string_destroy(path);
 
     if (co_http_request_get_version(request) == NULL)
     {
