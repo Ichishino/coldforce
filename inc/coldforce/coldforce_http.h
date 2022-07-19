@@ -22,6 +22,7 @@
 #include <coldforce/http/co_http_log.h>
 #include <coldforce/http/co_base64.h>
 #include <coldforce/http/co_sha1.h>
+#include <coldforce/http/co_md5.h>
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

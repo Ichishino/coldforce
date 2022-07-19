@@ -796,24 +796,19 @@ co_http2_connect(
     co_http2_client_t* client
 )
 {
+    co_http2_log_info(
+        &client->conn.tcp_client->sock.local_net_addr,
+        "-->",
+        &client->conn.tcp_client->remote_net_addr,
+        "http2 connect start (%s)",
+        client->conn.base_url->src);
+
     client->conn.tcp_client->callbacks.on_connect =
         (co_tcp_connect_fn)co_http2_client_on_tcp_connect;
 
-    bool result = client->conn.module.connect(
+    return client->conn.module.connect(
         client->conn.tcp_client,
         &client->conn.tcp_client->remote_net_addr);
-
-    if (result)
-    {
-        co_http2_log_info(
-            &client->conn.tcp_client->sock.local_net_addr,
-            "-->",
-            &client->conn.tcp_client->remote_net_addr,
-            "http2 connect start (%s)",
-            client->conn.base_url->src);
-    }
-
-    return result;
 }
 
 void
