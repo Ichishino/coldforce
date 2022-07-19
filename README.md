@@ -45,62 +45,98 @@ $ make
 cmake (same way as Linux)
 
 ### Code Examples
-* simple http server -> http://127.0.0.1:8080
+* websocket echo server -> ws://127.0.0.1:8080
 ```C++
 #include <coldforce.h>
 
-// app object
 typedef struct {
     co_app_t base_app;
     co_tcp_server_t* server;
+    co_list_t* clients;
 } my_app;
 
-// receive request
-void on_my_http_request(my_app* self, co_http_client_t* client,
-    const co_http_request_t* request, const co_http_response_t* unused, int error_code)
+void on_my_ws_receive_frame(
+    my_app* self, co_ws_client_t* client,
+    const co_ws_frame_t* frame, int error_code)
 {
     if (error_code == 0)
     {
-        co_http_response_t* response = co_http_response_create_with(200, "OK");
-        co_http_header_t* response_header = co_http_response_get_header(response);
+        bool fin = co_ws_frame_get_fin(frame);
+        uint8_t opcode = co_ws_frame_get_opcode(frame);
+        size_t data_size = (size_t)co_ws_frame_get_payload_size(frame);
+        const uint8_t* data = co_ws_frame_get_payload_data(frame);
 
-        co_http_header_add_field(response_header, "Content-Type", "text/html");
+        switch (opcode)
+        {
+        case CO_WS_OPCODE_TEXT:
+        case CO_WS_OPCODE_BINARY:
+        case CO_WS_OPCODE_CONTINUATION:
+        {
+            co_ws_send(client, fin, opcode, data, data_size);
 
-        const char* response_content =
-            "<!DOCTYPE html><html><body>Hello</body></html>";
-        uint32_t response_content_size = (uint32_t)strlen(response_content);
+            break;
+        }
+        default:
+        {
+            co_ws_default_handler(client, frame);
 
-        co_http_header_set_content_length(response_header, response_content_size);
-
-        // response
-        co_http_send_response(client, response);
-        co_http_send_data(client, response_content, response_content_size);
+            break;
+        }
+        }
     }
-
-    co_http_client_destroy(client);
+    else
+    {
+        co_list_remove(self->clients, client);
+    }
 }
 
-// close
-void on_my_http_close(my_app* self, co_http_client_t* client)
+void on_my_ws_close(
+    my_app* self, co_ws_client_t* client)
 {
-    co_http_client_destroy(client);
+    co_list_remove(self->clients, client);
 }
 
-// accept
-void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t* tcp_client)
+void on_my_handshake(
+    my_app* self, co_ws_client_t* client,
+    const co_http_request_t* request, int unused)
+{
+    if (co_http_request_validate_ws_upgrade(request))
+    {
+        co_http_response_t* response =
+            co_http_response_create_ws_upgrade(
+                request, NULL, NULL);
+        co_http_connection_send_response(
+            (co_http_connection_t*)client, response);
+    }
+    else
+    {
+        co_list_remove(self->clients, client);
+    }
+}
+
+void on_my_tcp_accept(
+    my_app* self, co_tcp_server_t* tcp_server,
+    co_tcp_client_t* tcp_client)
 {
     co_tcp_accept((co_thread_t*)self, tcp_client);
 
-    co_http_client_t* client = co_http_client_create_with(tcp_client);
-    co_http_callbacks_st* callbacks = co_http_get_callbacks(client);
-    callbacks->on_receive_finish = (co_http_receive_finish_fn)on_my_http_request;
-    callbacks->on_close = (co_http_close_fn)on_my_http_close;
+    co_ws_client_t* ws_client = co_ws_client_create_with(tcp_client);
+
+    co_ws_callbacks_st* callbacks = co_ws_get_callbacks(ws_client);
+    callbacks->on_handshake = (co_ws_handshake_fn)on_my_handshake;
+    callbacks->on_receive_frame = (co_ws_receive_frame_fn)on_my_ws_receive_frame;
+    callbacks->on_close = (co_ws_close_fn)on_my_ws_close;
+
+    co_list_add_tail(self->clients, ws_client);
 }
 
-// create app
 bool on_my_app_create(my_app* self)
 {
     uint16_t port = 8080;
+
+    co_list_ctx_st list_ctx = { 0 };
+    list_ctx.destroy_value = (co_item_destroy_fn)co_ws_client_destroy;
+    self->clients = co_list_create(&list_ctx);
 
     co_net_addr_t local_net_addr = { 0 };
     co_net_addr_set_family(&local_net_addr, CO_ADDRESS_FAMILY_IPV4);
@@ -108,16 +144,18 @@ bool on_my_app_create(my_app* self)
 
     self->server = co_tcp_server_create(&local_net_addr);
 
+    co_socket_option_set_reuse_addr(
+        co_tcp_server_get_socket(self->server), true);
+
     co_tcp_server_callbacks_st* callbacks = co_tcp_server_get_callbacks(self->server);
     callbacks->on_accept = (co_tcp_accept_fn)on_my_tcp_accept;
 
-    // listen
     return co_tcp_server_start(self->server, SOMAXCONN);
 }
 
-// destroy app
 void on_my_app_destroy(my_app* self)
 {
+    co_list_destroy(self->clients);
     co_tcp_server_destroy(self->server);
 }
 
@@ -131,12 +169,11 @@ int main(int argc, char* argv[])
         (co_app_destroy_fn)on_my_app_destroy,
         argc, argv);
 
-    // run
-    co_app_run((co_app_t*)&app);
+    int exit_code = co_app_run((co_app_t*)&app);
 
     co_net_app_cleanup((co_app_t*)&app);
 
-    return 0;
+    return exit_code;
 }
 ```
 

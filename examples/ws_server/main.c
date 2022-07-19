@@ -35,7 +35,7 @@ void on_my_ws_receive_frame(my_app* self, co_ws_client_t* client, const co_ws_fr
         case CO_WS_OPCODE_CONTINUATION:
         {
             // echo
-            co_ws_send(client, fin, opcode, data, (size_t)data_size);
+            co_ws_send(client, fin, opcode, data, data_size);
 
             break;
         }
