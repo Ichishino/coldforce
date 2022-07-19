@@ -36,8 +36,7 @@ CO_WS_API
 bool
 co_http_response_validate_ws_upgrade(
     const co_http_response_t* response,
-    const co_ws_client_t* client,
-    bool* upgrade_result
+    const co_ws_client_t* client
 );
 
 CO_WS_API

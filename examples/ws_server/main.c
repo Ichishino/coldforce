@@ -1,7 +1,3 @@
-#ifdef _WIN32
-#define _CRT_SECURE_NO_WARNINGS
-#endif
-
 #include <coldforce.h>
 
 #include <stdio.h>
@@ -19,20 +15,12 @@ typedef struct
 
 } my_app;
 
-#define my_client_log(protocol, client, str) \
-    do { \
-        char remote_str[64]; \
-        co_net_addr_to_string( \
-            co_##protocol##_get_remote_net_addr(client), remote_str, sizeof(remote_str)); \
-        printf("%s: %s\n", str, remote_str); \
-    } while(0)
-
 void on_my_ws_receive_frame(my_app* self, co_ws_client_t* client, const co_ws_frame_t* frame, int error_code)
 {
-    my_client_log(ws, client, "receive");
-
     if (error_code == 0)
     {
+        printf("receive frame\n");
+
         bool fin = co_ws_frame_get_fin(frame);
         uint8_t opcode = co_ws_frame_get_opcode(frame);
         size_t data_size = (size_t)co_ws_frame_get_payload_size(frame);
@@ -61,7 +49,7 @@ void on_my_ws_receive_frame(my_app* self, co_ws_client_t* client, const co_ws_fr
     }
     else
     {
-        my_client_log(ws, client, "close (received invalid data)");
+        printf("received invalid data\n");
 
         // close
         co_list_remove(self->clients, client);
@@ -70,16 +58,38 @@ void on_my_ws_receive_frame(my_app* self, co_ws_client_t* client, const co_ws_fr
 
 void on_my_ws_close(my_app* self, co_ws_client_t* client)
 {
-    my_client_log(ws, client, "close");
+    printf("closed\n");
 
     co_list_remove(self->clients, client);
+}
+
+void on_my_handshake(my_app* self, co_ws_client_t* client, const co_http_request_t* request, int unused)
+{
+    (void)unused;
+
+    if (co_http_request_validate_ws_upgrade(request))
+    {
+        printf("receive handshake request\n");
+
+        co_http_response_t* response =
+            co_http_response_create_ws_upgrade(
+                request, NULL, NULL);
+        co_http_connection_send_response(
+            (co_http_connection_t*)client, response);
+    }
+    else
+    {
+        printf("receive invalid data\n");
+
+        co_list_remove(self->clients, client);
+    }
 }
 
 void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t* tcp_client)
 {
     (void)tcp_server;
 
-    my_client_log(tcp, tcp_client, "accept");
+    printf("accept\n");
 
     co_tcp_accept((co_thread_t*)self, tcp_client);
 
@@ -88,6 +98,7 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t
 
     // callback
     co_ws_callbacks_st* callbacks = co_ws_get_callbacks(ws_client);
+    callbacks->on_handshake = (co_ws_handshake_fn)on_my_handshake;
     callbacks->on_receive_frame = (co_ws_receive_frame_fn)on_my_ws_receive_frame;
     callbacks->on_close = (co_ws_close_fn)on_my_ws_close;
 

@@ -176,8 +176,7 @@ co_http_request_validate_ws_upgrade(
 bool
 co_http_response_validate_ws_upgrade(
     const co_http_response_t* response,
-    const co_ws_client_t* client,
-    bool* upgrade_result
+    const co_ws_client_t* client
 )
 {
     const co_http_header_t* header =
@@ -240,9 +239,7 @@ co_http_response_validate_ws_upgrade(
     uint16_t status_code =
         co_http_response_get_status_code(response);
 
-    *upgrade_result = (status_code == 101) ? true : false;
-
-    return true;
+    return (status_code == 101) ? true : false;
 }
 
 co_http_request_t*

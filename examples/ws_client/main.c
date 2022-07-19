@@ -77,31 +77,22 @@ void on_my_ws_close(my_app* self, co_ws_client_t* client)
 
 void on_my_handshake(my_app* self, co_ws_client_t* client, const co_http_response_t* response, int error_code)
 {
-    printf("receive handshake(upgrade) response: %d\n", error_code);
+    printf("receive handshake response: %d\n", error_code);
 
     if (error_code == 0)
     {
-        bool upgrade_result = false;
-
-        if (co_http_response_validate_ws_upgrade(response, client, &upgrade_result))
+        if (co_http_response_validate_ws_upgrade(response, client))
         {
-            if (upgrade_result)
-            {
-                printf("upgrade success\n");
+            printf("handshake success\n");
 
-                // send
-                co_ws_send_text(client, "hello");
+            // send
+            co_ws_send_text(client, "hello");
 
-                return;
-            }
-            else
-            {
-                printf("upgrade refused\n");
-            }
+            return;
         }
         else
         {
-            printf("invalid upgrade response\n");
+            printf("handshake failed\n");
         }
     }
     else
