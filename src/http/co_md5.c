@@ -13,14 +13,6 @@
 // private
 //---------------------------------------------------------------------------//
 
-typedef struct
-{
-    uint32_t state[4];
-    uint32_t count[2];
-    uint8_t buffer[64];
-
-} co_md5_context_t;
-
 #define F(x, y, z)		((z) ^ ((x) & ((y) ^ (z))))
 #define G(x, y, z)		((y) ^ ((z) & ((x) ^ (y))))
 #define H(x, y, z)		(((x) ^ (y)) ^ (z))
@@ -47,9 +39,9 @@ typedef struct
 
 static const void*
 co_md5_transform(
-    co_md5_context_t* ctx,
-    const uint8_t* buffer,
-    uint32_t size
+    co_md5_ctx_t* ctx,
+    const uint8_t* data,
+    uint32_t data_size
 )
 {
     uint32_t a = ctx->state[0];
@@ -66,95 +58,115 @@ co_md5_transform(
 
         uint32_t block[16];
 
-        CO_MD5_ROUND(F, a, b, c, d, SET(block, buffer, 0), 0xd76aa478, 7);
-        CO_MD5_ROUND(F, d, a, b, c, SET(block, buffer, 1), 0xe8c7b756, 12);
-        CO_MD5_ROUND(F, c, d, a, b, SET(block, buffer, 2), 0x242070db, 17);
-        CO_MD5_ROUND(F, b, c, d, a, SET(block, buffer, 3), 0xc1bdceee, 22);
-        CO_MD5_ROUND(F, a, b, c, d, SET(block, buffer, 4), 0xf57c0faf, 7);
-        CO_MD5_ROUND(F, d, a, b, c, SET(block, buffer, 5), 0x4787c62a, 12);
-        CO_MD5_ROUND(F, c, d, a, b, SET(block, buffer, 6), 0xa8304613, 17);
-        CO_MD5_ROUND(F, b, c, d, a, SET(block, buffer, 7), 0xfd469501, 22);
-        CO_MD5_ROUND(F, a, b, c, d, SET(block, buffer, 8), 0x698098d8, 7);
-        CO_MD5_ROUND(F, d, a, b, c, SET(block, buffer, 9), 0x8b44f7af, 12);
-        CO_MD5_ROUND(F, c, d, a, b, SET(block, buffer, 10), 0xffff5bb1, 17);
-        CO_MD5_ROUND(F, b, c, d, a, SET(block, buffer, 11), 0x895cd7be, 22);
-        CO_MD5_ROUND(F, a, b, c, d, SET(block, buffer, 12), 0x6b901122, 7);
-        CO_MD5_ROUND(F, d, a, b, c, SET(block, buffer, 13), 0xfd987193, 12);
-        CO_MD5_ROUND(F, c, d, a, b, SET(block, buffer, 14), 0xa679438e, 17);
-        CO_MD5_ROUND(F, b, c, d, a, SET(block, buffer, 15), 0x49b40821, 22);
+        CO_MD5_ROUND(F, a, b, c, d, SET(block, data, 0), 0xd76aa478, 7);
+        CO_MD5_ROUND(F, d, a, b, c, SET(block, data, 1), 0xe8c7b756, 12);
+        CO_MD5_ROUND(F, c, d, a, b, SET(block, data, 2), 0x242070db, 17);
+        CO_MD5_ROUND(F, b, c, d, a, SET(block, data, 3), 0xc1bdceee, 22);
+        CO_MD5_ROUND(F, a, b, c, d, SET(block, data, 4), 0xf57c0faf, 7);
+        CO_MD5_ROUND(F, d, a, b, c, SET(block, data, 5), 0x4787c62a, 12);
+        CO_MD5_ROUND(F, c, d, a, b, SET(block, data, 6), 0xa8304613, 17);
+        CO_MD5_ROUND(F, b, c, d, a, SET(block, data, 7), 0xfd469501, 22);
+        CO_MD5_ROUND(F, a, b, c, d, SET(block, data, 8), 0x698098d8, 7);
+        CO_MD5_ROUND(F, d, a, b, c, SET(block, data, 9), 0x8b44f7af, 12);
+        CO_MD5_ROUND(F, c, d, a, b, SET(block, data, 10), 0xffff5bb1, 17);
+        CO_MD5_ROUND(F, b, c, d, a, SET(block, data, 11), 0x895cd7be, 22);
+        CO_MD5_ROUND(F, a, b, c, d, SET(block, data, 12), 0x6b901122, 7);
+        CO_MD5_ROUND(F, d, a, b, c, SET(block, data, 13), 0xfd987193, 12);
+        CO_MD5_ROUND(F, c, d, a, b, SET(block, data, 14), 0xa679438e, 17);
+        CO_MD5_ROUND(F, b, c, d, a, SET(block, data, 15), 0x49b40821, 22);
 
-        CO_MD5_ROUND(G, a, b, c, d, GET(block, buffer, 1), 0xf61e2562, 5);
-        CO_MD5_ROUND(G, d, a, b, c, GET(block, buffer, 6), 0xc040b340, 9);
-        CO_MD5_ROUND(G, c, d, a, b, GET(block, buffer, 11), 0x265e5a51, 14);
-        CO_MD5_ROUND(G, b, c, d, a, GET(block, buffer, 0), 0xe9b6c7aa, 20);
-        CO_MD5_ROUND(G, a, b, c, d, GET(block, buffer, 5), 0xd62f105d, 5);
-        CO_MD5_ROUND(G, d, a, b, c, GET(block, buffer, 10), 0x02441453, 9);
-        CO_MD5_ROUND(G, c, d, a, b, GET(block, buffer, 15), 0xd8a1e681, 14);
-        CO_MD5_ROUND(G, b, c, d, a, GET(block, buffer, 4), 0xe7d3fbc8, 20);
-        CO_MD5_ROUND(G, a, b, c, d, GET(block, buffer, 9), 0x21e1cde6, 5);
-        CO_MD5_ROUND(G, d, a, b, c, GET(block, buffer, 14), 0xc33707d6, 9);
-        CO_MD5_ROUND(G, c, d, a, b, GET(block, buffer, 3), 0xf4d50d87, 14);
-        CO_MD5_ROUND(G, b, c, d, a, GET(block, buffer, 8), 0x455a14ed, 20);
-        CO_MD5_ROUND(G, a, b, c, d, GET(block, buffer, 13), 0xa9e3e905, 5);
-        CO_MD5_ROUND(G, d, a, b, c, GET(block, buffer, 2), 0xfcefa3f8, 9);
-        CO_MD5_ROUND(G, c, d, a, b, GET(block, buffer, 7), 0x676f02d9, 14);
-        CO_MD5_ROUND(G, b, c, d, a, GET(block, buffer, 12), 0x8d2a4c8a, 20);
+        CO_MD5_ROUND(G, a, b, c, d, GET(block, data, 1), 0xf61e2562, 5);
+        CO_MD5_ROUND(G, d, a, b, c, GET(block, data, 6), 0xc040b340, 9);
+        CO_MD5_ROUND(G, c, d, a, b, GET(block, data, 11), 0x265e5a51, 14);
+        CO_MD5_ROUND(G, b, c, d, a, GET(block, data, 0), 0xe9b6c7aa, 20);
+        CO_MD5_ROUND(G, a, b, c, d, GET(block, data, 5), 0xd62f105d, 5);
+        CO_MD5_ROUND(G, d, a, b, c, GET(block, data, 10), 0x02441453, 9);
+        CO_MD5_ROUND(G, c, d, a, b, GET(block, data, 15), 0xd8a1e681, 14);
+        CO_MD5_ROUND(G, b, c, d, a, GET(block, data, 4), 0xe7d3fbc8, 20);
+        CO_MD5_ROUND(G, a, b, c, d, GET(block, data, 9), 0x21e1cde6, 5);
+        CO_MD5_ROUND(G, d, a, b, c, GET(block, data, 14), 0xc33707d6, 9);
+        CO_MD5_ROUND(G, c, d, a, b, GET(block, data, 3), 0xf4d50d87, 14);
+        CO_MD5_ROUND(G, b, c, d, a, GET(block, data, 8), 0x455a14ed, 20);
+        CO_MD5_ROUND(G, a, b, c, d, GET(block, data, 13), 0xa9e3e905, 5);
+        CO_MD5_ROUND(G, d, a, b, c, GET(block, data, 2), 0xfcefa3f8, 9);
+        CO_MD5_ROUND(G, c, d, a, b, GET(block, data, 7), 0x676f02d9, 14);
+        CO_MD5_ROUND(G, b, c, d, a, GET(block, data, 12), 0x8d2a4c8a, 20);
 
-        CO_MD5_ROUND(H, a, b, c, d, GET(block, buffer, 5), 0xfffa3942, 4);
-        CO_MD5_ROUND(H2, d, a, b, c, GET(block, buffer, 8), 0x8771f681, 11);
-        CO_MD5_ROUND(H, c, d, a, b, GET(block, buffer, 11), 0x6d9d6122, 16);
-        CO_MD5_ROUND(H2, b, c, d, a, GET(block, buffer, 14), 0xfde5380c, 23);
-        CO_MD5_ROUND(H, a, b, c, d, GET(block, buffer, 1), 0xa4beea44, 4);
-        CO_MD5_ROUND(H2, d, a, b, c, GET(block, buffer, 4), 0x4bdecfa9, 11);
-        CO_MD5_ROUND(H, c, d, a, b, GET(block, buffer, 7), 0xf6bb4b60, 16);
-        CO_MD5_ROUND(H2, b, c, d, a, GET(block, buffer, 10), 0xbebfbc70, 23);
-        CO_MD5_ROUND(H, a, b, c, d, GET(block, buffer, 13), 0x289b7ec6, 4);
-        CO_MD5_ROUND(H2, d, a, b, c, GET(block, buffer, 0), 0xeaa127fa, 11);
-        CO_MD5_ROUND(H, c, d, a, b, GET(block, buffer, 3), 0xd4ef3085, 16);
-        CO_MD5_ROUND(H2, b, c, d, a, GET(block, buffer, 6), 0x04881d05, 23);
-        CO_MD5_ROUND(H, a, b, c, d, GET(block, buffer, 9), 0xd9d4d039, 4);
-        CO_MD5_ROUND(H2, d, a, b, c, GET(block, buffer, 12), 0xe6db99e5, 11);
-        CO_MD5_ROUND(H, c, d, a, b, GET(block, buffer, 15), 0x1fa27cf8, 16);
-        CO_MD5_ROUND(H2, b, c, d, a, GET(block, buffer, 2), 0xc4ac5665, 23);
+        CO_MD5_ROUND(H, a, b, c, d, GET(block, data, 5), 0xfffa3942, 4);
+        CO_MD5_ROUND(H2, d, a, b, c, GET(block, data, 8), 0x8771f681, 11);
+        CO_MD5_ROUND(H, c, d, a, b, GET(block, data, 11), 0x6d9d6122, 16);
+        CO_MD5_ROUND(H2, b, c, d, a, GET(block, data, 14), 0xfde5380c, 23);
+        CO_MD5_ROUND(H, a, b, c, d, GET(block, data, 1), 0xa4beea44, 4);
+        CO_MD5_ROUND(H2, d, a, b, c, GET(block, data, 4), 0x4bdecfa9, 11);
+        CO_MD5_ROUND(H, c, d, a, b, GET(block, data, 7), 0xf6bb4b60, 16);
+        CO_MD5_ROUND(H2, b, c, d, a, GET(block, data, 10), 0xbebfbc70, 23);
+        CO_MD5_ROUND(H, a, b, c, d, GET(block, data, 13), 0x289b7ec6, 4);
+        CO_MD5_ROUND(H2, d, a, b, c, GET(block, data, 0), 0xeaa127fa, 11);
+        CO_MD5_ROUND(H, c, d, a, b, GET(block, data, 3), 0xd4ef3085, 16);
+        CO_MD5_ROUND(H2, b, c, d, a, GET(block, data, 6), 0x04881d05, 23);
+        CO_MD5_ROUND(H, a, b, c, d, GET(block, data, 9), 0xd9d4d039, 4);
+        CO_MD5_ROUND(H2, d, a, b, c, GET(block, data, 12), 0xe6db99e5, 11);
+        CO_MD5_ROUND(H, c, d, a, b, GET(block, data, 15), 0x1fa27cf8, 16);
+        CO_MD5_ROUND(H2, b, c, d, a, GET(block, data, 2), 0xc4ac5665, 23);
 
-        CO_MD5_ROUND(I, a, b, c, d, GET(block, buffer, 0), 0xf4292244, 6);
-        CO_MD5_ROUND(I, d, a, b, c, GET(block, buffer, 7), 0x432aff97, 10);
-        CO_MD5_ROUND(I, c, d, a, b, GET(block, buffer, 14), 0xab9423a7, 15);
-        CO_MD5_ROUND(I, b, c, d, a, GET(block, buffer, 5), 0xfc93a039, 21);
-        CO_MD5_ROUND(I, a, b, c, d, GET(block, buffer, 12), 0x655b59c3, 6);
-        CO_MD5_ROUND(I, d, a, b, c, GET(block, buffer, 3), 0x8f0ccc92, 10);
-        CO_MD5_ROUND(I, c, d, a, b, GET(block, buffer, 10), 0xffeff47d, 15);
-        CO_MD5_ROUND(I, b, c, d, a, GET(block, buffer, 1), 0x85845dd1, 21);
-        CO_MD5_ROUND(I, a, b, c, d, GET(block, buffer, 8), 0x6fa87e4f, 6);
-        CO_MD5_ROUND(I, d, a, b, c, GET(block, buffer, 15), 0xfe2ce6e0, 10);
-        CO_MD5_ROUND(I, c, d, a, b, GET(block, buffer, 6), 0xa3014314, 15);
-        CO_MD5_ROUND(I, b, c, d, a, GET(block, buffer, 13), 0x4e0811a1, 21);
-        CO_MD5_ROUND(I, a, b, c, d, GET(block, buffer, 4), 0xf7537e82, 6);
-        CO_MD5_ROUND(I, d, a, b, c, GET(block, buffer, 11), 0xbd3af235, 10);
-        CO_MD5_ROUND(I, c, d, a, b, GET(block, buffer, 2), 0x2ad7d2bb, 15);
-        CO_MD5_ROUND(I, b, c, d, a, GET(block, buffer, 9), 0xeb86d391, 21);
+        CO_MD5_ROUND(I, a, b, c, d, GET(block, data, 0), 0xf4292244, 6);
+        CO_MD5_ROUND(I, d, a, b, c, GET(block, data, 7), 0x432aff97, 10);
+        CO_MD5_ROUND(I, c, d, a, b, GET(block, data, 14), 0xab9423a7, 15);
+        CO_MD5_ROUND(I, b, c, d, a, GET(block, data, 5), 0xfc93a039, 21);
+        CO_MD5_ROUND(I, a, b, c, d, GET(block, data, 12), 0x655b59c3, 6);
+        CO_MD5_ROUND(I, d, a, b, c, GET(block, data, 3), 0x8f0ccc92, 10);
+        CO_MD5_ROUND(I, c, d, a, b, GET(block, data, 10), 0xffeff47d, 15);
+        CO_MD5_ROUND(I, b, c, d, a, GET(block, data, 1), 0x85845dd1, 21);
+        CO_MD5_ROUND(I, a, b, c, d, GET(block, data, 8), 0x6fa87e4f, 6);
+        CO_MD5_ROUND(I, d, a, b, c, GET(block, data, 15), 0xfe2ce6e0, 10);
+        CO_MD5_ROUND(I, c, d, a, b, GET(block, data, 6), 0xa3014314, 15);
+        CO_MD5_ROUND(I, b, c, d, a, GET(block, data, 13), 0x4e0811a1, 21);
+        CO_MD5_ROUND(I, a, b, c, d, GET(block, data, 4), 0xf7537e82, 6);
+        CO_MD5_ROUND(I, d, a, b, c, GET(block, data, 11), 0xbd3af235, 10);
+        CO_MD5_ROUND(I, c, d, a, b, GET(block, data, 2), 0x2ad7d2bb, 15);
+        CO_MD5_ROUND(I, b, c, d, a, GET(block, data, 9), 0xeb86d391, 21);
 
         a += saved_a;
         b += saved_b;
         c += saved_c;
         d += saved_d;
 
-        buffer += 64;
+        data += 64;
 
-    } while (size -= 64);
+    } while (data_size -= 64);
 
     ctx->state[0] = a;
     ctx->state[1] = b;
     ctx->state[2] = c;
     ctx->state[3] = d;
 
-    return buffer;
+    return data;
 }
 
-static void
+//---------------------------------------------------------------------------//
+// public
+//---------------------------------------------------------------------------//
+
+void
+co_md5_init(
+    co_md5_ctx_t* ctx
+)
+{
+    ctx->state[0] = 0x67452301;
+    ctx->state[1] = 0xefcdab89;
+    ctx->state[2] = 0x98badcfe;
+    ctx->state[3] = 0x10325476;
+
+    ctx->count[0] = 0;
+    ctx->count[1] = 0;
+
+    memset(ctx->buffer, 0x00, sizeof(ctx->buffer));
+}
+
+void
 co_md5_update(
-    co_md5_context_t* ctx,
-    const uint8_t* data,
+    co_md5_ctx_t* ctx,
+    const void* data,
     uint32_t data_size
 )
 {
@@ -184,7 +196,7 @@ co_md5_update(
 
         memcpy(&ctx->buffer[j], data, i);
 
-        data += i;
+        data = &((const uint8_t*)data)[i];
         data_size -= i;
 
         co_md5_transform(ctx, ctx->buffer, 64);
@@ -200,9 +212,9 @@ co_md5_update(
     memcpy(ctx->buffer, data, data_size);
 }
 
-static void
+void
 co_md5_final(
-    co_md5_context_t* ctx,
+    co_md5_ctx_t* ctx,
     uint8_t* hash
 )
 {
@@ -227,11 +239,11 @@ co_md5_final(
 
     ctx->count[0] <<= 3;
 
-    #define COPY_UINT32(dst, src) \
-        (dst)[0] = (uint8_t)(src); \
-        (dst)[1] = (uint8_t)((src) >> 8); \
-        (dst)[2] = (uint8_t)((src) >> 16); \
-        (dst)[3] = (uint8_t)((src) >> 24);
+#define COPY_UINT32(dst, src) \
+    (dst)[0] = (uint8_t)(src); \
+    (dst)[1] = (uint8_t)((src) >> 8); \
+    (dst)[2] = (uint8_t)((src) >> 16); \
+    (dst)[3] = (uint8_t)((src) >> 24);
 
     COPY_UINT32(&ctx->buffer[56], ctx->count[0]);
     COPY_UINT32(&ctx->buffer[60], ctx->count[1]);
@@ -242,11 +254,9 @@ co_md5_final(
     COPY_UINT32(&hash[4], ctx->state[1]);
     COPY_UINT32(&hash[8], ctx->state[2]);
     COPY_UINT32(&hash[12], ctx->state[3]);
-}
 
-//---------------------------------------------------------------------------//
-// public
-//---------------------------------------------------------------------------//
+#undef COPY_UINT32
+}
 
 void
 co_md5(
@@ -255,10 +265,9 @@ co_md5(
     uint8_t* hash
 )
 {
-    co_md5_context_t ctx =
-    { { 0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476 },
-      { 0 },{ 0 } };
+    co_md5_ctx_t ctx;
 
+    co_md5_init(&ctx);
     co_md5_update(&ctx, data, data_size);
     co_md5_final(&ctx, hash);
 }

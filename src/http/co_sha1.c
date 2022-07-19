@@ -13,14 +13,6 @@
 // private
 //---------------------------------------------------------------------------//
 
-typedef struct
-{
-    uint32_t state[5];
-    uint32_t count[2];
-    uint8_t buffer[64];
-
-} co_sha1_context_t;
-
 #define CO_SHA1_ROL(v, b) \
     (((v) << (b)) | ((v) >> (32 - (b))))
 
@@ -61,7 +53,7 @@ typedef struct
 
 static void
 co_sha1_transform(
-    co_sha1_context_t* ctx,
+    co_sha1_ctx_t* ctx,
     const uint8_t* buffer
 )
 {
@@ -172,10 +164,31 @@ co_sha1_transform(
     ctx->state[4] += e;
 }
 
-static void
+//---------------------------------------------------------------------------//
+// public
+//---------------------------------------------------------------------------//
+
+void
+co_sha1_init(
+    co_sha1_ctx_t* ctx
+)
+{
+    ctx->state[0] = 0x67452301;
+    ctx->state[1] = 0xefcdab89;
+    ctx->state[2] = 0x98badcfe;
+    ctx->state[3] = 0x10325476;
+    ctx->state[4] = 0xc3d2e1f0;
+
+    ctx->count[0] = 0;
+    ctx->count[1] = 0;
+
+    memset(ctx->buffer, 0x00, sizeof(ctx->buffer));
+}
+
+void
 co_sha1_update(
-    co_sha1_context_t* ctx,
-    const uint8_t* data,
+    co_sha1_ctx_t* ctx,
+    const void* data,
     uint32_t data_size
 )
 {
@@ -204,18 +217,20 @@ co_sha1_update(
 
         for (; i + 63 < data_size; i += 64)
         {
-            co_sha1_transform(ctx, &data[i]);
+            co_sha1_transform(
+                ctx, &((const uint8_t*)data)[i]);
         }
 
         j = 0;
     }
 
-    memcpy(&ctx->buffer[j], &data[i], data_size - i);
+    memcpy(&ctx->buffer[j],
+        &((const uint8_t*)data)[i], data_size - i);
 }
 
-static void
+void
 co_sha1_final(
-    co_sha1_context_t* ctx,
+    co_sha1_ctx_t* ctx,
     uint8_t* hash
 )
 {
@@ -248,10 +263,6 @@ co_sha1_final(
     }
 }
 
-//---------------------------------------------------------------------------//
-// public
-//---------------------------------------------------------------------------//
-
 void
 co_sha1(
     const void* data,
@@ -259,10 +270,9 @@ co_sha1(
     uint8_t* hash
 )
 {
-    co_sha1_context_t ctx =
-        { { 0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0  },
-          { 0 },{ 0 } };
+    co_sha1_ctx_t ctx;
 
+    co_sha1_init(&ctx);
     co_sha1_update(&ctx, data, data_size);
     co_sha1_final(&ctx, hash);
 }
