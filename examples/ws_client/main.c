@@ -75,7 +75,7 @@ void on_my_ws_close(my_app* self, co_ws_client_t* client)
     co_app_stop();
 }
 
-void on_my_handshake(my_app* self, co_ws_client_t* client, const co_http_response_t* response, int error_code)
+void on_my_ws_handshake(my_app* self, co_ws_client_t* client, const co_http_response_t* response, int error_code)
 {
     printf("receive handshake response: %d\n", error_code);
 
@@ -141,7 +141,7 @@ bool on_my_app_create(my_app* self)
 
     // callback
     co_ws_callbacks_st* callbacks = co_ws_get_callbacks(self->client);
-    callbacks->on_handshake = (co_ws_handshake_fn)on_my_handshake;
+    callbacks->on_handshake = (co_ws_handshake_fn)on_my_ws_handshake;
     callbacks->on_receive_frame = (co_ws_receive_frame_fn)on_my_ws_receive_frame;
     callbacks->on_close = (co_ws_close_fn)on_my_ws_close;
 

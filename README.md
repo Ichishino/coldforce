@@ -24,12 +24,12 @@ All of these support clients and servers (multi-client, C10K).
 * Use `-pthread` `-lm`
 
 ### Modules
-* co_core - Application core
-* co_net - TCP,UDP
-* co_tls - TLS
-* co_http - HTTP/1.1
-* co_http2 - HTTP/2
-* co_ws - WebSocket
+* Coldforce core : `co_core.dll` `libco_core.a`
+* Network core (TCP,UDP) : `co_net.dll` `libco_net.a`
+* TLS : `co_tls.dll` `libco_tls.a`
+* HTTP/1.1 : `co_http.dll` `libco_http.a`
+* HTTP/2 : `co_http2.dll` `libco_http2.a`
+* WebSocket : `co_ws.dll` `libco_ws.a`
 
 ### Builds
 * Windows  
@@ -45,7 +45,7 @@ $ make
 cmake (same way as Linux)
 
 ### Code Examples
-* websocket echo server -> ws://127.0.0.1:8080
+* WebSocket echo server -> ws://127.0.0.1:8080
 ```C++
 #include <coldforce.h>
 
@@ -96,7 +96,7 @@ void on_my_ws_close(
     co_list_remove(self->clients, client);
 }
 
-void on_my_handshake(
+void on_my_ws_handshake(
     my_app* self, co_ws_client_t* client,
     const co_http_request_t* request, int unused)
 {
@@ -123,7 +123,7 @@ void on_my_tcp_accept(
     co_ws_client_t* ws_client = co_ws_client_create_with(tcp_client);
 
     co_ws_callbacks_st* callbacks = co_ws_get_callbacks(ws_client);
-    callbacks->on_handshake = (co_ws_handshake_fn)on_my_handshake;
+    callbacks->on_handshake = (co_ws_handshake_fn)on_my_ws_handshake;
     callbacks->on_receive_frame = (co_ws_receive_frame_fn)on_my_ws_receive_frame;
     callbacks->on_close = (co_ws_close_fn)on_my_ws_close;
 

@@ -35,7 +35,7 @@ void on_my_ws_receive_frame(my_app* self, co_ws_client_t* client, const co_ws_fr
         case CO_WS_OPCODE_CONTINUATION:
         {
             // echo
-            co_ws_send(client, fin, opcode, data, data_size);
+            co_ws_send(client, fin, opcode, data, (size_t)data_size);
 
             break;
         }
@@ -63,7 +63,7 @@ void on_my_ws_close(my_app* self, co_ws_client_t* client)
     co_list_remove(self->clients, client);
 }
 
-void on_my_handshake(my_app* self, co_ws_client_t* client, const co_http_request_t* request, int unused)
+void on_my_ws_handshake(my_app* self, co_ws_client_t* client, const co_http_request_t* request, int unused)
 {
     (void)unused;
 
@@ -98,7 +98,7 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t
 
     // callback
     co_ws_callbacks_st* callbacks = co_ws_get_callbacks(ws_client);
-    callbacks->on_handshake = (co_ws_handshake_fn)on_my_handshake;
+    callbacks->on_handshake = (co_ws_handshake_fn)on_my_ws_handshake;
     callbacks->on_receive_frame = (co_ws_receive_frame_fn)on_my_ws_receive_frame;
     callbacks->on_close = (co_ws_close_fn)on_my_ws_close;
 
