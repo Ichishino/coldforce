@@ -102,6 +102,49 @@ co_string_trim(
 }
 
 char*
+co_string_wrap_quotes(
+    const char* str,
+    bool double_or_single
+)
+{
+    size_t length = strlen(str) + 3;
+
+    char* dest = (char*)co_mem_alloc(length);
+
+    if (dest != NULL)
+    {
+        strcpy(&dest[1], str);
+
+        const char quote = double_or_single ? '\"' : '\'';
+
+        dest[0] = quote;
+        dest[length - 2] = quote;
+        dest[length - 1] = '\0';
+    }
+
+    return dest;
+}
+
+void
+co_string_trim_quotes(
+    char* str
+)
+{
+    size_t length = strlen(str);
+
+    if (length >= 2)
+    {
+        if ((str[0] == '\"' && str[length - 1] == '\"') ||
+            (str[0] == '\'' && str[length - 1] == '\''))
+        {
+            memmove(str, &str[1], length - 1);
+
+            str[length - 2] = '\0';
+        }
+    }
+}
+
+char*
 co_string_duplicate(
     const char* str
 )
@@ -179,4 +222,30 @@ co_string_find_n(
     }
 
     return (char*)str1;
+}
+
+void
+co_string_hex(
+    const void* binary,
+    size_t size,
+    char* buffer,
+    bool uppercase
+)
+{
+    if (uppercase)
+    {
+        for (size_t index = 0; index < size; ++index)
+        {
+            sprintf(buffer, "%02X", ((const uint8_t*)binary)[index]);
+            buffer += 2;
+        }
+    }
+    else
+    {
+        for (size_t index = 0; index < size; ++index)
+        {
+            sprintf(buffer, "%02x", ((const uint8_t*)binary)[index]);
+            buffer += 2;
+        }
+    }
 }

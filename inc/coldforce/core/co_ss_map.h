@@ -41,7 +41,7 @@ typedef co_map_iterator_t   co_ss_map_iterator_t;
 
 #define co_ss_map_destroy       co_map_destroy
 #define co_ss_map_clear         co_map_clear
-#define co_ss_map_get_size      co_map_get_size
+#define co_ss_map_get_count     co_map_get_count
 
 #define co_ss_map_contains(map, key) \
     co_map_contains(map, (const void*)key)

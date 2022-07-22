@@ -7,8 +7,8 @@
 #include <coldforce/tls/co_tls_client.h>
 
 #include <coldforce/http/co_http_log.h>
+#include <coldforce/http/co_random.h>
 
-#include <coldforce/ws/co_random.h>
 #include <coldforce/ws/co_ws_client.h>
 #include <coldforce/ws/co_ws_http_extension.h>
 #include <coldforce/ws/co_ws_log.h>

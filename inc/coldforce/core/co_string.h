@@ -45,6 +45,19 @@ co_string_trim(
 
 CO_API
 char*
+co_string_wrap_quotes(
+    const char* str,
+    bool double_or_single
+);
+
+CO_API
+void
+co_string_trim_quotes(
+    char* str
+);
+
+CO_API
+char*
 co_string_duplicate(
     const char* str
 );
@@ -62,6 +75,15 @@ co_string_find_n(
     const char* str1,
     const char* str2,
     size_t length
+);
+
+CO_API
+void
+co_string_hex(
+    const void* binary,
+    size_t size,
+    char* buffer,
+    bool uppercase
 );
 
 #define co_string_destroy   co_mem_free

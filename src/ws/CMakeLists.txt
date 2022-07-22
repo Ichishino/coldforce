@@ -4,7 +4,6 @@ project(co_ws C)
 
 add_library(${PROJECT_NAME} STATIC
 
-    co_random.c
     co_ws.c
     co_ws_client.c
     co_ws_config.c

@@ -156,7 +156,7 @@ co_http_request_deserialize(
 
     co_string_destroy(url_str);
 
-    temp_index += (item_length + CO_HTTP_CRLF_LENGTH);
+    temp_index += (item_length + CO_HTTP_CRLF_LENGTH) + (*index);
 
     int result =
         co_http_message_deserialize_header(
@@ -473,3 +473,31 @@ co_http_request_remove_all_cookies(
     co_http_header_remove_all_fields(
         &request->message.header, CO_HTTP_HEADER_COOKIE);
 }
+
+bool
+co_http_request_set_auth(
+    co_http_request_t* request,
+    const char* header_name,
+    const co_http_auth_t* auth
+)
+{
+    char* auth_str =
+        co_http_auth_serialize_request(auth);
+
+    if (auth_str == NULL)
+    {
+        return false;
+    }
+
+    co_http_header_remove_all_fields(
+        &request->message.header,
+        header_name);
+
+    co_http_header_add_field_ptr(
+        &request->message.header,
+        co_string_duplicate(header_name),
+        auth_str);
+
+    return true;
+}
+

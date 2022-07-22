@@ -1,7 +1,7 @@
 #ifndef CO_RANDOM_H_INCLUDED
 #define CO_RANDOM_H_INCLUDED
 
-#include <coldforce/ws/co_ws.h>
+#include <coldforce/http/co_http.h>
 
 CO_EXTERN_C_BEGIN
 
@@ -13,14 +13,21 @@ CO_EXTERN_C_BEGIN
 //---------------------------------------------------------------------------//
 
 //---------------------------------------------------------------------------//
-// private
+// public
 //---------------------------------------------------------------------------//
 
-CO_WS_API
+CO_HTTP_API
 void
 co_random(
     void* buffer,
     size_t data_size
+);
+
+CO_HTTP_API
+void
+co_random_hex_string(
+    char* buffer,
+    size_t length
 );
 
 //---------------------------------------------------------------------------//

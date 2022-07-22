@@ -45,7 +45,7 @@ co_http_string_list_cleanup(
 );
 
 CO_HTTP_API
-const char*
+int
 co_http_string_list_find(
     const co_http_string_item_st* items,
     size_t item_count,

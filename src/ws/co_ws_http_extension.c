@@ -3,10 +3,10 @@
 
 #include <coldforce/http/co_base64.h>
 #include <coldforce/http/co_sha1.h>
+#include <coldforce/http/co_random.h>
 #include <coldforce/http/co_http_string_list.h>
 #include <coldforce/http/co_http_server.h>
 
-#include <coldforce/ws/co_random.h>
 #include <coldforce/ws/co_ws_server.h>
 #include <coldforce/ws/co_ws_client.h>
 #include <coldforce/ws/co_ws_http_extension.h>

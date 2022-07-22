@@ -12,6 +12,7 @@
 #include <coldforce/http/co_http_config.h>
 #include <coldforce/http/co_http_url.h>
 #include <coldforce/http/co_http_string_list.h>
+#include <coldforce/http/co_http_auth.h>
 #include <coldforce/http/co_http_cookie.h>
 #include <coldforce/http/co_http_header.h>
 #include <coldforce/http/co_http_request.h>

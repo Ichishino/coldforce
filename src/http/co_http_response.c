@@ -123,7 +123,7 @@ co_http_response_deserialize(
     response->status_code = (uint16_t)status_code;
     response->reason_phrase = reason_phrase;
 
-    temp_index += (item_length + CO_HTTP_CRLF_LENGTH);
+    temp_index += (item_length + CO_HTTP_CRLF_LENGTH) + (*index);
 
     int result =
         co_http_message_deserialize_header(
@@ -374,4 +374,31 @@ co_http_response_remove_all_cookies(
 {
     co_http_header_remove_all_fields(
         &response->message.header, CO_HTTP_HEADER_SET_COOKIE);
+}
+
+bool
+co_http_response_set_auth(
+    co_http_response_t* response,
+    const char* header_name,
+    const co_http_auth_t* auth
+)
+{
+    char* auth_str =
+        co_http_auth_serialize_request(auth);
+
+    if (auth_str == NULL)
+    {
+        return false;
+    }
+
+    co_http_header_remove_all_fields(
+        &response->message.header,
+        header_name);
+
+    co_http_header_add_field_ptr(
+        &response->message.header,
+        co_string_duplicate(header_name),
+        auth_str);
+
+    return true;
 }

@@ -1,6 +1,7 @@
 #include <coldforce/core/co_std.h>
+#include <coldforce/core/co_string.h>
 
-#include <coldforce/ws/co_random.h>
+#include <coldforce/http/co_random.h>
 
 #ifdef CO_OS_WIN
 #include <windows.h>
@@ -11,6 +12,10 @@
 //---------------------------------------------------------------------------//
 
 //---------------------------------------------------------------------------//
+//---------------------------------------------------------------------------//
+
+//---------------------------------------------------------------------------//
+// public
 //---------------------------------------------------------------------------//
 
 void
@@ -30,4 +35,20 @@ co_random(
         ((uint8_t*)buffer)[index] = (uint8_t)(random() % 256);
     }
 #endif
+}
+
+void
+co_random_hex_string(
+    char* buffer,
+    size_t length
+)
+{
+    size_t bin_size = length / 2 + 1;
+    uint8_t* bin =
+        (uint8_t*)co_mem_alloc(bin_size);
+    co_random(bin, bin_size);
+    co_string_hex(bin, bin_size, buffer, false);
+    co_mem_free(bin);
+
+    buffer[length] = '\0';
 }

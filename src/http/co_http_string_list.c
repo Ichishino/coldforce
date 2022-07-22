@@ -14,6 +14,48 @@
 // public
 //---------------------------------------------------------------------------//
 
+static size_t
+co_http_string_cspn(
+    const char* str,
+    const char* delimiters
+)
+{
+    size_t del_count = strlen(delimiters);
+
+    bool quoted1 = false;
+    bool quoted2 = false;
+
+    const char* ptr = str;
+
+    while ((*ptr) != '\0')
+    {
+        if (!quoted2 && (*ptr) == '\"')
+        {
+            quoted1 = !quoted1;
+        }
+
+        if (!quoted1 && (*ptr) == '\'')
+        {
+            quoted2 = !quoted2;
+        }
+
+        if (!quoted1 && !quoted2)
+        {
+            for (size_t i = 0; i < del_count; ++i)
+            {
+                if ((*ptr) == delimiters[i])
+                {
+                    return (size_t)(ptr - str);
+                }
+            }
+        }
+
+        ++ptr;
+    }
+
+    return (size_t)(ptr - str);
+}
+
 size_t
 co_http_string_list_parse(
     const char* str,
@@ -21,13 +63,13 @@ co_http_string_list_parse(
     size_t count
 )
 {
-    static const char* delimiter = ";&,";
+    static const char* delimiter = ";&, ";
 
     size_t index = 0;
 
     while (((*str) != '\0') && (index < count))
     {
-        size_t length = strcspn(str, delimiter);
+        size_t length = co_http_string_cspn(str, delimiter);
 
         if (length == 0)
         {
@@ -50,6 +92,9 @@ co_http_string_list_parse(
 
             co_string_trim(items[index].first, first_length);
             co_string_trim(items[index].second, second_length);
+
+            co_string_trim_quotes(items[index].first);
+            co_string_trim_quotes(items[index].second);
         }
         else
         {
@@ -58,6 +103,8 @@ co_http_string_list_parse(
             items[index].second = NULL;
 
             co_string_trim(items[index].first, length);
+
+            co_string_trim_quotes(items[index].first);
         }
 
         str += length;
@@ -83,7 +130,7 @@ co_http_string_list_cleanup(
     }
 }
 
-const char*
+int
 co_http_string_list_find(
     const co_http_string_item_st* items,
     size_t item_count,
@@ -92,13 +139,14 @@ co_http_string_list_find(
 {
     for (size_t index = 0; index < item_count; ++index)
     {
-        if (co_string_case_compare(items[index].first, first) == 0)
+        if (items[index].first != NULL &&
+            co_string_case_compare(items[index].first, first) == 0)
         {
-            return items[index].second;
+            return (int)index;
         }
     }
 
-    return NULL;
+    return -1;
 }
 
 bool
@@ -110,7 +158,8 @@ co_http_string_list_contains(
 {
     for (size_t index = 0; index < item_count; ++index)
     {
-        if (co_string_case_compare(items[index].first, first) == 0)
+        if (items[index].first != NULL &&
+            co_string_case_compare(items[index].first, first) == 0)
         {
             return true;
         }

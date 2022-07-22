@@ -55,6 +55,8 @@ CO_EXTERN_C_BEGIN
 #define CO_HTTP_HEADER_COOKIE               "Cookie"
 #define CO_HTTP_HEADER_CONNECTION           "Connection"
 #define CO_HTTP_HEADER_UPGRADE              "Upgrade"
+#define CO_HTTP_HEADER_AUTHORIZATION        "Authorization"
+#define CO_HTTP_HEADER_WWW_AUTHENTICATE     "WWW-Authenticate"
 
 #define CO_HTTP_TRANSFER_ENCODING_CHUNKED   "chunked"
 

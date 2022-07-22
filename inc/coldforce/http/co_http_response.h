@@ -3,6 +3,7 @@
 
 #include <coldforce/http/co_http.h>
 #include <coldforce/http/co_http_message.h>
+#include <coldforce/http/co_http_auth.h>
 
 CO_EXTERN_C_BEGIN
 
@@ -13,7 +14,7 @@ CO_EXTERN_C_BEGIN
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-typedef struct
+typedef struct co_http_response_t
 {
     co_http_message_t message;
 
@@ -155,6 +156,14 @@ CO_HTTP_API
 void
 co_http_response_remove_all_cookies(
     co_http_response_t* response
+);
+
+CO_HTTP_API
+bool
+co_http_response_set_auth(
+    co_http_response_t* response,
+    const char* header_name,
+    const co_http_auth_t* auth
 );
 
 //---------------------------------------------------------------------------//
