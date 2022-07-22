@@ -303,6 +303,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\src\http\co_base64.c" />
     <ClCompile Include="..\..\..\src\http\co_http.c" />
+    <ClCompile Include="..\..\..\src\http\co_http_auth.c" />
     <ClCompile Include="..\..\..\src\http\co_http_client.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug_static|Win32'">NotUsing</PrecompiledHeader>
@@ -368,12 +369,14 @@
       <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='Release_static|x64'">$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
     </ClCompile>
     <ClCompile Include="..\..\..\src\http\co_md5.c" />
+    <ClCompile Include="..\..\..\src\http\co_random.c" />
     <ClCompile Include="..\..\..\src\http\co_sha1.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\inc\coldforce\coldforce_http.h" />
     <ClInclude Include="..\..\..\inc\coldforce\http\co_base64.h" />
     <ClInclude Include="..\..\..\inc\coldforce\http\co_http.h" />
+    <ClInclude Include="..\..\..\inc\coldforce\http\co_http_auth.h" />
     <ClInclude Include="..\..\..\inc\coldforce\http\co_http_client.h" />
     <ClInclude Include="..\..\..\inc\coldforce\http\co_http_config.h" />
     <ClInclude Include="..\..\..\inc\coldforce\http\co_http_connection.h" />
@@ -388,6 +391,7 @@
     <ClInclude Include="..\..\..\inc\coldforce\http\co_http_string_list.h" />
     <ClInclude Include="..\..\..\inc\coldforce\http\co_http_url.h" />
     <ClInclude Include="..\..\..\inc\coldforce\http\co_md5.h" />
+    <ClInclude Include="..\..\..\inc\coldforce\http\co_random.h" />
     <ClInclude Include="..\..\..\inc\coldforce\http\co_sha1.h" />
   </ItemGroup>
   <ItemGroup>

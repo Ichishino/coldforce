@@ -35,7 +35,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\src\ws\co_random.c" />
     <ClCompile Include="..\..\..\src\ws\co_ws.c" />
     <ClCompile Include="..\..\..\src\ws\co_ws_client.c" />
     <ClCompile Include="..\..\..\src\ws\co_ws_config.c" />
@@ -46,7 +45,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\inc\coldforce\coldforce_ws.h" />
-    <ClInclude Include="..\..\..\inc\coldforce\ws\co_random.h" />
     <ClInclude Include="..\..\..\inc\coldforce\ws\co_ws.h" />
     <ClInclude Include="..\..\..\inc\coldforce\ws\co_ws_client.h" />
     <ClInclude Include="..\..\..\inc\coldforce\ws\co_ws_config.h" />
