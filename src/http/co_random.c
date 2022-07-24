@@ -43,7 +43,13 @@ co_random_hex_string(
     size_t length
 )
 {
-    size_t bin_size = length / 2 + 1;
+    size_t bin_size = length / 2;
+
+    if (length % 2)
+    {
+        bin_size += 1;
+    }
+
     uint8_t* bin =
         (uint8_t*)co_mem_alloc(bin_size);
     co_random(bin, bin_size);

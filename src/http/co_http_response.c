@@ -384,7 +384,7 @@ co_http_response_set_auth(
 )
 {
     char* auth_str =
-        co_http_auth_serialize_request(auth);
+        co_http_auth_serialize_response(auth);
 
     if (auth_str == NULL)
     {

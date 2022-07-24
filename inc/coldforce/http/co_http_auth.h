@@ -7,6 +7,7 @@
 
 CO_EXTERN_C_BEGIN
 
+struct co_http_request_t;
 struct co_http_response_t;
 
 //---------------------------------------------------------------------------//
@@ -56,29 +57,6 @@ co_http_auth_deserialize_response(
 //---------------------------------------------------------------------------//
 
 CO_HTTP_API
-char*
-co_http_auth_create_basic_credentials(
-    const char* user,
-    const char* password
-);
-
-CO_HTTP_API
-bool
-co_http_auth_parse_basic_credentials(
-    const char* credentials,
-    char** user,
-    char** password
-);
-
-CO_HTTP_API
-char*
-co_http_auth_create_digest_credentials(
-    const char* user,
-    const char* password,
-    const co_http_auth_t* response_auth
-);
-
-CO_HTTP_API
 co_http_auth_t*
 co_http_auth_create(
     void
@@ -86,20 +64,9 @@ co_http_auth_create(
 
 CO_HTTP_API
 co_http_auth_t*
-co_http_auth_create_basic_request(
-    const char* credentials
-);
-
-CO_HTTP_API
-co_http_auth_t*
-co_http_auth_create_digest_request(
-    const char* method,
-    const char* path,
-    const char* user,
-    const char* credentials,
-    const char* cnonce,
-    uint32_t nc,
-    const co_http_auth_t* response_auth
+co_http_auth_create_request(
+    const char* header_name,
+    const struct co_http_request_t* request
 );
 
 CO_HTTP_API
@@ -130,42 +97,139 @@ co_http_auth_get_scheme(
 
 CO_HTTP_API
 void
-co_http_auth_set_method(
-    co_http_auth_t* auth,
-    const char* method
-);
-
-CO_HTTP_API
-const char*
-co_http_auth_get_method(
-    const co_http_auth_t* auth
-);
-
-CO_HTTP_API
-void
-co_http_auth_set_value(
+co_http_auth_set_item(
     co_http_auth_t* auth,
     const char* name,
     const char* value
 );
 
 CO_HTTP_API
-const void*
-co_http_auth_get_value(
+const char*
+co_http_auth_get_item(
     const co_http_auth_t* auth,
     const char* name
 );
 
+//---------------------------------------------------------------------------//
+// basic auth
+//---------------------------------------------------------------------------//
+
+CO_HTTP_API
+co_http_auth_t*
+co_http_basic_auth_create_request(
+    const char* user,
+    const char* password
+);
+
+CO_HTTP_API
+co_http_auth_t*
+co_http_basic_auth_create_response(
+    const char* realm
+);
+
+CO_HTTP_API
+bool
+co_http_basic_auth_get_credentials(
+    const co_http_auth_t* auth,
+    char** user,
+    char** password
+);
+
+//---------------------------------------------------------------------------//
+// digest auth
+//---------------------------------------------------------------------------//
+
+CO_HTTP_API
+co_http_auth_t*
+co_http_digest_auth_create_request(
+    const char* user,
+    const char* password,
+    const co_http_auth_t* response_auth
+);
+
+CO_HTTP_API
+co_http_auth_t*
+co_http_digest_auth_create_response(
+    const char* realm,
+    const char* nonce,
+    const char* opaque
+);
+
+CO_HTTP_API
+bool
+co_http_digest_auth_validate(
+    const co_http_auth_t* request_auth,
+    const char* method,
+    const char* path,
+    const char* realm,
+    const char* user,
+    const char* password,
+    const char* nonce,
+    uint32_t nc
+);
+
 CO_HTTP_API
 void
-co_http_auth_set_credentials(
+co_http_digest_auth_set_method(
     co_http_auth_t* auth,
-    const char* credentials
+    const char* method
 );
 
 CO_HTTP_API
 const char*
-co_http_auth_get_credentials(
+co_http_digest_auth_get_method(
+    const co_http_auth_t* auth
+);
+
+CO_HTTP_API
+void
+co_http_digest_auth_set_path(
+    co_http_auth_t* auth,
+    const char* path
+);
+
+CO_HTTP_API
+const char*
+co_http_digest_auth_get_path(
+    const co_http_auth_t* auth
+);
+
+CO_HTTP_API
+void
+co_http_digest_auth_set_user(
+    co_http_auth_t* auth,
+    const char* user
+);
+
+CO_HTTP_API
+const char*
+co_http_digest_auth_get_user(
+    const co_http_auth_t* auth
+);
+
+CO_HTTP_API
+void
+co_http_digest_auth_set_count(
+    co_http_auth_t* auth,
+    uint32_t count
+);
+
+CO_HTTP_API
+uint32_t
+co_http_digest_auth_get_count(
+    const co_http_auth_t* auth
+);
+
+CO_HTTP_API
+void
+co_http_digest_auth_set_opaque(
+    co_http_auth_t* auth,
+    const char* opaque
+);
+
+CO_HTTP_API
+const char*
+co_http_digest_auth_get_opaque(
     const co_http_auth_t* auth
 );
 
