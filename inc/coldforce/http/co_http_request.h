@@ -177,10 +177,10 @@ co_http_request_remove_all_cookies(
 
 CO_HTTP_API
 bool
-co_http_request_set_auth(
+co_http_request_apply_auth(
     co_http_request_t* request,
     const char* header_name,
-    const co_http_auth_t* auth
+    co_http_auth_t* auth
 );
 
 //---------------------------------------------------------------------------//

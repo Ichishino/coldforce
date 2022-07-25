@@ -160,10 +160,10 @@ co_http_response_remove_all_cookies(
 
 CO_HTTP_API
 bool
-co_http_response_set_auth(
+co_http_response_apply_auth(
     co_http_response_t* response,
     const char* header_name,
-    const co_http_auth_t* auth
+    co_http_auth_t* auth
 );
 
 //---------------------------------------------------------------------------//

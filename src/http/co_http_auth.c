@@ -156,6 +156,13 @@ co_http_auth_serialize_request(
     }
     else if (co_string_case_compare(auth->scheme, "Digest") == 0)
     {
+        if (auth->method == NULL)
+        {
+            co_byte_array_destroy(buffer);
+
+            return NULL;
+        }
+
         static const char* digest_names[] = {
             "qop", "nc", "algorithm", "stale", NULL
         };
@@ -382,6 +389,7 @@ co_http_auth_create(
     auth->scheme = NULL;
     auth->method = NULL;
     auth->credentials = NULL;
+    auth->nc = 0;
 
     co_map_ctx_st ctx = CO_SS_MAP_CTX;
 
@@ -702,8 +710,8 @@ co_http_digest_auth_create_request(
     co_http_auth_set_item(auth, "qop", "auth");
     co_http_auth_set_item(auth, "algorithm", algorithm);
 
-    char cnonce[32+1];
-    co_random_hex_string(cnonce, 32);
+    char cnonce[16+1];
+    co_random_hex_string(cnonce, 16);
     co_http_auth_set_item(auth, "cnonce", cnonce);
 
     const char* opaque =

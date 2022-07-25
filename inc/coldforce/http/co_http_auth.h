@@ -22,6 +22,7 @@ typedef struct
     char* scheme;
     char* method;
     char* credentials;
+    uint32_t nc;
     co_map_t* items;
 
 } co_http_auth_t;

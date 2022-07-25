@@ -77,9 +77,10 @@ co_http_header_serialize(
             (const co_http_header_field_t*)list_data->value;
 
         co_byte_array_add_string(buffer, field->name);
-        co_byte_array_add_string(buffer, CO_HTTP_COLON);
+        co_byte_array_add(buffer, CO_HTTP_COLON, 1);
+        co_byte_array_add(buffer, " ", 1);
         co_byte_array_add_string(buffer, field->value);
-        co_byte_array_add_string(buffer, CO_HTTP_CRLF);
+        co_byte_array_add(buffer, CO_HTTP_CRLF, 2);
     }
 }
 

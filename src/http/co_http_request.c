@@ -23,12 +23,7 @@ co_http_request_serialize(
 {
     co_byte_array_add_string(buffer, request->method);
     co_byte_array_add_string(buffer, CO_HTTP_SP);
-    co_byte_array_add_string(buffer, request->url->path);
-
-    if (request->url->query != NULL)
-    {
-        co_byte_array_add_string(buffer, request->url->query);
-    }
+    co_byte_array_add_string(buffer, request->url->src);
     
     co_byte_array_add_string(buffer, CO_HTTP_SP);
     co_byte_array_add_string(buffer, request->version);
@@ -475,12 +470,19 @@ co_http_request_remove_all_cookies(
 }
 
 bool
-co_http_request_set_auth(
+co_http_request_apply_auth(
     co_http_request_t* request,
     const char* header_name,
-    const co_http_auth_t* auth
+    co_http_auth_t* auth
 )
 {
+    if (co_string_case_compare(auth->scheme, "Digest") == 0)
+    {
+        co_http_digest_auth_set_method(auth, request->method);
+        co_http_digest_auth_set_path(auth, request->url->src);
+        co_http_digest_auth_set_count(auth, ++auth->nc);
+    }
+
     char* auth_str =
         co_http_auth_serialize_request(auth);
 

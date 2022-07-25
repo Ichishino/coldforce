@@ -128,17 +128,15 @@ co_http_client_on_resopnse(
     co_list_data_st* data =
         co_list_get_head(client->conn.request_queue);
 
-    co_assert(data != NULL);
-    co_assert(
-        client->request == NULL ||
-        client->request == (co_http_request_t*)data->value);
+    if (error_code == 0 && data != NULL)
+    {
+        client->request = (co_http_request_t*)data->value;
+        co_list_remove_head(client->conn.request_queue);
+    }
 
-    client->request = (co_http_request_t*)data->value;
-
-    co_list_remove_head(client->conn.request_queue);
-
-    if ((client->conn.receive_timer != NULL) &&
-        (co_list_get_count(client->conn.request_queue) == 0 || error_code != 0))
+    if ((error_code != 0) ||
+        ((client->conn.receive_timer != NULL) &&
+            (co_list_get_count(client->conn.request_queue) == 0)))
     {
         co_timer_stop(client->conn.receive_timer);
     }
