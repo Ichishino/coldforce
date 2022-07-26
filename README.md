@@ -3,7 +3,7 @@ Coldforce
 [![Build](https://github.com/Ichishino/coldforce/actions/workflows/build.yml/badge.svg)](https://github.com/Ichishino/coldforce/actions/workflows/build.yml)
 
 Coldforce is a library written in C that supports various network protocols.  
-With the asynchronous API of this framework
+With the asynchronous API of this library
 You can easily create event-driven network applications.  
 The currently supported protocols are as follows.
 All of these support clients and servers (multi-client, C10K).
