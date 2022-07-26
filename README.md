@@ -2,16 +2,16 @@ Coldforce
 ========
 [![Build](https://github.com/Ichishino/coldforce/actions/workflows/build.yml/badge.svg)](https://github.com/Ichishino/coldforce/actions/workflows/build.yml)
 
-Coldforce is a framework written in C that supports various network protocols.  
+Coldforce is a library written in C that supports various network protocols.  
 With the asynchronous API of this framework
 You can easily create event-driven network applications.  
 The currently supported protocols are as follows.
 All of these support clients and servers (multi-client, C10K).
-* TCP/UDP
+* TCP/UDP (IPv4/IPv6)
 * TLS
-* HTTP/1.1
+* HTTP/1.1 (http/https, pipelining, Basic/Digest authentication)
 * HTTP/2
-* WebSocket
+* WebSocket (ws/wss)
 
 ### Platforms
 * Windows
