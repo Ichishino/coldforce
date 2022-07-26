@@ -62,7 +62,7 @@ typedef struct {
 
 void on_my_ws_receive_frame(
     my_app* self, co_ws_client_t* client,
-     const co_ws_frame_t* frame, int error_code)
+    const co_ws_frame_t* frame, int error_code)
 {
     if (error_code == 0)
     {
@@ -116,7 +116,7 @@ void on_my_ws_close(
 
 void on_my_ws_upgrade(
     my_app* self, co_ws_client_t* client,
-     const co_http_response_t* response, int error_code)
+    const co_http_response_t* response, int error_code)
 {
     if (error_code == 0)
     {
@@ -133,7 +133,7 @@ void on_my_ws_upgrade(
 
 void on_my_ws_connect(
     my_app* self, co_ws_client_t* client,
-     int error_code)
+    int error_code)
 {
     if (error_code == 0)
     {
