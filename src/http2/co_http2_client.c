@@ -60,7 +60,6 @@ co_http2_client_setup(
     client->conn.tcp_client->sock.sub_class = client;
     client->conn.receive_data.index = 0;
     client->conn.receive_data.ptr = co_byte_array_create();
-    client->conn.request_queue = NULL;
     client->conn.receive_timer = NULL;
 
     client->callbacks.on_connect = NULL;

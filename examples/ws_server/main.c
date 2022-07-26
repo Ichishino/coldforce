@@ -63,23 +63,24 @@ void on_my_ws_close(my_app* self, co_ws_client_t* client)
     co_list_remove(self->clients, client);
 }
 
-void on_my_ws_handshake(my_app* self, co_ws_client_t* client, const co_http_request_t* request, int unused)
+void on_my_ws_upgrade(my_app* self, co_ws_client_t* client, const co_http_request_t* request, int error_code)
 {
-    (void)unused;
-
-    if (co_http_request_validate_ws_upgrade(request))
+    if (error_code == 0)
     {
-        printf("receive handshake request\n");
+        printf("receive upgrade request\n");
 
         co_http_response_t* response =
             co_http_response_create_ws_upgrade(
                 request, NULL, NULL);
+
         co_http_connection_send_response(
             (co_http_connection_t*)client, response);
+
+        co_http_response_destroy(response);
     }
     else
     {
-        printf("receive invalid data\n");
+        printf("receive invalid upgrade request\n");
 
         co_list_remove(self->clients, client);
     }
@@ -98,7 +99,7 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t
 
     // callback
     co_ws_callbacks_st* callbacks = co_ws_get_callbacks(ws_client);
-    callbacks->on_handshake = (co_ws_handshake_fn)on_my_ws_handshake;
+    callbacks->on_upgrade = (co_ws_upgrade_fn)on_my_ws_upgrade;
     callbacks->on_receive_frame = (co_ws_receive_frame_fn)on_my_ws_receive_frame;
     callbacks->on_close = (co_ws_close_fn)on_my_ws_close;
 

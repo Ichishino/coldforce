@@ -64,6 +64,7 @@ typedef struct co_http_client_t
     co_http_connection_t conn;
     co_http_callbacks_st callbacks;
 
+    co_list_t* request_queue;
     co_http_content_receiver_t content_receiver;
 
     co_http_request_t* request;

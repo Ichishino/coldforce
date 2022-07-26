@@ -223,8 +223,15 @@ co_http_send_response(
     co_http_response_t* response
 )
 {
-    return co_http_connection_send_response(
+    bool result = co_http_connection_send_response(
         &client->conn, response);
+
+    if (result)
+    {
+        co_http_response_destroy(response);
+    }
+
+    return result;
 }
 
 bool

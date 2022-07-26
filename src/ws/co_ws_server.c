@@ -26,18 +26,18 @@ co_ws_server_on_receive_http_request(
 {
     co_http_request_t* request = co_http_request_create();
 
-    int result =
+    int parse_result =
         co_http_request_deserialize(request,
             client->conn.receive_data.ptr,
             &client->conn.receive_data.index);
 
-    if (result == CO_HTTP_PARSE_MORE_DATA)
+    if (parse_result == CO_HTTP_PARSE_MORE_DATA)
     {
         co_http_request_destroy(request);
 
         return true;
     }
-    else if (result != CO_HTTP_PARSE_COMPLETE)
+    else if (parse_result != CO_HTTP_PARSE_COMPLETE)
     {
         co_http_request_destroy(request);
 
@@ -51,18 +51,20 @@ co_ws_server_on_receive_http_request(
         request,
         "http receive request");
 
-    if (client->callbacks.on_handshake != NULL)
+    bool result = co_http_request_validate_ws_upgrade(request);
+
+    if (client->callbacks.on_upgrade != NULL)
     {
-        client->callbacks.on_handshake(
-            thread, client, (co_http_message_t*)request, 0);
+        co_ws_upgrade_fn handler = client->callbacks.on_upgrade;
+        client->callbacks.on_upgrade = NULL;
 
-        co_http_request_destroy(request);
-
-        return true;
+        handler(thread, client,
+            (const co_http_message_t*)request,
+            result ? 0 : CO_WS_ERROR_INVALID_UPGRADE);
     }
     else
     {
-        if (co_http_request_validate_ws_upgrade(request))
+        if (result)
         {
             co_http_response_t* response =
                 co_http_response_create_ws_upgrade(
@@ -71,13 +73,13 @@ co_ws_server_on_receive_http_request(
             co_http_connection_send_response(
                 (co_http_connection_t*)client, response);
 
-            co_http_request_destroy(request);
-
-            return true;
+            co_http_response_destroy(response);
         }
     }
 
-    return false;
+    co_http_request_destroy(request);
+
+    return result;
 }
 
 void

@@ -102,6 +102,8 @@ co_http2_server_on_upgrade_request(
     co_http_connection_send_response(
         (co_http_connection_t*)client, response);
 
+    co_http_response_destroy(response);
+
     co_http2_send_initial_settings(client);
 
     return true;

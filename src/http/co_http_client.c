@@ -56,8 +56,6 @@ co_http_client_setup(
     client->conn.receive_data.ptr = co_byte_array_create();
     client->conn.tcp_client->sock.sub_class = client;
 
-    client->conn.request_queue = co_list_create(NULL);
-
     uint32_t msec = co_http_config_get_max_receive_wait_time();
     client->conn.receive_timer = co_timer_create(
         msec, (co_timer_fn)co_http_client_on_receive_timer, false, client);
@@ -67,6 +65,8 @@ co_http_client_setup(
     client->callbacks.on_receive_start = NULL;
     client->callbacks.on_receive_finish = NULL;
     client->callbacks.on_receive_data = NULL;
+
+    client->request_queue = co_list_create(NULL);
 
     co_http_content_receiver_setup(&client->content_receiver);
 
@@ -87,8 +87,8 @@ co_http_client_cleanup(
         co_timer_destroy(client->conn.receive_timer);
         client->conn.receive_timer = NULL;
 
-        co_list_destroy(client->conn.request_queue);
-        client->conn.request_queue = NULL;
+        co_list_destroy(client->request_queue);
+        client->request_queue = NULL;
 
         co_http_content_receiver_cleanup(&client->content_receiver);
 
@@ -106,16 +106,16 @@ co_http_client_clear_request_queue(
 )
 {
     co_list_iterator_t* receive_it =
-        co_list_get_head_iterator(client->conn.request_queue);
+        co_list_get_head_iterator(client->request_queue);
 
     while (receive_it != NULL)
     {
         co_http_request_destroy(
             (co_http_request_t*)co_list_get_next(
-                client->conn.request_queue, &receive_it)->value);
+                client->request_queue, &receive_it)->value);
     }
 
-    co_list_clear(client->conn.request_queue);
+    co_list_clear(client->request_queue);
 }
 
 static void
@@ -126,17 +126,17 @@ co_http_client_on_resopnse(
 )
 {
     co_list_data_st* data =
-        co_list_get_head(client->conn.request_queue);
+        co_list_get_head(client->request_queue);
 
     if (error_code == 0 && data != NULL)
     {
         client->request = (co_http_request_t*)data->value;
-        co_list_remove_head(client->conn.request_queue);
+        co_list_remove_head(client->request_queue);
     }
 
     if ((error_code != 0) ||
         ((client->conn.receive_timer != NULL) &&
-            (co_list_get_count(client->conn.request_queue) == 0)))
+            (co_list_get_count(client->request_queue) == 0)))
     {
         co_timer_stop(client->conn.receive_timer);
     }
@@ -230,7 +230,7 @@ co_http_client_on_receive_ready(
 
     while (data_size > client->conn.receive_data.index)
     {
-        if (co_list_get_count(client->conn.request_queue) == 0)
+        if (co_list_get_count(client->request_queue) == 0)
         {
             break;
         }
@@ -238,7 +238,7 @@ co_http_client_on_receive_ready(
         if (client->response == NULL)
         {
             co_list_data_st* data =
-                co_list_get_head(client->conn.request_queue);
+                co_list_get_head(client->request_queue);
             client->request = (co_http_request_t*)data->value;
             client->response = co_http_response_create();
 
@@ -340,7 +340,7 @@ co_http_client_on_receive_ready(
         }
     }
 
-    if (co_list_get_count(client->conn.request_queue) == 0)
+    if (co_list_get_count(client->request_queue) == 0)
     {
         client->conn.receive_data.index = 0;
         co_byte_array_clear(client->conn.receive_data.ptr);
@@ -575,8 +575,16 @@ co_http_send_request(
     co_http_request_t* request
 )
 {    
-    return co_http_connection_send_request(
-        &client->conn, request);
+    bool result =
+        co_http_connection_send_request(
+            &client->conn, request);
+
+    if (result)
+    {
+        co_list_add_tail(client->request_queue, request);
+    }
+
+    return result;
 }
 
 bool
@@ -602,7 +610,7 @@ co_http_is_running(
 )
 {
     return (client != NULL && client->conn.tcp_client != NULL &&
-        co_list_get_count(client->conn.request_queue) > 0);
+        co_list_get_count(client->request_queue) > 0);
 }
 
 const co_net_addr_t*

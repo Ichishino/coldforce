@@ -17,7 +17,11 @@ CO_EXTERN_C_BEGIN
 
 struct co_ws_client_t;
 
-typedef void(*co_ws_handshake_fn)(
+typedef void(*co_ws_connect_fn)(
+    co_thread_t* self, struct co_ws_client_t*,
+    int error_code);
+
+typedef void(*co_ws_upgrade_fn)(
     co_thread_t* self, struct co_ws_client_t*,
     const co_http_message_t* request_or_response,
     int error_code);
@@ -30,7 +34,8 @@ typedef void(*co_ws_close_fn)(
 
 typedef struct
 {
-    co_ws_handshake_fn on_handshake;
+    co_ws_connect_fn on_connect;
+    co_ws_upgrade_fn on_upgrade;
     co_ws_receive_frame_fn on_receive_frame;
     co_ws_close_fn on_close;
 
@@ -40,13 +45,7 @@ typedef struct co_ws_client_t
 {
     co_http_connection_t conn;
     co_ws_callbacks_st callbacks;
-
-    struct Upgrade
-    {
-        co_http_request_t* request;
-        char* key;
-
-    } upgrade;
+    co_http_request_t* upgrade_request;
 
     bool mask;
     bool closed;
@@ -115,7 +114,13 @@ co_ws_get_callbacks(
 
 CO_WS_API
 bool
-co_ws_start_handshake(
+co_ws_connect(
+    co_ws_client_t* client
+);
+
+CO_WS_API
+bool
+co_ws_send_upgrade_request(
     co_ws_client_t* client,
     co_http_request_t* upgrade_request
 );

@@ -23,9 +23,11 @@ CO_EXTERN_C_BEGIN
 //---------------------------------------------------------------------------//
 
 #define CO_WS_ERROR_INVALID_FRAME          -7001
-#define CO_WS_ERROR_INVALID_RESPONSE       -7002
-#define CO_WS_ERROR_DATA_TOO_BIG           -7003
-#define CO_WS_ERROR_OUT_OF_MEMORY          -7004
+#define CO_WS_ERROR_INVALID_UPGRADE        -7002
+#define CO_WS_ERROR_INVALID_RESPONSE       -7003
+#define CO_WS_ERROR_UPGRADE_REFUSED        -7004
+#define CO_WS_ERROR_DATA_TOO_BIG           -7005
+#define CO_WS_ERROR_OUT_OF_MEMORY          -7006
 
 #define CO_HTTP_HEADER_SEC_WS_KEY          "Sec-WebSocket-Key"
 #define CO_HTTP_HEADER_SEC_WS_EXTENSIONS   "Sec-WebSocket-Extensions"

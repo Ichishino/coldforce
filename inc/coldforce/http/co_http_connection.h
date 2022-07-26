@@ -32,7 +32,6 @@ typedef struct
 
     } receive_data;
 
-    co_list_t* request_queue;
     co_timer_t* receive_timer;
 
 } co_http_connection_t;
@@ -45,14 +44,14 @@ CO_HTTP_API
 bool
 co_http_connection_send_request(
     co_http_connection_t* conn,
-    co_http_request_t* request
+    const co_http_request_t* request
 );
 
 CO_HTTP_API
 bool
 co_http_connection_send_response(
     co_http_connection_t* conn,
-    co_http_response_t* response
+    const co_http_response_t* response
 );
 
 CO_HTTP_API

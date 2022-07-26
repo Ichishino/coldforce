@@ -176,7 +176,7 @@ co_http_request_validate_ws_upgrade(
 bool
 co_http_response_validate_ws_upgrade(
     const co_http_response_t* response,
-    const co_ws_client_t* client
+    const co_http_request_t* request
 )
 {
     const co_http_header_t* header =
@@ -224,8 +224,13 @@ co_http_response_validate_ws_upgrade(
         return false;
     }
 
+    const co_http_header_t* request_header =
+        co_http_request_get_const_header(request);
+    const char* key = co_http_header_get_field(
+        request_header, CO_HTTP_HEADER_SEC_WS_KEY);
+
     char* request_key =
-        co_ws_create_base64_accept_key(client->upgrade.key);
+        co_ws_create_base64_accept_key(key);
 
     if (strcmp(response_key, request_key) != 0)
     {

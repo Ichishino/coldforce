@@ -597,7 +597,10 @@ co_http_basic_auth_create_response(
 
     co_http_auth_set_scheme(auth, "Basic");
 
-    co_http_auth_set_item(auth, "realm", realm);
+    if (realm != NULL)
+    {
+        co_http_auth_set_item(auth, "realm", realm);
+    }
 
     return auth;
 }

@@ -75,29 +75,24 @@ void on_my_ws_close(my_app* self, co_ws_client_t* client)
     co_app_stop();
 }
 
-void on_my_ws_handshake(my_app* self, co_ws_client_t* client, const co_http_response_t* response, int error_code)
+void on_my_ws_upgrade(my_app* self, co_ws_client_t* client, const co_http_response_t* response, int error_code)
 {
-    printf("receive handshake response: %d\n", error_code);
+    (void)response;
+
+    printf("receive upgrade response: %d\n", error_code);
 
     if (error_code == 0)
     {
-        if (co_http_response_validate_ws_upgrade(response, client))
-        {
-            printf("handshake success\n");
+        printf("upgrade success\n");
 
-            // send
-            co_ws_send_text(client, "hello");
+        // send
+        co_ws_send_text(client, "hello");
 
-            return;
-        }
-        else
-        {
-            printf("handshake failed\n");
-        }
+        return;
     }
     else
     {
-        printf("connect error\n");
+        printf("upgrade error\n");
     }
 
     // close
@@ -106,6 +101,26 @@ void on_my_ws_handshake(my_app* self, co_ws_client_t* client, const co_http_resp
 
     // quit app
     co_app_stop();
+}
+
+void on_my_ws_connect(my_app* self, co_ws_client_t* client, int error_code)
+{
+    if (error_code == 0)
+    {
+        printf("connect success\n");
+
+        co_http_request_t* request =
+            co_http_request_create_ws_upgrade(self->path, NULL, NULL);
+
+        co_ws_send_upgrade_request(self->client, request);
+    }
+    else
+    {
+        printf("connect error: %d\n", error_code);
+
+        co_ws_client_destroy(client);
+        self->client = NULL;
+    }
 }
 
 bool on_my_app_create(my_app* self)
@@ -141,14 +156,13 @@ bool on_my_app_create(my_app* self)
 
     // callback
     co_ws_callbacks_st* callbacks = co_ws_get_callbacks(self->client);
-    callbacks->on_handshake = (co_ws_handshake_fn)on_my_ws_handshake;
+    callbacks->on_connect = (co_ws_connect_fn)on_my_ws_connect;
+    callbacks->on_upgrade = (co_ws_upgrade_fn)on_my_ws_upgrade;
     callbacks->on_receive_frame = (co_ws_receive_frame_fn)on_my_ws_receive_frame;
     callbacks->on_close = (co_ws_close_fn)on_my_ws_close;
 
-    co_http_request_t* request = co_http_request_create_ws_upgrade(self->path, NULL, NULL);
-
-    // start
-    co_ws_start_handshake(self->client, request);
+    // connect
+    co_ws_connect(self->client);
 
     return true;
 }
