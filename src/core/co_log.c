@@ -85,7 +85,7 @@ co_log_write_header(
 #endif
 
     fprintf((FILE*)g_log.category[category].output,
-        "<<coldforce>> %d-%02d-%02d %02d:%02d:%02d:%03d [%s] <%s> ",
+        "<<COLDFORCE>> %d-%02d-%02d %02d:%02d:%02d:%03d [%s] <%s> ",
 #ifdef CO_OS_WIN
         st.wYear, st.wMonth, st.wDay,
         st.wHour, st.wMinute, st.wSecond, st.wMilliseconds,
@@ -118,6 +118,8 @@ co_log_add_category(
 )
 {
     co_assert(category <= CO_LOG_CATEGORY_MAX);
+
+    co_log_setup();
 
     g_log.category[category].name = name;
 }

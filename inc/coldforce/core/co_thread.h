@@ -111,7 +111,7 @@ co_thread_set_exit_code(
 CO_API
 int
 co_thread_get_exit_code(
-    co_thread_t* thread
+    const co_thread_t* thread
 );
 
 CO_API

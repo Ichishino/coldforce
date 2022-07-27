@@ -1,5 +1,6 @@
 #include <coldforce/core/co_std.h>
 #include <coldforce/core/co_app.h>
+#include <coldforce/core/co_log.h>
 
 #ifdef CO_OS_WIN
 #   include <windows.h>
@@ -87,6 +88,8 @@ co_app_run(
     co_app_t* app
 )
 {
+    co_core_log_info("app start");
+
     bool create_result = true;
 
     if (app->main_thread.on_create != NULL)
@@ -104,6 +107,9 @@ co_app_run(
     {
         app->main_thread.on_destroy((co_thread_t*)app);
     }
+
+    co_core_log_info(
+        "app exit: %d", app->main_thread.exit_code);
 
     return app->main_thread.exit_code;
 }

@@ -1,5 +1,6 @@
 #include <coldforce/core/co_std.h>
 #include <coldforce/core/co_thread.h>
+#include <coldforce/core/co_log.h>
 
 #ifdef CO_OS_WIN
 #   include <windows.h>
@@ -42,6 +43,9 @@ co_thread_main(
         (struct co_thread_param_st*)param;
     co_thread_t* thread = thread_param->thread;
 
+    co_core_log_info(
+        "thread (%08x) start", thread->handle);
+
     co_assert(current_thread == NULL);
     current_thread = thread;
 
@@ -69,6 +73,9 @@ co_thread_main(
     {
         thread->on_destroy(thread);
     }
+
+    co_core_log_info(
+        "thread (%08x) exit: %d", thread->handle, thread->exit_code);
 
 #ifdef CO_OS_WIN
     return thread->exit_code;
@@ -235,7 +242,7 @@ co_thread_set_exit_code(
 
 int
 co_thread_get_exit_code(
-    co_thread_t* thread
+    const co_thread_t* thread
 )
 {
     return thread->exit_code;

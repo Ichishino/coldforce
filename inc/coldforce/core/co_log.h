@@ -110,6 +110,18 @@ co_core_log_set_level(
 #define co_log_debug(category, format, ...) \
     co_log_write(CO_LOG_LEVEL_DEBUG, category, format, ##__VA_ARGS__)
 
+#define co_core_log_error(format, ...) \
+    co_log_error(CO_LOG_CATEGORY_CORE, format, ##__VA_ARGS__)
+
+#define co_core_log_warning(format, ...) \
+    co_log_warning(CO_LOG_CATEGORY_CORE, format, ##__VA_ARGS__)
+
+#define co_core_log_info(format, ...) \
+    co_log_info(CO_LOG_CATEGORY_CORE, format, ##__VA_ARGS__)
+
+#define co_core_log_debug(format, ...) \
+    co_log_debug(CO_LOG_CATEGORY_CORE, format, ##__VA_ARGS__)
+
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 

@@ -496,7 +496,7 @@ co_tcp_connect(
     co_tcp_log_info(
         &client->sock.local_net_addr,
         "-->",
-        &client->remote_net_addr,
+        remote_net_addr,
         "tcp connect start");
 
     return true;

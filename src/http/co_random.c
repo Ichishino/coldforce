@@ -37,6 +37,18 @@ co_random(
 #endif
 }
 
+uint32_t
+co_random_range(
+    uint32_t min,
+    uint32_t max
+)
+{
+    uint32_t value;
+    co_random(&value, sizeof(value));
+
+    return (uint32_t)((value % (max - min + 1)) + min);
+}
+
 void
 co_random_hex_string(
     char* buffer,

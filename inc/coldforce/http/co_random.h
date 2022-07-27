@@ -24,6 +24,13 @@ co_random(
 );
 
 CO_HTTP_API
+uint32_t
+co_random_range(
+    uint32_t min,
+    uint32_t max
+);
+
+CO_HTTP_API
 void
 co_random_hex_string(
     char* buffer,
