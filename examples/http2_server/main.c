@@ -384,7 +384,7 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t
 #else
 
     // create http2 client
-    co_http2_client_t* http2_client = co_http2_client_create_with(tcp_client);
+    co_http2_client_t* http2_client = co_tcp_upgrade_to_http2(tcp_client);
 
     // settings (optional)
     co_http2_setting_param_st params[2];
@@ -395,9 +395,9 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t
     co_http2_init_settings(http2_client, params, 2);
 
     // callback
-    co_http2_callbacks_st* callback = co_http2_get_callbacks(http2_client);
-    callback->on_receive_finish = (co_http2_receive_finish_fn)on_my_http2_request;
-    callback->on_close = (co_http2_close_fn)on_my_http2_close;
+    co_http2_callbacks_st* callbacks = co_http2_get_callbacks(http2_client);
+    callbacks->on_receive_finish = (co_http2_receive_finish_fn)on_my_http2_request;
+    callbacks->on_close = (co_http2_close_fn)on_my_http2_close;
 
     co_list_add_tail(self->http2_clients, http2_client);
 
