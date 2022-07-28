@@ -48,3 +48,12 @@ co_net_thread_cleanup(
 
     co_thread_cleanup(thread);
 }
+
+co_net_thread_callbacks_st*
+co_net_thread_get_callbacks(
+    co_thread_t* thread
+)
+{
+    return &(((co_net_worker_t*)
+        thread->event_worker)->callbacks);
+}

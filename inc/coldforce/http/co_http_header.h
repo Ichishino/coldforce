@@ -156,6 +156,18 @@ co_http_header_get_content_length(
     size_t* length
 );
 
+CO_HTTP_API
+void
+co_http_header_set_keep_alive(
+    co_http_header_t* header
+);
+
+CO_HTTP_API
+bool
+co_http_header_get_keep_alive(
+    const co_http_header_t* header
+);
+
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 

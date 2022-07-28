@@ -60,8 +60,10 @@ void on_my_tcp_close(my_client_thread* self, co_tcp_client_t* client)
     co_mutex_unlock(self->mutex);
 }
 
-void on_my_tcp_transfer(my_client_thread* self, co_tcp_client_t* client)
+void on_my_client_tcp_accept(my_client_thread* self, co_tcp_server_t* unused, co_tcp_client_t* client)
 {
+    (void)unused;
+
     // accept
     co_tcp_accept((co_thread_t*)self, client);
 
@@ -93,9 +95,9 @@ bool on_my_client_thread_create(my_client_thread* self, void* param)
     list_ctx.destroy_value = (co_item_destroy_fn)co_tcp_client_destroy; // auto destroy
     self->client_list = co_list_create(&list_ctx);
 
-    // transfer handler
-    co_tcp_set_transfer_handler(
-        (co_thread_t*)self, (co_tcp_transfer_fn)on_my_tcp_transfer);
+    co_net_thread_callbacks_st* callbacks =
+        co_net_thread_get_callbacks((co_thread_t*)self);
+    callbacks->on_tcp_accept = (co_tcp_accept_fn)on_my_client_tcp_accept;
 
     return true;
 }

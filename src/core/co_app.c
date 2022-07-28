@@ -154,3 +154,19 @@ co_app_get_current(
 {
     return current_app;
 }
+
+void
+co_app_set_exit_code(
+    int exit_code
+)
+{
+    co_thread_set_exit_code(exit_code);
+}
+
+int
+co_app_get_exit_code(
+    void
+)
+{
+    return co_thread_get_exit_code((co_thread_t*)current_app);
+}

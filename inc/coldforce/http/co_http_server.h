@@ -19,7 +19,7 @@ CO_EXTERN_C_BEGIN
 
 CO_HTTP_API
 co_http_client_t*
-co_http_client_create_with(
+co_tcp_upgrade_to_http(
     co_tcp_client_t* tcp_client
 );
 

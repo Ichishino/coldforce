@@ -21,6 +21,12 @@ CO_EXTERN_C_BEGIN
 
 struct co_net_selector_t;
 
+typedef struct
+{
+    co_tcp_accept_fn on_tcp_accept;
+
+} co_net_thread_callbacks_st;
+
 typedef struct co_net_worker_t
 {
     co_event_worker_t event_worker;
@@ -31,7 +37,7 @@ typedef struct co_net_worker_t
     co_list_t* tcp_clients;
     co_list_t* udps;
 
-    co_tcp_transfer_fn on_tcp_transfer;
+    co_net_thread_callbacks_st callbacks;
     co_thread_destroy_fn on_destroy;
 
 #ifdef CO_DEBUG
@@ -84,17 +90,6 @@ bool
 co_net_worker_dispatch(
     co_net_worker_t* net_worker,
     co_event_t* event
-);
-
-void
-co_net_worker_on_idle(
-    co_net_worker_t* net_worker
-);
-
-void
-co_net_worker_on_tcp_transfer(
-    co_net_worker_t* net_worker,
-    co_tcp_client_t* client
 );
 
 bool

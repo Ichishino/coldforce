@@ -4,6 +4,7 @@
 #include <coldforce/core/co_thread.h>
 
 #include <coldforce/net/co_net.h>
+#include <coldforce/net/co_net_worker.h>
 
 CO_EXTERN_C_BEGIN
 
@@ -29,6 +30,12 @@ co_net_thread_init(
 CO_NET_API
 void
 co_net_thread_cleanup(
+    co_thread_t* thread
+);
+
+CO_NET_API
+co_net_thread_callbacks_st*
+co_net_thread_get_callbacks(
     co_thread_t* thread
 );
 

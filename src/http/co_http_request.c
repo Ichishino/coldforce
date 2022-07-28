@@ -502,4 +502,3 @@ co_http_request_apply_auth(
 
     return true;
 }
-

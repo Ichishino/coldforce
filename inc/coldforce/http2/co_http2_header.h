@@ -5,6 +5,7 @@
 
 #include <coldforce/http/co_http_url.h>
 #include <coldforce/http/co_http_cookie.h>
+#include <coldforce/http/co_http_auth.h>
 
 #include <coldforce/http2/co_http2.h>
 
@@ -301,6 +302,14 @@ CO_HTTP2_API
 void
 co_http2_header_remove_all_server_cookies(
     co_http2_header_t* header
+);
+
+CO_HTTP2_API
+bool
+co_http2_header_apply_auth(
+    co_http2_header_t* header,
+    const char* header_name,
+    co_http_auth_t* auth
 );
 
 //---------------------------------------------------------------------------//

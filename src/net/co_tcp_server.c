@@ -256,7 +256,7 @@ co_tcp_accept(
         CO_DEBUG_SOCKET_COUNTER_DEC();
 
         return co_thread_send_event(owner_thread,
-            CO_NET_EVENT_ID_TCP_TRANSFER, (uintptr_t)client, 0);
+            CO_NET_EVENT_ID_TCP_ACCEPT_ON_THREAD, (uintptr_t)client, 0);
     }
 
     client->sock.owner_thread = owner_thread;
@@ -272,15 +272,6 @@ co_tcp_accept(
 #endif
 
     return true;
-}
-
-void
-co_tcp_set_transfer_handler(
-    co_thread_t* thread,
-    co_tcp_transfer_fn handler
-)
-{
-    ((co_net_worker_t*)thread->event_worker)->on_tcp_transfer = handler;
 }
 
 co_socket_t*

@@ -195,7 +195,7 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t
     co_tcp_accept((co_thread_t*)self, tcp_client);
 
     // create http client
-    co_http_client_t* client = co_http_client_create_with(tcp_client);
+    co_http_client_t* client = co_tcp_upgrade_to_http(tcp_client);
 
     // callback
     co_http_callbacks_st* callbacks = co_http_get_callbacks(client);

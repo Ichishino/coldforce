@@ -14,6 +14,33 @@
 // private
 //---------------------------------------------------------------------------//
 
+static void
+co_net_worker_on_idle(
+    co_net_worker_t* net_worker
+)
+{
+#ifdef CO_OS_WIN
+    co_win_try_clear_io_ctx_trash(net_worker->net_selector);
+#endif
+    co_event_worker_on_idle(&net_worker->event_worker);
+}
+
+static void
+co_net_worker_on_tcp_accept(
+    co_net_worker_t* net_worker,
+    co_tcp_client_t* client
+)
+{
+    co_thread_t* thread = co_thread_get_current();
+
+    if (net_worker->callbacks.on_tcp_accept != NULL)
+    {
+        CO_DEBUG_SOCKET_COUNTER_INC();
+
+        net_worker->callbacks.on_tcp_accept(thread, NULL, client);
+    }
+}
+
 co_net_worker_t*
 co_net_worker_create(
     void
@@ -37,7 +64,7 @@ co_net_worker_create(
     net_worker->tcp_clients = NULL;
     net_worker->udps = NULL;
 
-    net_worker->on_tcp_transfer = NULL;
+    net_worker->callbacks.on_tcp_accept = NULL;
     net_worker->on_destroy = NULL;
 
 #ifdef CO_DEBUG
@@ -182,9 +209,9 @@ co_net_worker_dispatch(
             (co_tcp_client_t*)event->param1);
         break;
     }
-    case CO_NET_EVENT_ID_TCP_TRANSFER:
+    case CO_NET_EVENT_ID_TCP_ACCEPT_ON_THREAD:
     {
-        co_net_worker_on_tcp_transfer(
+        co_net_worker_on_tcp_accept(
             net_worker, (co_tcp_client_t*)event->param1);
         break;
     }
@@ -212,33 +239,6 @@ co_net_worker_dispatch(
     }
 
     return true;
-}
-
-void
-co_net_worker_on_idle(
-    co_net_worker_t* net_worker
-)
-{
-#ifdef CO_OS_WIN
-    co_win_try_clear_io_ctx_trash(net_worker->net_selector);
-#endif
-    co_event_worker_on_idle(&net_worker->event_worker);
-}
-
-void
-co_net_worker_on_tcp_transfer(
-    co_net_worker_t* net_worker,
-    co_tcp_client_t* client
-)
-{
-    co_thread_t* thread = co_thread_get_current();
-
-    if (net_worker->on_tcp_transfer != NULL)
-    {
-        CO_DEBUG_SOCKET_COUNTER_INC();
-
-        net_worker->on_tcp_transfer(thread, client);
-    }
 }
 
 bool

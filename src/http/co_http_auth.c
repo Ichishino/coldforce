@@ -1,9 +1,8 @@
 #include <coldforce/core/co_std.h>
 #include <coldforce/core/co_string.h>
+#include <coldforce/core/co_byte_array.h>
 
 #include <coldforce/http/co_http_auth.h>
-#include <coldforce/http/co_http_request.h>
-#include <coldforce/http/co_http_response.h>
 #include <coldforce/http/co_http_string_list.h>
 #include <coldforce/http/co_base64.h>
 #include <coldforce/http/co_random.h>
@@ -242,6 +241,8 @@ co_http_auth_deserialize_request(
     co_http_auth_t* auth
 )
 {
+    auth->request = true;
+
     co_http_string_item_st items[32] = { 0 };
 
     size_t item_count =
@@ -323,6 +324,8 @@ co_http_auth_deserialize_response(
     co_http_auth_t* auth
 )
 {
+    auth->request = false;
+
     co_http_string_item_st items[32] = { 0 };
 
     size_t item_count =
@@ -369,6 +372,21 @@ co_http_auth_deserialize_response(
     return true;
 }
 
+char*
+co_http_auth_serialize(
+    const co_http_auth_t* auth
+)
+{
+    if (auth->request)
+    {
+        return co_http_auth_serialize_request(auth);
+    }
+    else
+    {
+        return co_http_auth_serialize_response(auth);
+    }
+}
+
 //---------------------------------------------------------------------------//
 // public
 //---------------------------------------------------------------------------//
@@ -386,6 +404,7 @@ co_http_auth_create(
         return NULL;
     }
 
+    auth->request = false;
     auth->scheme = NULL;
     auth->method = NULL;
     auth->credentials = NULL;
@@ -400,23 +419,12 @@ co_http_auth_create(
 
 co_http_auth_t*
 co_http_auth_create_request(
-    const char* header_name,
-    const co_http_request_t* request
+    const char* request_auth
 )
 {
-    const co_http_header_t* header =
-        co_http_request_get_const_header(request);
-    const char* auth_str =
-        co_http_header_get_field(header, header_name);
-
-    if (auth_str == NULL)
-    {
-        return NULL;
-    }
-
     co_http_auth_t* auth = co_http_auth_create();
 
-    if (!co_http_auth_deserialize_request(auth_str, auth))
+    if (!co_http_auth_deserialize_request(request_auth, auth))
     {
         co_http_auth_destroy(auth);
 
@@ -428,23 +436,12 @@ co_http_auth_create_request(
 
 co_http_auth_t*
 co_http_auth_create_response(
-    const char* header_name,
-    const co_http_response_t* response
+    const char* response_auth
 )
 {
-    const co_http_header_t* header =
-        co_http_response_get_const_header(response);
-    const char* auth_str =
-        co_http_header_get_field(header, header_name);
-
-    if (auth_str == NULL)
-    {
-        return NULL;
-    }
-
     co_http_auth_t* auth = co_http_auth_create();
 
-    if (!co_http_auth_deserialize_response(auth_str, auth))
+    if (!co_http_auth_deserialize_response(response_auth, auth))
     {
         co_http_auth_destroy(auth);
 
@@ -558,6 +555,8 @@ co_http_basic_auth_create_request(
         return NULL;
     }
 
+    auth->request = true;
+
     co_http_auth_set_scheme(auth, "Basic");
 
     size_t raw_data_length =
@@ -594,6 +593,8 @@ co_http_basic_auth_create_response(
     {
         return NULL;
     }
+
+    auth->request = false;
 
     co_http_auth_set_scheme(auth, "Basic");
 
@@ -705,6 +706,8 @@ co_http_digest_auth_create_request(
         return NULL;
     }
 
+    auth->request = true;
+
     co_http_auth_set_scheme(auth, "Digest");
 
     co_http_auth_set_item(auth, "realm", realm);
@@ -745,6 +748,8 @@ co_http_digest_auth_create_response(
     {
         return NULL;
     }
+
+    auth->request = false;
 
     co_http_auth_set_scheme(auth, "Digest");
 

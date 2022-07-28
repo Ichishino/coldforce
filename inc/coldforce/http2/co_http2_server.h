@@ -31,7 +31,7 @@ co_http2_server_on_tcp_receive_ready(
 
 CO_HTTP2_API
 co_http2_client_t*
-co_http2_client_create_with(
+co_tcp_upgrade_to_http2(
     co_tcp_client_t* tcp_client
 );
 

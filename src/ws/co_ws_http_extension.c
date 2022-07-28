@@ -263,7 +263,7 @@ co_http_request_create_ws_upgrade(
     co_http_header_add_field(
         header, CO_HTTP_HEADER_UPGRADE, "websocket");
     co_http_header_add_field(
-        header, CO_HTTP_HEADER_CONNECTION, "upgrade");
+        header, CO_HTTP_HEADER_CONNECTION, "keep-alive, upgrade");
 
     uint8_t ws_key[16];
     co_random(ws_key, sizeof(ws_key));

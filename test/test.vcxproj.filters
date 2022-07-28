@@ -27,6 +27,9 @@
     <ClCompile Include="test_tcp_client_thread.c">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="test_http_server_thread.c">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="test_app.h">
@@ -39,6 +42,9 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="test_tcp_client_thread.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="test_http_server_thread.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>

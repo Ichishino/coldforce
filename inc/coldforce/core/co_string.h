@@ -95,8 +95,8 @@ co_string_hex(
 #endif
 
 #ifdef CO_OS_WIN
-#   define co_string_case_compare   stricmp
-#   define co_string_case_compare_n strnicmp
+#   define co_string_case_compare   _stricmp
+#   define co_string_case_compare_n _strnicmp
 #else
 #   define co_string_case_compare   strcasecmp
 #   define co_string_case_compare_n strncasecmp

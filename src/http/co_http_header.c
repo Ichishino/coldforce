@@ -3,6 +3,7 @@
 
 #include <coldforce/http/co_http_header.h>
 #include <coldforce/http/co_http_config.h>
+#include <coldforce/http/co_http_string_list.h>
 
 #ifndef CO_OS_WIN
 #include <errno.h>
@@ -460,7 +461,8 @@ co_http_header_set_content_length(
     char str[32];
     sprintf(str, "%zu", length);
 
-    co_http_header_set_field(header, CO_HTTP_HEADER_CONTENT_LENGTH, str);
+    co_http_header_set_field(
+        header, CO_HTTP_HEADER_CONTENT_LENGTH, str);
 }
 
 bool
@@ -469,15 +471,16 @@ co_http_header_get_content_length(
     size_t* length
 )
 {
-    const char* str =
-        co_http_header_get_field(header, CO_HTTP_HEADER_CONTENT_LENGTH);
+    const char* value =
+        co_http_header_get_field(
+            header, CO_HTTP_HEADER_CONTENT_LENGTH);
 
-    if (str == NULL)
+    if (value == NULL)
     {
         return false;
     }
 
-    *length = co_string_to_size_t(str, NULL, 10);
+    *length = co_string_to_size_t(value, NULL, 10);
 
     if (errno != 0)
     {
@@ -485,4 +488,66 @@ co_http_header_get_content_length(
     }
 
     return true;
+}
+
+void
+co_http_header_set_keep_alive(
+    co_http_header_t* header
+)
+{
+    const char* value =
+        co_http_header_get_field(
+            header, CO_HTTP_HEADER_CONNECTION);
+
+    if (value != NULL)
+    {
+        co_http_string_item_st items[8];
+
+        size_t item_count =
+            co_http_string_list_parse(value, items, 8);
+
+        if (!co_http_string_list_contains(items, item_count, "keep-alive"))
+        {
+            char* new_value = (char*)co_mem_alloc(strlen(value) + 13);
+            strcpy(new_value, value);
+            strcat(new_value, ", keep-alive");
+
+            co_http_header_set_field(
+                header, CO_HTTP_HEADER_CONNECTION, new_value);
+        }
+
+        co_http_string_list_cleanup(items, item_count);
+    }
+    else
+    {
+        co_http_header_set_field(
+            header, CO_HTTP_HEADER_CONNECTION, "keep-alive");
+    }
+}
+
+bool
+co_http_header_get_keep_alive(
+    const co_http_header_t* header
+)
+{
+    const char* value =
+        co_http_header_get_field(
+            header, CO_HTTP_HEADER_CONNECTION);
+
+    if (value == NULL)
+    {
+        return false;
+    }
+
+    co_http_string_item_st items[8];
+    size_t item_count =
+        co_http_string_list_parse(value, items, 8);
+
+    bool result =
+        co_http_string_list_contains(
+            items, item_count, "keep-alive");
+
+    co_http_string_list_cleanup(items, item_count);
+
+    return result;
 }

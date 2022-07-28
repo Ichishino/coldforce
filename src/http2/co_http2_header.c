@@ -659,3 +659,40 @@ co_http2_header_remove_all_server_cookies(
     co_http2_header_remove_all_fields(
         header, CO_HTTP2_HEADER_SET_COOKIE);
 }
+
+bool
+co_http2_header_apply_auth(
+    co_http2_header_t* header,
+    const char* header_name,
+    co_http_auth_t* auth
+)
+{
+    if (co_string_case_compare(auth->scheme, "Digest") == 0)
+    {
+        const char* method = co_http2_header_get_method(header);
+
+        if (method != NULL)
+        {
+            co_http_digest_auth_set_method(auth, method);
+            co_http_digest_auth_set_path(auth, co_http2_header_get_path(header));
+            co_http_digest_auth_set_count(auth, ++auth->nc);
+        }
+    }
+
+    char* auth_str =
+        co_http_auth_serialize(auth);
+
+    if (auth_str == NULL)
+    {
+        return false;
+    }
+
+    co_http2_header_remove_all_fields(
+        header, header_name);
+
+    co_http2_header_add_field_ptr(
+        header, co_string_duplicate(header_name),
+        auth_str);
+
+    return true;
+}

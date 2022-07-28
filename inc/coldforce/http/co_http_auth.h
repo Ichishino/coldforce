@@ -7,9 +7,6 @@
 
 CO_EXTERN_C_BEGIN
 
-struct co_http_request_t;
-struct co_http_response_t;
-
 //---------------------------------------------------------------------------//
 // http auth
 //---------------------------------------------------------------------------//
@@ -19,6 +16,7 @@ struct co_http_response_t;
 
 typedef struct
 {
+    bool request;
     char* scheme;
     char* method;
     char* credentials;
@@ -53,6 +51,12 @@ co_http_auth_deserialize_response(
     co_http_auth_t* auth
 );
 
+CO_HTTP_API
+char*
+co_http_auth_serialize(
+    const co_http_auth_t* auth
+);
+
 //---------------------------------------------------------------------------//
 // public
 //---------------------------------------------------------------------------//
@@ -66,15 +70,13 @@ co_http_auth_create(
 CO_HTTP_API
 co_http_auth_t*
 co_http_auth_create_request(
-    const char* header_name,
-    const struct co_http_request_t* request
+    const char* request_auth
 );
 
 CO_HTTP_API
 co_http_auth_t*
 co_http_auth_create_response(
-    const char* header_name,
-    const struct co_http_response_t* response
+    const char* response_auth
 );
 
 CO_HTTP_API
