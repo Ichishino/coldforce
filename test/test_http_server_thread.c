@@ -100,7 +100,7 @@ http_server_on_http2_request(
                 if (co_http_digest_auth_validate(
                     request_auth, "GET", "/stop", realm,
                     user, password,
-                    nonce, 1))
+                    nonce, 0))
                 {
                     is_digest_ok = true;
                 }

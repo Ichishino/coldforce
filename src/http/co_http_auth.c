@@ -832,8 +832,12 @@ co_http_digest_auth_validate(
         (void)sscanf(request_nc_str, "%08X", &request_nc);
     }
 
-    if (request_nc == 0 ||
-        request_nc != nc)
+    if (request_nc == 0)
+    {
+        return false;
+    }
+
+    if (nc != 0 && request_nc != nc)
     {
         return false;
     }
@@ -865,15 +869,12 @@ co_http_digest_auth_validate(
         return false;
     }
 
-    char nc_str[16];
-    sprintf(nc_str, "%08x", nc);
-
     char* response =
         co_http_digest_auth_hash(
             request_algorithm, 6,
             a1_hash,
             request_nonce,
-            nc_str,
+            request_nc_str,
             request_cnonce,
             request_qop,
             a2_hash);

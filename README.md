@@ -9,8 +9,8 @@ The currently supported protocols are as follows.
 All of these support clients and servers (multi-client, C10K).
 * TCP/UDP (IPv4/IPv6)
 * TLS
-* HTTP/1.1 (http/https, pipelining, Basic/Digest authentication)
-* HTTP/2
+* HTTP/1.1 (http/https, pipelining, basic/digest authentication)
+* HTTP/2 (server push)
 * WebSocket (ws/wss)
 
 ### Platforms
