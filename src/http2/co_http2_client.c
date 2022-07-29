@@ -96,6 +96,8 @@ co_http2_client_setup(
         CO_HTTP2_SETTING_DEFAULT_MAX_FRAME_SIZE;
     client->local_settings.max_header_list_size =
         CO_HTTP2_SETTING_DEFAULT_MAX_HEADER_LIST_SIZE;
+    client->local_settings.enable_conncet_protocol =
+        CO_HTTP2_SETTING_DEFAULT_ENABLE_CONNECT_PROTOCOL;
 
     client->remote_settings.header_table_size =
         CO_HTTP2_SETTING_DEFAULT_HEADER_TABLE_SIZE;
@@ -109,6 +111,8 @@ co_http2_client_setup(
         CO_HTTP2_SETTING_DEFAULT_MAX_FRAME_SIZE;
     client->remote_settings.max_header_list_size =
         CO_HTTP2_SETTING_DEFAULT_MAX_HEADER_LIST_SIZE;
+    client->remote_settings.enable_conncet_protocol =
+        CO_HTTP2_SETTING_DEFAULT_ENABLE_CONNECT_PROTOCOL;
 
     co_http2_hpack_dynamic_table_setup(
         &client->local_dynamic_table,
@@ -183,6 +187,12 @@ co_http2_set_setting_param(
     case CO_HTTP2_SETTING_ID_MAX_HEADER_LIST_SIZE:
     {
         settings->max_header_list_size = value;
+
+        break;
+    }
+    case CO_HTTP2_SETTING_ID_ENABLE_CONNECT_PROTOCOL:
+    {
+        settings->enable_conncet_protocol = value;
 
         break;
     }
@@ -869,7 +879,7 @@ co_http2_send_initial_settings(
 )
 {
     uint16_t param_count = 0;
-    co_http2_setting_param_st params[6];
+    co_http2_setting_param_st params[CO_HTTP2_SETTING_MAX_SIZE];
 
     if (client->local_settings.header_table_size !=
         CO_HTTP2_SETTING_DEFAULT_HEADER_TABLE_SIZE)
@@ -928,6 +938,16 @@ co_http2_send_initial_settings(
             CO_HTTP2_SETTING_ID_MAX_HEADER_LIST_SIZE;
         params[param_count].value =
             client->local_settings.max_header_list_size;
+        ++param_count;
+    }
+
+    if (client->local_settings.enable_conncet_protocol !=
+        CO_HTTP2_SETTING_DEFAULT_ENABLE_CONNECT_PROTOCOL)
+    {
+        params[param_count].id =
+            CO_HTTP2_SETTING_ID_ENABLE_CONNECT_PROTOCOL;
+        params[param_count].value =
+            client->local_settings.enable_conncet_protocol;
         ++param_count;
     }
 

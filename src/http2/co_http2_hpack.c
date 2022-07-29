@@ -914,6 +914,12 @@ co_http2_hpack_deserialize_header(
                 co_string_destroy(name);
                 co_string_destroy(value);
             }
+            else if (co_string_case_compare(name, ":protocol") == 0)
+            {
+                header->pseudo.protocol = value;
+
+                co_string_destroy(name);
+            }
             else
             {
                 co_http2_header_add_field_ptr(header, name, value);

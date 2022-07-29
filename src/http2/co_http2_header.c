@@ -133,6 +133,7 @@ co_http2_header_destroy(
     {
         co_string_destroy(header->pseudo.authority);
         co_string_destroy(header->pseudo.method);
+        co_string_destroy(header->pseudo.protocol);
         co_string_destroy(header->pseudo.scheme);
         co_http_url_destroy(header->pseudo.url);
 
@@ -204,6 +205,32 @@ co_http2_header_get_method(
 )
 {
     return header->pseudo.method;
+}
+
+void
+co_http2_header_set_protocol(
+    co_http2_header_t* header,
+    const char* protocol
+)
+{
+    co_string_destroy(header->pseudo.protocol);
+
+    if (protocol != NULL)
+    {
+        header->pseudo.protocol = co_string_duplicate(protocol);
+    }
+    else
+    {
+        header->pseudo.method = NULL;
+    }
+}
+
+const char*
+co_http2_header_get_protocol(
+    const co_http2_header_t* header
+)
+{
+    return header->pseudo.protocol;
 }
 
 void

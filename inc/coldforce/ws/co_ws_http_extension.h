@@ -55,6 +55,17 @@ co_http_response_create_ws_upgrade(
     const char* extensions
 );
 
+CO_WS_API
+bool
+co_http_connection_send_ws_frame(
+    co_http_connection_t* conn,
+    bool fin,
+    uint8_t opcode,
+    bool mask,
+    const void* data,
+    size_t data_size
+);
+
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 

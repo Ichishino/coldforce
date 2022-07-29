@@ -29,6 +29,7 @@ typedef struct co_http2_pseudo_header_t
 {
     char* authority;
     char* method;
+    char* protocol;
     co_http_url_st* url;
     char* scheme;
     uint16_t status_code;
@@ -121,6 +122,19 @@ co_http2_header_set_method(
 CO_HTTP2_API
 const char*
 co_http2_header_get_method(
+    const co_http2_header_t* header
+);
+
+CO_HTTP2_API
+void
+co_http2_header_set_protocol(
+    co_http2_header_t* header,
+    const char* protocol
+);
+
+CO_HTTP2_API
+const char*
+co_http2_header_get_protocol(
     const co_http2_header_t* header
 );
 

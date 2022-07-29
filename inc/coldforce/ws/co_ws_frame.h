@@ -12,6 +12,7 @@ CO_EXTERN_C_BEGIN
 //---------------------------------------------------------------------------//
 
 #define CO_WS_FRAME_HEADER_MIN_SIZE    2
+#define CO_WS_FRAME_HEADER_MAX_SIZE    16
 #define CO_WS_FRAME_MASK_SIZE          4
 
 #define CO_WS_CLOSE_REASON_NORMAL               1000
