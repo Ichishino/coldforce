@@ -24,12 +24,12 @@ All of these support clients and servers (multi-client, C10K).
 * Use `-pthread` `-lm`
 
 ### Modules
-* Coldforce core : `co_core.dll` `libco_core.a`
-* Network core (TCP,UDP) : `co_net.dll` `libco_net.a`
-* TLS : `co_tls.dll` `libco_tls.a`
-* HTTP/1.1 : `co_http.dll` `libco_http.a`
-* HTTP/2 : `co_http2.dll` `libco_http2.a`
-* WebSocket : `co_ws.dll` `libco_ws.a`
+* Coldforce core : `co_core.dll`, `libco_core.a`
+* Network core (TCP,UDP) : `co_net.dll`, `libco_net.a`
+* TLS : `co_tls.dll`, `libco_tls.a`
+* HTTP/1.1 : `co_http.dll`, `libco_http.a`
+* HTTP/2 : `co_http2.dll`, `libco_http2.a`
+* WebSocket : `co_ws.dll` `co_ws_http2.dll`, `libco_ws.a` `libco_ws_http2.a`
 
 ### Builds
 * Windows  

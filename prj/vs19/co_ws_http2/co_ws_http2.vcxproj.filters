@@ -17,9 +17,15 @@
     <ClInclude Include="..\..\..\inc\coldforce\ws_http2\co_ws_http2_extension.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\inc\coldforce\coldforce_ws_http2.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\ws_http2\co_ws_http2_extension.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ws_http2\co_ws_http2.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
