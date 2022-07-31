@@ -481,11 +481,6 @@ co_http2_stream_on_receive_frame(
             return false;
         }
 
-        if (stream->receive_header == NULL)
-        {
-            break;
-        }
-
         co_http2_stream_update_local_window_size(stream, frame->header.length);
 
         if (stream->on_receive_data != NULL)

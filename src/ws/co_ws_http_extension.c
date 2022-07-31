@@ -302,7 +302,7 @@ co_http_response_t*
 co_http_response_create_ws_upgrade(
     const co_http_request_t* request,
     const char* protocol,
-    const char* extensions
+    const char* extension
 )
 {
     co_http_response_t* response =
@@ -341,10 +341,10 @@ co_http_response_create_ws_upgrade(
             header, CO_HTTP_HEADER_SEC_WS_PROTOCOL, protocol);
     }
 
-    if (extensions != NULL)
+    if (extension != NULL)
     {
         co_http_header_add_field(
-            header, CO_HTTP_HEADER_SEC_WS_EXTENSIONS, extensions);
+            header, CO_HTTP_HEADER_SEC_WS_EXTENSIONS, extension);
     }
 
     return response;

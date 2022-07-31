@@ -56,14 +56,14 @@
 #endif
 
 #ifdef _MSC_VER
-#   ifdef CO_EXPORTS
-#       define CO_API  __declspec(dllexport)
+#   ifdef CO_CORE_EXPORTS
+#       define CO_CORE_API  __declspec(dllexport)
 #   else
-#       define CO_API
+#       define CO_CORE_API
 #   endif
 #   define CO_THREAD_LOCAL __declspec(thread)
 #else
-#   define CO_API
+#   define CO_CORE_API
 #   define CO_THREAD_LOCAL __thread
 #endif
 
@@ -124,7 +124,7 @@ typedef struct
 // private
 //---------------------------------------------------------------------------//
 
-CO_API
+CO_CORE_API
 void
 co_mem_free_later(
     void* mem

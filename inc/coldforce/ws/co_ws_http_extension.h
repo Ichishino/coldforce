@@ -52,7 +52,7 @@ co_http_response_t*
 co_http_response_create_ws_upgrade(
     const co_http_request_t* request,
     const char* protocol,
-    const char* extensions
+    const char* extension
 );
 
 CO_WS_API

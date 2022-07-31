@@ -109,27 +109,27 @@ co_event_worker_get_event_count(
     co_event_worker_t* event_worker
 );
 
-CO_API
+CO_CORE_API
 co_wait_result_t
 co_event_worker_wait(
     co_event_worker_t* event_worker,
     uint32_t msec
 );
 
-CO_API
+CO_CORE_API
 void
 co_event_worker_wake_up(
     co_event_worker_t* event_worker
 );
 
-CO_API
+CO_CORE_API
 bool
 co_event_worker_dispatch(
     co_event_worker_t* event_worker,
     co_event_t* event
 );
 
-CO_API
+CO_CORE_API
 void
 co_event_worker_on_idle(
     co_event_worker_t* event_worker

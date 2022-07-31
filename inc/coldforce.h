@@ -11,6 +11,7 @@
 #include <coldforce/coldforce_http.h>
 #include <coldforce/coldforce_http2.h>
 #include <coldforce/coldforce_ws.h>
+#include <coldforce/coldforce_ws_http2.h>
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

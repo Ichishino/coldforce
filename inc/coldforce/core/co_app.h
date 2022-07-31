@@ -34,7 +34,7 @@ typedef struct
 // private
 //---------------------------------------------------------------------------//
 
-CO_API
+CO_CORE_API
 void
 co_app_setup(
     co_app_t* app,
@@ -49,7 +49,7 @@ co_app_setup(
 // public
 //---------------------------------------------------------------------------//
 
-CO_API
+CO_CORE_API
 void
 co_app_init(
     co_app_t* app,
@@ -59,49 +59,49 @@ co_app_init(
     char** argv
 );
 
-CO_API
+CO_CORE_API
 void
 co_app_cleanup(
     co_app_t* app
 );
 
-CO_API
+CO_CORE_API
 int
 co_app_run(
     co_app_t* app
 );
 
-CO_API
+CO_CORE_API
 int
 co_app_start(
     co_app_t* app
 );
 
-CO_API
+CO_CORE_API
 void
 co_app_stop(
     void
 );
 
-CO_API
+CO_CORE_API
 const co_args_st*
 co_app_get_args(
     const co_app_t* app
 );
 
-CO_API
+CO_CORE_API
 co_app_t*
 co_app_get_current(
     void
 );
 
-CO_API
+CO_CORE_API
 void
 co_app_set_exit_code(
     int exit_code
 );
 
-CO_API
+CO_CORE_API
 int
 co_app_get_exit_code(
     void

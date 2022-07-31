@@ -22,25 +22,25 @@ typedef struct
 // public
 //---------------------------------------------------------------------------//
 
-CO_API
+CO_CORE_API
 co_mutex_t*
 co_mutex_create(
     void
 );
 
-CO_API
+CO_CORE_API
 void
 co_mutex_destroy(
     co_mutex_t* mutex
 );
 
-CO_API
+CO_CORE_API
 void
 co_mutex_lock(
     co_mutex_t* mutex
 );
 
-CO_API
+CO_CORE_API
 void
 co_mutex_unlock(
     co_mutex_t* mutex

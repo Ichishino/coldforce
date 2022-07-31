@@ -22,6 +22,10 @@ CO_EXTERN_C_BEGIN
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
+#define CO_HTTP2_HEADER_SEC_WS_EXTENSIONS   "sec-websocket-extensions"
+#define CO_HTTP2_HEADER_SEC_WS_PROTOCOL     "sec-websocket-protocol"
+#define CO_HTTP2_HEADER_SEC_WS_VERSION      "sec-webSocket-version"
+
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 

@@ -16,60 +16,60 @@ CO_EXTERN_C_BEGIN
 // public
 //---------------------------------------------------------------------------//
 
-CO_API
+CO_CORE_API
 size_t
 co_string_hash(
     const char* str
 );
 
-CO_API
+CO_CORE_API
 size_t
 co_string_trim_left(
     char* str,
     size_t length
 );
 
-CO_API
+CO_CORE_API
 size_t
 co_string_trim_right(
     char* str,
     size_t length
 );
 
-CO_API
+CO_CORE_API
 size_t
 co_string_trim(
     char* str,
     size_t length
 );
 
-CO_API
+CO_CORE_API
 char*
 co_string_wrap_quotes(
     const char* str,
     bool double_or_single
 );
 
-CO_API
+CO_CORE_API
 void
 co_string_trim_quotes(
     char* str
 );
 
-CO_API
+CO_CORE_API
 char*
 co_string_duplicate(
     const char* str
 );
 
-CO_API
+CO_CORE_API
 char*
 co_string_duplicate_n(
     const char* str,
     size_t length
 );
 
-CO_API
+CO_CORE_API
 char*
 co_string_find_n(
     const char* str1,
@@ -77,7 +77,7 @@ co_string_find_n(
     size_t length
 );
 
-CO_API
+CO_CORE_API
 void
 co_string_hex(
     const void* binary,

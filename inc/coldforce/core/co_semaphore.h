@@ -22,26 +22,26 @@ typedef struct
 // public
 //---------------------------------------------------------------------------//
 
-CO_API
+CO_CORE_API
 co_semaphore_t*
 co_semaphore_create(
     int count
 );
 
-CO_API
+CO_CORE_API
 void
 co_semaphore_destroy(
     co_semaphore_t* semaphore
 );
 
-CO_API
+CO_CORE_API
 co_wait_result_t
 co_semaphore_wait(
     co_semaphore_t* semaphore,
     uint32_t msec
 );
 
-CO_API
+CO_CORE_API
 void
 co_semaphore_post(
     co_semaphore_t* semaphore

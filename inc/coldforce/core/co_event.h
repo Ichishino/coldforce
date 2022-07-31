@@ -45,7 +45,7 @@ typedef struct
 // public
 //---------------------------------------------------------------------------//
 
-CO_API
+CO_CORE_API
 void
 co_thread_set_event_handler(
     struct co_thread_t* thread,
@@ -53,21 +53,21 @@ co_thread_set_event_handler(
     co_event_fn handler
 );
 
-CO_API
+CO_CORE_API
 co_event_fn
 co_thread_get_event_handler(
     struct co_thread_t* thread,
     co_event_id_t event_id
 );
 
-CO_API
+CO_CORE_API
 void
 co_thread_remove_event_handler(
     struct co_thread_t* thread,
     co_event_id_t event_id
 );
 
-CO_API
+CO_CORE_API
 bool
 co_thread_send_event(
     struct co_thread_t* thread,
@@ -76,7 +76,7 @@ co_thread_send_event(
     uintptr_t param2
 );
 
-CO_API
+CO_CORE_API
 bool
 co_thread_send_task_event(
     struct co_thread_t* thread,

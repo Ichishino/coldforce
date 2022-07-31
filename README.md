@@ -4,14 +4,14 @@ Coldforce
 
 Coldforce is a library written in C that supports various network protocols.  
 With the asynchronous API of this library
-You can easily create event-driven network applications.  
+You can easily develop event-driven network applications.  
 The currently supported protocols are as follows.
 All of these support clients and servers (multi-client, C10K).
 * TCP/UDP (IPv4/IPv6)
 * TLS
 * HTTP/1.1 (http/https, pipelining, basic/digest authentication)
 * HTTP/2 (server push)
-* WebSocket (ws/wss)
+* WebSocket (ws/wss, over http2)
 
 ### Platforms
 * Windows
@@ -282,7 +282,7 @@ void on_my_tcp_accept(
 {
     co_tcp_accept((co_thread_t*)self, tcp_client);
 
-    co_ws_client_t* ws_client = co_ws_client_create_with(tcp_client);
+    co_ws_client_t* ws_client = co_tcp_upgrade_to_ws(tcp_client);
 
     co_ws_callbacks_st* callbacks = co_ws_get_callbacks(ws_client);
     callbacks->on_upgrade = (co_ws_upgrade_fn)on_my_ws_upgrade;

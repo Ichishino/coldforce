@@ -232,7 +232,8 @@ co_ws_client_on_receive_ready(
         co_ws_frame_t* frame = co_ws_frame_create();
 
         int result = co_ws_frame_deserialize(frame,
-            client->conn.receive_data.ptr,
+            co_byte_array_get_ptr(client->conn.receive_data.ptr, 0),
+            co_byte_array_get_count(client->conn.receive_data.ptr),
             &client->conn.receive_data.index);
 
         if (result == CO_WS_PARSE_COMPLETE)

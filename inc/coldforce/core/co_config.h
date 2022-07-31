@@ -22,7 +22,7 @@ CO_EXTERN_C_BEGIN
 // public
 //---------------------------------------------------------------------------//
 
-CO_API
+CO_CORE_API
 co_ss_map_t*
 co_config_read_file(
     const char* file_path

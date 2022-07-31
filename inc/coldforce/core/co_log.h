@@ -53,13 +53,13 @@ typedef struct co_log_t
 // private
 //---------------------------------------------------------------------------//
 
-CO_API
+CO_CORE_API
 co_log_t*
 co_log_get_default(
     void
 );
 
-CO_API
+CO_CORE_API
 void
 co_log_write_header(
     int level,
@@ -70,20 +70,20 @@ co_log_write_header(
 // public
 //---------------------------------------------------------------------------//
 
-CO_API
+CO_CORE_API
 void
 co_log_set_level(
     int category,
     int level
 );
 
-CO_API
+CO_CORE_API
 void
 co_log_add_category(
     int category, const char* name
 );
 
-CO_API
+CO_CORE_API
 void
 co_log_write(
     int level,
@@ -92,7 +92,7 @@ co_log_write(
     ...
 );
 
-CO_API
+CO_CORE_API
 void
 co_core_log_set_level(
     int level

@@ -52,10 +52,11 @@ typedef struct
 // private
 //---------------------------------------------------------------------------//
 
-int
+CO_WS_API int
 co_ws_frame_deserialize(
     co_ws_frame_t* frame,
-    const co_byte_array_t* data,
+    const uint8_t* data,
+    const size_t data_size,
     size_t* index
 );
 

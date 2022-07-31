@@ -19,6 +19,129 @@
 // public
 //---------------------------------------------------------------------------//
 
+co_http2_header_t*
+co_http2_header_create_ws_connect_request(
+    const char* path,
+    const char* protocols,
+    const char* extensions
+)
+{
+    co_http2_header_t* header =
+        co_http2_header_create_request("CONNECT", path);
+    co_http2_header_set_protocol(header, "websocket");
+
+    co_http2_header_set_field(
+        header, CO_HTTP2_HEADER_SEC_WS_VERSION, "13");
+
+    if (protocols != NULL)
+    {
+        co_http2_header_set_field(
+            header, CO_HTTP_HEADER_SEC_WS_PROTOCOL, protocols);
+    }
+
+    if (extensions != NULL)
+    {
+        co_http2_header_set_field(
+            header, CO_HTTP_HEADER_SEC_WS_EXTENSIONS, extensions);
+    }
+
+    return header;
+}
+
+co_http2_header_t*
+co_http2_header_create_ws_connect_response(
+    const char* protocol,
+    const char* extension
+)
+{
+    co_http2_header_t* header =
+        co_http2_header_create_response(200);
+
+    if (protocol != NULL)
+    {
+        co_http2_header_set_field(
+            header, CO_HTTP_HEADER_SEC_WS_PROTOCOL, protocol);
+    }
+
+    if (extension != NULL)
+    {
+        co_http2_header_set_field(
+            header, CO_HTTP_HEADER_SEC_WS_EXTENSIONS, extension);
+    }
+
+    return header;
+}
+
+bool
+co_http2_header_validate_ws_connect_request(
+    const co_http2_header_t* header
+)
+{
+    const char* method =
+        co_http2_header_get_method(header);
+
+    if (method != NULL &&
+        co_string_case_compare(method, "CONNECT") != 0)
+    {
+        return false;
+    }
+
+    const char* protocol =
+        co_http2_header_get_protocol(header);
+
+    if (protocol != NULL &&
+        co_string_case_compare(protocol, "websocket") != 0)
+    {
+        return false;
+    }
+
+    const char* version =
+        co_http2_header_get_field(
+            header, CO_HTTP2_HEADER_SEC_WS_VERSION);
+
+    if (version != NULL &&
+        strcmp(version, "13") != 0)
+    {
+        return false;
+    }
+
+    return true;
+}
+
+bool
+co_http2_header_validate_ws_connect_response(
+    const co_http2_header_t* header
+)
+{
+    if (co_http2_header_get_status_code(header) != 200)
+    {
+        return false;
+    }
+
+    return true;
+}
+
+co_ws_frame_t*
+co_http2_create_ws_frame(
+    const co_http2_data_st* data
+)
+{
+    co_ws_frame_t* frame = co_ws_frame_create();
+
+    size_t unused = 0;
+
+    if (co_ws_frame_deserialize(
+        frame, data->ptr, data->size, &unused) !=
+        CO_WS_PARSE_COMPLETE)
+    {
+        co_ws_frame_destroy(frame);
+
+        return NULL;
+    }
+
+    return frame;
+}
+
 bool
 co_http2_stream_send_ws_frame(
     co_http2_stream_t* stream,
@@ -30,7 +153,8 @@ co_http2_stream_send_ws_frame(
 )
 {
     return co_http_connection_send_ws_frame(
-        &stream->client->conn, fin, opcode, mask, data, data_size);
+        &stream->client->conn,
+        fin, opcode, mask, data, data_size);
 }
 
 bool

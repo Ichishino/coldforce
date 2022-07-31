@@ -32,7 +32,7 @@ co_ws_server_on_receive_ready(
 
 CO_WS_API
 struct co_ws_client_t*
-co_ws_client_create_with(
+co_tcp_upgrade_to_ws(
     co_tcp_client_t* tcp_client
 );
 

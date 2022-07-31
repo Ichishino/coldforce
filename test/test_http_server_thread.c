@@ -1,6 +1,21 @@
 #include "test_http_server_thread.h"
 
 //---------------------------------------------------------------------------//
+// websocket over http2
+//---------------------------------------------------------------------------//
+
+static void
+http_server_on_ws_http2_receive_frame(
+    http_server_thread* self,
+    co_http2_client_t* http2_client,
+    co_http2_stream_t* stream,
+    const co_ws_frame_t* frame
+)
+{
+
+}
+
+//---------------------------------------------------------------------------//
 // websocket
 //---------------------------------------------------------------------------//
 
@@ -150,8 +165,40 @@ http_server_on_http2_request(
         co_http2_stream_send_data(
             stream, true, data, (uint32_t)strlen(data));
     }
-    else if (strcmp(url->path, "/serverpush") == 0)
+    else if (strcmp(url->path, "/server-push") == 0)
     {
+    }
+    else if (strcmp(url->path, "/ws-over-http2") == 0)
+    {
+        if (request_header != NULL)
+        {
+            co_http2_header_t* response_header =
+                co_http2_header_create_ws_connect_response(NULL, NULL);
+
+            co_http2_stream_send_header(stream, true, response_header);
+        }
+        else
+        {
+            co_ws_frame_t* ws_frame =
+                co_http2_create_ws_frame(request_data);
+
+            if (ws_frame == NULL)
+            {
+                return;
+            }
+
+            http_server_on_ws_http2_receive_frame(
+                self, http2_client, stream, ws_frame);
+
+            co_ws_frame_destroy(ws_frame);
+        }
+    }
+    else if (strcmp(url->path, "/favicon.ico") == 0)
+    {
+        co_http2_header_t* response_header =
+            co_http2_header_create_response(404);
+        co_http2_stream_send_header(
+            stream, true, response_header);
     }
     else
     {
@@ -318,6 +365,16 @@ http_server_on_tls_handshake(
                 (co_http2_receive_finish_fn)http_server_on_http2_request;
             callbacks->on_close =
                 (co_http2_close_fn)http_server_on_http2_close;
+
+            co_http2_setting_param_st params[3];
+            params[0].id = CO_HTTP2_SETTING_ID_INITIAL_WINDOW_SIZE;
+            params[0].value = 1024 * 1024 * 10;
+            params[1].id = CO_HTTP2_SETTING_ID_MAX_CONCURRENT_STREAMS;
+            params[1].value = 200;
+            params[2].id = CO_HTTP2_SETTING_ID_ENABLE_CONNECT_PROTOCOL;
+            params[2].value = 1;
+            co_http2_init_settings(http2_client, params, 3);
+            co_http2_send_initial_settings(http2_client);
 
             co_list_add_tail(self->http2_clients, http2_client);
 

@@ -13,7 +13,7 @@ CO_EXTERN_C_BEGIN
 // private
 //---------------------------------------------------------------------------//
 
-CO_API
+CO_CORE_API
 uint64_t
 co_get_current_time_in_msecs(
     void

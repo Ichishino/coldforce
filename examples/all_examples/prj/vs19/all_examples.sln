@@ -45,6 +45,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tls_client", "..\..\..\tls_
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tls_echo_server", "..\..\..\tls_echo_server\prj\vs19\tls_echo_server.vcxproj", "{6B8F4D2F-26D8-412F-A521-933200033419}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "co_ws_http2", "..\..\..\..\prj\vs19\co_ws_http2\co_ws_http2.vcxproj", "{31D82D22-EC96-4C52-A466-A246D53BB8C2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -221,6 +223,14 @@ Global
 		{6B8F4D2F-26D8-412F-A521-933200033419}.Release|x64.Build.0 = Release|x64
 		{6B8F4D2F-26D8-412F-A521-933200033419}.Release|x86.ActiveCfg = Release|Win32
 		{6B8F4D2F-26D8-412F-A521-933200033419}.Release|x86.Build.0 = Release|Win32
+		{31D82D22-EC96-4C52-A466-A246D53BB8C2}.Debug|x64.ActiveCfg = Debug|x64
+		{31D82D22-EC96-4C52-A466-A246D53BB8C2}.Debug|x64.Build.0 = Debug|x64
+		{31D82D22-EC96-4C52-A466-A246D53BB8C2}.Debug|x86.ActiveCfg = Debug|Win32
+		{31D82D22-EC96-4C52-A466-A246D53BB8C2}.Debug|x86.Build.0 = Debug|Win32
+		{31D82D22-EC96-4C52-A466-A246D53BB8C2}.Release|x64.ActiveCfg = Release|x64
+		{31D82D22-EC96-4C52-A466-A246D53BB8C2}.Release|x64.Build.0 = Release|x64
+		{31D82D22-EC96-4C52-A466-A246D53BB8C2}.Release|x86.ActiveCfg = Release|Win32
+		{31D82D22-EC96-4C52-A466-A246D53BB8C2}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -15,7 +15,8 @@
 int
 co_ws_frame_deserialize(
     co_ws_frame_t* frame,
-    const co_byte_array_t* data,
+    const uint8_t* data,
+    const size_t data_size,
     size_t* index
 )
 {
@@ -23,7 +24,7 @@ co_ws_frame_deserialize(
 
     uint8_t opcode;
 
-    co_byte_array_get(data, temp_index, &opcode, sizeof(opcode));
+    memcpy(&opcode, &data[temp_index], sizeof(opcode));
     temp_index += sizeof(opcode);
 
     frame->header.fin = ((opcode & 0x80) == 0x80);
@@ -39,8 +40,7 @@ co_ws_frame_deserialize(
 
     uint8_t u8_length;
 
-    co_byte_array_get(
-        data, temp_index, &u8_length, sizeof(u8_length));
+    memcpy(&u8_length, &data[temp_index], sizeof(u8_length));
     temp_index += sizeof(u8_length);
 
     bool mask = ((u8_length & 0x80) == 0x80);
@@ -52,15 +52,14 @@ co_ws_frame_deserialize(
     }
     else if (u8_length == 126)
     {
-        if ((co_byte_array_get_count(data) - temp_index) < sizeof(uint16_t))
+        if ((data_size - temp_index) < sizeof(uint16_t))
         {
             return CO_WS_PARSE_MORE_DATA;
         }
 
         uint16_t u16_length;
 
-        co_byte_array_get(
-            data, temp_index, &u16_length, sizeof(u16_length));
+        memcpy(&u16_length, &data[temp_index], sizeof(u16_length));
         temp_index += sizeof(u16_length);
 
         frame->header.payload_size =
@@ -68,15 +67,14 @@ co_ws_frame_deserialize(
     }
     else if (u8_length == 127)
     {
-        if ((co_byte_array_get_count(data) - temp_index) < sizeof(uint64_t))
+        if ((data_size - temp_index) < sizeof(uint64_t))
         {
             return CO_WS_PARSE_MORE_DATA;
         }
 
         uint64_t u64_length;
 
-        co_byte_array_get(
-            data, temp_index, &u64_length, sizeof(u64_length));
+        memcpy(&u64_length, &data[temp_index], sizeof(u64_length));
         temp_index += sizeof(u64_length);
 
         frame->header.payload_size =
@@ -87,19 +85,16 @@ co_ws_frame_deserialize(
 
     if (mask)
     {
-        if ((co_byte_array_get_count(data) - temp_index) <
-            CO_WS_FRAME_MASK_SIZE)
+        if ((data_size - temp_index) < CO_WS_FRAME_MASK_SIZE)
         {
             return CO_WS_PARSE_MORE_DATA;
         }
 
-        co_byte_array_get(
-            data, temp_index, mask_key, sizeof(mask_key));
+        memcpy(mask_key, &data[temp_index], sizeof(mask_key));
         temp_index += sizeof(mask_key);
     }
 
-    if ((co_byte_array_get_count(data) - temp_index) <
-        frame->header.payload_size)
+    if ((data_size - temp_index) < frame->header.payload_size)
     {
         return CO_WS_PARSE_MORE_DATA;
     }
@@ -123,8 +118,8 @@ co_ws_frame_deserialize(
 
         frame->payload_data[frame->header.payload_size] = '\0';
 
-        co_byte_array_get(data, temp_index,
-            frame->payload_data, (size_t)frame->header.payload_size);
+        memcpy(frame->payload_data,
+            &data[temp_index], (size_t)frame->header.payload_size);
         temp_index += (size_t)frame->header.payload_size;
     }
 

@@ -37,6 +37,9 @@
     <ProjectReference Include="..\prj\vs19\co_ws\co_ws.vcxproj">
       <Project>{6d8c833f-5540-40fb-925e-428262ac2ca7}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\prj\vs19\co_ws_http2\co_ws_http2.vcxproj">
+      <Project>{31d82d22-ec96-4c52-a466-a246d53bb8c2}</Project>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.c" />

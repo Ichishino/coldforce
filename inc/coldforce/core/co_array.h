@@ -26,58 +26,58 @@ typedef struct {
 // public
 //---------------------------------------------------------------------------//
 
-CO_API
+CO_CORE_API
 co_array_t*
 co_array_create(
     size_t element_size
 );
 
-CO_API
+CO_CORE_API
 void
 co_array_destroy(
     co_array_t* arr
 );
 
-CO_API
+CO_CORE_API
 void*
 co_array_detach(
     co_array_t* arr
 );
 
-CO_API
+CO_CORE_API
 void
 co_array_clear(
     co_array_t* arr
 );
 
-CO_API
+CO_CORE_API
 bool
 co_array_set_count(
     co_array_t* arr,
     size_t count
 );
 
-CO_API
+CO_CORE_API
 size_t
 co_array_get_count(
     const co_array_t* arr
 );
 
-CO_API
+CO_CORE_API
 void*
 co_array_get_ptr(
     co_array_t* arr,
     size_t index
 );
 
-CO_API
+CO_CORE_API
 const void*
 co_array_get_const_ptr(
     const co_array_t* arr,
     size_t index
 );
 
-CO_API
+CO_CORE_API
 void
 co_array_set(
     co_array_t* arr,
@@ -86,7 +86,7 @@ co_array_set(
     size_t count
 );
 
-CO_API
+CO_CORE_API
 size_t
 co_array_get(
     const co_array_t* arr,
@@ -95,7 +95,7 @@ co_array_get(
     size_t count
 );
 
-CO_API
+CO_CORE_API
 void
 co_array_add(
     co_array_t* arr,
@@ -103,7 +103,7 @@ co_array_add(
     size_t count
 );
 
-CO_API
+CO_CORE_API
 void
 co_array_zero_clear(
     co_array_t* arr

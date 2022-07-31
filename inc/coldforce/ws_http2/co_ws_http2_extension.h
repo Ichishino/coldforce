@@ -21,6 +21,39 @@ CO_EXTERN_C_BEGIN
 //---------------------------------------------------------------------------//
 
 CO_WS_HTTP2_API
+co_http2_header_t*
+co_http2_header_create_ws_connect_request(
+    const char* path,
+    const char* protocols,
+    const char* extensions
+);
+
+CO_WS_HTTP2_API
+co_http2_header_t*
+co_http2_header_create_ws_connect_response(
+    const char* protocol,
+    const char* extension
+);
+
+CO_WS_HTTP2_API
+bool
+co_http2_header_validate_ws_connect_request(
+    const co_http2_header_t* header
+);
+
+CO_WS_HTTP2_API
+bool
+co_http2_header_validate_ws_connect_response(
+    const co_http2_header_t* header
+);
+
+CO_WS_HTTP2_API
+co_ws_frame_t*
+co_http2_create_ws_frame(
+    const co_http2_data_st* data
+);
+
+CO_WS_HTTP2_API
 bool
 co_http2_stream_send_ws_frame(
     co_http2_stream_t* stream,
