@@ -12,7 +12,30 @@ http_server_on_ws_http2_receive_frame(
     const co_ws_frame_t* frame
 )
 {
+    bool fin = co_ws_frame_get_fin(frame);
+    uint8_t opcode = co_ws_frame_get_opcode(frame);
+    size_t data_size = (size_t)co_ws_frame_get_payload_size(frame);
+    const uint8_t* data = co_ws_frame_get_payload_data(frame);
 
+    switch (opcode)
+    {
+    case CO_WS_OPCODE_TEXT:
+    case CO_WS_OPCODE_BINARY:
+    case CO_WS_OPCODE_CONTINUATION:
+    {
+        co_http2_stream_send_ws_frame(stream,
+            fin, opcode, false, data, (size_t)data_size);
+
+        break;
+    }
+    case CO_WS_OPCODE_CLOSE:
+    default:
+    {
+        co_http2_stream_ws_default_handler(stream, frame);
+
+        break;
+    }
+    }
 }
 
 //---------------------------------------------------------------------------//
@@ -172,10 +195,23 @@ http_server_on_http2_request(
     {
         if (request_header != NULL)
         {
-            co_http2_header_t* response_header =
-                co_http2_header_create_ws_connect_response(NULL, NULL);
+            if (co_http2_header_validate_ws_connect_request(request_header))
+            {
+                co_http2_header_t* response_header =
+                    co_http2_header_create_ws_connect_response(NULL, NULL);
 
-            co_http2_stream_send_header(stream, true, response_header);
+                co_http2_stream_send_header(stream, true, response_header);
+
+                co_http2_stream_set_protocol_mode(stream, "websocket");
+            }
+            else
+            {
+                co_http2_header_t* response_header =
+                    co_http2_header_create_response(404);
+
+                co_http2_stream_send_header(
+                    stream, true, response_header);
+            }
         }
         else
         {
@@ -256,68 +292,103 @@ http_server_on_http_request(
         return;
     }
 
-    if (co_http_request_validate_ws_upgrade(request))
+    bool not_found = false;
+
+    const co_http_url_st* url = co_http_request_get_url(request);
+
+    if (strcmp(url->path, "/ws") == 0)
+    {
+        if (co_http_request_validate_ws_upgrade(request))
+        {
+            co_http_response_t* response =
+                co_http_response_create_ws_upgrade(
+                    request, NULL, NULL);
+            co_http_connection_send_response(
+                (co_http_connection_t*)htttp_client, response);
+            co_http_response_destroy(response);
+
+            co_list_iterator_t* it =
+                co_list_find(self->http_clients, htttp_client);
+            co_list_data_st* data =
+                co_list_get(self->http_clients, it);
+            data->value = NULL;
+            co_list_remove_at(self->http_clients, it);
+
+            co_ws_client_t* ws_client =
+                co_http_upgrade_to_ws(htttp_client);
+            co_ws_callbacks_st* callbacks =
+                co_ws_get_callbacks(ws_client);
+            callbacks->on_receive_frame =
+                (co_ws_receive_frame_fn)http_server_on_ws_receive_frame;
+            callbacks->on_close =
+                (co_ws_close_fn)http_server_on_ws_close;
+
+            co_list_add_tail(self->ws_clients, ws_client);
+
+            return;
+        }
+        else
+        {
+            not_found = true;
+        }
+    }
+    else if (strcmp(url->path, "/favicon.ico") == 0)
+    {
+        not_found = true;
+    }
+
+    if (!not_found)
+    {
+        const char* data =
+            "<html><title>coldforce test</title><body>http OK</body></html>";
+        size_t data_length = strlen(data);
+
+        co_http_response_t* response =
+            co_http_response_create_with(200, "OK");
+        co_http_header_t* response_header =
+            co_http_response_get_header(response);
+        co_http_header_add_field(
+            response_header, "Content-Type", "text/html");
+        co_http_header_add_field(
+            response_header, "Cache-Control", "no-store");
+        co_http_header_set_content_length(
+            response_header, data_length);
+
+        const co_http_header_t* request_header =
+            co_http_request_get_const_header(request);
+
+        bool keep_alive =
+            co_http_header_get_keep_alive(request_header);
+
+        if (!keep_alive)
+        {
+            co_http_header_add_field(
+                response_header, CO_HTTP_HEADER_CONNECTION, "close");
+        }
+
+        co_http_send_response(htttp_client, response);
+        co_http_send_data(htttp_client, data, data_length);
+
+        if (!keep_alive)
+        {
+            co_list_remove(self->http_clients, htttp_client);
+        }
+    }
+    else
     {
         co_http_response_t* response =
-            co_http_response_create_ws_upgrade(
-                request, NULL, NULL);
-        co_http_connection_send_response(
-            (co_http_connection_t*)htttp_client, response);
-        co_http_response_destroy(response);
-
-        co_list_iterator_t* it =
-            co_list_find(self->http_clients, htttp_client);
-        co_list_data_st* data =
-            co_list_get(self->http_clients, it);
-        data->value = NULL;
-        co_list_remove_at(self->http_clients, it);
-
-        co_ws_client_t* ws_client =
-            co_http_upgrade_to_ws(htttp_client);
-        co_ws_callbacks_st* callbacks =
-            co_ws_get_callbacks(ws_client);
-        callbacks->on_receive_frame =
-            (co_ws_receive_frame_fn)http_server_on_ws_receive_frame;
-        callbacks->on_close =
-            (co_ws_close_fn)http_server_on_ws_close;
-
-        co_list_add_tail(self->ws_clients, ws_client);
-
-        return;
-    }
-
-    const char* data =
-        "<html><title>coldforce test</title><body>http OK</body></html>";
-    size_t data_length = strlen(data);
-
-    co_http_response_t* response =
-        co_http_response_create_with(200, "OK");
-    co_http_header_t* response_header =
-        co_http_response_get_header(response);
-    co_http_header_add_field(
-        response_header, "Content-Type", "text/html");
-    co_http_header_add_field(
-        response_header, "Cache-Control", "no-store");
-    co_http_header_set_content_length(
-        response_header, data_length);
-
-    const co_http_header_t* request_header =
-        co_http_request_get_const_header(request);
-    
-    bool keep_alive =
-        co_http_header_get_keep_alive(request_header);
-
-    if (!keep_alive)
-    {
+            co_http_response_create_with(404, "NotFound");
+        co_http_header_t* response_header =
+            co_http_response_get_header(response);
         co_http_header_add_field(
-            response_header, CO_HTTP_HEADER_CONNECTION, "close");
-    }
-    
-    co_http_send_response(htttp_client, response);
-    co_http_send_data(htttp_client, data, data_length);
+            response_header, "Content-Type", "text/html");
+        const char* data =
+            "<html><title>coldforce test</title><body>http NotFound</body></html>";
+        size_t data_length = strlen(data);
+        co_http_header_set_content_length(response_header, data_length);
+        co_http_send_response(htttp_client, response);
+        co_http_send_data(htttp_client, data, data_length);
 
-    if (!keep_alive)
-    {
         co_list_remove(self->http_clients, htttp_client);
     }
 }
@@ -482,6 +553,8 @@ on_http_server_thread_create(
 
     size_t protocol_count = 2;
     const char* protocols[] = { CO_HTTP2_PROTOCOL, CO_HTTP_PROTOCOL };
+//    size_t protocol_count = 1;
+//    const char* protocols[] = { CO_HTTP_PROTOCOL };
     co_tls_server_set_available_protocols(
         self->server, protocols, protocol_count);
 

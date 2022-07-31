@@ -1,5 +1,7 @@
 #include <coldforce/core/co_std.h>
 
+#include <coldforce/net/co_byte_order.h>
+
 #include <coldforce/http2/co_http2_stream.h>
 #include <coldforce/http2/co_http2_client.h>
 #include <coldforce/http2/co_http2_server.h>
@@ -269,4 +271,46 @@ co_http2_stream_send_ws_pong(
         CO_WS_OPCODE_PONG,
         !co_http2_is_server(stream->client),
         data, data_size);
+}
+
+void
+co_http2_stream_ws_default_handler(
+    co_http2_stream_t* stream,
+    const co_ws_frame_t* frame
+)
+{
+    switch (frame->header.opcode)
+    {
+    case CO_WS_OPCODE_CLOSE:
+    {
+        uint16_t reason_code = CO_WS_CLOSE_REASON_NORMAL;
+
+        if (frame->header.payload_size >= sizeof(uint16_t))
+        {
+            memcpy(&reason_code,
+                frame->payload_data, sizeof(uint16_t));
+            reason_code =
+                co_byte_order_16_network_to_host(reason_code);
+        }
+
+        co_http2_stream_send_ws_close(stream, reason_code, NULL);
+
+        co_http2_stream_set_protocol_mode(stream, NULL);
+
+        break;
+    }
+    case CO_WS_OPCODE_PING:
+    {
+        co_http2_stream_send_ws_pong(stream,
+            frame->payload_data, (size_t)frame->header.payload_size);
+
+        break;
+    }
+    case CO_WS_OPCODE_PONG:
+    {
+        break;
+    }
+    default:
+        break;
+    }
 }

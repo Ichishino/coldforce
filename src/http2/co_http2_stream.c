@@ -60,6 +60,7 @@ co_http2_stream_create(
     stream->local_window_size = stream->max_local_window_size;
 
     stream->promised_stream_id = 0;
+    stream->protocol = NULL;
 
     return stream;
 }
@@ -88,6 +89,9 @@ co_http2_stream_destroy(
             co_mem_free(stream->receive_data.ptr);
             stream->receive_data.ptr = NULL;
         }
+
+        co_string_destroy(stream->protocol);
+        stream->protocol = NULL;
 
         stream->state = CO_HTTP2_STREAM_STATE_CLOSED;
 
@@ -1296,6 +1300,41 @@ co_http2_stream_get_sendable_data_size(
     return co_min(
         stream->client->system_stream->remote_window_size,
         stream->remote_window_size);
+}
+
+bool
+co_http2_stream_set_protocol_mode(
+    co_http2_stream_t* stream,
+    const char* protocol
+)
+{
+    if (protocol != NULL &&
+        stream->protocol != NULL)
+    {
+        return false;
+    }
+
+    co_string_destroy(stream->protocol);
+
+    if (protocol != NULL)
+    {
+        stream->protocol =
+            co_string_duplicate(protocol);
+    }
+    else
+    {
+        stream->protocol = NULL;
+    }
+
+    return true;
+}
+
+const char*
+co_http2_stream_get_protocol_mode(
+    const co_http2_stream_t* stream
+)
+{
+    return stream->protocol;
 }
 
 void

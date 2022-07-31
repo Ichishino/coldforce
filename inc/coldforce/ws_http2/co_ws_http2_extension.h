@@ -114,6 +114,13 @@ co_http2_stream_send_ws_pong(
     size_t data_size
 );
 
+CO_WS_HTTP2_API
+void
+co_http2_stream_ws_default_handler(
+    co_http2_stream_t* stream,
+    const co_ws_frame_t* frame
+);
+
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 

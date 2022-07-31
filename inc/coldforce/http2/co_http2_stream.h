@@ -88,6 +88,8 @@ typedef struct co_http2_stream_t
 
     uint32_t promised_stream_id;
 
+    char* protocol;
+
     void* user_data;
 
 } co_http2_stream_t;
@@ -211,6 +213,19 @@ co_http2_stream_get_remote_window_size(
 CO_HTTP2_API
 uint32_t
 co_http2_stream_get_sendable_data_size(
+    const co_http2_stream_t* stream
+);
+
+CO_HTTP2_API
+bool
+co_http2_stream_set_protocol_mode(
+    co_http2_stream_t* stream,
+    const char* protocol
+);
+
+CO_HTTP2_API
+const char*
+co_http2_stream_get_protocol_mode(
     const co_http2_stream_t* stream
 );
 
