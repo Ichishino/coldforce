@@ -32,14 +32,14 @@ co_http_send_response(
 
 CO_HTTP_API
 bool
-co_http_begin_chunked_response(
+co_http_start_chunked_response(
     co_http_client_t* client,
     co_http_response_t* response
 );
 
 CO_HTTP_API
 bool
-co_http_send_chunked_response(
+co_http_send_chunked_data(
     co_http_client_t* client,
     const void* data,
     size_t data_length

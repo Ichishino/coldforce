@@ -52,6 +52,16 @@ typedef struct
 // private
 //---------------------------------------------------------------------------//
 
+CO_WS_API bool
+co_ws_frame_serialize(
+    bool fin,
+    uint8_t opcode,
+    bool mask,
+    const void* data,
+    size_t data_size,
+    co_byte_array_t* buffer
+);
+
 CO_WS_API int
 co_ws_frame_deserialize(
     co_ws_frame_t* frame,

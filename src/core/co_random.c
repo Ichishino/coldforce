@@ -1,7 +1,6 @@
 #include <coldforce/core/co_std.h>
 #include <coldforce/core/co_string.h>
-
-#include <coldforce/http/co_random.h>
+#include <coldforce/core/co_random.h>
 
 #ifdef CO_OS_WIN
 #include <windows.h>

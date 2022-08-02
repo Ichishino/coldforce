@@ -235,7 +235,7 @@ co_http_send_response(
 }
 
 bool
-co_http_begin_chunked_response(
+co_http_start_chunked_response(
     co_http_client_t* client,
     co_http_response_t* response
 )
@@ -281,7 +281,7 @@ co_http_begin_chunked_response(
 }
 
 bool
-co_http_send_chunked_response(
+co_http_send_chunked_data(
     co_http_client_t* client,
     const void* data,
     size_t data_length
@@ -320,5 +320,5 @@ co_http_end_chunked_response(
     co_http_client_t* client
 )
 {
-    return co_http_send_chunked_response(client, NULL, 0);
+    return co_http_send_chunked_data(client, NULL, 0);
 }

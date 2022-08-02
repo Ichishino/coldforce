@@ -170,14 +170,10 @@ co_net_selector_wait(
 
                 if (data_length > 0)
                 {
-                    if (!co_thread_send_event(
+                    co_thread_send_event(
                         io_ctx->sock->owner_thread,
                         CO_NET_EVENT_ID_TCP_RECEIVE_READY,
-                        (uintptr_t)io_ctx->sock, (uintptr_t)data_length))
-                    {
-                        co_tcp_client_on_receive_ready(
-                            (co_tcp_client_t*)io_ctx->sock, data_length);
-                    }
+                        (uintptr_t)io_ctx->sock, (uintptr_t)data_length);
                 }
                 else
                 {

@@ -127,6 +127,7 @@ co_ws_server_on_receive_ready(
                 &client->conn.tcp_client->remote_net_addr,
                 frame->header.fin,
                 frame->header.opcode,
+                frame->payload_data,
                 (size_t)frame->header.payload_size,
                 "ws receive frame");
 

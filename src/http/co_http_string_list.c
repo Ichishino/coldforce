@@ -87,14 +87,22 @@ co_http_string_list_parse(
 
             items[index].first =
                 co_string_duplicate_n(str, first_length);
-            items[index].second =
-                co_string_duplicate_n(&str[first_length + 1], second_length);
 
             co_string_trim(items[index].first, first_length);
-            co_string_trim(items[index].second, second_length);
-
             co_string_trim_quotes(items[index].first);
-            co_string_trim_quotes(items[index].second);
+
+            if (second_length > 0)
+            {
+                items[index].second =
+                    co_string_duplicate_n(&str[first_length + 1], second_length);
+
+                co_string_trim(items[index].second, second_length);
+                co_string_trim_quotes(items[index].second);
+            }
+            else
+            {
+                items[index].second = NULL;
+            }
         }
         else
         {

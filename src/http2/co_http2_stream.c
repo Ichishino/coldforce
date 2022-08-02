@@ -60,7 +60,9 @@ co_http2_stream_create(
     stream->local_window_size = stream->max_local_window_size;
 
     stream->promised_stream_id = 0;
-    stream->protocol = NULL;
+
+    stream->protocol.name = NULL;
+    stream->protocol.data = 0;
 
     return stream;
 }
@@ -90,8 +92,8 @@ co_http2_stream_destroy(
             stream->receive_data.ptr = NULL;
         }
 
-        co_string_destroy(stream->protocol);
-        stream->protocol = NULL;
+        co_string_destroy(stream->protocol.name);
+        stream->protocol.name = NULL;
 
         stream->state = CO_HTTP2_STREAM_STATE_CLOSED;
 
@@ -362,6 +364,15 @@ co_http2_stream_change_state(
 
         break;
     }
+    case CO_HTTP2_STREAM_STATE_PROTOCOL:
+    {
+        if (frame_type == CO_HTTP2_FRAME_TYPE_RST_STREAM)
+        {
+            stream->state = CO_HTTP2_STREAM_STATE_CLOSED;
+        }
+
+        break;
+    }
     default:
     {
         error_code = CO_HTTP2_STREAM_ERROR_INTERNAL_ERROR;
@@ -448,6 +459,9 @@ co_http2_stream_on_receive_finish(
             stream->receive_header, &stream->receive_data,
             error_code);
     }
+
+    co_http2_header_destroy(stream->receive_header);
+    stream->receive_header = NULL;
 
     co_mem_free(stream->receive_data.ptr);
     stream->receive_data.ptr = NULL;
@@ -858,6 +872,23 @@ co_http2_stream_on_receive_frame(
     }
 
     return true;
+}
+
+void
+co_http2_stream_set_protocol_data(
+    co_http2_stream_t* stream,
+    uintptr_t data
+)
+{
+    stream->protocol.data = data;
+}
+
+uintptr_t
+co_http2_stream_get_protocol_data(
+    const co_http2_stream_t* stream
+)
+{
+    return stream->protocol.data;
 }
 
 //---------------------------------------------------------------------------//
@@ -1309,21 +1340,26 @@ co_http2_stream_set_protocol_mode(
 )
 {
     if (protocol != NULL &&
-        stream->protocol != NULL)
+        stream->protocol.name != NULL)
     {
         return false;
     }
 
-    co_string_destroy(stream->protocol);
+    co_string_destroy(stream->protocol.name);
+    stream->protocol.data = 0;
 
     if (protocol != NULL)
     {
-        stream->protocol =
+        stream->protocol.name =
             co_string_duplicate(protocol);
+
+        stream->state = CO_HTTP2_STREAM_STATE_PROTOCOL;
     }
     else
     {
-        stream->protocol = NULL;
+        stream->protocol.name = NULL;
+
+        stream->state = CO_HTTP2_STREAM_STATE_CLOSED;
     }
 
     return true;
@@ -1334,7 +1370,7 @@ co_http2_stream_get_protocol_mode(
     const co_http2_stream_t* stream
 )
 {
-    return stream->protocol;
+    return stream->protocol.name;
 }
 
 void

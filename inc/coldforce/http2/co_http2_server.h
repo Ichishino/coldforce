@@ -25,12 +25,6 @@ co_http2_server_on_tcp_receive_ready(
     co_tcp_client_t* tcp_client
 );
 
-CO_HTTP2_API
-bool
-co_http2_is_server(
-    const co_http2_client_t* client
-);
-
 //---------------------------------------------------------------------------//
 // public
 //---------------------------------------------------------------------------//

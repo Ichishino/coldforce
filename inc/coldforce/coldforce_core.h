@@ -10,7 +10,7 @@
 #include <coldforce/core/co_list.h>
 #include <coldforce/core/co_string_list.h>
 #include <coldforce/core/co_map.h>
-#include <coldforce/core/co_ss_map.h>
+#include <coldforce/core/co_string_map.h>
 #include <coldforce/core/co_queue.h>
 #include <coldforce/core/co_string.h>
 #include <coldforce/core/co_config.h>
@@ -20,6 +20,7 @@
 #include <coldforce/core/co_app.h>
 #include <coldforce/core/co_debug.h>
 #include <coldforce/core/co_log.h>
+#include <coldforce/core/co_random.h>
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

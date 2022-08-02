@@ -315,7 +315,7 @@ co_map_remove(
 
 void
 co_map_iterator_init(
-    co_map_t* map,
+    const co_map_t* map,
     co_map_iterator_t* iterator
 )
 {
@@ -336,12 +336,12 @@ co_map_iterator_init(
     iterator->item = NULL;
 }
 
-co_map_data_st*
+const co_map_data_st*
 co_map_iterator_get_next(
     co_map_iterator_t* iterator
 )
 {
-    co_map_data_st* data = &iterator->item->data;
+    const co_map_data_st* data = &iterator->item->data;
 
     if (iterator->item->next != NULL)
     {

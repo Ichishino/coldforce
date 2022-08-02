@@ -1,4 +1,5 @@
 #include <coldforce/core/co_std.h>
+#include <coldforce/core/co_string.h>
 
 #include <coldforce/net/co_byte_order.h>
 
@@ -7,6 +8,7 @@
 #include <coldforce/http2/co_http2_server.h>
 
 #include <coldforce/ws/co_ws_http_extension.h>
+#include <coldforce/ws/co_ws_log.h>
 
 #include <coldforce/ws_http2/co_ws_http2_extension.h>
 
@@ -76,9 +78,15 @@ co_http2_header_create_ws_connect_response(
 
 bool
 co_http2_header_validate_ws_connect_request(
+    const co_http2_stream_t* stream,
     const co_http2_header_t* header
 )
 {
+    if (!stream->client->local_settings.enable_conncet_protocol)
+    {
+        return false;
+    }
+
     const char* method =
         co_http2_header_get_method(header);
 
@@ -124,7 +132,8 @@ co_http2_header_validate_ws_connect_response(
 }
 
 co_ws_frame_t*
-co_http2_create_ws_frame(
+co_http2_stream_receive_ws_frame(
+    const co_http2_stream_t* stream,
     const co_http2_data_st* data
 )
 {
@@ -141,6 +150,16 @@ co_http2_create_ws_frame(
         return NULL;
     }
 
+    co_ws_log_debug_frame(
+        &stream->client->conn.tcp_client->sock.local_net_addr,
+        "<--",
+        &stream->client->conn.tcp_client->remote_net_addr,
+        frame->header.fin,
+        frame->header.opcode,
+        frame->payload_data,
+        (size_t)frame->header.payload_size,
+        "ws receive frame (over http2)");
+
     return frame;
 }
 
@@ -149,14 +168,34 @@ co_http2_stream_send_ws_frame(
     co_http2_stream_t* stream,
     bool fin,
     uint8_t opcode,
-    bool mask,
     const void* data,
     size_t data_size
 )
 {
-    return co_http_connection_send_ws_frame(
-        &stream->client->conn,
-        fin, opcode, mask, data, data_size);
+    co_ws_log_debug_frame(
+        &stream->client->conn.tcp_client->sock.local_net_addr,
+        "-->",
+        &stream->client->conn.tcp_client->remote_net_addr,
+        fin, opcode, data, data_size,
+        "ws send frame (over http2)");
+
+    co_byte_array_t* buffer = co_byte_array_create();
+
+    co_ws_frame_serialize(
+        fin, opcode,
+        !co_http_connection_is_server(&stream->client->conn),
+        data, data_size,
+        buffer);
+
+    bool result =
+        co_http2_stream_send_data(
+            stream,
+            true, co_byte_array_get_ptr(buffer, 0),
+            (uint32_t)co_byte_array_get_count(buffer));
+
+    co_byte_array_destroy(buffer);
+
+    return result;
 }
 
 bool
@@ -170,7 +209,6 @@ co_http2_stream_send_ws_binary(
     return co_http2_stream_send_ws_frame(
         stream, fin,
         CO_WS_OPCODE_BINARY,
-        !co_http2_is_server(stream->client),
         data, data_size);
 }
 
@@ -184,7 +222,6 @@ co_http2_stream_send_ws_text(
     return co_http2_stream_send_ws_frame(
         stream, fin,
         CO_WS_OPCODE_TEXT,
-        !co_http2_is_server(stream->client),
         text, strlen(text));
 }
 
@@ -199,7 +236,6 @@ co_http2_stream_send_ws_continuation(
     return co_http2_stream_send_ws_frame(
         stream, fin,
         CO_WS_OPCODE_CONTINUATION,
-        !co_http2_is_server(stream->client),
         data, data_size);
 }
 
@@ -210,6 +246,13 @@ co_http2_stream_send_ws_close(
     const char* utf8_reason_str
 )
 {
+    if (co_http2_stream_get_protocol_data(stream) == 1)
+    {
+        return true;
+    }
+
+    co_http2_stream_set_protocol_data(stream, 1);
+
     size_t data_size = sizeof(reason_code);
 
     if (utf8_reason_str != NULL)
@@ -237,7 +280,6 @@ co_http2_stream_send_ws_close(
         co_http2_stream_send_ws_frame(
             stream, true,
             CO_WS_OPCODE_CLOSE,
-            !co_http2_is_server(stream->client),
             data, data_size);
 
     co_mem_free(data);
@@ -255,7 +297,6 @@ co_http2_stream_send_ws_ping(
     return co_http2_stream_send_ws_frame(
         stream, true,
         CO_WS_OPCODE_PING,
-        !co_http2_is_server(stream->client),
         data, data_size);
 }
 
@@ -269,7 +310,6 @@ co_http2_stream_send_ws_pong(
     return co_http2_stream_send_ws_frame(
         stream, true,
         CO_WS_OPCODE_PONG,
-        !co_http2_is_server(stream->client),
         data, data_size);
 }
 

@@ -21,6 +21,7 @@ CO_EXTERN_C_BEGIN
 // private
 //---------------------------------------------------------------------------//
 
+CO_WS_API
 void
 co_ws_log_write_frame(
     int level,
@@ -29,6 +30,7 @@ co_ws_log_write_frame(
     const co_net_addr_t* addr2,
     bool fin,
     uint8_t opcode,
+    const void* data,
     size_t data_size,
     const char* format,
     ...
@@ -54,9 +56,9 @@ co_ws_log_write_frame(
     co_ws_log_write(CO_LOG_LEVEL_DEBUG, \
         addr1, text, addr2, format, ##__VA_ARGS__)
 
-#define co_ws_log_debug_frame(addr1, text, addr2, fin, opcode, data_size, format, ...) \
+#define co_ws_log_debug_frame(addr1, text, addr2, fin, opcode, data, data_size, format, ...) \
     co_ws_log_write_frame(CO_LOG_LEVEL_DEBUG, \
-        addr1, text, addr2, fin, opcode, data_size, format, ##__VA_ARGS__)
+        addr1, text, addr2, fin, opcode, data, data_size, format, ##__VA_ARGS__)
 
 //---------------------------------------------------------------------------//
 // public

@@ -1,9 +1,9 @@
 #include <coldforce/core/co_std.h>
 #include <coldforce/core/co_string.h>
+#include <coldforce/core/co_random.h>
 
 #include <coldforce/http/co_base64.h>
 #include <coldforce/http/co_sha1.h>
-#include <coldforce/http/co_random.h>
 #include <coldforce/http/co_http_string_list.h>
 #include <coldforce/http/co_http_server.h>
 
@@ -348,121 +348,4 @@ co_http_response_create_ws_upgrade(
     }
 
     return response;
-}
-
-bool
-co_http_connection_send_ws_frame(
-    co_http_connection_t* conn,
-    bool fin,
-    uint8_t opcode,
-    bool mask,
-    const void* data,
-    size_t data_size
-)
-{
-    co_ws_log_debug_frame(
-        &conn->tcp_client->sock.local_net_addr,
-        "-->",
-        &conn->tcp_client->remote_net_addr,
-        fin, opcode, data_size,
-        "ws send frame");
-
-    uint8_t header[32];
-    uint32_t header_size = CO_WS_FRAME_HEADER_MIN_SIZE;
-
-    header[0] = opcode;
-
-    if (fin)
-    {
-        header[0] |= 0x80;
-    }
-
-    if (data_size <= 125)
-    {
-        header[1] = (uint8_t)data_size;
-    }
-    else if (data_size <= UINT16_MAX)
-    {
-        header[1] = 126;
-
-        header[2] = (uint8_t)((data_size & 0xff00) >> 8);
-        header[3] = (uint8_t)(data_size & 0x00ff);
-
-        header_size += 2;
-    }
-    else
-    {
-        header[1] = 127;
-
-        header[2] = (uint8_t)((data_size & 0xff00000000000000) >> 56);
-        header[3] = (uint8_t)((data_size & 0x00ff000000000000) >> 48);
-        header[4] = (uint8_t)((data_size & 0x0000ff0000000000) >> 40);
-        header[5] = (uint8_t)((data_size & 0x000000ff00000000) >> 32);
-        header[6] = (uint8_t)((data_size & 0x00000000ff000000) >> 24);
-        header[7] = (uint8_t)((data_size & 0x0000000000ff0000) >> 16);
-        header[8] = (uint8_t)((data_size & 0x000000000000ff00) >> 8);
-        header[9] = (uint8_t)(data_size & 0x00000000000000ff);
-
-        header_size += 8;
-    }
-
-    bool result = false;
-
-    if (mask)
-    {
-        header[1] |= 0x80;
-
-        uint8_t* masked_data =
-            (uint8_t*)co_mem_alloc(data_size);
-
-        if (masked_data == NULL)
-        {
-            return false;
-        }
-
-        uint8_t mask_key[CO_WS_FRAME_MASK_SIZE];
-
-        co_random(mask_key, sizeof(mask_key));
-
-        for (uint16_t index = 0;
-            index < CO_WS_FRAME_MASK_SIZE; ++index)
-        {
-            header[header_size] = mask_key[index];
-            ++header_size;
-        }
-
-        for (uint64_t index = 0; index < data_size; ++index)
-        {
-            masked_data[index] = ((uint8_t*)data)[index] ^
-                mask_key[index % CO_WS_FRAME_MASK_SIZE];
-        }
-
-        result =
-            co_http_connection_send_data(
-                conn, header, header_size);
-
-        if (result && (data_size > 0))
-        {
-            result =
-                co_http_connection_send_data(
-                    conn, masked_data, data_size);
-        }
-
-        co_mem_free(masked_data);
-    }
-    else
-    {
-        result =
-            co_http_connection_send_data(
-                conn, header, header_size);
-
-        if (result && (data_size > 0))
-        {
-            result =
-                co_http_connection_send_data(
-                    conn, data, data_size);
-        }
-    }
-
-    return result;
 }

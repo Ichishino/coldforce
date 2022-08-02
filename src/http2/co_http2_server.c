@@ -248,14 +248,6 @@ co_http2_server_on_tcp_receive_ready(
     co_byte_array_clear(client->conn.receive_data.ptr);
 }
 
-bool
-co_http2_is_server(
-    const co_http2_client_t* client
-)
-{
-    return (client->conn.base_url == NULL);
-}
-
 //---------------------------------------------------------------------------//
 // public
 //---------------------------------------------------------------------------//

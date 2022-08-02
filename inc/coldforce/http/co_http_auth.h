@@ -1,7 +1,7 @@
 #ifndef CO_HTTP_AUTH_H_INCLUDED
 #define CO_HTTP_AUTH_H_INCLUDED
 
-#include <coldforce/core/co_ss_map.h>
+#include <coldforce/core/co_map.h>
 
 #include <coldforce/http/co_http.h>
 

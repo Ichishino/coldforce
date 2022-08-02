@@ -1,7 +1,9 @@
 #include <coldforce/core/co_std.h>
 #include <coldforce/core/co_string.h>
+#include <coldforce/core/co_byte_array.h>
 
 #include <coldforce/http/co_http_url.h>
+#include <coldforce/http/co_http_string_list.h>
 
 #include <ctype.h>
 
@@ -11,6 +13,18 @@
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
+
+//---------------------------------------------------------------------------//
+// private
+//---------------------------------------------------------------------------//
+
+static void*
+co_http_url_query_duplicate_map_item(
+    const void* key_or_value
+)
+{
+    return (void*)key_or_value;
+}
 
 //---------------------------------------------------------------------------//
 // public
@@ -280,10 +294,12 @@ co_http_url_component_encode(
         {
             (*dest)[(*dest_length)++] = src[index];
         }
+/*
         else if (src[index] == ' ')
         {
             (*dest)[(*dest_length)++] = '+';
         }
+*/
         else
         {
             char hex[3];
@@ -347,4 +363,138 @@ co_http_url_component_decode(
     (*dest)[(*dest_length)] = '\0';
 
     return true;
+}
+
+co_string_map_t*
+co_http_url_query_parse(
+    const char* src,
+    bool unescape
+)
+{
+    co_map_ctx_st ctx = CO_STRING_MAP_CTX;
+    co_string_map_t* query_map = co_map_create(&ctx);
+
+    if (src != NULL)
+    {
+        co_http_string_item_st items[256];
+
+        size_t count =
+            co_http_string_list_parse(src, items, 256);
+
+        co_item_duplicate_fn duplicate_key =
+            query_map->duplicate_key;
+        co_item_duplicate_fn duplicate_value =
+            query_map->duplicate_value;
+
+        query_map->duplicate_key =
+            co_http_url_query_duplicate_map_item;
+        query_map->duplicate_value =
+            co_http_url_query_duplicate_map_item;
+
+        for (size_t index = 0; index < count; ++index)
+        {
+            char* key;
+            char* value;
+
+            if (unescape)
+            {
+                size_t key_length;
+
+                co_http_url_component_decode(
+                    items[index].first, strlen(items[index].first),
+                    &key, &key_length);
+
+                size_t value_length;
+
+                co_http_url_component_decode(
+                    items[index].second, strlen(items[index].second),
+                    &value, &value_length);
+            }
+            else
+            {
+                key = items[index].first;
+                items[index].first = NULL;
+
+                value = items[index].second;
+                items[index].second = NULL;
+            }
+
+            co_string_map_set(query_map, key, value);
+        }
+
+        query_map->duplicate_key =
+            duplicate_key;
+        query_map->duplicate_value =
+            duplicate_value;
+
+        co_http_string_list_cleanup(items, count);
+    }
+
+    return query_map;
+}
+
+char*
+co_http_url_query_to_string(
+    const co_string_map_t* query_map,
+    bool escape
+)
+{
+    co_byte_array_t* buffer = co_byte_array_create();
+
+    co_string_map_iterator_t it;
+    co_string_map_iterator_init(query_map, &it);
+
+    while (co_string_map_iterator_has_next(&it))
+    {
+        const co_string_map_data_st* data =
+            co_string_map_iterator_get_next(&it);
+
+        if (escape)
+        {
+            char* key = NULL;
+            size_t key_length = 0;
+
+            co_http_url_component_encode(
+                data->key, strlen(data->key), &key, &key_length);
+
+            char* value = NULL;
+            size_t value_length = 0;
+
+            co_http_url_component_encode(
+                data->value, strlen(data->value), &value, &value_length);
+
+            co_byte_array_add_string(buffer, key);
+            co_byte_array_add_string(buffer, "=");
+            co_byte_array_add_string(buffer, value);
+            co_byte_array_add_string(buffer, "&");
+
+            co_string_destroy(key);
+            co_string_destroy(value);
+        }
+        else
+        {
+            co_byte_array_add_string(buffer, data->key);
+            co_byte_array_add_string(buffer, "=");
+            co_byte_array_add_string(buffer, data->value);
+            co_byte_array_add_string(buffer, "&");
+        }
+    }
+
+    uint8_t* str = co_byte_array_get_ptr(buffer, 0);
+    size_t length = co_byte_array_get_count(buffer);
+
+    if (length > 0)
+    {
+        str[length - 1] = '\0';
+    }
+    else
+    {
+        co_byte_array_add_string(buffer, "\0");
+    }
+
+    char* result = (char*)co_byte_array_detach(buffer);
+
+    co_byte_array_destroy(buffer);
+
+    return result;
 }

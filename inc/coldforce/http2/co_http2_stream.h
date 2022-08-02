@@ -26,6 +26,7 @@ struct co_thread_t;
 #define CO_HTTP2_STREAM_STATE_LOCAL_CLOSED          4
 #define CO_HTTP2_STREAM_STATE_RESERVED_LOCAL        5
 #define CO_HTTP2_STREAM_STATE_RESERVED_REMOTE       6
+#define CO_HTTP2_STREAM_STATE_PROTOCOL              10
 
 #define CO_HTTP2_STREAM_ERROR_NO_ERROR              0x0
 #define CO_HTTP2_STREAM_ERROR_PROTOCOL_ERROR        0x1
@@ -88,7 +89,12 @@ typedef struct co_http2_stream_t
 
     uint32_t promised_stream_id;
 
-    char* protocol;
+    struct Protocol
+    {
+        char* name;
+        uintptr_t data;
+
+    } protocol;
 
     void* user_data;
 
@@ -128,6 +134,19 @@ void
 co_http2_stream_update_local_window_size(
     co_http2_stream_t* stream,
     uint32_t consumed_size
+);
+
+CO_HTTP2_API
+void
+co_http2_stream_set_protocol_data(
+    co_http2_stream_t* stream,
+    uintptr_t data
+);
+
+CO_HTTP2_API
+uintptr_t
+co_http2_stream_get_protocol_data(
+    const co_http2_stream_t* stream
 );
 
 //---------------------------------------------------------------------------//

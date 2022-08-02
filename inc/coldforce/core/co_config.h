@@ -2,7 +2,7 @@
 #define CO_CONFIG_H_INCLUDED
 
 #include <coldforce/core/co.h>
-#include <coldforce/core/co_ss_map.h>
+#include <coldforce/core/co_string_map.h>
 
 CO_EXTERN_C_BEGIN
 
@@ -23,7 +23,7 @@ CO_EXTERN_C_BEGIN
 //---------------------------------------------------------------------------//
 
 CO_CORE_API
-co_ss_map_t*
+co_string_map_t*
 co_config_read_file(
     const char* file_path
 );

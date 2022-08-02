@@ -18,6 +18,7 @@ co_ws_log_write_frame(
     const co_net_addr_t* addr2,
     bool fin,
     uint8_t opcode,
+    const void* data,
     size_t data_size,
     const char* format,
     ...
@@ -86,6 +87,15 @@ co_ws_log_write_frame(
     fprintf(fp,
         "%s(0x%02x) fin(%d) payload_size(%zd)\n",
         opcode_str, opcode, fin, data_size);
+
+    if (opcode == CO_WS_OPCODE_TEXT)
+    {
+        co_log_write_header(
+            level, CO_LOG_CATEGORY_WS);
+
+        fprintf(fp, "%*.*s\n",
+            (int)data_size, (int)data_size, (const char*)data);
+    }
 
     co_log_write_header(
         level, CO_LOG_CATEGORY_WS);

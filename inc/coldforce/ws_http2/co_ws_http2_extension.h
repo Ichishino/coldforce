@@ -38,6 +38,7 @@ co_http2_header_create_ws_connect_response(
 CO_WS_HTTP2_API
 bool
 co_http2_header_validate_ws_connect_request(
+    const co_http2_stream_t* stream,
     const co_http2_header_t* header
 );
 
@@ -49,7 +50,8 @@ co_http2_header_validate_ws_connect_response(
 
 CO_WS_HTTP2_API
 co_ws_frame_t*
-co_http2_create_ws_frame(
+co_http2_stream_receive_ws_frame(
+    const co_http2_stream_t* stream,
     const co_http2_data_st* data
 );
 
@@ -59,7 +61,6 @@ co_http2_stream_send_ws_frame(
     co_http2_stream_t* stream,
     bool fin,
     uint8_t opcode,
-    bool mask,
     const void* data,
     size_t data_size
 );

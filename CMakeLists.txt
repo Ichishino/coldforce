@@ -11,3 +11,4 @@ add_subdirectory(src/ws)
 add_subdirectory(src/ws_http2)
 
 add_subdirectory(examples)
+#add_subdirectory(test)

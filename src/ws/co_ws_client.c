@@ -1,5 +1,6 @@
 #include <coldforce/core/co_std.h>
 #include <coldforce/core/co_string.h>
+#include <coldforce/core/co_random.h>
 
 #include <coldforce/net/co_byte_order.h>
 #include <coldforce/net/co_net_addr_resolve.h>
@@ -7,7 +8,6 @@
 #include <coldforce/tls/co_tls_client.h>
 
 #include <coldforce/http/co_http_log.h>
-#include <coldforce/http/co_random.h>
 
 #include <coldforce/ws/co_ws_client.h>
 #include <coldforce/ws/co_ws_http_extension.h>
@@ -244,6 +244,7 @@ co_ws_client_on_receive_ready(
                 &client->conn.tcp_client->remote_net_addr,
                 frame->header.fin,
                 frame->header.opcode,
+                frame->payload_data,
                 (size_t)frame->header.payload_size,
                 "ws receive frame");
 
@@ -544,8 +545,30 @@ co_ws_send(
     size_t data_size
 )
 {
-    return co_http_connection_send_ws_frame(
-        &client->conn, fin, opcode, client->mask, data, data_size);
+    co_ws_log_debug_frame(
+        &client->conn.tcp_client->sock.local_net_addr,
+        "-->",
+        &client->conn.tcp_client->remote_net_addr,
+        fin, opcode, data, data_size,
+        "ws send frame");
+
+    co_byte_array_t* buffer = co_byte_array_create();
+
+    co_ws_frame_serialize(
+        fin, opcode,
+        !co_http_connection_is_server(&client->conn),
+        data, data_size,
+        buffer);
+
+    bool result =
+        co_http_connection_send_data(
+            &client->conn,
+            co_byte_array_get_ptr(buffer, 0),
+            co_byte_array_get_count(buffer));
+
+    co_byte_array_destroy(buffer);
+
+    return result;
 }
 
 bool

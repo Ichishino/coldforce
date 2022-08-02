@@ -1,6 +1,8 @@
 #ifndef CO_HTTP_URL_H_INCLUDED
 #define CO_HTTP_URL_H_INCLUDED
 
+#include <coldforce/core/co_string_map.h>
+
 #include <coldforce/http/co_http.h>
 
 CO_EXTERN_C_BEGIN
@@ -82,6 +84,20 @@ co_http_url_component_decode(
     size_t src_length,
     char** dest,
     size_t* dest_length
+);
+
+CO_HTTP_API
+co_string_map_t*
+co_http_url_query_parse(
+    const char* src,
+    bool unescape
+);
+
+CO_HTTP_API
+char*
+co_http_url_query_to_string(
+    const co_string_map_t* query_map,
+    bool escape
 );
 
 //---------------------------------------------------------------------------//

@@ -72,6 +72,15 @@ co_http2_log_write_header(
             ":method: %s\n", header->pseudo.method);
     }
 
+    if (header->pseudo.protocol != NULL)
+    {
+        co_log_write_header(
+            level, CO_LOG_CATEGORY_HTTP2);
+
+        fprintf(fp,
+            ":protocol: %s\n", header->pseudo.protocol);
+    }
+
     if (header->pseudo.url != NULL)
     {
         co_log_write_header(

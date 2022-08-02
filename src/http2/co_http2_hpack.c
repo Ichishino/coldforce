@@ -591,6 +591,12 @@ co_http2_hpack_serialize_header(
                 ":method", header->pseudo.method, dynamic_table, buffer);
         }
     }
+
+    if (header->pseudo.protocol != NULL)
+    {
+        co_http2_hpack_serialize_header_field(
+            ":protocol", header->pseudo.protocol, dynamic_table, buffer);
+    }
     
     if (header->pseudo.scheme != NULL)
     {

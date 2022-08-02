@@ -1,11 +1,12 @@
 #include <coldforce/core/co_std.h>
 #include <coldforce/core/co_string.h>
+#include <coldforce/core/co_string_map.h>
 #include <coldforce/core/co_byte_array.h>
+#include <coldforce/core/co_random.h>
 
 #include <coldforce/http/co_http_auth.h>
 #include <coldforce/http/co_http_string_list.h>
 #include <coldforce/http/co_base64.h>
-#include <coldforce/http/co_random.h>
 #include <coldforce/http/co_md5.h>
 
 //---------------------------------------------------------------------------//
@@ -81,20 +82,20 @@ co_http_auth_serialize_items(
     co_byte_array_t* buffer
 )
 {
-    if (co_ss_map_get_count(auth->items) == 0)
+    if (co_string_map_get_count(auth->items) == 0)
     {
         return;
     }
 
     co_byte_array_add(buffer, " ", 1);
 
-    co_ss_map_iterator_t it;
-    co_ss_map_iterator_init(auth->items, &it);
+    co_string_map_iterator_t it;
+    co_string_map_iterator_init(auth->items, &it);
 
-    while (co_ss_map_iterator_has_next(&it))
+    while (co_string_map_iterator_has_next(&it))
     {
-        co_ss_map_data_st* data =
-            co_ss_map_iterator_get_next(&it);
+        const co_string_map_data_st* data =
+            co_string_map_iterator_get_next(&it);
 
         co_byte_array_add(buffer, data->key, strlen(data->key));
 
@@ -279,7 +280,7 @@ co_http_auth_deserialize_request(
     {
         if (items[index].first != NULL)
         {
-            co_ss_map_set(auth->items,
+            co_string_map_set(auth->items,
                 items[index].first, items[index].second);
         }
     }
@@ -362,7 +363,7 @@ co_http_auth_deserialize_response(
     {
         if (items[index].first != NULL)
         {
-            co_ss_map_set(auth->items,
+            co_string_map_set(auth->items,
                 items[index].first, items[index].second);
         }
     }
@@ -410,7 +411,7 @@ co_http_auth_create(
     auth->credentials = NULL;
     auth->nc = 0;
 
-    co_map_ctx_st ctx = CO_SS_MAP_CTX;
+    co_map_ctx_st ctx = CO_STRING_MAP_CTX;
 
     auth->items = co_map_create(&ctx);
 
@@ -461,7 +462,7 @@ co_http_auth_destroy(
         co_string_destroy(auth->scheme);
         co_string_destroy(auth->method);
         co_string_destroy(auth->credentials);
-        co_ss_map_destroy(auth->items);
+        co_string_map_destroy(auth->items);
 
         co_mem_free(auth);
     }
@@ -497,7 +498,7 @@ co_http_auth_set_item(
     const char* value
 )
 {
-    co_ss_map_set(auth->items, name, value);
+    co_string_map_set(auth->items, name, value);
 }
 
 const char*
@@ -506,8 +507,8 @@ co_http_auth_get_item(
     const char* name
 )
 {
-    co_ss_map_data_st* data =
-        co_ss_map_get(auth->items, name);
+    co_string_map_data_st* data =
+        co_string_map_get(auth->items, name);
 
     return (data != NULL) ? data->value : NULL;
 }

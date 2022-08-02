@@ -15,6 +15,7 @@ add_library(${PROJECT_NAME} STATIC
     co_map.c
     co_mutex.c
     co_queue.c
+    co_random.c
     co_semaphore.c
     co_string.c
     co_thread.c

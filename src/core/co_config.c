@@ -1,7 +1,6 @@
 #include <coldforce/core/co_std.h>
 #include <coldforce/core/co_config.h>
 #include <coldforce/core/co_string.h>
-#include <coldforce/core/co_ss_map.h>
 
 //---------------------------------------------------------------------------//
 // config
@@ -14,7 +13,7 @@
 // public
 //---------------------------------------------------------------------------//
 
-co_ss_map_t*
+co_string_map_t*
 co_config_read_file(
     const char* file_path
 )
@@ -26,8 +25,8 @@ co_config_read_file(
         return NULL;
     }
 
-    co_map_ctx_st ctx = CO_SS_MAP_CTX;
-    co_ss_map_t* config_map = co_map_create(&ctx);
+    co_map_ctx_st ctx = CO_STRING_MAP_CTX;
+    co_string_map_t* config_map = co_map_create(&ctx);
 
     char line[CO_CONFIG_LINE_MAX_LENGTH];
 
@@ -70,7 +69,7 @@ co_config_read_file(
         co_string_trim_right(key, key_length);
         co_string_trim_left(value, value_length);
 
-        co_ss_map_set(config_map, key, value);
+        co_string_map_set(config_map, key, value);
     }
 
     fclose(file);
