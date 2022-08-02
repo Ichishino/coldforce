@@ -283,11 +283,12 @@
     <ClInclude Include="..\..\..\inc\coldforce\core\co_map.h" />
     <ClInclude Include="..\..\..\inc\coldforce\core\co_mutex.h" />
     <ClInclude Include="..\..\..\inc\coldforce\core\co_queue.h" />
+    <ClInclude Include="..\..\..\inc\coldforce\core\co_random.h" />
     <ClInclude Include="..\..\..\inc\coldforce\core\co_semaphore.h" />
-    <ClInclude Include="..\..\..\inc\coldforce\core\co_ss_map.h" />
     <ClInclude Include="..\..\..\inc\coldforce\core\co_std.h" />
     <ClInclude Include="..\..\..\inc\coldforce\core\co_string.h" />
     <ClInclude Include="..\..\..\inc\coldforce\core\co_string_list.h" />
+    <ClInclude Include="..\..\..\inc\coldforce\core\co_string_map.h" />
     <ClInclude Include="..\..\..\inc\coldforce\core\co_thread.h" />
     <ClInclude Include="..\..\..\inc\coldforce\core\co_time.h" />
     <ClInclude Include="..\..\..\inc\coldforce\core\co_timer.h" />
@@ -305,6 +306,7 @@
     <ClCompile Include="..\..\..\src\core\co_map.c" />
     <ClCompile Include="..\..\..\src\core\co_mutex.c" />
     <ClCompile Include="..\..\..\src\core\co_queue.c" />
+    <ClCompile Include="..\..\..\src\core\co_random.c" />
     <ClCompile Include="..\..\..\src\core\co_semaphore.c" />
     <ClCompile Include="..\..\..\src\core\co_string.c" />
     <ClCompile Include="..\..\..\src\core\co_thread.c" />

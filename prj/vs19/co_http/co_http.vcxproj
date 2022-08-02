@@ -337,7 +337,6 @@
       <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='Release_static|x64'">$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
     </ClCompile>
     <ClCompile Include="..\..\..\src\http\co_md5.c" />
-    <ClCompile Include="..\..\..\src\http\co_random.c" />
     <ClCompile Include="..\..\..\src\http\co_sha1.c" />
   </ItemGroup>
   <ItemGroup>
@@ -359,7 +358,6 @@
     <ClInclude Include="..\..\..\inc\coldforce\http\co_http_string_list.h" />
     <ClInclude Include="..\..\..\inc\coldforce\http\co_http_url.h" />
     <ClInclude Include="..\..\..\inc\coldforce\http\co_md5.h" />
-    <ClInclude Include="..\..\..\inc\coldforce\http\co_random.h" />
     <ClInclude Include="..\..\..\inc\coldforce\http\co_sha1.h" />
   </ItemGroup>
   <ItemGroup>
