@@ -363,12 +363,14 @@ void on_my_tls_handshake(my_app* self, co_tcp_client_t* tcp_client, int error_co
 // tcp
 //---------------------------------------------------------------------------//
 
+#ifdef CO_CAN_USE_TLS
 void on_my_tcp_close(my_app* self, co_tcp_client_t* tcp_client)
 {
     (void)self;
 
     co_tls_client_destroy(tcp_client);
 }
+#endif
 
 void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t* tcp_client)
 {
