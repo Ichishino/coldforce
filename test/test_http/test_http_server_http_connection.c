@@ -94,6 +94,35 @@ http_server_on_http_request(
             co_list_remove(self->http_clients, http_client);
         }
     }
+    else if (strcmp(url->path, "/chunked") == 0)
+    {
+        co_http_response_t* response =
+            co_http_response_create_with(200, "OK");
+        co_http_header_t* response_header =
+            co_http_response_get_header(response);
+        co_http_header_add_field(
+            response_header, "Content-Type", "text/html");
+
+        co_http_start_chunked_response(http_client, response);
+
+        const char* data =
+            "<html>"
+            "<head>"
+            "<title>Coldforce Test (http/1.1)</title>"
+            "</head>"
+            "<body>"
+            "Chunked Data OK"
+            "</body>"
+            "</html>";
+        size_t data_length = strlen(data);
+
+        for (size_t index = 0; index < data_length; ++index)
+        {
+            co_http_send_chunked_data(http_client, &data[index], 1);
+        }
+
+        co_http_end_chunked_response(http_client);
+    }
     else if (strcmp(url->path, "/stop") == 0)
     {
         bool is_basic_auth_ok = false;

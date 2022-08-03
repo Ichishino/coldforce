@@ -51,6 +51,17 @@ http_server_on_tls_handshake(
 //---------------------------------------------------------------------------//
 
 static void
+http_server_on_tcp_close(
+    http_server_thread* self,
+    co_tcp_client_t* tcp_client
+)
+{
+    (void)self;
+
+    co_tls_client_destroy(tcp_client);
+}
+
+static void
 http_server_on_tcp_accept(
     http_server_thread* self,
     co_tcp_server_t* tcp_server,
@@ -61,9 +72,14 @@ http_server_on_tcp_accept(
 
     co_tcp_accept((co_thread_t*)self, tcp_client);
 
-    co_tls_callbacks_st* callbacks =
+    co_tcp_callbacks_st* tcp_callbacks =
+        co_tcp_get_callbacks(tcp_client);
+    tcp_callbacks->on_close =
+        (co_tcp_close_fn)http_server_on_tcp_close;
+
+    co_tls_callbacks_st* tls_callbacks =
         co_tls_get_callbacks(tcp_client);
-    callbacks->on_handshake =
+    tls_callbacks->on_handshake =
         (co_tls_handshake_fn)http_server_on_tls_handshake;
 
     co_tls_start_handshake(tcp_client);

@@ -217,6 +217,13 @@ void on_my_tls_handshake(my_app* self, co_tcp_client_t* tcp_client, int error_co
     }
 }
 
+void on_my_tcp_close(my_app* self, co_tcp_client_t* tcp_client)
+{
+    (void)self;
+
+    co_tls_client_destroy(tcp_client);
+}
+
 void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t* tcp_client)
 {
     (void)tcp_server;
@@ -227,8 +234,10 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t
     co_tcp_accept((co_thread_t*)self, tcp_client);
 
     // callback
-    co_tls_callbacks_st* callbacks = co_tls_get_callbacks(tcp_client);
-    callbacks->on_handshake = (co_tls_handshake_fn)on_my_tls_handshake;
+    co_tcp_callbacks_st* tcp_callbacks = co_tcp_get_callbacks(tcp_client);
+    tcp_callbacks->on_close = (co_tcp_close_fn)on_my_tcp_close;
+    co_tls_callbacks_st* tls_callbacks = co_tls_get_callbacks(tcp_client);
+    tls_callbacks->on_handshake = (co_tls_handshake_fn)on_my_tls_handshake;
 
     // TLS handshake
     co_tls_start_handshake(tcp_client);

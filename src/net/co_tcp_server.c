@@ -53,6 +53,10 @@ co_tcp_server_on_accept_ready(
         server->callbacks.on_accept(
             server->sock.owner_thread, server, win_client);
     }
+    else
+    {
+        co_tcp_client_destroy(win_client);
+    }
 
 #endif
 
@@ -93,6 +97,10 @@ co_tcp_server_on_accept_ready(
         {
             server->callbacks.on_accept(
                 server->sock.owner_thread, server, client);
+        }
+        else
+        {
+            co_tcp_client_destroy(client);
         }
     }
 
