@@ -4,11 +4,11 @@
 #include <coldforce/core/co_byte_array.h>
 
 #include <coldforce/net/co_tcp_client.h>
+#include <coldforce/net/co_url.h>
 
 #include <coldforce/tls/co_tls.h>
 
 #include <coldforce/http/co_http.h>
-#include <coldforce/http/co_http_url.h>
 #include <coldforce/http/co_http_request.h>
 #include <coldforce/http/co_http_response.h>
 #include <coldforce/http/co_http_content_receiver.h>

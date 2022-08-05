@@ -26,36 +26,33 @@ co_http_client_on_receive_timer(
     co_timer_t* timer
 );
 
+static void
+co_http_client_clear_request_queue(
+    co_http_client_t* client
+)
+{
+    if (client != NULL &&
+        client->request_queue != NULL)
+    {
+        co_list_iterator_t* receive_it =
+            co_list_get_head_iterator(client->request_queue);
+
+        while (receive_it != NULL)
+        {
+            co_http_request_destroy(
+                (co_http_request_t*)co_list_get_next(
+                    client->request_queue, &receive_it)->value);
+        }
+
+        co_list_clear(client->request_queue);
+    }
+}
+
 void
 co_http_client_setup(
     co_http_client_t* client
 )
 {
-#ifdef CO_CAN_USE_TLS
-    if (client->conn.tcp_client->sock.tls != NULL)
-    {
-        client->conn.module.destroy = co_tls_client_destroy;
-        client->conn.module.close = co_tls_close;
-        client->conn.module.connect = co_tls_connect;
-        client->conn.module.send = co_tls_send;
-        client->conn.module.receive_all = co_tls_receive_all;
-    }
-    else
-    {
-#endif
-        client->conn.module.destroy = co_tcp_client_destroy;
-        client->conn.module.close = co_tcp_close;
-        client->conn.module.connect = co_tcp_connect;
-        client->conn.module.send = co_tcp_send;
-        client->conn.module.receive_all = co_tcp_receive_all;
-
-#ifdef CO_CAN_USE_TLS
-    }
-#endif
-    client->conn.receive_data.index = 0;
-    client->conn.receive_data.ptr = co_byte_array_create();
-    client->conn.tcp_client->sock.sub_class = client;
-
     uint32_t msec = co_http_config_get_max_receive_wait_time();
     client->conn.receive_timer = co_timer_create(
         msec, (co_timer_fn)co_http_client_on_receive_timer, false, client);
@@ -81,11 +78,7 @@ co_http_client_cleanup(
 {
     if (client != NULL)
     {
-        co_byte_array_destroy(client->conn.receive_data.ptr);
-        client->conn.receive_data.ptr = NULL;
-
-        co_timer_destroy(client->conn.receive_timer);
-        client->conn.receive_timer = NULL;
+        co_http_client_clear_request_queue(client);
 
         co_list_destroy(client->request_queue);
         client->request_queue = NULL;
@@ -101,24 +94,6 @@ co_http_client_cleanup(
 }
 
 static void
-co_http_client_clear_request_queue(
-    co_http_client_t* client
-)
-{
-    co_list_iterator_t* receive_it =
-        co_list_get_head_iterator(client->request_queue);
-
-    while (receive_it != NULL)
-    {
-        co_http_request_destroy(
-            (co_http_request_t*)co_list_get_next(
-                client->request_queue, &receive_it)->value);
-    }
-
-    co_list_clear(client->request_queue);
-}
-
-static void
 co_http_client_on_resopnse(
     co_thread_t* thread,
     co_http_client_t* client,
@@ -128,10 +103,13 @@ co_http_client_on_resopnse(
     co_list_data_st* data =
         co_list_get_head(client->request_queue);
 
-    if (error_code == 0 && data != NULL)
+    if (data != NULL)
     {
-        client->request = (co_http_request_t*)data->value;
-        co_list_remove_head(client->request_queue);
+        if (client->request != NULL &&
+            client->request == (co_http_request_t*)data->value)
+        {
+            co_list_remove_head(client->request_queue);
+        }
     }
 
     if ((error_code != 0) ||
@@ -320,6 +298,7 @@ co_http_client_on_receive_ready(
         {
             co_http_content_more_data(
                 &client->content_receiver,
+                &client->conn.receive_data.index,
                 client->conn.receive_data.ptr);
 
             return;
@@ -386,120 +365,19 @@ co_http_client_create(
         return NULL;
     }
 
-    client->conn.base_url = co_http_url_create(base_url);
+    co_url_st* url = co_url_create(base_url);
 
-    if (client->conn.base_url->host == NULL)
+    const char* protocols[1] = { CO_HTTP_PROTOCOL };
+
+    if (!co_http_connection_setup(
+        (co_http_connection_t*)client, url, local_net_addr,
+        protocols, 1, tls_ctx))
     {
-        co_http_url_destroy(client->conn.base_url);
+        co_url_destroy(url);
         co_mem_free(client);
 
         return NULL;
     }
-
-    if (client->conn.base_url->scheme == NULL)
-    {
-        client->conn.base_url->scheme = co_string_duplicate("http");
-    }
-
-    bool secure = false;
-
-    if (co_string_case_compare(
-        client->conn.base_url->scheme, "https") == 0)
-    {
-        secure = true;
-    }
-
-    int address_family =
-        co_net_addr_get_family(local_net_addr);
-
-    co_net_addr_t remote_net_addr;
-    co_net_addr_init(&remote_net_addr);
-
-    if (!co_net_addr_set_address(
-        &remote_net_addr, client->conn.base_url->host))
-    {
-        co_resolve_hint_st hint = { 0 };
-        hint.family = address_family;
-
-        if (co_net_addr_resolve_service(
-            client->conn.base_url->host,
-            client->conn.base_url->scheme,
-            &hint, &remote_net_addr, 1) == 0)
-        {
-            co_http_log_error(NULL, NULL, NULL,
-                "failed to resolve hostname (%s)", base_url);
-
-            co_http_url_destroy(client->conn.base_url);
-            co_mem_free(client);
-
-            return NULL;
-        }
-    }
-    else
-    {
-        uint16_t port = client->conn.base_url->port;
-
-        if (port == 0)
-        {
-            if (secure)
-            {
-                port = 443;
-            }
-            else
-            {
-                port = 80;
-            }
-        }
-
-        co_net_addr_set_port(
-            &remote_net_addr, port);
-    }
-
-    if (secure)
-    {
-#ifdef CO_CAN_USE_TLS
-        client->conn.tcp_client =
-            co_tls_client_create(local_net_addr, tls_ctx);
-
-        if (client->conn.tcp_client != NULL)
-        {
-            co_tls_set_host_name(
-                client->conn.tcp_client,
-                client->conn.base_url->host);
-
-            const char* protocol = CO_HTTP_PROTOCOL;
-
-            co_tls_set_available_protocols(
-                client->conn.tcp_client, &protocol, 1);
-        }
-#else
-        (void)tls_ctx;
-
-        co_http_log_error(NULL, NULL, NULL,
-            "OpenSSL is not installed");
-
-        co_http_url_destroy(client->conn.base_url);
-        co_mem_free(client);
-
-        return NULL;
-#endif
-    }
-    else
-    {
-        client->conn.tcp_client =
-            co_tcp_client_create(local_net_addr);
-    }
-
-    if (client->conn.tcp_client == NULL)
-    {
-        co_http_url_destroy(client->conn.base_url);
-        co_mem_free(client);
-
-        return NULL;
-    }
-
-    memcpy(&client->conn.tcp_client->remote_net_addr,
-        &remote_net_addr, sizeof(co_net_addr_t));
 
     co_http_client_setup(client);
 
@@ -518,18 +396,8 @@ co_http_client_destroy(
 {
     if (client != NULL)
     {
-        co_http_client_clear_request_queue(client);
-
         co_http_client_cleanup(client);
-
-        co_http_url_destroy(client->conn.base_url);
-        client->conn.base_url = NULL;
-
-        if (client->conn.tcp_client != NULL)
-        {
-            client->conn.module.destroy(client->conn.tcp_client);
-            client->conn.tcp_client = NULL;
-        }
+        co_http_connection_cleanup(&client->conn);
 
         co_mem_free_later(client);
     }

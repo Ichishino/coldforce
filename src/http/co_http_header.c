@@ -1,9 +1,9 @@
 #include <coldforce/core/co_std.h>
 #include <coldforce/core/co_string.h>
+#include <coldforce/core/co_string_token.h>
 
 #include <coldforce/http/co_http_header.h>
 #include <coldforce/http/co_http_config.h>
-#include <coldforce/http/co_http_string_list.h>
 
 #ifndef CO_OS_WIN
 #include <errno.h>
@@ -501,12 +501,12 @@ co_http_header_set_keep_alive(
 
     if (value != NULL)
     {
-        co_http_string_item_st items[8];
+        co_string_token_st tokens[8];
 
-        size_t item_count =
-            co_http_string_list_parse(value, items, 8);
+        size_t token_count =
+            co_string_token_split(value, tokens, 8);
 
-        if (!co_http_string_list_contains(items, item_count, "keep-alive"))
+        if (!co_string_token_contains(tokens, token_count, "keep-alive"))
         {
             char* new_value = (char*)co_mem_alloc(strlen(value) + 13);
             strcpy(new_value, value);
@@ -516,7 +516,7 @@ co_http_header_set_keep_alive(
                 header, CO_HTTP_HEADER_CONNECTION, new_value);
         }
 
-        co_http_string_list_cleanup(items, item_count);
+        co_string_token_cleanup(tokens, token_count);
     }
     else
     {
@@ -539,15 +539,15 @@ co_http_header_get_keep_alive(
         return false;
     }
 
-    co_http_string_item_st items[8];
-    size_t item_count =
-        co_http_string_list_parse(value, items, 8);
+    co_string_token_st tokens[8];
+    size_t token_count =
+        co_string_token_split(value, tokens, 8);
 
     bool result =
-        co_http_string_list_contains(
-            items, item_count, "keep-alive");
+        co_string_token_contains(
+            tokens, token_count, "keep-alive");
 
-    co_http_string_list_cleanup(items, item_count);
+    co_string_token_cleanup(tokens, token_count);
 
     return result;
 }

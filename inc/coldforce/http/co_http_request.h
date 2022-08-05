@@ -3,8 +3,9 @@
 
 #include <coldforce/core/co_byte_array.h>
 
+#include <coldforce/net/co_url.h>
+
 #include <coldforce/http/co_http.h>
-#include <coldforce/http/co_http_url.h>
 #include <coldforce/http/co_http_message.h>
 #include <coldforce/http/co_http_auth.h>
 
@@ -21,7 +22,7 @@ typedef struct co_http_request_t
 {
     co_http_message_t message;
 
-    co_http_url_st* url;
+    co_url_st* url;
 
     char* method;
     char* version;
@@ -116,7 +117,7 @@ co_http_request_get_path(
 );
 
 CO_HTTP_API
-const co_http_url_st*
+const co_url_st*
 co_http_request_get_url(
     const co_http_request_t* request
 );

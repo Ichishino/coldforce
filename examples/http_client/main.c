@@ -175,12 +175,12 @@ bool on_my_app_create(my_app* self)
         return false;
     }
 
-    co_http_url_st* url = co_http_url_create(args->values[1]);
+    co_url_st* url = co_url_create(args->values[1]);
 
-    self->base_url = co_http_url_create_base_url(url);
-    self->path = co_http_url_create_path_and_query(url);
+    self->base_url = co_url_create_base_url(url);
+    self->path = co_url_create_path_and_query(url);
 
-    co_http_url_destroy(url);
+    co_url_destroy(url);
 
     if (args->count >= 3)
     {

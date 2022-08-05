@@ -21,7 +21,7 @@
 //---------------------------------------------------------------------------//
 
 size_t
-co_net_addr_resolve_service(
+co_net_addr_resolve(
     const char* node,
     const char* service,
     const co_resolve_hint_st* hint,
@@ -64,23 +64,4 @@ co_net_addr_resolve_service(
     freeaddrinfo(out);
 
     return data_count;
-}
-
-size_t
-co_net_addr_resolve_name(
-    const char* node,
-    uint16_t port,
-    const co_resolve_hint_st* hint,
-    co_net_addr_t* net_addr,
-    size_t count
-)
-{
-    char service[8];
-    sprintf(service, "%d", port);
-
-    co_resolve_hint_st name_hint = *hint;
-    name_hint.flags |= AI_NUMERICSERV;
-
-    return co_net_addr_resolve_service(
-        node, service, &name_hint, net_addr, count);
 }

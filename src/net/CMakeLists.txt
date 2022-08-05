@@ -20,6 +20,7 @@ add_library(${PROJECT_NAME} STATIC
     co_tcp_client.c
     co_tcp_server.c
     co_udp.c
+    co_url.c
 )
 
 include(../common.cmake)

@@ -54,18 +54,11 @@ co_http_upgrade_to_http2(
         settings = &http2_client->remote_settings;
     }
 
-    http2_client->conn.base_url = http_client->conn.base_url;
-    http_client->conn.base_url = NULL;
-
-    http2_client->conn.tcp_client = http_client->conn.tcp_client;
-    http_client->conn.tcp_client = NULL;
+    co_http_connection_move(
+        (co_http_connection_t*)http_client,
+        (co_http_connection_t*)http2_client);
 
     co_http2_client_setup(http2_client);
-
-    co_byte_array_t* receive_data_ptr = http2_client->conn.receive_data.ptr;
-    http2_client->conn.receive_data.ptr = http_client->conn.receive_data.ptr;
-    http2_client->conn.receive_data.index = http_client->conn.receive_data.index;
-    http_client->conn.receive_data.ptr = receive_data_ptr;
 
     http2_client->new_stream_id = new_stream_id;
 
@@ -203,7 +196,7 @@ co_http_request_create_http2_upgrade(
         co_http_request_get_header(request);
 
     char* host_and_port =
-        co_http_url_create_host_and_port(client->conn.base_url);
+        co_url_create_host_and_port(client->conn.base_url);
 
     co_http_header_add_field_ptr(
         header, co_string_duplicate(CO_HTTP_HEADER_HOST), host_and_port);

@@ -99,7 +99,7 @@ co_http_request_deserialize(
                 "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n", 24) == 0))
         {
             request->method = method;
-            request->url = co_http_url_create("*");
+            request->url = co_url_create("*");
             request->version = co_string_duplicate("HTTP/2.0");
 
             (*index) += 24;
@@ -128,12 +128,12 @@ co_http_request_deserialize(
 
     char* url_str = co_string_duplicate_n(&data_ptr[temp_index], item_length);
 
-    co_http_url_st* url = co_http_url_create(url_str);
+    co_url_st* url = co_url_create(url_str);
 
     if (url->path == NULL)
     {
         co_string_destroy(method);
-        co_http_url_destroy(url);
+        co_url_destroy(url);
 
         return CO_HTTP_PARSE_ERROR;
     }
@@ -221,7 +221,7 @@ co_http_request_destroy(
         co_string_destroy(request->method);
         co_string_destroy(request->version);
 
-        co_http_url_destroy(request->url);
+        co_url_destroy(request->url);
         co_http_message_cleanup(&request->message);
 
         co_mem_free(request);
@@ -278,11 +278,11 @@ co_http_request_set_path(
     co_http_request_t* request,
     const char* path)
 {
-    co_http_url_destroy(request->url);
+    co_url_destroy(request->url);
 
     if (path != NULL)
     {
-        request->url = co_http_url_create(path);
+        request->url = co_url_create(path);
 
         if (request->url->path == NULL)
         {
@@ -308,7 +308,7 @@ co_http_request_get_path(
     return request->url->src;
 }
 
-const co_http_url_st*
+const co_url_st*
 co_http_request_get_url(
     const co_http_request_t* request
 )

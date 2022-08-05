@@ -18,9 +18,7 @@ add_library(${PROJECT_NAME} STATIC
     co_http_request.c
     co_http_response.c
     co_http_server.c
-    co_http_string_list.c
     co_http_sync.c
-    co_http_url.c
     co_md5.c
     co_sha1.c
 )

@@ -18,6 +18,7 @@ add_library(${PROJECT_NAME} STATIC
     co_random.c
     co_semaphore.c
     co_string.c
+    co_string_token.c
     co_thread.c
     co_time.c
     co_timer.c

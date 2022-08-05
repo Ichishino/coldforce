@@ -19,10 +19,10 @@ http_server_on_http_request(
         return;
     }
 
-    const co_http_url_st* url = co_http_request_get_url(request);
+    const co_url_st* url = co_http_request_get_url(request);
 
     co_string_map_t* query_map =
-        co_http_url_query_parse(url->query, true);
+        co_url_query_parse(url->query, true);
 
     if (strcmp(url->path, "/") == 0 ||
         strcmp(url->path, "/index.html") == 0)

@@ -1,10 +1,10 @@
 #include <coldforce/core/co_std.h>
 #include <coldforce/core/co_string.h>
+#include <coldforce/core/co_string_token.h>
 
 #include <coldforce/tls/co_tls_client.h>
 #include <coldforce/tls/co_tls_server.h>
 
-#include <coldforce/http/co_http_string_list.h>
 #include <coldforce/http/co_http_server.h>
 #include <coldforce/http/co_http_client.h>
 #include <coldforce/http/co_http_config.h>
@@ -144,6 +144,7 @@ co_http_server_on_receive_ready(
         {
             co_http_content_more_data(
                 &client->content_receiver,
+                &client->conn.receive_data.index,
                 client->conn.receive_data.ptr);
 
             return;
@@ -204,8 +205,8 @@ co_tcp_upgrade_to_http(
         return NULL;
     }
 
-    client->conn.base_url = NULL;
-    client->conn.tcp_client = tcp_client;
+    co_tcp_upgrade_to_http_connection(
+        tcp_client, (co_http_connection_t*)client, NULL);
 
     co_http_client_setup(client);
 
@@ -253,13 +254,13 @@ co_http_start_chunked_response(
     }
     else
     {
-        co_http_string_item_st items[32];
+        co_string_token_st tokens[32];
 
-        size_t count = co_http_string_list_parse(
-            transfer_encoding, items, 32);
+        size_t token_count = co_string_token_split(
+            transfer_encoding, tokens, 32);
 
-        if (!co_http_string_list_contains(
-            items, count,
+        if (!co_string_token_contains(
+            tokens, token_count,
             CO_HTTP_TRANSFER_ENCODING_CHUNKED))
         {
             char new_item[1024];
@@ -274,7 +275,7 @@ co_http_start_chunked_response(
                 new_item);
         }
 
-        co_http_string_list_cleanup(items, count);
+        co_string_token_cleanup(tokens, token_count);
     }
 
     return co_http_send_response(client, response);

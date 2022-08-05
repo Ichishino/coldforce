@@ -91,7 +91,7 @@ http_server_on_http2_request(
     const char* method =
         co_http2_header_get_method(request_header);
 
-    const co_http_url_st* url =
+    const co_url_st* url =
         co_http2_header_get_path_url(request_header);
 
     if (strcmp(url->path, "/") == 0 ||
@@ -99,7 +99,7 @@ http_server_on_http2_request(
     {
         // query parameter
         co_string_map_t* query_map =
-            co_http_url_query_parse(url->query, true);
+            co_url_query_parse(url->query, true);
 
         co_http2_header_t* response_header =
             co_http2_header_create_response(200);

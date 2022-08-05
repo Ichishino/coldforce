@@ -135,7 +135,7 @@ co_http2_header_destroy(
         co_string_destroy(header->pseudo.method);
         co_string_destroy(header->pseudo.protocol);
         co_string_destroy(header->pseudo.scheme);
-        co_http_url_destroy(header->pseudo.url);
+        co_url_destroy(header->pseudo.url);
 
         co_list_destroy(header->field_list);
         header->field_list = NULL;
@@ -239,11 +239,11 @@ co_http2_header_set_path(
     const char* path
 )
 {
-    co_http_url_destroy(header->pseudo.url);
+    co_url_destroy(header->pseudo.url);
 
     if (path != NULL)
     {
-        header->pseudo.url = co_http_url_create(path);
+        header->pseudo.url = co_url_create(path);
 
         if (header->pseudo.url->path == NULL)
         {
@@ -269,7 +269,7 @@ co_http2_header_get_path(
     return header->pseudo.url->src;
 }
 
-const co_http_url_st*
+const co_url_st*
 co_http2_header_get_path_url(
     const co_http2_header_t* header
 )

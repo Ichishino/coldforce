@@ -1,10 +1,10 @@
 #include <coldforce/core/co_std.h>
 #include <coldforce/core/co_string.h>
 #include <coldforce/core/co_random.h>
+#include <coldforce/core/co_string_token.h>
 
 #include <coldforce/http/co_base64.h>
 #include <coldforce/http/co_sha1.h>
-#include <coldforce/http/co_http_string_list.h>
 #include <coldforce/http/co_http_server.h>
 
 #include <coldforce/ws/co_ws_server.h>
@@ -65,15 +65,13 @@ co_http_upgrade_to_ws(
         return NULL;
     }
 
-    co_ws_client_setup(ws_client,
-        http_client->conn.tcp_client, http_client->conn.base_url);
+    co_http_connection_move(
+        (co_http_connection_t*)http_client,
+        (co_http_connection_t*)ws_client);
+
+    co_ws_client_setup(ws_client);
 
     ws_client->mask = (ws_client->conn.base_url != NULL);
-
-    http_client->conn.tcp_client = NULL;
-    http_client->conn.base_url = NULL;
-
-    co_http_client_destroy(http_client);
 
     if (ws_client->conn.base_url != NULL)
     {
@@ -88,6 +86,8 @@ co_http_upgrade_to_ws(
 
     ws_client->conn.tcp_client->callbacks.on_close =
         (co_tcp_close_fn)co_ws_client_on_close;
+
+    co_http_client_destroy(http_client);
 
     return ws_client;
 }
@@ -121,13 +121,13 @@ co_http_request_validate_ws_upgrade(
         return false;
     }
 
-    co_http_string_item_st items[8];
-    size_t item_count = co_http_string_list_parse(connection, items, 8);
+    co_string_token_st tokens[8];
+    size_t token_count = co_string_token_split(connection, tokens, 8);
 
     bool upgrade_contains =
-        co_http_string_list_contains(items, item_count, "upgrade");
+        co_string_token_contains(tokens, token_count, "upgrade");
 
-    co_http_string_list_cleanup(items, item_count);
+    co_string_token_cleanup(tokens, token_count);
 
     if (!upgrade_contains)
     {
@@ -204,13 +204,13 @@ co_http_response_validate_ws_upgrade(
         return false;
     }
 
-    co_http_string_item_st items[8];
-    size_t item_count = co_http_string_list_parse(connection, items, 8);
+    co_string_token_st tokens[8];
+    size_t token_count = co_string_token_split(connection, tokens, 8);
 
     bool upgrade_contains =
-        co_http_string_list_contains(items, item_count, "upgrade");
+        co_string_token_contains(tokens, token_count, "upgrade");
 
-    co_http_string_list_cleanup(items, item_count);
+    co_string_token_cleanup(tokens, token_count);
 
     if (!upgrade_contains)
     {

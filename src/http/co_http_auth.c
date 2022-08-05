@@ -1,11 +1,11 @@
 #include <coldforce/core/co_std.h>
 #include <coldforce/core/co_string.h>
 #include <coldforce/core/co_string_map.h>
+#include <coldforce/core/co_string_token.h>
 #include <coldforce/core/co_byte_array.h>
 #include <coldforce/core/co_random.h>
 
 #include <coldforce/http/co_http_auth.h>
-#include <coldforce/http/co_http_string_list.h>
 #include <coldforce/http/co_base64.h>
 #include <coldforce/http/co_md5.h>
 
@@ -244,48 +244,48 @@ co_http_auth_deserialize_request(
 {
     auth->request = true;
 
-    co_http_string_item_st items[32] = { 0 };
+    co_string_token_st tokens[32] = { 0 };
 
-    size_t item_count =
-        co_http_string_list_parse(str, items, 32);
+    size_t token_count =
+        co_string_token_split(str, tokens, 32);
 
-    if (item_count == 0)
+    if (token_count == 0)
     {
         return false;
     }
 
-    if (items[0].second != NULL)
+    if (tokens[0].second != NULL)
     {
         return false;
     }
 
-    auth->scheme = items[0].first;
-    items[0].first = NULL;
+    auth->scheme = tokens[0].first;
+    tokens[0].first = NULL;
 
     if (auth->scheme == NULL)
     {
         return false;
     }
 
-    if (items[1].second == NULL)
+    if (tokens[1].second == NULL)
     {
         if (co_string_case_compare(auth->scheme, "Basic") == 0)
         {
-            auth->credentials = items[1].first;
-            items[1].first = NULL;
+            auth->credentials = tokens[1].first;
+            tokens[1].first = NULL;
         }
     }
 
-    for (size_t index = 0; index < item_count; ++index)
+    for (size_t index = 0; index < token_count; ++index)
     {
-        if (items[index].first != NULL)
+        if (tokens[index].first != NULL)
         {
             co_string_map_set(auth->items,
-                items[index].first, items[index].second);
+                tokens[index].first, tokens[index].second);
         }
     }
 
-    co_http_string_list_cleanup(items, item_count);
+    co_string_token_cleanup(tokens, token_count);
 
     return true;
 }
@@ -327,48 +327,48 @@ co_http_auth_deserialize_response(
 {
     auth->request = false;
 
-    co_http_string_item_st items[32] = { 0 };
+    co_string_token_st tokens[32] = { 0 };
 
-    size_t item_count =
-        co_http_string_list_parse(str, items, 32);
+    size_t token_count =
+        co_string_token_split(str, tokens, 32);
 
-    if (item_count == 0)
+    if (token_count == 0)
     {
         return false;
     }
 
-    if (items[0].second != NULL)
+    if (tokens[0].second != NULL)
     {
         return false;
     }
 
-    auth->scheme = items[0].first;
-    items[0].first = NULL;
+    auth->scheme = tokens[0].first;
+    tokens[0].first = NULL;
 
     if (auth->scheme == NULL)
     {
         return false;
     }
 
-    if (items[1].second == NULL)
+    if (tokens[1].second == NULL)
     {
         if (co_string_case_compare(auth->scheme, "Basic") == 0)
         {
-            auth->credentials = items[1].first;
-            items[1].first = NULL;
+            auth->credentials = tokens[1].first;
+            tokens[1].first = NULL;
         }
     }
 
-    for (size_t index = 0; index < item_count; ++index)
+    for (size_t index = 0; index < token_count; ++index)
     {
-        if (items[index].first != NULL)
+        if (tokens[index].first != NULL)
         {
             co_string_map_set(auth->items,
-                items[index].first, items[index].second);
+                tokens[index].first, tokens[index].second);
         }
     }
 
-    co_http_string_list_cleanup(items, item_count);
+    co_string_token_cleanup(tokens, token_count);
 
     return true;
 }
@@ -681,16 +681,16 @@ co_http_digest_auth_create_request(
 
     if (algorithm != NULL)
     {
-        co_http_string_item_st items[8];
+        co_string_token_st tokens[8];
 
-        size_t count =
-            co_http_string_list_parse(algorithm, items, 8);
+        size_t token_count =
+            co_string_token_split(algorithm, tokens, 8);
 
         bool md5 =
-            co_http_string_list_contains(items, count, "MD5") ||
-            co_http_string_list_contains(items, count, "MD5-sess");
+            co_string_token_contains(tokens, token_count, "MD5") ||
+            co_string_token_contains(tokens, token_count, "MD5-sess");
 
-        co_http_string_list_cleanup(items, count);
+        co_string_token_cleanup(tokens, token_count);
 
         if (!md5)
         {

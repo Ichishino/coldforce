@@ -636,7 +636,7 @@ co_http2_hpack_serialize_header(
         else
         {
             char* path_and_query =
-                co_http_url_create_path_and_query(header->pseudo.url);
+                co_url_create_path_and_query(header->pseudo.url);
 
             co_http2_hpack_serialize_header_field(
                 ":path", path_and_query, dynamic_table, buffer);
@@ -897,7 +897,7 @@ co_http2_hpack_deserialize_header(
             }
             else if (co_string_case_compare(name, ":path") == 0)
             {
-                header->pseudo.url = co_http_url_create(value);
+                header->pseudo.url = co_url_create(value);
 
                 co_string_destroy(name);
                 co_string_destroy(value);

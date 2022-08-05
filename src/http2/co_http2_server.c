@@ -265,8 +265,8 @@ co_tcp_upgrade_to_http2(
         return NULL;
     }
 
-    client->conn.base_url = NULL;
-    client->conn.tcp_client = tcp_client;
+    co_tcp_upgrade_to_http_connection(
+        tcp_client, (co_http_connection_t*)client, NULL);
 
     co_http2_client_setup(client);
 

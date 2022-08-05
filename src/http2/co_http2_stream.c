@@ -1001,7 +1001,7 @@ co_http2_stream_send_header(
         if (header->pseudo.authority == NULL)
         {
             header->pseudo.authority =
-                co_http_url_create_host_and_port(
+                co_url_create_host_and_port(
                     stream->client->conn.base_url);
         }
 

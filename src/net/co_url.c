@@ -1,14 +1,19 @@
 #include <coldforce/core/co_std.h>
 #include <coldforce/core/co_string.h>
+#include <coldforce/core/co_string_token.h>
 #include <coldforce/core/co_byte_array.h>
 
-#include <coldforce/http/co_http_url.h>
-#include <coldforce/http/co_http_string_list.h>
+#include <coldforce/net/co_net_addr_resolve.h>
+#include <coldforce/net/co_url.h>
 
 #include <ctype.h>
 
+#ifndef CO_OS_WIN
+#include <netdb.h>
+#endif
+
 //---------------------------------------------------------------------------//
-// http url
+// url
 //---------------------------------------------------------------------------//
 
 //---------------------------------------------------------------------------//
@@ -19,7 +24,7 @@
 //---------------------------------------------------------------------------//
 
 static void*
-co_http_url_query_duplicate_map_item(
+co_url_query_duplicate_map_item(
     const void* key_or_value
 )
 {
@@ -30,8 +35,8 @@ co_http_url_query_duplicate_map_item(
 // public
 //---------------------------------------------------------------------------//
 
-co_http_url_st*
-co_http_url_create(
+co_url_st*
+co_url_create(
     const char* str
 )
 {
@@ -40,8 +45,8 @@ co_http_url_create(
         return NULL;
     }
 
-    co_http_url_st* url =
-        (co_http_url_st*)co_mem_alloc(sizeof(co_http_url_st));
+    co_url_st* url =
+        (co_url_st*)co_mem_alloc(sizeof(co_url_st));
 
     if (url == NULL)
     {
@@ -153,8 +158,8 @@ co_http_url_create(
 }
 
 void
-co_http_url_destroy(
-    co_http_url_st* url
+co_url_destroy(
+    co_url_st* url
 )
 {
     if (url != NULL)
@@ -173,8 +178,8 @@ co_http_url_destroy(
 }
 
 char*
-co_http_url_create_base_url(
-    const co_http_url_st* url
+co_url_create_base_url(
+    const co_url_st* url
 )
 {
     if (url->scheme == NULL || url->host == NULL)
@@ -199,8 +204,8 @@ co_http_url_create_base_url(
 }
 
 char*
-co_http_url_create_host_and_port(
-    const co_http_url_st* url
+co_url_create_host_and_port(
+    const co_url_st* url
 )
 {
     if (url->host == NULL)
@@ -222,8 +227,8 @@ co_http_url_create_host_and_port(
 }
 
 char*
-co_http_url_create_path_and_query(
-    const co_http_url_st* url
+co_url_create_path_and_query(
+    const co_url_st* url
 )
 {
     if (url->path == NULL)
@@ -245,8 +250,8 @@ co_http_url_create_path_and_query(
 }
 
 char*
-co_http_url_create_file_name(
-    const co_http_url_st* url
+co_url_create_file_name(
+    const co_url_st* url
 )
 {
     if (url->path == NULL)
@@ -270,7 +275,7 @@ co_http_url_create_file_name(
 }
 
 bool
-co_http_url_component_encode(
+co_url_component_encode(
     const char* src,
     size_t src_length,
     char** dest,
@@ -317,7 +322,7 @@ co_http_url_component_encode(
 }
 
 bool
-co_http_url_component_decode(
+co_url_component_decode(
     const char* src,
     size_t src_length,
     char** dest,
@@ -366,7 +371,7 @@ co_http_url_component_decode(
 }
 
 co_string_map_t*
-co_http_url_query_parse(
+co_url_query_parse(
     const char* src,
     bool unescape
 )
@@ -376,10 +381,10 @@ co_http_url_query_parse(
 
     if (src != NULL)
     {
-        co_http_string_item_st items[256];
+        co_string_token_st tokens[256];
 
         size_t count =
-            co_http_string_list_parse(src, items, 256);
+            co_string_token_split(src, tokens, 256);
 
         co_item_duplicate_fn duplicate_key =
             query_map->duplicate_key;
@@ -387,9 +392,9 @@ co_http_url_query_parse(
             query_map->duplicate_value;
 
         query_map->duplicate_key =
-            co_http_url_query_duplicate_map_item;
+            co_url_query_duplicate_map_item;
         query_map->duplicate_value =
-            co_http_url_query_duplicate_map_item;
+            co_url_query_duplicate_map_item;
 
         for (size_t index = 0; index < count; ++index)
         {
@@ -400,23 +405,23 @@ co_http_url_query_parse(
             {
                 size_t key_length;
 
-                co_http_url_component_decode(
-                    items[index].first, strlen(items[index].first),
+                co_url_component_decode(
+                    tokens[index].first, strlen(tokens[index].first),
                     &key, &key_length);
 
                 size_t value_length;
 
-                co_http_url_component_decode(
-                    items[index].second, strlen(items[index].second),
+                co_url_component_decode(
+                    tokens[index].second, strlen(tokens[index].second),
                     &value, &value_length);
             }
             else
             {
-                key = items[index].first;
-                items[index].first = NULL;
+                key = tokens[index].first;
+                tokens[index].first = NULL;
 
-                value = items[index].second;
-                items[index].second = NULL;
+                value = tokens[index].second;
+                tokens[index].second = NULL;
             }
 
             co_string_map_set(query_map, key, value);
@@ -427,14 +432,14 @@ co_http_url_query_parse(
         query_map->duplicate_value =
             duplicate_value;
 
-        co_http_string_list_cleanup(items, count);
+        co_string_token_cleanup(tokens, count);
     }
 
     return query_map;
 }
 
 char*
-co_http_url_query_to_string(
+co_url_query_to_string(
     const co_string_map_t* query_map,
     bool escape
 )
@@ -454,13 +459,13 @@ co_http_url_query_to_string(
             char* key = NULL;
             size_t key_length = 0;
 
-            co_http_url_component_encode(
+            co_url_component_encode(
                 data->key, strlen(data->key), &key, &key_length);
 
             char* value = NULL;
             size_t value_length = 0;
 
-            co_http_url_component_encode(
+            co_url_component_encode(
                 data->value, strlen(data->value), &value, &value_length);
 
             co_byte_array_add_string(buffer, key);
@@ -497,4 +502,41 @@ co_http_url_query_to_string(
     co_byte_array_destroy(buffer);
 
     return result;
+}
+
+bool
+co_url_to_net_addr(
+    const co_url_st* url,
+    int address_family,
+    co_net_addr_t* net_addr
+)
+{
+    co_resolve_hint_st hint = { 0 };
+    hint.family = address_family;
+
+    if (url->port == 0)
+    {
+        if (co_net_addr_resolve(
+            url->host, url->scheme,
+            &hint, net_addr, 1) == 0)
+        {
+            return false;
+        }
+    }
+    else
+    {
+        char service[8];
+        sprintf(service, "%d", url->port);
+
+        hint.flags |= AI_NUMERICSERV;
+
+        if (co_net_addr_resolve(
+            url->host, service,
+            &hint, net_addr, 1) == 0)
+        {
+            return false;
+        }
+    }
+
+    return true;
 }

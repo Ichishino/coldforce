@@ -1,40 +1,63 @@
-#ifndef CO_NET_ADDR_RESOLVE_H_INCLUDED
-#define CO_NET_ADDR_RESOLVE_H_INCLUDED
+#ifndef CO_STRING_TOKEN_H_INCLUDED
+#define CO_STRING_TOKEN_H_INCLUDED
 
-#include <coldforce/net/co_net.h>
-#include <coldforce/net/co_net_addr.h>
-#include <coldforce/net/co_socket_handle.h>
+#include <coldforce/core/co.h>
 
 CO_EXTERN_C_BEGIN
 
 //---------------------------------------------------------------------------//
-// net address resolve
+// string token
 //---------------------------------------------------------------------------//
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
+
+// ex.
+//
+// "aaaa=1234&bbb=5678&ccc=9999"
+// "aaaa=1234; bbb=5678; ccc=9999"
+// "aaaa, bbbb, cccc"
 
 typedef struct
 {
-    int family;
-    int type;
-    int protocol;
-    int flags;
+    char* first;
+    char* second;
 
-} co_resolve_hint_st;
+} co_string_token_st;
 
 //---------------------------------------------------------------------------//
 // public
 //---------------------------------------------------------------------------//
 
-CO_NET_API
+CO_CORE_API
 size_t
-co_net_addr_resolve(
-    const char* node,
-    const char* service,
-    const co_resolve_hint_st* hint,
-    co_net_addr_t* net_addr,
+co_string_token_split(
+    const char* str,
+    co_string_token_st* tokens,
     size_t count
+);
+
+CO_CORE_API
+void
+co_string_token_cleanup(
+    co_string_token_st* tokens,
+    size_t count
+);
+
+CO_CORE_API
+int
+co_string_token_find(
+    const co_string_token_st* tokens,
+    size_t count,
+    const char* first
+);
+
+CO_CORE_API
+bool
+co_string_token_contains(
+    const co_string_token_st* token,
+    size_t count,
+    const char* first
 );
 
 //---------------------------------------------------------------------------//
@@ -42,4 +65,4 @@ co_net_addr_resolve(
 
 CO_EXTERN_C_END
 
-#endif // CO_NET_ADDR_RESOLVE_H_INCLUDED
+#endif // CO_STRING_TOKEN_H_INCLUDED

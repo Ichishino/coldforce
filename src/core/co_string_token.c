@@ -1,21 +1,20 @@
 #include <coldforce/core/co_std.h>
 #include <coldforce/core/co_string.h>
-
-#include <coldforce/http/co_http_string_list.h>
-
-//---------------------------------------------------------------------------//
-// http string list
-//---------------------------------------------------------------------------//
+#include <coldforce/core/co_string_token.h>
 
 //---------------------------------------------------------------------------//
+// string token
 //---------------------------------------------------------------------------//
 
 //---------------------------------------------------------------------------//
-// public
+//---------------------------------------------------------------------------//
+
+//---------------------------------------------------------------------------//
+// private
 //---------------------------------------------------------------------------//
 
 static size_t
-co_http_string_cspn(
+co_string_token_cspn(
     const char* str,
     const char* delimiters
 )
@@ -56,10 +55,14 @@ co_http_string_cspn(
     return (size_t)(ptr - str);
 }
 
+//---------------------------------------------------------------------------//
+// public
+//---------------------------------------------------------------------------//
+
 size_t
-co_http_string_list_parse(
+co_string_token_split(
     const char* str,
-    co_http_string_item_st* items,
+    co_string_token_st* tokens,
     size_t count
 )
 {
@@ -69,7 +72,7 @@ co_http_string_list_parse(
 
     while (((*str) != '\0') && (index < count))
     {
-        size_t length = co_http_string_cspn(str, delimiter);
+        size_t length = co_string_token_cspn(str, delimiter);
 
         if (length == 0)
         {
@@ -85,34 +88,34 @@ co_http_string_list_parse(
             size_t first_length = ptr - str;
             size_t second_length = length - (first_length + 1);
 
-            items[index].first =
+            tokens[index].first =
                 co_string_duplicate_n(str, first_length);
 
-            co_string_trim(items[index].first, first_length);
-            co_string_trim_quotes(items[index].first);
+            co_string_trim(tokens[index].first, first_length);
+            co_string_trim_quotes(tokens[index].first);
 
             if (second_length > 0)
             {
-                items[index].second =
+                tokens[index].second =
                     co_string_duplicate_n(&str[first_length + 1], second_length);
 
-                co_string_trim(items[index].second, second_length);
-                co_string_trim_quotes(items[index].second);
+                co_string_trim(tokens[index].second, second_length);
+                co_string_trim_quotes(tokens[index].second);
             }
             else
             {
-                items[index].second = NULL;
+                tokens[index].second = NULL;
             }
         }
         else
         {
-            items[index].first =
+            tokens[index].first =
                 co_string_duplicate_n(str, length);
-            items[index].second = NULL;
+            tokens[index].second = NULL;
 
-            co_string_trim(items[index].first, length);
+            co_string_trim(tokens[index].first, length);
 
-            co_string_trim_quotes(items[index].first);
+            co_string_trim_quotes(tokens[index].first);
         }
 
         str += length;
@@ -123,32 +126,32 @@ co_http_string_list_parse(
 }
 
 void
-co_http_string_list_cleanup(
-    co_http_string_item_st* items,
+co_string_token_cleanup(
+    co_string_token_st* tokens,
     size_t count
 )
 {
     for (size_t index = 0; index < count; ++index)
     {
-        co_string_destroy(items[index].first);
-        items[index].first = NULL;
+        co_string_destroy(tokens[index].first);
+        tokens[index].first = NULL;
 
-        co_string_destroy(items[index].second);
-        items[index].second = NULL;
+        co_string_destroy(tokens[index].second);
+        tokens[index].second = NULL;
     }
 }
 
 int
-co_http_string_list_find(
-    const co_http_string_item_st* items,
-    size_t item_count,
+co_string_token_find(
+    const co_string_token_st* tokens,
+    size_t count,
     const char* first
 )
 {
-    for (size_t index = 0; index < item_count; ++index)
+    for (size_t index = 0; index < count; ++index)
     {
-        if (items[index].first != NULL &&
-            co_string_case_compare(items[index].first, first) == 0)
+        if (tokens[index].first != NULL &&
+            co_string_case_compare(tokens[index].first, first) == 0)
         {
             return (int)index;
         }
@@ -158,16 +161,16 @@ co_http_string_list_find(
 }
 
 bool
-co_http_string_list_contains(
-    const co_http_string_item_st* items,
-    size_t item_count,
+co_string_token_contains(
+    const co_string_token_st* tokens,
+    size_t count,
     const char* first
 )
 {
-    for (size_t index = 0; index < item_count; ++index)
+    for (size_t index = 0; index < count; ++index)
     {
-        if (items[index].first != NULL &&
-            co_string_case_compare(items[index].first, first) == 0)
+        if (tokens[index].first != NULL &&
+            co_string_case_compare(tokens[index].first, first) == 0)
         {
             return true;
         }

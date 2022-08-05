@@ -158,7 +158,7 @@ void on_my_http_request(my_app* self, co_http_client_t* client,
 
     if (error_code == 0)
     {
-        const co_http_url_st* url = co_http_request_get_url(request);
+        const co_url_st* url = co_http_request_get_url(request);
 
         if (strcmp(url->path, "/stop") == 0)
         {

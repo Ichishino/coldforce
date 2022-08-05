@@ -181,24 +181,25 @@ co_tcp_upgrade_to_ws(
     co_tcp_client_t* tcp_client
 )
 {
-    co_ws_client_t* ws_client =
+    co_ws_client_t* client =
         (co_ws_client_t*)co_mem_alloc(sizeof(co_ws_client_t));
 
-    if (ws_client == NULL)
+    if (client == NULL)
     {
         return NULL;
     }
 
-    ws_client->conn.tcp_client = tcp_client;
+    co_tcp_upgrade_to_http_connection(
+        tcp_client, (co_http_connection_t*)client, NULL);
 
-    co_ws_client_setup(ws_client, tcp_client, NULL);
+    co_ws_client_setup(client);
 
-    ws_client->mask = false;
+    client->mask = false;
 
-    ws_client->conn.tcp_client->callbacks.on_receive =
+    client->conn.tcp_client->callbacks.on_receive =
         (co_tcp_receive_fn)co_ws_server_on_receive_ready;
-    ws_client->conn.tcp_client->callbacks.on_close =
+    client->conn.tcp_client->callbacks.on_close =
         (co_tcp_close_fn)co_ws_client_on_close;
 
-    return ws_client;
+    return client;
 }

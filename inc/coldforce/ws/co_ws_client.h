@@ -58,9 +58,7 @@ typedef struct co_ws_client_t
 
 void
 co_ws_client_setup(
-    co_ws_client_t* client,
-    co_tcp_client_t* tcp_client,
-    co_http_url_st* base_url
+    co_ws_client_t* client
 );
 
 void

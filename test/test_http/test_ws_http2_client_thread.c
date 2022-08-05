@@ -187,12 +187,12 @@ ws_http2_client_on_thread_create(
     ws_http2_client_thread* self
 )
 {
-    co_http_url_st* url = co_http_url_create(self->url);
+    co_url_st* url = co_url_create(self->url);
 
-    self->base_url = co_http_url_create_base_url(url);
-    self->path = co_http_url_create_path_and_query(url);
+    self->base_url = co_url_create_base_url(url);
+    self->path = co_url_create_path_and_query(url);
 
-    co_http_url_destroy(url);
+    co_url_destroy(url);
 
     co_net_addr_t local_net_addr = { 0 };
     co_net_addr_set_family(

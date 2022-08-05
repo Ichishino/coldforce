@@ -77,7 +77,7 @@ void on_my_http2_default_request(
 
     const char* method = co_http2_header_get_method(request_header);
     const char* authority = co_http2_header_get_authority(request_header);
-    const co_http_url_st* url = co_http2_header_get_path_url(request_header);
+    const co_url_st* url = co_http2_header_get_path_url(request_header);
     const char* path = url->path;
     const char* query = ((url->query != NULL) ? url->query : "");
 
@@ -118,7 +118,7 @@ void on_my_http2_request(
 
     if (error_code == 0)
     {
-        const co_http_url_st* url = co_http2_header_get_path_url(request_header);
+        const co_url_st* url = co_http2_header_get_path_url(request_header);
 
         if (strcmp(url->path, "/stop") == 0)
         {

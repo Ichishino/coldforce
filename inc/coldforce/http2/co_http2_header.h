@@ -3,7 +3,8 @@
 
 #include <coldforce/core/co_list.h>
 
-#include <coldforce/http/co_http_url.h>
+#include <coldforce/net/co_url.h>
+
 #include <coldforce/http/co_http_cookie.h>
 #include <coldforce/http/co_http_auth.h>
 
@@ -30,7 +31,7 @@ typedef struct co_http2_pseudo_header_t
     char* authority;
     char* method;
     char* protocol;
-    co_http_url_st* url;
+    co_url_st* url;
     char* scheme;
     uint16_t status_code;
 
@@ -153,7 +154,7 @@ co_http2_header_get_path(
 
 
 CO_HTTP2_API
-const co_http_url_st*
+const co_url_st*
 co_http2_header_get_path_url(
     const co_http2_header_t* header
 );

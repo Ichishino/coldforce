@@ -1,8 +1,8 @@
 #include <coldforce/core/co_std.h>
 #include <coldforce/core/co_string.h>
+#include <coldforce/core/co_string_token.h>
 
 #include <coldforce/http/co_http_content_receiver.h>
-#include <coldforce/http/co_http_string_list.h>
 #include <coldforce/http/co_http_config.h>
 #include <coldforce/http/co_http_log.h>
 
@@ -100,25 +100,34 @@ co_http_receive_chunked_data(
                 return CO_HTTP_PARSE_MORE_DATA;
             }
 
-            if (((size_t)(new_line - &data_ptr[receiver->index])) > CO_SIZE_T_HEX_DIGIT_MAX)
+            size_t digits = (size_t)(new_line - &data_ptr[receiver->index]);
+
+            if (digits > CO_SIZE_T_HEX_DIGIT_MAX)
             {
                 return CO_HTTP_PARSE_ERROR;
             }
 
-            receiver->chunk_size =
-                co_string_to_size_t(&data_ptr[receiver->index], NULL, 16);
-
-            co_http_log_debug(NULL, NULL, NULL,
-                "http receive chunked data %zd bytes", receiver->chunk_size);
-
-            if (receiver->chunk_size > max_content_size)
+            if (digits > 0)
             {
-                return CO_HTTP_ERROR_CONTENT_TOO_BIG;
+                receiver->chunk_size =
+                    co_string_to_size_t(&data_ptr[receiver->index], NULL, 16);
+
+                co_http_log_debug(NULL, NULL, NULL,
+                    "http receive chunked data %zd bytes", receiver->chunk_size);
+
+                if (receiver->chunk_size > max_content_size)
+                {
+                    return CO_HTTP_ERROR_CONTENT_TOO_BIG;
+                }
             }
 
-            receiver->index +=
-                (new_line - &data_ptr[receiver->index]) + CO_HTTP_CRLF_LENGTH;
+            receiver->index += (digits + CO_HTTP_CRLF_LENGTH);
             receive_size = data_size - receiver->index;
+
+            if (digits == 0)
+            {
+                continue;
+            }
         }
 
         size_t content_size = 0;
@@ -244,16 +253,16 @@ co_http_start_receive_content(
 
     if (value != NULL)
     {
-        co_http_string_item_st items[32];
-        size_t item_count = co_http_string_list_parse(value, items, 32);
+        co_string_token_st tokens[32];
+        size_t token_count = co_string_token_split(value, tokens, 32);
         
-        if (co_http_string_list_contains(items, item_count,
+        if (co_string_token_contains(tokens, token_count,
             CO_HTTP_TRANSFER_ENCODING_CHUNKED))
         {
             receiver->chunked = true;
         }
 
-        co_http_string_list_cleanup(items, item_count);
+        co_string_token_cleanup(tokens, token_count);
     }
 
     if (!receiver->chunked)
@@ -319,9 +328,18 @@ co_http_complete_receive_content(
 void
 co_http_content_more_data(
     co_http_content_receiver_t* receiver,
+    size_t* index,
     co_byte_array_t* receive_data
 )
 {
-    receiver->index = 0;
-    co_byte_array_clear(receive_data);
+    if (receiver->index == co_byte_array_get_count(receive_data))
+    {
+        receiver->index = 0;
+        *index = 0;
+        co_byte_array_clear(receive_data);
+    }
+    else
+    {
+        *index = receiver->index;
+    }
 }

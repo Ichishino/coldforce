@@ -78,6 +78,7 @@ co_http_complete_receive_content(
 void
 co_http_content_more_data(
     co_http_content_receiver_t* receiver,
+    size_t* index,
     co_byte_array_t* receive_data
 );
 
