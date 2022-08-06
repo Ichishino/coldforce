@@ -153,12 +153,12 @@ void on_my_ws_connect(
 
 bool on_my_app_create(my_app* self)
 {
-    co_http_url_st* url = co_http_url_create("ws://127.0.0.1:8080/");
+    co_url_st* url = co_url_create("ws://127.0.0.1:8080/");
 
-    self->base_url = co_http_url_create_base_url(url);
-    self->path = co_http_url_create_path_and_query(url);
+    self->base_url = co_url_create_base_url(url);
+    self->path = co_url_create_path_and_query(url);
 
-    co_http_url_destroy(url);
+    co_url_destroy(url);
 
     co_net_addr_t local_net_addr = { 0 };
     co_net_addr_set_family(&local_net_addr, CO_ADDRESS_FAMILY_IPV4);
