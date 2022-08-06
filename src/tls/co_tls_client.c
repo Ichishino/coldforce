@@ -739,6 +739,10 @@ co_tls_receive(
             buffer, ssl_result,
             "tls receive %d bytes", ssl_result);
     }
+    else if (raw_data_size == buffer_size)
+    {
+        return co_tls_receive(client, buffer, buffer_size);
+    }
 
     return ssl_result;
 }
