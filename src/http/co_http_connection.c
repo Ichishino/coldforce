@@ -57,14 +57,16 @@ co_http_connection_setup(
         conn->tcp_client =
             co_tls_client_create(local_net_addr, tls_ctx);
 
-        if (conn->tcp_client != NULL &&
-            protocols != NULL && protocol_count > 0)
+        if (conn->tcp_client != NULL)
         {
             co_tls_set_host_name(
                 conn->tcp_client, base_url->host);
 
-            co_tls_set_available_protocols(
-                conn->tcp_client, protocols, protocol_count);
+            if (protocols != NULL && protocol_count > 0)
+            {
+                co_tls_set_available_protocols(
+                    conn->tcp_client, protocols, protocol_count);
+            }
         }
 #else
         (void)protocols;

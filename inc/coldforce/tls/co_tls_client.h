@@ -38,6 +38,8 @@ typedef struct
     co_tcp_receive_fn on_receive;
 
     BIO* network_bio;
+
+    co_byte_array_t* send_data;
     co_queue_t* receive_data_queue;
 
 } co_tls_client_t;

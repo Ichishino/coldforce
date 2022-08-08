@@ -25,7 +25,7 @@ typedef struct
     co_tcp_client_module_t module;
     co_url_st* base_url;
 
-    struct ReceiveData
+    struct co_http_connection_receive_data_t
     {
         size_t index;
         co_byte_array_t* ptr;

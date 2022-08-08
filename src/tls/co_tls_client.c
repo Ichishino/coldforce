@@ -85,6 +85,7 @@ co_tls_client_setup(
     tls->callbacks.on_handshake = NULL;
     tls->on_connect = NULL;
     tls->on_receive = NULL;
+    tls->send_data = co_byte_array_create();
     tls->receive_data_queue = co_queue_create(sizeof(uint8_t), NULL);
 }
 
@@ -95,6 +96,9 @@ co_tls_client_cleanup(
 {
     if (tls != NULL)
     {
+        co_byte_array_destroy(tls->send_data);
+        tls->send_data = NULL;
+
         co_queue_destroy(tls->receive_data_queue);
         tls->receive_data_queue = NULL;
 
@@ -647,20 +651,20 @@ co_tls_send(
         data, data_size,
         "tls send %zd bytes", data_size);
 
+    co_tls_client_t* tls = co_tcp_client_get_tls(client);
+
+    co_byte_array_clear(tls->send_data);
+
     bool result = false;
 
-    co_byte_array_t* send_data = co_byte_array_create();
-
     if (co_tls_encrypt_data(
-        client, data, data_size, send_data))
+        client, data, data_size, tls->send_data))
     {
         result = co_tcp_send(client,
-            co_byte_array_get_ptr(send_data, 0),
-            co_byte_array_get_count(send_data));
+            co_byte_array_get_ptr(tls->send_data, 0),
+            co_byte_array_get_count(tls->send_data));
     }
     
-    co_byte_array_destroy(send_data);
-
     return result;
 }
 
@@ -678,19 +682,19 @@ co_tls_send_async(
         data, data_size,
         "tls send async %zd bytes", data_size);
 
+    co_tls_client_t* tls = co_tcp_client_get_tls(client);
+
+    co_byte_array_clear(tls->send_data);
+
     bool result = false;
 
-    co_byte_array_t* send_data = co_byte_array_create();
-
     if (co_tls_encrypt_data(
-        client, data, data_size, send_data))
+        client, data, data_size, tls->send_data))
     {
         result = co_tcp_send_async(client,
-            co_byte_array_get_ptr(send_data, 0),
-            co_byte_array_get_count(send_data));
+            co_byte_array_get_ptr(tls->send_data, 0),
+            co_byte_array_get_count(tls->send_data));
     }
-
-    co_byte_array_destroy(send_data);
 
     return result;
 }
@@ -739,7 +743,7 @@ co_tls_receive(
             buffer, ssl_result,
             "tls receive %d bytes", ssl_result);
     }
-    else if (raw_data_size == buffer_size)
+    else if (raw_data_size == (ssize_t)buffer_size)
     {
         return co_tls_receive(client, buffer, buffer_size);
     }
