@@ -376,8 +376,7 @@ co_url_query_parse(
     bool unescape
 )
 {
-    co_map_ctx_st ctx = CO_STRING_MAP_CTX;
-    co_string_map_t* query_map = co_map_create(&ctx);
+    co_string_map_t* query_map = co_string_map_create();
 
     if (src != NULL)
     {
@@ -446,13 +445,13 @@ co_url_query_to_string(
 {
     co_byte_array_t* buffer = co_byte_array_create();
 
-    co_string_map_iterator_t it;
-    co_string_map_iterator_init(query_map, &it);
+    co_string_map_const_iterator_t it;
+    co_string_map_const_iterator_init(query_map, &it);
 
-    while (co_string_map_iterator_has_next(&it))
+    while (co_string_map_const_iterator_has_next(&it))
     {
         const co_string_map_data_st* data =
-            co_string_map_iterator_get_next(&it);
+            co_string_map_const_iterator_get_next(&it);
 
         if (escape)
         {

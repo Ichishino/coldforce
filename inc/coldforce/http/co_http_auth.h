@@ -1,7 +1,7 @@
 #ifndef CO_HTTP_AUTH_H_INCLUDED
 #define CO_HTTP_AUTH_H_INCLUDED
 
-#include <coldforce/core/co_map.h>
+#include <coldforce/core/co_string_map.h>
 
 #include <coldforce/http/co_http.h>
 
@@ -21,7 +21,7 @@ typedef struct
     char* method;
     char* credentials;
     uint32_t nc;
-    co_map_t* items;
+    co_string_map_t* items;
 
 } co_http_auth_t;
 

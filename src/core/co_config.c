@@ -25,8 +25,7 @@ co_config_read_file(
         return NULL;
     }
 
-    co_map_ctx_st ctx = CO_STRING_MAP_CTX;
-    co_string_map_t* config_map = co_map_create(&ctx);
+    co_string_map_t* config_map = co_string_map_create();
 
     char line[CO_CONFIG_LINE_MAX_LENGTH];
 

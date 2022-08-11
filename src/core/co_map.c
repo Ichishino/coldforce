@@ -315,7 +315,7 @@ co_map_remove(
 
 void
 co_map_iterator_init(
-    const co_map_t* map,
+    co_map_t* map,
     co_map_iterator_t* iterator
 )
 {
@@ -336,9 +336,67 @@ co_map_iterator_init(
     iterator->item = NULL;
 }
 
-const co_map_data_st*
+void
+co_map_const_iterator_init(
+    const co_map_t* map,
+    co_map_const_iterator_t* iterator
+)
+{
+    iterator->map = map;
+
+    for (size_t index = 0; index < map->hash_size; ++index)
+    {
+        if (map->items[index] != NULL)
+        {
+            iterator->index = index;
+            iterator->item = map->items[index];
+
+            return;
+        }
+    }
+
+    iterator->index = SIZE_MAX;
+    iterator->item = NULL;
+}
+
+co_map_data_st*
 co_map_iterator_get_next(
     co_map_iterator_t* iterator
+)
+{
+    co_map_data_st* data = &iterator->item->data;
+
+    if (iterator->item->next != NULL)
+    {
+        iterator->item = iterator->item->next;
+
+        return data;
+    }
+    else
+    {
+        for (size_t index = iterator->index + 1;
+            index < iterator->map->hash_size;
+            ++index)
+        {
+            if (iterator->map->items[index] != NULL)
+            {
+                iterator->index = index;
+                iterator->item = iterator->map->items[index];
+
+                return data;
+            }
+        }
+    }
+
+    iterator->index = SIZE_MAX;
+    iterator->item = NULL;
+
+    return data;
+}
+
+const co_map_data_st*
+co_map_const_iterator_get_next(
+    co_map_const_iterator_t* iterator
 )
 {
     const co_map_data_st* data = &iterator->item->data;
@@ -373,7 +431,16 @@ co_map_iterator_get_next(
 
 bool
 co_map_iterator_has_next(
-    const co_map_iterator_t* iterator
+    co_map_iterator_t* iterator
+)
+{
+    return (iterator->item != NULL) &&
+        (iterator->map->hash_size > iterator->index);
+}
+
+bool
+co_map_const_iterator_has_next(
+    co_map_const_iterator_t* iterator
 )
 {
     return (iterator->item != NULL) &&

@@ -411,9 +411,7 @@ co_http_auth_create(
     auth->credentials = NULL;
     auth->nc = 0;
 
-    co_map_ctx_st ctx = CO_STRING_MAP_CTX;
-
-    auth->items = co_map_create(&ctx);
+    auth->items = co_string_map_create();
 
     return auth;
 }

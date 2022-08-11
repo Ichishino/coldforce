@@ -23,25 +23,21 @@ typedef struct
 
 typedef co_map_t            co_string_map_t;
 typedef co_map_iterator_t   co_string_map_iterator_t;
-
-#define CO_STRING_MAP_CTX \
-    { \
-        .hash_size = CO_MAP_DEFAULT_HASH_SIZE, \
-        .hash_key = (co_item_hash_fn)co_string_hash, \
-        .destroy_key = (co_item_destroy_fn)co_string_destroy, \
-        .destroy_value = (co_item_destroy_fn)co_string_destroy, \
-        .duplicate_key = (co_item_duplicate_fn)co_string_duplicate, \
-        .duplicate_value = (co_item_duplicate_fn)co_string_duplicate, \
-        .compare_keys = (co_item_compare_fn)strcmp \
-    }
+typedef co_map_const_iterator_t   co_string_map_const_iterator_t;
 
 //---------------------------------------------------------------------------//
 // public
 //---------------------------------------------------------------------------//
 
-#define co_string_map_destroy       co_map_destroy
-#define co_string_map_clear         co_map_clear
-#define co_string_map_get_count     co_map_get_count
+CO_CORE_API
+co_string_map_t*
+co_string_map_create(
+    void
+);
+
+#define co_string_map_destroy(map)       co_map_destroy(map)
+#define co_string_map_clear(map)         co_map_clear(map)
+#define co_string_map_get_count(map)     co_map_get_count(map)
 
 #define co_string_map_contains(map, key) \
     co_map_contains(map, (const void*)key)
@@ -55,12 +51,23 @@ typedef co_map_iterator_t   co_string_map_iterator_t;
 #define co_string_map_remove(map, key) \
     co_map_remove(map, (const void*)key)
 
-#define co_string_map_iterator_init co_map_iterator_init
+#define co_string_map_iterator_init \
+    co_map_iterator_init
+
+#define co_string_map_const_iterator_init \
+    co_map_const_iterator_init
 
 #define co_string_map_iterator_get_next(iterator) \
-    ((const co_string_map_data_st*)co_map_iterator_get_next(iterator))
+    ((co_string_map_data_st*)co_map_iterator_get_next(iterator))
 
-#define co_string_map_iterator_has_next co_map_iterator_has_next
+#define co_string_map_const_iterator_get_next(iterator) \
+    ((const co_string_map_data_st*)co_map_const_iterator_get_next(iterator))
+
+#define co_string_map_iterator_has_next \
+    co_map_iterator_has_next
+
+#define co_string_map_const_iterator_has_next \
+    co_map_const_iterator_has_next
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

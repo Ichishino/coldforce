@@ -310,6 +310,8 @@
     <ClCompile Include="..\..\..\src\core\co_random.c" />
     <ClCompile Include="..\..\..\src\core\co_semaphore.c" />
     <ClCompile Include="..\..\..\src\core\co_string.c" />
+    <ClCompile Include="..\..\..\src\core\co_string_list.c" />
+    <ClCompile Include="..\..\..\src\core\co_string_map.c" />
     <ClCompile Include="..\..\..\src\core\co_string_token.c" />
     <ClCompile Include="..\..\..\src\core\co_thread.c" />
     <ClCompile Include="..\..\..\src\core\co_time.c" />

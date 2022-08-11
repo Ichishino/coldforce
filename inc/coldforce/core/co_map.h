@@ -60,12 +60,21 @@ typedef struct
 
 typedef struct
 {
+    co_map_t* map;
+
+    size_t index;
+    co_map_item_t* item;
+
+} co_map_iterator_t;
+
+typedef struct
+{
     const co_map_t* map;
 
     size_t index;
     const co_map_item_t* item;
 
-} co_map_iterator_t;
+} co_map_const_iterator_t;
 
 //---------------------------------------------------------------------------//
 // public
@@ -127,20 +136,39 @@ co_map_remove(
 CO_CORE_API
 void
 co_map_iterator_init(
-    const co_map_t* map,
+    co_map_t* map,
     co_map_iterator_t* iterator
 );
 
 CO_CORE_API
-const co_map_data_st*
+void
+co_map_const_iterator_init(
+    const co_map_t* map,
+    co_map_const_iterator_t* iterator
+);
+
+CO_CORE_API
+co_map_data_st*
 co_map_iterator_get_next(
     co_map_iterator_t* iterator
 );
 
 CO_CORE_API
+const co_map_data_st*
+co_map_const_iterator_get_next(
+    co_map_const_iterator_t* iterator
+);
+
+CO_CORE_API
 bool
 co_map_iterator_has_next(
-    const co_map_iterator_t* iterator
+    co_map_iterator_t* iterator
+);
+
+CO_CORE_API
+bool
+co_map_const_iterator_has_next(
+    co_map_const_iterator_t* iterator
 );
 
 //---------------------------------------------------------------------------//
