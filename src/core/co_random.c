@@ -20,16 +20,16 @@
 void
 co_random(
     void* buffer,
-    size_t data_size
+    size_t length
 )
 {
 #ifdef CO_OS_WIN
     HCRYPTPROV prov;
     CryptAcquireContext(&prov, NULL, NULL, PROV_RSA_FULL, 0);
-    CryptGenRandom(prov, (DWORD)data_size, (BYTE*)buffer);
+    CryptGenRandom(prov, (DWORD)length, (BYTE*)buffer);
     CryptReleaseContext(prov, 0);
 #else
-    for (size_t index = 0; index < data_size; ++index)
+    for (size_t index = 0; index < length; ++index)
     {
         ((uint8_t*)buffer)[index] = (uint8_t)(random() % 256);
     }
@@ -49,23 +49,46 @@ co_random_range(
 }
 
 void
+co_random_string(
+    char* buffer,
+    size_t length,
+    const char* characters
+)
+{
+    uint32_t characters_length =
+        (uint32_t)strlen(characters);
+
+    for (size_t index = 0; index < length; ++index)
+    {
+        buffer[index] = characters[
+            co_random_range(0, characters_length - 1)];
+    }
+
+    buffer[length] = '\0';
+}
+
+void
+co_random_alnum_string(
+    char* buffer,
+    size_t length
+)
+{
+    static const char* alnum =
+        "0123456789"
+        "abcdefghijklmnopqrstuvwxyz"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    co_random_string(buffer, length, alnum);
+}
+
+void
 co_random_hex_string(
     char* buffer,
     size_t length
 )
 {
-    size_t bin_size = length / 2;
+    static const char* hex =
+        "0123456789abcdef";
 
-    if (length % 2)
-    {
-        bin_size += 1;
-    }
-
-    uint8_t* bin =
-        (uint8_t*)co_mem_alloc(bin_size);
-    co_random(bin, bin_size);
-    co_string_hex(bin, bin_size, buffer, false);
-    co_mem_free(bin);
-
-    buffer[length] = '\0';
+    co_random_string(buffer, length, hex);
 }

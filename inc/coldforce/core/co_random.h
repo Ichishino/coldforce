@@ -20,7 +20,7 @@ CO_CORE_API
 void
 co_random(
     void* buffer,
-    size_t data_size
+    size_t length
 );
 
 CO_CORE_API
@@ -28,6 +28,21 @@ uint32_t
 co_random_range(
     uint32_t min,
     uint32_t max
+);
+
+CO_CORE_API
+void
+co_random_string(
+    char* buffer,
+    size_t length,
+    const char* characters
+);
+
+CO_CORE_API
+void
+co_random_alnum_string(
+    char* buffer,
+    size_t length
 );
 
 CO_CORE_API
