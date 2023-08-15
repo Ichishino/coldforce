@@ -72,7 +72,7 @@ co_socket_option_get_reuse_addr(
         return false;
     }
 
-    *enable = (value == 1) ? true : false;
+    *enable = (value == 0) ? false : true;
 
     return true;
 }
@@ -106,7 +106,7 @@ co_socket_option_get_keep_alive(
         return false;
     }
 
-    *enable = (value == 1) ? true : false;
+    *enable = (value == 0) ? false : true;
 
     return true;
 }
@@ -119,10 +119,8 @@ co_socket_option_set_send_buffer(
     size_t buffer_size
 )
 {
-    int value = (int)buffer_size;
-
     return co_socket_option_set(
-        sock, SOL_SOCKET, SO_SNDBUF, &value, sizeof(value));
+        sock, SOL_SOCKET, SO_SNDBUF, &buffer_size, sizeof(buffer_size));
 }
 
 bool
@@ -131,16 +129,13 @@ co_socket_option_get_send_buffer(
     size_t* buffer_size
 )
 {
-    int value = 0;
-    size_t value_size = sizeof(value);
+    size_t value_size = sizeof(size_t);
 
     if (!co_socket_option_get(
-        sock, SOL_SOCKET, SO_SNDBUF, &value, &value_size))
+        sock, SOL_SOCKET, SO_SNDBUF, buffer_size, &value_size))
     {
         return false;
     }
-
-    *buffer_size = (size_t)value;
 
     return true;
 }
@@ -153,10 +148,8 @@ co_socket_option_set_receive_buffer(
     size_t buffer_size
 )
 {
-    int value = (int)buffer_size;
-
     return co_socket_option_set(
-        sock, SOL_SOCKET, SO_RCVBUF, &value, sizeof(value));
+        sock, SOL_SOCKET, SO_RCVBUF, &buffer_size, sizeof(buffer_size));
 }
 
 bool
@@ -165,16 +158,13 @@ co_socket_option_get_receive_buffer(
     size_t* buffer_size
 )
 {
-    int value = 0;
-    size_t value_size = sizeof(value);
+    size_t value_size = sizeof(size_t);
 
     if (!co_socket_option_get(
-        sock, SOL_SOCKET, SO_RCVBUF, &value, &value_size))
+        sock, SOL_SOCKET, SO_RCVBUF, buffer_size, &value_size))
     {
         return false;
     }
-
-    *buffer_size = (size_t)value;
 
     return true;
 }
@@ -256,7 +246,7 @@ co_socket_option_get_tcp_no_delay(
         return false;
     }
 
-    *enable = (value == 1) ? true : false;
+    *enable = (value == 0) ? false : true;
 
     return true;
 }

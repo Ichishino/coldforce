@@ -236,8 +236,12 @@ co_socket_handle_get_option(
     size_t* buffer_size
 )
 {
+    socklen_t value_size = sizeof(size_t);
+
     int result = getsockopt(
-        handle, level, name, buffer, (socklen_t*)buffer_size);
+        handle, level, name, buffer, &value_size);
+
+    *buffer_size = (size_t)value_size;
 
     return (result == 0);
 }
