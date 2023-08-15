@@ -36,7 +36,7 @@ typedef struct
 
 CO_CORE_API
 void
-co_app_setup(
+co_app_setup_internal(
     co_app_t* app,
     co_app_create_fn create_handler,
     co_app_destroy_fn destroy_handler,
@@ -51,7 +51,7 @@ co_app_setup(
 
 CO_CORE_API
 void
-co_app_init(
+co_app_setup(
     co_app_t* app,
     co_app_create_fn create_handler,
     co_app_destroy_fn destroy_handler,

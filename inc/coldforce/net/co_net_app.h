@@ -20,7 +20,7 @@ CO_EXTERN_C_BEGIN
 
 CO_NET_API
 bool
-co_net_app_init(
+co_net_app_setup(
     co_app_t* app,
     co_app_create_fn create_handler,
     co_app_destroy_fn destroy_handler,

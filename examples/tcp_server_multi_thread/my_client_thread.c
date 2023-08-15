@@ -110,7 +110,7 @@ void on_my_client_thread_destroy(my_client_thread* self)
 
 void init_my_client_thread(my_client_thread* thread)
 {
-    co_net_thread_init(
+    co_net_thread_setup(
         (co_thread_t*)thread,
         (co_thread_create_fn)on_my_client_thread_create,
         (co_thread_destroy_fn)on_my_client_thread_destroy);

@@ -17,7 +17,7 @@
 //---------------------------------------------------------------------------//
 
 bool
-co_net_app_init(
+co_net_app_setup(
     co_app_t* app,
     co_app_create_fn create_handler,
     co_app_destroy_fn destroy_handler,
@@ -34,7 +34,7 @@ co_net_app_init(
 
     net_worker->on_destroy = destroy_handler;
 
-    co_app_setup(app,
+    co_app_setup_internal(app,
         create_handler, (co_app_destroy_fn)co_net_worker_on_destroy,
         (co_event_worker_t*)net_worker,
         argc, argv);

@@ -249,7 +249,7 @@ ws_http2_client_thread_start(
     ws_http2_client_thread* thread
 )
 {
-    co_net_thread_init(
+    co_net_thread_setup(
         (co_thread_t*)thread,
         (co_thread_create_fn)ws_http2_client_on_thread_create,
         (co_thread_destroy_fn)ws_http2_client_on_thread_destroy);

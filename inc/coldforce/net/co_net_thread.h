@@ -21,7 +21,7 @@ CO_EXTERN_C_BEGIN
 
 CO_NET_API
 bool
-co_net_thread_init(
+co_net_thread_setup(
     co_thread_t* thread,
     co_thread_create_fn create_handler,
     co_thread_destroy_fn destroy_handler

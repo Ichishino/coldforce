@@ -16,7 +16,7 @@
 //---------------------------------------------------------------------------//
 
 bool
-co_net_thread_init(
+co_net_thread_setup(
     co_thread_t* thread,
     co_thread_create_fn create_handler,
     co_thread_destroy_fn destroy_handler
@@ -31,7 +31,7 @@ co_net_thread_init(
 
     net_worker->on_destroy = destroy_handler;
 
-    co_thread_setup(thread,
+    co_thread_setup_internal(thread,
         create_handler, (co_thread_destroy_fn)co_net_worker_on_destroy,
         (co_event_worker_t*)net_worker);
 

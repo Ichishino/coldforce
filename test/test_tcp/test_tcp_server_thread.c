@@ -122,7 +122,7 @@ tcp_server_thread_start(
     tcp_server_thread* thread
 )
 {
-    co_net_thread_init(
+    co_net_thread_setup(
         (co_thread_t*)thread,
         (co_thread_create_fn)on_tcp_server_thread_create,
         (co_thread_destroy_fn)on_tcp_server_thread_destroy);

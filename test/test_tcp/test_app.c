@@ -39,7 +39,7 @@ test_app_run(
 {
     test_app app = { 0 };
 
-    co_net_app_init(
+    co_net_app_setup(
         (co_app_t*)&app,
         (co_app_create_fn)on_test_app_create,
         (co_app_destroy_fn)on_test_app_destroy,

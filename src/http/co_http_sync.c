@@ -209,7 +209,7 @@ co_http_sync_request(
     http_thread.save_file_name = save_file_name;
     http_thread.tls_ctx = tls_ctx;
 
-    co_net_thread_init(
+    co_net_thread_setup(
         (co_thread_t*)&http_thread,
         (co_thread_create_fn)co_http_thread_on_create,
         (co_thread_destroy_fn)co_http_thread_on_destroy);

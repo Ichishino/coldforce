@@ -42,7 +42,7 @@ typedef struct co_thread_t
 //---------------------------------------------------------------------------//
 
 CO_CORE_API
-void co_thread_setup(
+void co_thread_setup_internal(
     co_thread_t* thread,
     co_thread_create_fn create_handler,
     co_thread_destroy_fn destroy_handler,
@@ -60,7 +60,7 @@ co_thread_run(
 
 CO_CORE_API
 void
-co_thread_init(
+co_thread_setup(
     co_thread_t* thread,
     co_thread_create_fn create_handler,
     co_thread_destroy_fn destroy_handler

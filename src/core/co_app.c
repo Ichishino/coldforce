@@ -23,7 +23,7 @@ static co_app_t* current_app = NULL;
 extern CO_THREAD_LOCAL co_thread_t* current_thread;
 
 void
-co_app_setup(
+co_app_setup_internal(
     co_app_t* app,
     co_app_create_fn create_handler,
     co_app_destroy_fn destroy_handler,
@@ -35,7 +35,7 @@ co_app_setup(
     co_assert(current_app == NULL);
     co_assert(current_thread == NULL);
 
-    co_thread_setup(&app->main_thread,
+    co_thread_setup_internal(&app->main_thread,
         create_handler, destroy_handler, event_worker);
 
 #ifdef CO_OS_WIN
@@ -59,7 +59,7 @@ co_app_setup(
 //---------------------------------------------------------------------------//
 
 void
-co_app_init(
+co_app_setup(
     co_app_t* app,
     co_app_create_fn create_handler,
     co_app_destroy_fn destroy_handler,
@@ -67,7 +67,7 @@ co_app_init(
     char** argv
 )
 {
-    co_app_setup(
+    co_app_setup_internal(
         app, create_handler, destroy_handler, NULL,
         argc, argv);
 }
