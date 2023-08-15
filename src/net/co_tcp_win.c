@@ -71,7 +71,7 @@ co_win_tcp_load_functions(
 
 co_socket_handle_t
 co_win_tcp_socket_create(
-    co_address_family_t family
+    co_net_addr_family_t family
 )
 {
     SOCKET sock = WSASocketW(

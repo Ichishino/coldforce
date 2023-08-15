@@ -202,7 +202,7 @@ co_http_sync_request(
     else
     {
         co_net_addr_set_family(
-            &http_thread.local_net_addr, CO_ADDRESS_FAMILY_IPV4);
+            &http_thread.local_net_addr, CO_NET_ADDR_FAMILY_IPV4);
     }
 
     http_thread.request = request;

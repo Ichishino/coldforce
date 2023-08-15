@@ -196,7 +196,7 @@ ws_http2_client_on_thread_create(
 
     co_net_addr_t local_net_addr = { 0 };
     co_net_addr_set_family(
-        &local_net_addr, CO_ADDRESS_FAMILY_IPV4);
+        &local_net_addr, CO_NET_ADDR_FAMILY_IPV4);
 
     co_tls_ctx_st tls_ctx = { 0 };
 

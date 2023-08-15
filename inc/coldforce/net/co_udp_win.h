@@ -50,7 +50,7 @@ typedef struct
 
 co_socket_handle_t
 co_win_udp_socket_create(
-    co_address_family_t family
+    co_net_addr_family_t family
 );
 
 bool

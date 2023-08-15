@@ -25,7 +25,7 @@ void on_my_udp_receive(my_app* self, co_udp_t* udp)
 
         // receive
         ssize_t size = co_udp_receive(
-            udp, &remote_net_addr, &buffer, sizeof(buffer));
+            udp, &remote_net_addr, buffer, sizeof(buffer));
 
         if (size <= 0)
         {
@@ -57,7 +57,7 @@ bool on_my_app_create(my_app* self)
 
     // local address
     co_net_addr_t local_net_addr = { 0 };
-    co_net_addr_set_family(&local_net_addr, CO_ADDRESS_FAMILY_IPV4);
+    co_net_addr_set_family(&local_net_addr, CO_NET_ADDR_FAMILY_IPV4);
     co_net_addr_set_port(&local_net_addr, port);
 
     self->udp = co_udp_create(&local_net_addr);

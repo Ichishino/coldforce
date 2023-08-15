@@ -32,7 +32,7 @@ co_net_addr_init(
 void
 co_net_addr_set_family(
     co_net_addr_t* net_addr,
-    co_address_family_t family
+    co_net_addr_family_t family
 )
 {
     net_addr->sa.any.ss_family = family;
@@ -51,7 +51,7 @@ co_net_addr_set_family(
     }
 }
 
-co_address_family_t
+co_net_addr_family_t
 co_net_addr_get_family(
     const co_net_addr_t* net_addr
 )

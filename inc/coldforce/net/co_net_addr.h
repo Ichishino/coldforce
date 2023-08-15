@@ -22,12 +22,12 @@ CO_EXTERN_C_BEGIN
 
 typedef enum
 {
-    CO_ADDRESS_FAMILY_UNSPEC = AF_UNSPEC,
-    CO_ADDRESS_FAMILY_IPV4 = AF_INET,
-    CO_ADDRESS_FAMILY_IPV6 = AF_INET6,
-    CO_ADDRESS_FAMILY_UNIX = AF_UNIX
+    CO_NET_ADDR_FAMILY_UNSPEC = AF_UNSPEC,
+    CO_NET_ADDR_FAMILY_IPV4 = AF_INET,
+    CO_NET_ADDR_FAMILY_IPV6 = AF_INET6,
+    CO_NET_ADDR_FAMILY_UNIX = AF_UNIX
 
-} co_address_family_t;
+} co_net_addr_family_t;
 
 typedef struct
 {
@@ -56,11 +56,11 @@ CO_NET_API
 void
 co_net_addr_set_family(
     co_net_addr_t* net_addr,
-    co_address_family_t family
+    co_net_addr_family_t family
 );
 
 CO_NET_API
-co_address_family_t
+co_net_addr_family_t
 co_net_addr_get_family(
     const co_net_addr_t* net_addr
 );

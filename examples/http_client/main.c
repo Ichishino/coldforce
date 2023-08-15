@@ -188,7 +188,7 @@ bool on_my_app_create(my_app* self)
     }
 
     co_net_addr_t local_net_addr = { 0 };
-    co_net_addr_set_family(&local_net_addr, CO_ADDRESS_FAMILY_IPV4);
+    co_net_addr_set_family(&local_net_addr, CO_NET_ADDR_FAMILY_IPV4);
 
     self->client = co_http_client_create(self->base_url, &local_net_addr, NULL);
 

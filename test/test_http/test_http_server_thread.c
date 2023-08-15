@@ -133,7 +133,7 @@ on_http_server_thread_create(
     self->ws_clients = co_list_create(&ws_list_ctx);
 
     co_net_addr_t local_net_addr = { 0 };
-    co_net_addr_set_family(&local_net_addr, CO_ADDRESS_FAMILY_IPV4);
+    co_net_addr_set_family(&local_net_addr, CO_NET_ADDR_FAMILY_IPV4);
     co_net_addr_set_port(&local_net_addr, self->port);
 
     co_tls_ctx_st tls_ctx = { 0 };
