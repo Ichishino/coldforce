@@ -218,7 +218,7 @@ co_http_sync_request(
     co_thread_start((co_thread_t*)&http_thread);
 
     // wait
-    co_thread_wait((co_thread_t*)&http_thread);
+    co_thread_join((co_thread_t*)&http_thread);
     co_net_thread_cleanup((co_thread_t*)&http_thread);
 
     return http_thread.response;

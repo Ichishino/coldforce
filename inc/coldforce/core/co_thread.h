@@ -86,7 +86,7 @@ co_thread_stop(
 
 CO_CORE_API
 void
-co_thread_wait(
+co_thread_join(
     co_thread_t* thread
 );
 

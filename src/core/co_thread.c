@@ -194,7 +194,7 @@ co_thread_start(
 
     if (!thread_param.create_result)
     {
-        co_thread_wait(thread);
+        co_thread_join(thread);
 
         return false;
     }
@@ -215,7 +215,7 @@ co_thread_stop(
 }
 
 void
-co_thread_wait(
+co_thread_join(
     co_thread_t* thread
 )
 {
