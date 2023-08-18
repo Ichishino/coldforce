@@ -1,6 +1,0 @@
-//
-// Coldforce
-// common_config.xcconfig
-//
-
-HEADER_SEARCH_PATHS = ../../../inc/** /usr/local/opt/openssl/include/**

@@ -11,7 +11,7 @@ jobs:
       uses: microsoft/setup-msbuild@v1.1    
     - name: Build
       run: |
-        msbuild examples/all_examples/prj/vs19/all_examples.sln /t:build /p:Configuration=Release /p:Platform=x64
+        msbuild examples/all_examples.sln /t:build /p:Configuration=Release /p:Platform=x64
   build-on-ubuntu:
     runs-on: ubuntu-latest
     steps:

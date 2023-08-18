@@ -1,7 +1,0 @@
-//
-// Coldforce
-// example.xcconfig
-//
-
-HEADER_SEARCH_PATHS = ../../../../inc/**
-OTHER_LDFLAGS = -lpthread

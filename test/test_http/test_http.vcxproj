@@ -29,26 +29,26 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -72,19 +72,23 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>../../build/vs19/$(Configuration)$(PlatformArchitecture)/</OutDir>
+    <OutDir>../../build/msvc/$(Configuration)$(PlatformArchitecture)/</OutDir>
+    <IntDir>../../build/msvc/$(Configuration)$(PlatformArchitecture)/test/$(ProjectName)/</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>../../build/vs19/$(Configuration)$(PlatformArchitecture)/</OutDir>
+    <OutDir>../../build/msvc/$(Configuration)$(PlatformArchitecture)/</OutDir>
+    <IntDir>../../build/msvc/$(Configuration)$(PlatformArchitecture)/test/$(ProjectName)/</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>../../build/vs19/$(Configuration)$(PlatformArchitecture)/</OutDir>
+    <OutDir>../../build/msvc/$(Configuration)$(PlatformArchitecture)/</OutDir>
+    <IntDir>../../build/msvc/$(Configuration)$(PlatformArchitecture)/test/$(ProjectName)/</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>../../build/vs19/$(Configuration)$(PlatformArchitecture)/</OutDir>
+    <OutDir>../../build/msvc/$(Configuration)$(PlatformArchitecture)/</OutDir>
+    <IntDir>../../build/msvc/$(Configuration)$(PlatformArchitecture)/test/$(ProjectName)/</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -151,29 +155,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\prj\vs19\co_core\co_core.vcxproj">
-      <Project>{4d32c6c5-283e-4610-aac5-b64943bedbbd}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\prj\vs19\co_http2\co_http2.vcxproj">
-      <Project>{c026f32c-b005-436b-9f8f-48c7ea25d333}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\prj\vs19\co_http\co_http.vcxproj">
-      <Project>{702988b4-8828-46e5-951f-ab5267db3b38}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\prj\vs19\co_net\co_net.vcxproj">
-      <Project>{bc7afcd0-9685-4d50-949c-fc7a194e972f}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\prj\vs19\co_tls\co_tls.vcxproj">
-      <Project>{325fd737-e9f2-4528-b106-e009d03b0788}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\prj\vs19\co_ws\co_ws.vcxproj">
-      <Project>{6d8c833f-5540-40fb-925e-428262ac2ca7}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\prj\vs19\co_ws_http2\co_ws_http2.vcxproj">
-      <Project>{31d82d22-ec96-4c52-a466-a246d53bb8c2}</Project>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="main.c" />
     <ClCompile Include="test_app.c" />
     <ClCompile Include="test_http_server_http2_connection.c" />
@@ -190,6 +171,29 @@
     <ClInclude Include="test_http_server_thread.h" />
     <ClInclude Include="test_http_server_ws_connection.h" />
     <ClInclude Include="test_ws_http2_client_thread.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\prj\msvc\co_core\co_core.vcxproj">
+      <Project>{4d32c6c5-283e-4610-aac5-b64943bedbbd}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\prj\msvc\co_http2\co_http2.vcxproj">
+      <Project>{c026f32c-b005-436b-9f8f-48c7ea25d333}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\prj\msvc\co_http\co_http.vcxproj">
+      <Project>{702988b4-8828-46e5-951f-ab5267db3b38}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\prj\msvc\co_net\co_net.vcxproj">
+      <Project>{bc7afcd0-9685-4d50-949c-fc7a194e972f}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\prj\msvc\co_tls\co_tls.vcxproj">
+      <Project>{325fd737-e9f2-4528-b106-e009d03b0788}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\prj\msvc\co_ws\co_ws.vcxproj">
+      <Project>{6d8c833f-5540-40fb-925e-428262ac2ca7}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\prj\msvc\co_ws_http2\co_ws_http2.vcxproj">
+      <Project>{31d82d22-ec96-4c52-a466-a246d53bb8c2}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

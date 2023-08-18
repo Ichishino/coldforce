@@ -24,8 +24,8 @@ on_test_app_destroy(
     co_thread_stop((co_thread_t*)&self->tcp_client);
     co_thread_stop((co_thread_t*)&self->tcp_server);
 
-    co_thread_wait((co_thread_t*)&self->tcp_client);
-    co_thread_wait((co_thread_t*)&self->tcp_server);
+    co_thread_join((co_thread_t*)&self->tcp_client);
+    co_thread_join((co_thread_t*)&self->tcp_server);
 
     co_net_thread_cleanup((co_thread_t*)&self->tcp_client);
     co_net_thread_cleanup((co_thread_t*)&self->tcp_server);

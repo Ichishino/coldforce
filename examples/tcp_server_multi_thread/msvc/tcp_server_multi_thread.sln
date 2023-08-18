@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31919.166
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_tcp", "test_tcp.vcxproj", "{C15C6A2F-3B50-4F45-8F52-D9E1C1ADD0EC}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tcp_server_multi_thread", "tcp_server_multi_thread.vcxproj", "{A6E3C323-CABA-4776-A2DF-7058F72F24C0}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "co_core", "..\..\prj\msvc\co_core\co_core.vcxproj", "{4D32C6C5-283E-4610-AAC5-B64943BEDBBD}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "co_core", "..\..\..\prj\msvc\co_core\co_core.vcxproj", "{4D32C6C5-283E-4610-AAC5-B64943BEDBBD}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "co_net", "..\..\prj\msvc\co_net\co_net.vcxproj", "{BC7AFCD0-9685-4D50-949C-FC7A194E972F}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "co_net", "..\..\..\prj\msvc\co_net\co_net.vcxproj", "{BC7AFCD0-9685-4D50-949C-FC7A194E972F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,22 +21,22 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{C15C6A2F-3B50-4F45-8F52-D9E1C1ADD0EC}.Debug_static|x64.ActiveCfg = Debug|x64
-		{C15C6A2F-3B50-4F45-8F52-D9E1C1ADD0EC}.Debug_static|x64.Build.0 = Debug|x64
-		{C15C6A2F-3B50-4F45-8F52-D9E1C1ADD0EC}.Debug_static|x86.ActiveCfg = Debug|Win32
-		{C15C6A2F-3B50-4F45-8F52-D9E1C1ADD0EC}.Debug_static|x86.Build.0 = Debug|Win32
-		{C15C6A2F-3B50-4F45-8F52-D9E1C1ADD0EC}.Debug|x64.ActiveCfg = Debug|x64
-		{C15C6A2F-3B50-4F45-8F52-D9E1C1ADD0EC}.Debug|x64.Build.0 = Debug|x64
-		{C15C6A2F-3B50-4F45-8F52-D9E1C1ADD0EC}.Debug|x86.ActiveCfg = Debug|Win32
-		{C15C6A2F-3B50-4F45-8F52-D9E1C1ADD0EC}.Debug|x86.Build.0 = Debug|Win32
-		{C15C6A2F-3B50-4F45-8F52-D9E1C1ADD0EC}.Release_static|x64.ActiveCfg = Release|x64
-		{C15C6A2F-3B50-4F45-8F52-D9E1C1ADD0EC}.Release_static|x64.Build.0 = Release|x64
-		{C15C6A2F-3B50-4F45-8F52-D9E1C1ADD0EC}.Release_static|x86.ActiveCfg = Release|Win32
-		{C15C6A2F-3B50-4F45-8F52-D9E1C1ADD0EC}.Release_static|x86.Build.0 = Release|Win32
-		{C15C6A2F-3B50-4F45-8F52-D9E1C1ADD0EC}.Release|x64.ActiveCfg = Release|x64
-		{C15C6A2F-3B50-4F45-8F52-D9E1C1ADD0EC}.Release|x64.Build.0 = Release|x64
-		{C15C6A2F-3B50-4F45-8F52-D9E1C1ADD0EC}.Release|x86.ActiveCfg = Release|Win32
-		{C15C6A2F-3B50-4F45-8F52-D9E1C1ADD0EC}.Release|x86.Build.0 = Release|Win32
+		{A6E3C323-CABA-4776-A2DF-7058F72F24C0}.Debug_static|x64.ActiveCfg = Debug|x64
+		{A6E3C323-CABA-4776-A2DF-7058F72F24C0}.Debug_static|x64.Build.0 = Debug|x64
+		{A6E3C323-CABA-4776-A2DF-7058F72F24C0}.Debug_static|x86.ActiveCfg = Debug|Win32
+		{A6E3C323-CABA-4776-A2DF-7058F72F24C0}.Debug_static|x86.Build.0 = Debug|Win32
+		{A6E3C323-CABA-4776-A2DF-7058F72F24C0}.Debug|x64.ActiveCfg = Debug|x64
+		{A6E3C323-CABA-4776-A2DF-7058F72F24C0}.Debug|x64.Build.0 = Debug|x64
+		{A6E3C323-CABA-4776-A2DF-7058F72F24C0}.Debug|x86.ActiveCfg = Debug|Win32
+		{A6E3C323-CABA-4776-A2DF-7058F72F24C0}.Debug|x86.Build.0 = Debug|Win32
+		{A6E3C323-CABA-4776-A2DF-7058F72F24C0}.Release_static|x64.ActiveCfg = Release|x64
+		{A6E3C323-CABA-4776-A2DF-7058F72F24C0}.Release_static|x64.Build.0 = Release|x64
+		{A6E3C323-CABA-4776-A2DF-7058F72F24C0}.Release_static|x86.ActiveCfg = Release|Win32
+		{A6E3C323-CABA-4776-A2DF-7058F72F24C0}.Release_static|x86.Build.0 = Release|Win32
+		{A6E3C323-CABA-4776-A2DF-7058F72F24C0}.Release|x64.ActiveCfg = Release|x64
+		{A6E3C323-CABA-4776-A2DF-7058F72F24C0}.Release|x64.Build.0 = Release|x64
+		{A6E3C323-CABA-4776-A2DF-7058F72F24C0}.Release|x86.ActiveCfg = Release|Win32
+		{A6E3C323-CABA-4776-A2DF-7058F72F24C0}.Release|x86.Build.0 = Release|Win32
 		{4D32C6C5-283E-4610-AAC5-B64943BEDBBD}.Debug_static|x64.ActiveCfg = Debug_static|x64
 		{4D32C6C5-283E-4610-AAC5-B64943BEDBBD}.Debug_static|x64.Build.0 = Debug_static|x64
 		{4D32C6C5-283E-4610-AAC5-B64943BEDBBD}.Debug_static|x86.ActiveCfg = Debug_static|Win32
@@ -74,6 +74,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {87DDA351-A8B9-45CC-9AC3-25A96DC49C08}
+		SolutionGuid = {2C67498A-F7A6-4387-AB00-139A1C939623}
 	EndGlobalSection
 EndGlobal
