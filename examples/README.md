@@ -1,6 +1,6 @@
 ### Builds
 * Windows  
-Visual Studio ([examples/all_examples/prj/vs19/all_examples.sln](https://github.com/Ichishino/coldforce/tree/master/examples/all_examples/prj/vs19/))
+Visual Studio ([examples/all_examples.sln](https://github.com/Ichishino/coldforce/tree/master/examples/))
 * Linux, macOS  
 cmake
 ```shellsession

@@ -33,7 +33,7 @@ All of these support clients and servers (multi-client, C10K).
 
 ### Builds
 * Windows  
-Visual Studio ([prj/vs19/coldforce.sln](https://github.com/Ichishino/coldforce/tree/master/prj/vs19/coldforce))
+Visual Studio ([prj/msvc/coldforce.sln](https://github.com/Ichishino/coldforce/tree/master/prj/msvc/coldforce))
 * Linux  
 cmake
 ```shellsession
