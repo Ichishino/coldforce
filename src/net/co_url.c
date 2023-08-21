@@ -53,8 +53,6 @@ co_url_create(
         return NULL;
     }
 
-    url->src = co_string_duplicate(str);
-
     url->scheme = NULL;
     url->user = NULL;
     url->password = NULL;
@@ -63,6 +61,11 @@ co_url_create(
     url->path = NULL;
     url->query = NULL;
     url->fragment = NULL;
+
+    url->src = co_string_duplicate(str);
+    url->origin = NULL;
+    url->host_and_port = NULL;
+    url->path_and_query = NULL;
 
     size_t length = strlen(str);
     char* url_str = co_string_duplicate_n(str, length);
@@ -154,6 +157,56 @@ co_url_create(
 
     co_string_destroy(url_str);
 
+    if (url->scheme != NULL && url->host != NULL)
+    {
+        url->origin =
+            (char*)co_mem_alloc(strlen(url->scheme) + strlen(url->host) + 10);
+
+        if (url->port != 0)
+        {
+            sprintf(url->origin,
+                "%s://%s:%u", url->scheme, url->host, url->port);
+        }
+        else
+        {
+            sprintf(url->origin,
+                "%s://%s", url->scheme, url->host);
+        }
+    }
+
+    if (url->host != NULL)
+    {
+        if (url->port != 0)
+        {
+            url->host_and_port =
+                (char*)co_mem_alloc(strlen(url->host) + 7);
+
+            sprintf(url->host_and_port,
+                "%s:%u", url->host, url->port);
+        }
+        else
+        {
+            url->host_and_port = co_string_duplicate(url->host);
+        }
+    }
+
+    if (url->path == NULL)
+    {
+        url->path_and_query = co_string_duplicate("/");
+    }
+    else if (url->query == NULL)
+    {
+        url->path_and_query = co_string_duplicate(url->path);
+    }
+    else
+    {
+        url->path_and_query =
+            (char*)co_mem_alloc(strlen(url->path) + strlen(url->query) + 2);
+
+        sprintf(url->path_and_query,
+            "%s?%s", url->path, url->query);
+    }
+
     return url;
 }
 
@@ -164,7 +217,6 @@ co_url_destroy(
 {
     if (url != NULL)
     {
-        co_string_destroy(url->src);
         co_string_destroy(url->scheme);
         co_string_destroy(url->user);
         co_string_destroy(url->password);
@@ -173,105 +225,13 @@ co_url_destroy(
         co_string_destroy(url->query);
         co_string_destroy(url->fragment);
 
+        co_string_destroy(url->src);
+        co_string_destroy(url->origin);
+        co_string_destroy(url->host_and_port);
+        co_string_destroy(url->path_and_query);
+
         co_mem_free(url);
     }
-}
-
-char*
-co_url_create_base_url(
-    const co_url_st* url
-)
-{
-    if (url->scheme == NULL || url->host == NULL)
-    {
-        return NULL;
-    }
-
-    size_t length = strlen(url->scheme) + 3 + strlen(url->host);
-
-    char* base_url = (char*)co_mem_alloc(length + 32);
-
-    if (url->port != 0)
-    {
-        sprintf(base_url, "%s://%s:%u", url->scheme, url->host, url->port);
-    }
-    else
-    {
-        sprintf(base_url, "%s://%s", url->scheme, url->host);
-    }
-
-    return base_url;
-}
-
-char*
-co_url_create_host_and_port(
-    const co_url_st* url
-)
-{
-    if (url->host == NULL)
-    {
-        return NULL;
-    }
-    else if (url->port == 0)
-    {
-        return co_string_duplicate(url->host);
-    }
-
-    size_t length = strlen(url->host);
-
-    char* host_and_port = (char*)co_mem_alloc(length + 32);
-
-    sprintf(host_and_port, "%s:%u", url->host, url->port);
-
-    return host_and_port;
-}
-
-char*
-co_url_create_path_and_query(
-    const co_url_st* url
-)
-{
-    if (url->path == NULL)
-    {
-        return co_string_duplicate("/");
-    }
-    else if (url->query == NULL)
-    {
-        return co_string_duplicate(url->path);
-    }
-
-    size_t length = strlen(url->path) + strlen(url->query);
-
-    char* path_and_query = (char*)co_mem_alloc(length + 2);
-
-    sprintf(path_and_query, "%s?%s", url->path, url->query);
-
-    return path_and_query;
-}
-
-char*
-co_url_create_file_name(
-    const co_url_st* url
-)
-{
-    if (url->path == NULL)
-    {
-        return NULL;
-    }
-
-    const char* str = strrchr(url->path, '/');
-
-    if (str != NULL)
-    {
-        ++str;
-    }
-    else
-    {
-        str = url->path;
-        ++str;
-    }
-
-    return co_string_duplicate(str);
 }
 
 bool

@@ -128,7 +128,7 @@ ws_http2_client_on_connect(
     {
         {
             co_http2_header_t* header =
-                co_http2_header_create_ws_connect_request(self->path, NULL, NULL);
+                co_http2_header_create_ws_connect_request(self->url->path_and_query, NULL, NULL);
 
             self->http2_stream1 = co_http2_create_stream(http2_client);
 
@@ -137,11 +137,11 @@ ws_http2_client_on_connect(
         /*
         {
             co_http2_header_t* header =
-                co_http2_header_create_ws_connect_request(self->path, NULL, NULL);
+                co_http2_header_create_ws_connect_request(self->url->path_and_query, NULL, NULL);
 
-            self->stream2 = co_http2_create_stream(http2_client);
+            self->http2_stream2 = co_http2_create_stream(http2_client);
 
-            co_http2_stream_send_header(stream, true, header);
+            co_http2_stream_send_header(self->http2_stream2, true, header);
         }
         */
     }
@@ -187,13 +187,6 @@ ws_http2_client_on_thread_create(
     ws_http2_client_thread* self
 )
 {
-    co_url_st* url = co_url_create(self->url);
-
-    self->base_url = co_url_create_base_url(url);
-    self->path = co_url_create_path_and_query(url);
-
-    co_url_destroy(url);
-
     co_net_addr_t local_net_addr = { 0 };
     co_net_addr_set_family(
         &local_net_addr, CO_NET_ADDR_FAMILY_IPV4);
@@ -206,7 +199,7 @@ ws_http2_client_on_thread_create(
     }
 
     self->http2_client = co_http2_client_create(
-        self->base_url, &local_net_addr, &tls_ctx);
+        self->url->origin, &local_net_addr, &tls_ctx);
 
     if (self->http2_client == NULL)
     {
@@ -239,9 +232,7 @@ ws_http2_client_on_thread_destroy(
 )
 {
     co_http2_client_destroy(self->http2_client);
-
-    co_string_destroy(self->base_url);
-    co_string_destroy(self->path);
+    co_url_destroy(self->url);
 }
 
 bool

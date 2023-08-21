@@ -56,8 +56,7 @@ cmake (same way as Linux)
 typedef struct {
     co_app_t base_app;
     co_ws_client_t* client;
-    char* base_url;
-    char* path;
+    co_url_st* url;
 } my_app;
 
 void on_my_ws_receive_frame(
@@ -138,7 +137,7 @@ void on_my_ws_connect(
     if (error_code == 0)
     {
         co_http_request_t* request =
-            co_http_request_create_ws_upgrade(self->path, NULL, NULL);
+            co_http_request_create_ws_upgrade(self->url->path_and_query, NULL, NULL);
 
         co_ws_send_upgrade_request(self->client, request);
     }
@@ -153,17 +152,12 @@ void on_my_ws_connect(
 
 bool on_my_app_create(my_app* self)
 {
-    co_url_st* url = co_url_create("ws://127.0.0.1:8080/");
-
-    self->base_url = co_url_create_base_url(url);
-    self->path = co_url_create_path_and_query(url);
-
-    co_url_destroy(url);
+    self->url = co_url_create("ws://127.0.0.1:8080/");
 
     co_net_addr_t local_net_addr = { 0 };
     co_net_addr_set_family(&local_net_addr, CO_NET_ADDR_FAMILY_IPV4);
 
-    self->client = co_ws_client_create(self->base_url, &local_net_addr, NULL);
+    self->client = co_ws_client_create(self->url->origin, &local_net_addr, NULL);
 
     if (self->client == NULL)
     {
@@ -184,9 +178,7 @@ bool on_my_app_create(my_app* self)
 void on_my_app_destroy(my_app* self)
 {
     co_ws_client_destroy(self->client);
-
-    co_string_destroy(self->base_url);
-    co_string_destroy(self->path);
+    co_url_destroy(self->url);
 }
 
 int main(int argc, char* argv[])

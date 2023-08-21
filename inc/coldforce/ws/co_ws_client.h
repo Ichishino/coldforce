@@ -208,7 +208,7 @@ co_ws_client_get_socket(
 
 CO_WS_API
 const char*
-co_ws_get_base_url(
+co_ws_get_url_origin(
     const co_ws_client_t* client
 );
 

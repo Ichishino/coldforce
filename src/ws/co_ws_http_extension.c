@@ -79,9 +79,9 @@ co_http_upgrade_to_ws(
 
     co_ws_client_setup(ws_client);
 
-    ws_client->mask = (ws_client->conn.base_url != NULL);
+    ws_client->mask = !co_http_connection_is_server(&ws_client->conn);
 
-    if (ws_client->conn.base_url != NULL)
+    if (!co_http_connection_is_server(&ws_client->conn))
     {
         ws_client->conn.tcp_client->callbacks.on_receive =
             (co_tcp_receive_fn)co_ws_client_on_receive_ready;
@@ -264,7 +264,7 @@ co_http_request_create_ws_upgrade(
 )
 {
     co_http_request_t* request =
-        co_http_request_create_with("GET", path);
+        co_http_request_create("GET", path);
 
     co_http_header_t* header =
         co_http_request_get_header(request);
@@ -314,7 +314,7 @@ co_http_response_create_ws_upgrade(
 )
 {
     co_http_response_t* response =
-        co_http_response_create_with(101, "Switching Protocols");
+        co_http_response_create(101, "Switching Protocols");
 
     co_http_header_t* header =
         co_http_response_get_header(response);

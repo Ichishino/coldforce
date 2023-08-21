@@ -16,7 +16,7 @@ on_test_app_create(
         return false;
     }
 
-    self->ws_http2_client.url = "https://127.0.0.1:8443/ws-over-http2";
+    self->ws_http2_client.url = co_url_create("https://127.0.0.1:8443/ws-over-http2");
     ws_http2_client_thread_start(&self->ws_http2_client);
 
     return true;

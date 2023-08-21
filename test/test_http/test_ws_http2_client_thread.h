@@ -6,9 +6,7 @@ typedef struct
 {
     co_thread_t thread;
 
-    const char* url;
-    char* base_url;
-    char* path;
+    co_url_st* url;
 
     co_http2_client_t* http2_client;
     co_http2_stream_t* http2_stream1;

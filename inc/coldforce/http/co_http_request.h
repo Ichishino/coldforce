@@ -55,12 +55,6 @@ co_http_request_deserialize(
 CO_HTTP_API
 co_http_request_t*
 co_http_request_create(
-    void
-);
-
-CO_HTTP_API
-co_http_request_t*
-co_http_request_create_with(
     const char* method,
     const char* path
 );

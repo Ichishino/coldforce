@@ -14,8 +14,7 @@ typedef struct
 
     // my app data
     co_http2_client_t* client;
-    char* base_url;
-    char* path;
+    co_url_st* url;
     char* save_file_path;
     FILE* fp;
 
@@ -114,7 +113,9 @@ void on_my_connect(my_app* self, co_http2_client_t* client, int error_code)
 
     if (error_code == 0)
     {
-        co_http2_header_t* header = co_http2_header_create_request("GET", self->path);
+        co_http2_header_t* header =
+            co_http2_header_create_request("GET", self->url->path_and_query);
+
         co_http2_header_add_field(header, "accept", "text/html");
 
         // new stream per request
@@ -144,12 +145,7 @@ bool on_my_app_create(my_app* self)
         return false;
     }
 
-    co_url_st* url = co_url_create(args->values[1]);
-
-    self->base_url = co_url_create_base_url(url);
-    self->path = co_url_create_path_and_query(url);
-
-    co_url_destroy(url);
+    self->url = co_url_create(args->values[1]);
 
     if (args->count >= 3)
     {
@@ -159,7 +155,7 @@ bool on_my_app_create(my_app* self)
     co_net_addr_t local_net_addr = { 0 };
     co_net_addr_set_family(&local_net_addr, CO_NET_ADDR_FAMILY_IPV4);
 
-    self->client = co_http2_client_create(self->base_url, &local_net_addr, NULL);
+    self->client = co_http2_client_create(self->url->origin, &local_net_addr, NULL);
 
     if (self->client == NULL)
     {
@@ -194,9 +190,7 @@ bool on_my_app_create(my_app* self)
 void on_my_app_destroy(my_app* self)
 {
     co_http2_client_destroy(self->client);
-
-    co_string_destroy(self->base_url);
-    co_string_destroy(self->path);
+    co_url_destroy(self->url);
 
     if (self->fp != NULL)
     {

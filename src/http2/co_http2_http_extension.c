@@ -37,7 +37,7 @@ co_http_upgrade_to_http2(
     co_http2_settings_st* settings = NULL;
     uint32_t new_stream_id = 0;
 
-    if (http_client->conn.base_url != NULL)
+    if (!co_http_connection_is_server(&http_client->conn))
     {
         new_stream_id = UINT32_MAX;
 
@@ -190,17 +190,14 @@ co_http_request_create_http2_upgrade(
     }
 
     co_http_request_t* request =
-        co_http_request_create_with("GET", path);
+        co_http_request_create("GET", path);
 
     co_http_header_t* header =
         co_http_request_get_header(request);
 
-    char* host_and_port =
-        co_url_create_host_and_port(client->conn.base_url);
-
-    co_http_header_add_field_ptr(
-        header, co_string_duplicate(CO_HTTP_HEADER_HOST), host_and_port);
-
+    co_http_header_add_field(
+        header, CO_HTTP_HEADER_HOST,
+        client->conn.url_origin->host_and_port);
     co_http_header_add_field(
         header, CO_HTTP_HEADER_CONNECTION,
         CO_HTTP_HEADER_UPGRADE", "CO_HTTP2_HEADER_SETTINGS);
@@ -221,7 +218,7 @@ co_http_response_create_http2_upgrade(
 )
 {
     co_http_response_t* response =
-        co_http_response_create_with(status_code, reason_phrase);
+        co_http_response_create(status_code, reason_phrase);
 
     if (status_code == 101)
     {

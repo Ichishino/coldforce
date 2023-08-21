@@ -149,7 +149,7 @@ co_http2_set_upgrade_settings(
 CO_HTTP2_API
 co_http2_client_t*
 co_http2_client_create(
-    const char* base_url,
+    const char* url_origin,
     const co_net_addr_t* local_net_addr,
     co_tls_ctx_st* tls_ctx
 );
@@ -253,7 +253,7 @@ co_http2_client_get_socket(
 
 CO_HTTP2_API
 const char*
-co_http2_get_base_url(
+co_http2_get_url_origin(
     const co_http2_client_t* client
 );
 

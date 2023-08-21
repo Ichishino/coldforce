@@ -88,7 +88,7 @@ co_http_client_setup(
 CO_HTTP_API
 co_http_client_t*
 co_http_client_create(
-    const char* base_url,
+    const char* url_origin,
     const co_net_addr_t* local_net_addr,
     co_tls_ctx_st* tls_ctx
 );
@@ -152,7 +152,7 @@ co_http_client_get_socket(
 
 CO_HTTP_API
 const char*
-co_http_get_base_url(
+co_http_get_url_origin(
     const co_http_client_t* client
 );
 

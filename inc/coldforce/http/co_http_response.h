@@ -50,12 +50,6 @@ co_http_response_deserialize(
 CO_HTTP_API
 co_http_response_t*
 co_http_response_create(
-    void
-);
-
-CO_HTTP_API
-co_http_response_t*
-co_http_response_create_with(
     uint16_t status_code,
     const char* reason_phrase
 );

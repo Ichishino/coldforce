@@ -635,13 +635,8 @@ co_http2_hpack_serialize_header(
         }
         else
         {
-            char* path_and_query =
-                co_url_create_path_and_query(header->pseudo.url);
-
             co_http2_hpack_serialize_header_field(
-                ":path", path_and_query, dynamic_table, buffer);
-
-            co_string_destroy(path_and_query);
+                ":path", header->pseudo.url->path_and_query, dynamic_table, buffer);
         }
     }
 

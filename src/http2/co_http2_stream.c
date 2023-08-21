@@ -996,20 +996,20 @@ co_http2_stream_send_header(
 
     stream->send_header = header;
 
-    if (stream->client->conn.base_url != NULL)
+    if (stream->client->conn.url_origin != NULL)
     {
         if (header->pseudo.authority == NULL)
         {
             header->pseudo.authority =
-                co_url_create_host_and_port(
-                    stream->client->conn.base_url);
+                co_string_duplicate(
+                    stream->client->conn.url_origin->host_and_port);
         }
 
         if (header->pseudo.scheme == NULL)
         {
             header->pseudo.scheme =
                 co_string_duplicate(
-                    stream->client->conn.base_url->scheme);
+                    stream->client->conn.url_origin->scheme);
         }
     }
 

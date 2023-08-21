@@ -20,7 +20,7 @@ typedef struct
 {
     co_thread_t thread;
 
-    char* base_url;
+    co_url_st* url;
     co_net_addr_t local_net_addr;
     co_tls_ctx_st* tls_ctx;
 
@@ -120,7 +120,7 @@ co_http_thread_on_create(
 )
 {
     self->client = co_http_client_create(
-        self->base_url, &self->local_net_addr, self->tls_ctx);
+        self->url->origin, &self->local_net_addr, self->tls_ctx);
 
     if (self->client == NULL)
     {
@@ -153,7 +153,7 @@ co_http_thread_on_destroy(
 {
     co_http_request_destroy(self->request);
     co_http_client_destroy(self->client);
-    co_string_destroy(self->base_url);
+    co_url_destroy(self->url);
 
     if (self->fp != NULL)
     {
@@ -176,18 +176,19 @@ co_http_sync_request(
 {
     co_http_thread_t http_thread = { 0 };
 
-    co_url_st* http_url = co_url_create(url);
+    http_thread.url = co_url_create(url);
 
-    http_thread.base_url = co_url_create_base_url(http_url);
+    if (http_thread.url == NULL ||
+        http_thread.url->host == NULL)
+    {
+        return NULL;
+    }
 
     if (co_http_request_get_path(request) == NULL)
     {
-        char* path = co_url_create_path_and_query(http_url);
-        co_http_request_set_path(request, path);
-        co_string_destroy(path);
+        co_http_request_set_path(
+            request, http_thread.url->path_and_query);
     }
-
-    co_url_destroy(http_url);
 
     if (co_http_request_get_version(request) == NULL)
     {

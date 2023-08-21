@@ -23,7 +23,7 @@ typedef struct
 {
     co_tcp_client_t* tcp_client;
     co_tcp_client_module_t module;
-    co_url_st* base_url;
+    co_url_st* url_origin;
 
     struct co_http_connection_receive_data_t
     {
@@ -44,7 +44,7 @@ CO_HTTP_API
 bool
 co_http_connection_setup(
     co_http_connection_t* conn,
-    co_url_st* base_url,
+    co_url_st* url_origin,
     const co_net_addr_t* local_net_addr,
     const char** protocols,
     size_t protocol_count,
@@ -62,7 +62,7 @@ void
 co_tcp_upgrade_to_http_connection(
     co_tcp_client_t* tcp_client,
     co_http_connection_t* conn,
-    co_url_st* base_url
+    co_url_st* url_origin
 );
 
 CO_HTTP_API

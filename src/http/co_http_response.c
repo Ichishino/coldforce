@@ -143,7 +143,8 @@ co_http_response_deserialize(
 
 co_http_response_t*
 co_http_response_create(
-    void
+    uint16_t status_code,
+    const char* reason_phrase
 )
 {
     co_http_response_t* response =
@@ -160,25 +161,12 @@ co_http_response_create(
     response->status_code = 0;
     response->reason_phrase = NULL;
 
-    return response;
-}
-
-co_http_response_t*
-co_http_response_create_with(
-    uint16_t status_code,
-    const char* reason_phrase
-)
-{
-    co_http_response_t* response = co_http_response_create();
-
-    if (response == NULL)
+    if (status_code > 0)
     {
-        return NULL;
+        co_http_response_set_status_code(response, status_code);
+        co_http_response_set_reason_phrase(response, reason_phrase);
+        co_http_response_set_version(response, CO_HTTP_VERSION_1_1);
     }
-
-    co_http_response_set_status_code(response, status_code);
-    co_http_response_set_reason_phrase(response, reason_phrase);
-    co_http_response_set_version(response, CO_HTTP_VERSION_1_1);
 
     return response;
 }

@@ -17,7 +17,6 @@ CO_EXTERN_C_BEGIN
 
 typedef struct
 {
-    char* src;
     char* scheme;
     char* user;
     char* password;
@@ -26,6 +25,11 @@ typedef struct
     char* path;
     char* query;
     char* fragment;
+
+    char* src;
+    char* origin;
+    char* host_and_port;
+    char* path_and_query;
 
 } co_url_st;
 
@@ -43,30 +47,6 @@ CO_NET_API
 void
 co_url_destroy(
     co_url_st* url
-);
-
-CO_NET_API
-char*
-co_url_create_base_url(
-    const co_url_st* url
-);
-
-CO_NET_API
-char*
-co_url_create_host_and_port(
-    const co_url_st* url
-);
-
-CO_NET_API
-char*
-co_url_create_path_and_query(
-    const co_url_st* url
-);
-
-CO_NET_API
-char*
-co_url_create_file_name(
-    const co_url_st* url
 );
 
 CO_NET_API

@@ -66,7 +66,7 @@ co_http_server_on_receive_ready(
     {
         if (client->request == NULL)
         {
-            client->request = co_http_request_create();
+            client->request = co_http_request_create(NULL, NULL);
 
             if (client->request == NULL)
             {

@@ -167,7 +167,7 @@ void on_my_http_request(my_app* self, co_http_client_t* http1_client,
     if (error_code == 0)
     {
         co_http_response_t* response =
-            co_http_response_create_with(200, "OK");
+            co_http_response_create(200, "OK");
 
         co_http_header_t* response_header = co_http_response_get_header(response);
 

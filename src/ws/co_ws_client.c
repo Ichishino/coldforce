@@ -102,7 +102,7 @@ co_ws_client_on_receive_http_response(
     co_ws_client_t* client
 )
 {
-    co_http_response_t* response = co_http_response_create();
+    co_http_response_t* response = co_http_response_create(0, NULL);
 
     int parse_result =
         co_http_response_deserialize(response,
@@ -281,12 +281,12 @@ co_ws_client_on_close(
 
 co_ws_client_t*
 co_ws_client_create(
-    const char* base_url,
+    const char* url_origin,
     const co_net_addr_t* local_net_addr,
     co_tls_ctx_st* tls_ctx
 )
 {
-    if (base_url == NULL)
+    if (url_origin == NULL)
     {
         return NULL;
     }
@@ -299,7 +299,7 @@ co_ws_client_create(
         return NULL;
     }
 
-    co_url_st* url = co_url_create(base_url);
+    co_url_st* url = co_url_create(url_origin);
 
     if (url->host == NULL)
     {
@@ -311,7 +311,7 @@ co_ws_client_create(
 
     if (url->scheme == NULL)
     {
-        client->conn.base_url->scheme = co_string_duplicate("http");
+        client->conn.url_origin->scheme = co_string_duplicate("http");
     }
     else if (co_string_case_compare(url->scheme, "wss") == 0)
     {
@@ -395,6 +395,15 @@ co_ws_send_upgrade_request(
     co_http_request_t* upgrade_request
 )
 {
+    if (!co_http_header_contains(
+        &upgrade_request->message.header, CO_HTTP_HEADER_HOST))
+    {
+        co_http_header_add_field(
+            &upgrade_request->message.header,
+            CO_HTTP_HEADER_HOST,
+            client->conn.url_origin->host_and_port);
+    }
+
     client->upgrade_request = upgrade_request;
 
     return co_http_connection_send_request(
@@ -608,12 +617,12 @@ co_ws_client_get_socket(
 }
 
 const char*
-co_ws_get_base_url(
+co_ws_get_url_origin(
     const co_ws_client_t* client
 )
 {
-    return ((client->conn.base_url != NULL) ?
-        client->conn.base_url->src : NULL);
+    return ((client->conn.url_origin != NULL) ?
+        client->conn.url_origin->src : NULL);
 }
 
 bool

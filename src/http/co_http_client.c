@@ -218,7 +218,7 @@ co_http_client_on_receive_ready(
             co_list_data_st* data =
                 co_list_get_head(client->request_queue);
             client->request = (co_http_request_t*)data->value;
-            client->response = co_http_response_create();
+            client->response = co_http_response_create(0, NULL);
 
             if (client->response == NULL)
             {
@@ -352,7 +352,7 @@ co_http_client_on_tcp_close(
 
 co_http_client_t*
 co_http_client_create(
-    const char* base_url,
+    const char* url_origin,
     const co_net_addr_t* local_net_addr,
     co_tls_ctx_st* tls_ctx
 )
@@ -365,7 +365,7 @@ co_http_client_create(
         return NULL;
     }
 
-    co_url_st* url = co_url_create(base_url);
+    co_url_st* url = co_url_create(url_origin);
 
     const char* protocols[1] = { CO_HTTP_PROTOCOL };
 
@@ -442,7 +442,16 @@ co_http_send_request(
     co_http_client_t* client,
     co_http_request_t* request
 )
-{    
+{
+    if (!co_http_header_contains(
+        &request->message.header, CO_HTTP_HEADER_HOST))
+    {
+        co_http_header_add_field(
+            &request->message.header,
+            CO_HTTP_HEADER_HOST,
+            client->conn.url_origin->host_and_port);
+    }
+
     bool result =
         co_http_connection_send_request(
             &client->conn, request);
@@ -500,12 +509,12 @@ co_http_client_get_socket(
 }
 
 const char*
-co_http_get_base_url(
+co_http_get_url_origin(
     const co_http_client_t* client
 )
 {
-    return ((client->conn.base_url != NULL) ?
-        client->conn.base_url->src : NULL);
+    return ((client->conn.url_origin != NULL) ?
+        client->conn.url_origin->src : NULL);
 }
 
 bool

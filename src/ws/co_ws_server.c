@@ -24,7 +24,7 @@ co_ws_server_on_receive_http_request(
     co_ws_client_t* client
 )
 {
-    co_http_request_t* request = co_http_request_create();
+    co_http_request_t* request = co_http_request_create(NULL, NULL);
 
     int parse_result =
         co_http_request_deserialize(request,

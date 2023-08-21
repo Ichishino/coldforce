@@ -171,7 +171,8 @@ co_http_request_deserialize(
 
 co_http_request_t*
 co_http_request_create(
-    void
+    const char* method,
+    const char* path
 )
 {
     co_http_request_t* request =
@@ -188,25 +189,12 @@ co_http_request_create(
     request->method = NULL;
     request->version = NULL;
 
-    return request;
-}
-
-co_http_request_t*
-co_http_request_create_with(
-    const char* method,
-    const char* path
-)
-{
-    co_http_request_t* request = co_http_request_create();
-
-    if (request == NULL)
+    if (method != NULL)
     {
-        return NULL;
+        co_http_request_set_method(request, method);
+        co_http_request_set_path(request, path);
+        co_http_request_set_version(request, CO_HTTP_VERSION_1_1);
     }
-
-    co_http_request_set_method(request, method);    
-    co_http_request_set_path(request, path);
-    co_http_request_set_version(request, CO_HTTP_VERSION_1_1);
 
     return request;
 }

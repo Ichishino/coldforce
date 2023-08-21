@@ -15,8 +15,7 @@ typedef struct
 
     // my app data
     co_http_client_t* client;
-    char* base_url;
-    char* path;
+    co_url_st* url;
     const char* save_file_path;
     FILE* fp;
 
@@ -121,7 +120,7 @@ void on_my_connect(my_app* self, co_http_client_t* client, int error_code)
     {
         // GET request
         {
-            co_http_request_t* request = co_http_request_create_with("GET", self->path);
+            co_http_request_t* request = co_http_request_create("GET", self->url->path_and_query);
 
             // set header
             co_http_header_t* header = co_http_request_get_header(request);
@@ -133,7 +132,7 @@ void on_my_connect(my_app* self, co_http_client_t* client, int error_code)
 /*
         // POST request
         {
-            co_http_request_t* request = co_http_request_create_with("POST", self->path);
+            co_http_request_t* request = co_http_request_create("POST", self->url->path_and_query);
 
             // set header
             co_http_header_t* header = co_http_request_get_header(request);
@@ -175,12 +174,7 @@ bool on_my_app_create(my_app* self)
         return false;
     }
 
-    co_url_st* url = co_url_create(args->values[1]);
-
-    self->base_url = co_url_create_base_url(url);
-    self->path = co_url_create_path_and_query(url);
-
-    co_url_destroy(url);
+    self->url = co_url_create(args->values[1]);
 
     if (args->count >= 3)
     {
@@ -190,7 +184,7 @@ bool on_my_app_create(my_app* self)
     co_net_addr_t local_net_addr = { 0 };
     co_net_addr_set_family(&local_net_addr, CO_NET_ADDR_FAMILY_IPV4);
 
-    self->client = co_http_client_create(self->base_url, &local_net_addr, NULL);
+    self->client = co_http_client_create(self->url->origin, &local_net_addr, NULL);
 
     if (self->client == NULL)
     {
@@ -219,9 +213,7 @@ bool on_my_app_create(my_app* self)
 void on_my_app_destroy(my_app* self)
 {
     co_http_client_destroy(self->client);
-
-    co_string_destroy(self->base_url);
-    co_string_destroy(self->path);
+    co_url_destroy(self->url);
 
     if (self->fp != NULL)
     {

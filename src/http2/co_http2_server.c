@@ -55,7 +55,7 @@ co_http2_server_on_upgrade_request(
         }
     }
 
-    co_http_request_t* request = co_http_request_create();
+    co_http_request_t* request = co_http_request_create(NULL, NULL);
 
     if (co_http_request_deserialize(
         request, client->conn.receive_data.ptr,

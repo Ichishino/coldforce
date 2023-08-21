@@ -35,7 +35,7 @@ http_server_on_http_request(
         size_t data_length = strlen(data);
 
         co_http_response_t* response =
-            co_http_response_create_with(200, "OK");
+            co_http_response_create(200, "OK");
         co_http_header_t* response_header =
             co_http_response_get_header(response);
         co_http_header_add_field(
@@ -88,7 +88,7 @@ http_server_on_http_request(
         else
         {
             co_http_response_t* response =
-                co_http_response_create_with(400, "Bad Rquest");
+                co_http_response_create(400, "Bad Rquest");
             co_http_send_response(http_client, response);
 
             co_list_remove(self->http_clients, http_client);
@@ -97,7 +97,7 @@ http_server_on_http_request(
     else if (strcmp(url->path, "/chunked") == 0)
     {
         co_http_response_t* response =
-            co_http_response_create_with(200, "OK");
+            co_http_response_create(200, "OK");
         co_http_header_t* response_header =
             co_http_response_get_header(response);
         co_http_header_add_field(
@@ -167,7 +167,7 @@ http_server_on_http_request(
         if (is_basic_auth_ok)
         {
             response =
-                co_http_response_create_with(200, "OK");
+                co_http_response_create(200, "OK");
 
             data =
                 "<html>"
@@ -180,7 +180,7 @@ http_server_on_http_request(
         else
         {
             response =
-                co_http_response_create_with(401, "Unauthorized");
+                co_http_response_create(401, "Unauthorized");
 
             data =
                 "<html>"
@@ -210,7 +210,7 @@ http_server_on_http_request(
     else
     {
         co_http_response_t* response =
-            co_http_response_create_with(404, "Not Found");
+            co_http_response_create(404, "Not Found");
 
         co_http_header_t* response_header =
             co_http_response_get_header(response);

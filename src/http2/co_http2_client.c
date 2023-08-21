@@ -580,7 +580,7 @@ co_http2_set_upgrade_settings(
 
 co_http2_client_t*
 co_http2_client_create(
-    const char* base_url,
+    const char* url_origin,
     const co_net_addr_t* local_net_addr,
     co_tls_ctx_st* tls_ctx
 )
@@ -593,7 +593,7 @@ co_http2_client_create(
         return NULL;
     }
 
-    co_url_st* url = co_url_create(base_url);
+    co_url_st* url = co_url_create(url_origin);
 
     const char* protocols[1] = { CO_HTTP2_PROTOCOL };
 
@@ -677,7 +677,7 @@ co_http2_connect(
         "-->",
         &client->conn.tcp_client->remote_net_addr,
         "http2 connect start (%s)",
-        client->conn.base_url->src);
+        client->conn.url_origin->src);
 
     client->conn.tcp_client->callbacks.on_connect =
         (co_tcp_connect_fn)co_http2_client_on_tcp_connect;
@@ -909,12 +909,12 @@ co_http2_client_get_socket(
 }
 
 const char*
-co_http2_get_base_url(
+co_http2_get_url_origin(
     const co_http2_client_t* client
 )
 {
-    return ((client->conn.base_url != NULL) ?
-        client->conn.base_url->src : NULL);
+    return ((client->conn.url_origin != NULL) ?
+        client->conn.url_origin->src : NULL);
 }
 
 bool

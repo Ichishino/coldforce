@@ -40,7 +40,7 @@ void on_my_http_stop_app_request(my_app* self, co_http_client_t* client)
 
     my_client_log(http, client, "=== server stop ===");
 
-    co_http_response_t* response = co_http_response_create_with(200, "OK");
+    co_http_response_t* response = co_http_response_create(200, "OK");
     co_http_header_t* response_header = co_http_response_get_header(response);
 
     co_http_header_add_field(response_header, "Content-Type", "text/html");
@@ -76,7 +76,7 @@ void on_my_http_default_request(my_app* self, co_http_client_t* client, const co
 
     // response
 
-    co_http_response_t* response = co_http_response_create_with(200, "OK");
+    co_http_response_t* response = co_http_response_create(200, "OK");
     co_http_header_t* response_header = co_http_response_get_header(response);
 
     co_http_header_add_field(response_header, "Content-Type", "text/html");
@@ -175,7 +175,7 @@ void on_my_http_request(my_app* self, co_http_client_t* client,
     else
     {
         co_http_response_t* response =
-            co_http_response_create_with(400, "Bad Request");
+            co_http_response_create(400, "Bad Request");
 
         co_http_send_response(client, response);
     }
