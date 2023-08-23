@@ -220,7 +220,7 @@ co_udp_destroy(
         }
 #endif
         co_socket_cleanup(&udp->sock);
-        co_mem_free(udp);
+        co_mem_free_later(udp);
     }
 }
 

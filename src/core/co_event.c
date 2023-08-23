@@ -27,12 +27,11 @@ co_thread_set_event_handler(
 
 co_event_fn
 co_thread_get_event_handler(
-    co_thread_t* thread,
-    co_event_id_t
-    event_id
+    const co_thread_t* thread,
+    co_event_id_t event_id
 )
 {
-    co_map_data_st* data =
+    const co_map_data_st* data =
         co_map_get(thread->event_worker->event_handler_map,
             (void*)(uintptr_t)event_id);
 

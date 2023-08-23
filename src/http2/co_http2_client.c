@@ -202,8 +202,13 @@ co_http2_destroy_stream(
     co_http2_stream_t* stream
 )
 {
-    co_map_remove(
-        client->stream_map, (void*)(uintptr_t)stream->id);
+    if (client != NULL &&
+        client->stream_map != NULL &&
+        stream != NULL)
+    {
+        co_map_remove(
+            client->stream_map, (void*)(uintptr_t)stream->id);
+    }
 }
 
 void
@@ -329,7 +334,7 @@ co_http2_client_on_receive_system_frame(
     }
 }
 
-void
+bool
 co_http2_client_on_push_promise(
     co_http2_client_t* client,
     co_http2_stream_t* stream,
@@ -361,12 +366,19 @@ co_http2_client_on_push_promise(
             client->conn.tcp_client->sock.owner_thread,
             client, stream, promised_stream, header))
         {
-            return;
+            return (client->conn.tcp_client != NULL);
+        }
+
+        if (client->conn.tcp_client == NULL)
+        {
+            return false;
         }
     }
 
     co_http2_stream_send_rst_stream(
         promised_stream, CO_HTTP2_STREAM_ERROR_CANCEL);
+
+    return true;
 }
 
 static void
@@ -493,6 +505,11 @@ co_http2_client_on_tcp_receive_ready(
             }
 
             co_http2_frame_destroy(frame);
+
+            if (client->conn.tcp_client == NULL)
+            {
+                return;
+            }
         }
         else if (result == CO_HTTP_PARSE_MORE_DATA)
         {

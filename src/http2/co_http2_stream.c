@@ -445,7 +445,7 @@ co_http2_stream_send_frame(
     return result;
 }
 
-static void
+static bool
 co_http2_stream_on_receive_finish(
     co_http2_stream_t* stream,
     int error_code
@@ -458,6 +458,11 @@ co_http2_stream_on_receive_finish(
             stream->client, stream,
             stream->receive_header, &stream->receive_data,
             error_code);
+
+        if (stream->client->conn.tcp_client == NULL)
+        {
+            return false;
+        }
     }
 
     co_http2_header_destroy(stream->receive_header);
@@ -465,6 +470,8 @@ co_http2_stream_on_receive_finish(
 
     co_mem_free(stream->receive_data.ptr);
     stream->receive_data.ptr = NULL;
+
+    return true;
 }
 
 bool
@@ -524,12 +531,20 @@ co_http2_stream_on_receive_frame(
 
                         return false;
                     }
+
+                    if (stream->client->conn.tcp_client == NULL)
+                    {
+                        return false;
+                    }
                 }
             }
 
             if (frame->header.flags & CO_HTTP2_FRAME_FLAG_END_STREAM)
             {
-                co_http2_stream_on_receive_finish(stream, 0);
+                if (!co_http2_stream_on_receive_finish(stream, 0))
+                {
+                    return false;
+                }
             }
         }
         else if (frame->header.flags & CO_HTTP2_FRAME_FLAG_END_STREAM)
@@ -571,7 +586,10 @@ co_http2_stream_on_receive_frame(
                 }
             }
 
-            co_http2_stream_on_receive_finish(stream, 0);
+            if (!co_http2_stream_on_receive_finish(stream, 0))
+            {
+                return false;
+            }
         }
         else
         {
@@ -630,13 +648,13 @@ co_http2_stream_on_receive_frame(
 
             co_byte_array_clear(stream->header_block_pool.data);
 
-            if (stream->state == CO_HTTP2_STREAM_STATE_REMOTE_CLOSED)
+            if ((stream->state == CO_HTTP2_STREAM_STATE_REMOTE_CLOSED) ||
+                (frame->header.flags & CO_HTTP2_FRAME_FLAG_END_STREAM))
             {
-                co_http2_stream_on_receive_finish(stream, 0);
-            }
-            else if (frame->header.flags & CO_HTTP2_FRAME_FLAG_END_STREAM)
-            {
-                co_http2_stream_on_receive_finish(stream, 0);
+                if (!co_http2_stream_on_receive_finish(stream, 0))
+                {
+                    return false;
+                }
             }
             else
             {
@@ -655,6 +673,11 @@ co_http2_stream_on_receive_frame(
 
                         return false;
                     }
+                }
+
+                if (stream->client->conn.tcp_client == NULL)
+                {
+                    return false;
                 }
             }
         }
@@ -706,9 +729,12 @@ co_http2_stream_on_receive_frame(
             (frame->payload.rst_stream.error_code !=
                 CO_HTTP2_STREAM_ERROR_REFUSED_STREAM))
         {
-            co_http2_stream_on_receive_finish(stream,
-                (CO_HTTP2_ERROR_STREAM_CLOSED -
-                    frame->payload.rst_stream.error_code));
+            if (!co_http2_stream_on_receive_finish(stream,
+                    (CO_HTTP2_ERROR_STREAM_CLOSED -
+                    frame->payload.rst_stream.error_code)))
+            {
+                return false;
+            }
         }
         
         break;
@@ -747,8 +773,11 @@ co_http2_stream_on_receive_frame(
                 header,
                 "http2 receive header (push-promise)");
 
-            co_http2_client_on_push_promise(
-                stream->client, stream, stream->promised_stream_id, header);
+            if (!co_http2_client_on_push_promise(
+                stream->client, stream, stream->promised_stream_id, header))
+            {
+                return false;
+            }
         }
         else
         {
@@ -846,14 +875,20 @@ co_http2_stream_on_receive_frame(
 
             if (stream->header_block_pool.type == CO_HTTP2_FRAME_TYPE_PUSH_PROMISE)
             {
-                co_http2_client_on_push_promise(
-                    stream->client, stream, stream->promised_stream_id, header);
+                if (!co_http2_client_on_push_promise(
+                    stream->client, stream, stream->promised_stream_id, header))
+                {
+                    return false;
+                }
 
                 stream->promised_stream_id = 0;
             }
             else if (stream->state == CO_HTTP2_STREAM_STATE_REMOTE_CLOSED)
             {
-                co_http2_stream_on_receive_finish(stream, 0);
+                if (!co_http2_stream_on_receive_finish(stream, 0))
+                {
+                    return false;
+                }
             }
 
             stream->header_block_pool.type = 0;

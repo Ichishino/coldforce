@@ -741,7 +741,8 @@ co_tcp_is_open(
     const co_tcp_client_t* client
 )
 {
-    return (client->sock.open_local && client->open_remote);
+    return (client != NULL &&
+        client->sock.open_local && client->open_remote);
 }
 
 co_socket_t*

@@ -121,7 +121,7 @@ co_http2_client_on_close(
     int error_code
 );
 
-void
+bool
 co_http2_client_on_push_promise(
     co_http2_client_t* client,
     co_http2_stream_t* stream,

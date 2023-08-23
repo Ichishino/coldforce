@@ -213,6 +213,11 @@ co_win_udp_receive_start(
     co_udp_t* udp
 )
 {
+    if (udp->sock.handle == CO_SOCKET_INVALID_HANDLE)
+    {
+        return false;
+    }
+
     memset(&udp->win.receive.io_ctx->ol, 0x00, sizeof(WSAOVERLAPPED));
 
     udp->win.receive.size = 0;

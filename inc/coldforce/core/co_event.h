@@ -29,7 +29,7 @@ typedef struct
 
 } co_event_t;
 
-typedef void(*co_event_fn)(void* self, const co_event_t* event);
+typedef void(*co_event_fn)(struct co_thread_t* self, const co_event_t* event);
 typedef void(*co_task_fn)(uintptr_t param1, uintptr_t param2);
 
 typedef struct
@@ -56,7 +56,7 @@ co_thread_set_event_handler(
 CO_CORE_API
 co_event_fn
 co_thread_get_event_handler(
-    struct co_thread_t* thread,
+    const struct co_thread_t* thread,
     co_event_id_t event_id
 );
 

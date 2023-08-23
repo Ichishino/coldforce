@@ -99,7 +99,7 @@ void on_my_server_app_destroy(my_server_app* self)
     for (int i = 0; i < THREAD_COUNT; ++i)
     {
         co_thread_join((co_thread_t*)&self->client_thread[i]);
-        co_thread_cleanup((co_thread_t*)&self->client_thread[i]);
+        co_net_thread_cleanup((co_thread_t*)&self->client_thread[i]);
     }
 
     co_tcp_server_destroy(self->server);

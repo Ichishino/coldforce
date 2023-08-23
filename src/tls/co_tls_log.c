@@ -39,7 +39,7 @@ co_tls_log_write_certificate(
     const int length = BIO_pending(mem);
 
     char* str =
-        (char*)co_mem_alloc(length + 1);
+        (char*)co_mem_alloc((size_t)length + 1);
     str[length] = '\0';
 
     BIO_read(mem, str, length);
