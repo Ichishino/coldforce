@@ -75,8 +75,6 @@ co_http_connection_setup(
 
         co_http_log_error(NULL, NULL, NULL,
             "OpenSSL is not installed");
-
-        return false;
 #endif
     }
     else
@@ -105,6 +103,9 @@ co_http_connection_setup(
         url_origin, address_family,
         &conn->tcp_client->remote_net_addr))
     {
+        conn->module.destroy(conn->tcp_client);
+        conn->tcp_client = NULL;
+
         co_http_log_error(NULL, NULL, NULL,
             "failed to resolve hostname (%s)", url_origin->src);
 

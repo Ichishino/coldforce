@@ -119,6 +119,12 @@ co_http_thread_on_create(
     co_http_thread_t* self
 )
 {
+    if (self->url == NULL ||
+        self->url->origin == NULL)
+    {
+        return false;
+    }
+
     self->client = co_http_client_create(
         self->url->origin, &self->local_net_addr, self->tls_ctx);
 
