@@ -72,12 +72,6 @@ co_app_run(
 );
 
 CO_CORE_API
-int
-co_app_start(
-    co_app_t* app
-);
-
-CO_CORE_API
 void
 co_app_stop(
     void

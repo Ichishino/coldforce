@@ -45,15 +45,9 @@ test_app_run(
 {
     test_app app = { 0 };
 
-    co_net_app_setup(
+    return co_net_app_start(
         (co_app_t*)&app,
         (co_app_create_fn)on_test_app_create,
         (co_app_destroy_fn)on_test_app_destroy,
         argc, argv);
-
-    int exit_code = co_app_run((co_app_t*)&app);
-
-    co_net_app_cleanup((co_app_t*)&app);
-
-    return exit_code;
 }

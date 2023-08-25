@@ -1,18 +1,24 @@
-### Builds
+# Examples
+
+## Builds
+
 * Windows  
 Visual Studio ([examples/all_examples.sln](https://github.com/Ichishino/coldforce/tree/master/examples/))
 * Linux, macOS  
-cmake
-```shellsession
-$ cd build
-$ cmake ..
-$ make
-```
+  cmake
 
-### Run
+  ```shellsession
+  cd build
+  cmake ..
+  make
+  ```
+
+## Run
+
 * Linux, macOS
-```shellsession
-$ cd build/examples
-$ cd http_client
-$ ./http_client http://www.example.com
-```
+
+  ```shellsession
+  cd build/examples
+  cd http_client
+  ./http_client http://www.example.com
+  ```

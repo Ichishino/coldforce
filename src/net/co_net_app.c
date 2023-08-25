@@ -13,10 +13,10 @@
 //---------------------------------------------------------------------------//
 
 //---------------------------------------------------------------------------//
-// public
+// private
 //---------------------------------------------------------------------------//
 
-bool
+static bool
 co_net_app_setup(
     co_app_t* app,
     co_app_create_fn create_handler,
@@ -42,7 +42,7 @@ co_net_app_setup(
     return true;
 }
 
-void
+static void
 co_net_app_cleanup(
     co_app_t* app
 )
@@ -57,3 +57,30 @@ co_net_app_cleanup(
     }
 }
 
+//---------------------------------------------------------------------------//
+// public
+//---------------------------------------------------------------------------//
+
+int
+co_net_app_start(
+    co_app_t* app,
+    co_app_create_fn create_handler,
+    co_app_destroy_fn destroy_handler,
+    int argc,
+    char** argv
+)
+{
+    if (!co_net_app_setup(
+        app,
+        create_handler, destroy_handler,
+        argc, argv))
+    {
+        return -1;
+    }
+
+    int exit_code = co_app_run(app);
+
+    co_net_app_cleanup(app);
+
+    return exit_code;
+}

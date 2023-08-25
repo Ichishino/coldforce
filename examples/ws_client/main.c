@@ -175,16 +175,9 @@ int main(int argc, char* argv[])
 
     my_app app = { 0 };
 
-    co_net_app_setup(
+    return co_net_app_start(
         (co_app_t*)&app,
         (co_app_create_fn)on_my_app_create,
         (co_app_destroy_fn)on_my_app_destroy,
         argc, argv);
-
-    // run
-    int exit_code = co_app_run((co_app_t*)&app);
-
-    co_net_app_cleanup((co_app_t*)&app);
-
-    return exit_code;
 }

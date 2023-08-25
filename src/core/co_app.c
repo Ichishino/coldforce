@@ -114,18 +114,6 @@ co_app_run(
     return app->main_thread.exit_code;
 }
 
-int
-co_app_start(
-    co_app_t* app
-)
-{
-    int exit_code = co_app_run(app);
-
-    co_app_cleanup(app);
-
-    return exit_code;
-}
-
 void
 co_app_stop(
     void
