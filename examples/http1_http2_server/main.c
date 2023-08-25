@@ -288,13 +288,13 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t
     // cannot determine http protocol version
 #if 1
     // http/1.1
-    co_http_client_t* http1_client = co_tcp_upgrade_to_http(tcp_client);
+    co_http_client_t* http1_client = co_tcp_upgrade_to_http(tcp_client, NULL);
     co_http_callbacks_st* callbacks = co_http_get_callbacks(http1_client);
     callbacks->on_receive_finish = (co_http_receive_finish_fn)on_my_http_request;
     callbacks->on_close = (co_http_close_fn)on_my_http_close;
 #else
     // http/2
-    co_http2_client_t* http2_client = co_tcp_upgrade_to_http2(tcp_client);
+    co_http2_client_t* http2_client = co_tcp_upgrade_to_http2(tcp_client, NULL);
     co_http2_callbacks_st* callbacks = co_http2_get_callbacks(http2_client);
     callbacks->on_receive_finish = (co_http2_receive_finish_fn)on_my_http2_request;
     callbacks->on_close = (co_http2_close_fn)on_my_http2_close;

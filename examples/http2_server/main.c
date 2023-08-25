@@ -395,7 +395,7 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t
 #else
 
     // create http2 client
-    co_http2_client_t* http2_client = co_tcp_upgrade_to_http2(tcp_client);
+    co_http2_client_t* http2_client = co_tcp_upgrade_to_http2(tcp_client, NULL);
 
     // settings (optional)
     co_http2_setting_param_st params[2];

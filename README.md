@@ -1,7 +1,6 @@
 
 # Coldforce
 
-========
 [![Build](https://github.com/Ichishino/coldforce/actions/workflows/build.yml/badge.svg)](https://github.com/Ichishino/coldforce/actions/workflows/build.yml)
 
 Coldforce is a library written in C that supports various network protocols.  
