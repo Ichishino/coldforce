@@ -14,7 +14,7 @@ add_library(${PROJECT_NAME} STATIC
     co_http2_log.c
     co_http2_server.c
     co_http2_stream.c
+    co_http2_tcp_extension.c
 )
 
 include(../common.cmake)
-

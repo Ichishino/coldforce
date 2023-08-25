@@ -40,8 +40,8 @@ co_http_server_on_request(
     client->request = NULL;
 }
 
-static void
-co_http_server_on_receive_ready(
+void
+co_http_server_on_tcp_receive_ready(
     co_thread_t* thread,
     co_tcp_client_t* tcp_client
 )
@@ -167,8 +167,8 @@ co_http_server_on_receive_ready(
     co_byte_array_clear(client->conn.receive_data.ptr);
 }
 
-static void
-co_http_server_on_close(
+void
+co_http_server_on_tcp_close(
     co_thread_t* thread,
     co_tcp_client_t* tcp_client
 )
@@ -191,32 +191,6 @@ co_http_server_on_close(
 //---------------------------------------------------------------------------//
 // public
 //---------------------------------------------------------------------------//
-
-co_http_client_t*
-co_tcp_upgrade_to_http(
-    co_tcp_client_t* tcp_client
-)
-{
-    co_http_client_t* client =
-        (co_http_client_t*)co_mem_alloc(sizeof(co_http_client_t));
-
-    if (client == NULL)
-    {
-        return NULL;
-    }
-
-    co_tcp_upgrade_to_http_connection(
-        tcp_client, (co_http_connection_t*)client, NULL);
-
-    co_http_client_setup(client);
-
-    client->conn.tcp_client->callbacks.on_receive =
-        (co_tcp_receive_fn)co_http_server_on_receive_ready;
-    client->conn.tcp_client->callbacks.on_close =
-        (co_tcp_close_fn)co_http_server_on_close;
-
-    return client;
-}
 
 bool
 co_http_send_response(

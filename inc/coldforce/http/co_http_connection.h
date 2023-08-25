@@ -59,14 +59,6 @@ co_http_connection_cleanup(
 
 CO_HTTP_API
 void
-co_tcp_upgrade_to_http_connection(
-    co_tcp_client_t* tcp_client,
-    co_http_connection_t* conn,
-    co_url_st* url_origin
-);
-
-CO_HTTP_API
-void
 co_http_connection_move(
     co_http_connection_t* from_conn,
     co_http_connection_t* to_conn

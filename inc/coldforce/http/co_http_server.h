@@ -14,14 +14,24 @@ CO_EXTERN_C_BEGIN
 //---------------------------------------------------------------------------//
 
 //---------------------------------------------------------------------------//
-// public
+// private
 //---------------------------------------------------------------------------//
 
-CO_HTTP_API
-co_http_client_t*
-co_tcp_upgrade_to_http(
+void
+co_http_server_on_tcp_receive_ready(
+    co_thread_t* thread,
     co_tcp_client_t* tcp_client
 );
+
+void
+co_http_server_on_tcp_close(
+    co_thread_t* thread,
+    co_tcp_client_t* tcp_client
+);
+
+//---------------------------------------------------------------------------//
+// public
+//---------------------------------------------------------------------------//
 
 CO_HTTP_API
 bool

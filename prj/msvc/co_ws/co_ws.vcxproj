@@ -42,6 +42,7 @@
     <ClCompile Include="..\..\..\src\ws\co_ws_http_extension.c" />
     <ClCompile Include="..\..\..\src\ws\co_ws_log.c" />
     <ClCompile Include="..\..\..\src\ws\co_ws_server.c" />
+    <ClCompile Include="..\..\..\src\ws\co_ws_tcp_extension.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\inc\coldforce\coldforce_ws.h" />
@@ -52,6 +53,7 @@
     <ClInclude Include="..\..\..\inc\coldforce\ws\co_ws_http_extension.h" />
     <ClInclude Include="..\..\..\inc\coldforce\ws\co_ws_log.h" />
     <ClInclude Include="..\..\..\inc\coldforce\ws\co_ws_server.h" />
+    <ClInclude Include="..\..\..\inc\coldforce\ws\co_ws_tcp_extension.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\co_core\co_core.vcxproj">

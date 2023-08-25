@@ -83,7 +83,7 @@ co_ws_server_on_receive_http_request(
 }
 
 void
-co_ws_server_on_receive_ready(
+co_ws_server_on_tcp_receive_ready(
     co_thread_t* thread,
     co_tcp_client_t* tcp_client
 )
@@ -131,7 +131,7 @@ co_ws_server_on_receive_ready(
                 (size_t)frame->header.payload_size,
                 "ws receive frame");
 
-            co_ws_client_on_frame(
+            co_ws_client_on_receive_frame(
                 thread, client, frame, 0);
 
             if (client->conn.tcp_client == NULL)
@@ -160,7 +160,7 @@ co_ws_server_on_receive_ready(
             }
             else
             {
-                co_ws_client_on_frame(
+                co_ws_client_on_receive_frame(
                     thread, client, NULL, result);
             }
 
@@ -170,36 +170,4 @@ co_ws_server_on_receive_ready(
 
     client->conn.receive_data.index = 0;
     co_byte_array_clear(client->conn.receive_data.ptr);
-}
-
-//---------------------------------------------------------------------------//
-// public
-//---------------------------------------------------------------------------//
-
-co_ws_client_t*
-co_tcp_upgrade_to_ws(
-    co_tcp_client_t* tcp_client
-)
-{
-    co_ws_client_t* client =
-        (co_ws_client_t*)co_mem_alloc(sizeof(co_ws_client_t));
-
-    if (client == NULL)
-    {
-        return NULL;
-    }
-
-    co_tcp_upgrade_to_http_connection(
-        tcp_client, (co_http_connection_t*)client, NULL);
-
-    co_ws_client_setup(client);
-
-    client->mask = false;
-
-    client->conn.tcp_client->callbacks.on_receive =
-        (co_tcp_receive_fn)co_ws_server_on_receive_ready;
-    client->conn.tcp_client->callbacks.on_close =
-        (co_tcp_close_fn)co_ws_client_on_close;
-
-    return client;
 }

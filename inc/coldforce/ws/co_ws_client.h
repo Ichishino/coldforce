@@ -67,7 +67,7 @@ co_ws_client_cleanup(
 );
 
 void
-co_ws_client_on_frame(
+co_ws_client_on_receive_frame(
     co_thread_t* thread,
     co_ws_client_t* client,
     co_ws_frame_t* frame,
@@ -75,13 +75,13 @@ co_ws_client_on_frame(
 );
 
 void
-co_ws_client_on_receive_ready(
+co_ws_client_on_tcp_receive_ready(
     co_thread_t* thread,
     co_tcp_client_t* tcp_client
 );
 
 void
-co_ws_client_on_close(
+co_ws_client_on_tcp_close(
     co_thread_t* thread,
     co_tcp_client_t* tcp_client
 );

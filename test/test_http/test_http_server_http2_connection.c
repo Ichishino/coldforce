@@ -284,7 +284,7 @@ add_http2_server_connection(
 )
 {
     co_http2_client_t* http2_client =
-        co_tcp_upgrade_to_http2(tcp_client);
+        co_tcp_upgrade_to_http2(tcp_client, NULL);
 
     co_http2_callbacks_st* callbacks =
         co_http2_get_callbacks(http2_client);

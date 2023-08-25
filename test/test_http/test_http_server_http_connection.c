@@ -252,7 +252,7 @@ add_http_server_connection(
 )
 {
     co_http_client_t* http_client =
-        co_tcp_upgrade_to_http(tcp_client);
+        co_tcp_upgrade_to_http(tcp_client, NULL);
 
     co_http_callbacks_st* callbacks =
         co_http_get_callbacks(http_client);

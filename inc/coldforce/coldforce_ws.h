@@ -15,6 +15,7 @@
 #include <coldforce/ws/co_ws_frame.h>
 #include <coldforce/ws/co_ws_client.h>
 #include <coldforce/ws/co_ws_server.h>
+#include <coldforce/ws/co_ws_tcp_extension.h>
 #include <coldforce/ws/co_ws_http_extension.h>
 #include <coldforce/ws/co_ws_log.h>
 

@@ -1,5 +1,5 @@
-#ifndef CO_WS_SERVER_H_INCLUDED
-#define CO_WS_SERVER_H_INCLUDED
+#ifndef CO_WS_TCP_EXTENSION_H_INCLUDED
+#define CO_WS_TCP_EXTENSION_H_INCLUDED
 
 #include <coldforce/net/co_tcp_client.h>
 
@@ -7,21 +7,24 @@
 
 CO_EXTERN_C_BEGIN
 
+struct co_ws_client_t;
+
 //---------------------------------------------------------------------------//
-// websocket server
+// tcp extension for websocket
 //---------------------------------------------------------------------------//
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
 //---------------------------------------------------------------------------//
-// private
+// public
 //---------------------------------------------------------------------------//
 
-void
-co_ws_server_on_tcp_receive_ready(
-    co_thread_t* thread,
-    co_tcp_client_t* tcp_client
+CO_WS_API
+struct co_ws_client_t*
+co_tcp_upgrade_to_ws(
+    co_tcp_client_t* tcp_client,
+    const char* url_origin
 );
 
 //---------------------------------------------------------------------------//
@@ -29,4 +32,4 @@ co_ws_server_on_tcp_receive_ready(
 
 CO_EXTERN_C_END
 
-#endif // CO_WS_SERVER_H_INCLUDED
+#endif // CO_WS_TCP_EXTENSION_H_INCLUDED

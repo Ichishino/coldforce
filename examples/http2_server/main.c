@@ -331,7 +331,7 @@ void on_my_tls_handshake(my_app* self, co_tcp_client_t* tcp_client, int error_co
         my_client_log(tcp, tcp_client, "TLS handshake success");
 
         // create http2 client
-        co_http2_client_t* http2_client = co_tcp_upgrade_to_http2(tcp_client);
+        co_http2_client_t* http2_client = co_tcp_upgrade_to_http2(tcp_client, NULL);
 
         // settings (optional)
         co_http2_setting_param_st params[2];

@@ -162,6 +162,17 @@ void on_my_connect(my_app* self, co_http_client_t* client, int error_code)
     }
 }
 
+void on_my_close(my_app* self, co_http_client_t* client)
+{
+    printf("closed\n");
+
+    co_http_client_destroy(client);
+    self->client = NULL;
+
+    // quit app
+    co_app_stop();
+}
+
 bool on_my_app_create(my_app* self)
 {
     const co_args_st* args = co_app_get_args((co_app_t*)self);
@@ -196,6 +207,7 @@ bool on_my_app_create(my_app* self)
     // callback
     co_http_callbacks_st* callbacks = co_http_get_callbacks(self->client);
     callbacks->on_connect = (co_http_connect_fn)on_my_connect;
+    callbacks->on_close = (co_http_close_fn)on_my_close;
     callbacks->on_receive_finish = (co_http_receive_finish_fn)on_my_receive_finish;
 
     if (self->save_file_path != NULL)

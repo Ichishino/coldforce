@@ -219,7 +219,7 @@ void on_my_tls_handshake(my_app* self, co_tcp_client_t* tcp_client, int error_co
         {
             // http/2
 
-            co_http2_client_t* http2_client = co_tcp_upgrade_to_http2(tcp_client);
+            co_http2_client_t* http2_client = co_tcp_upgrade_to_http2(tcp_client, NULL);
 
             // callback
             co_http2_callbacks_st* callbacks = co_http2_get_callbacks(http2_client);
@@ -232,7 +232,7 @@ void on_my_tls_handshake(my_app* self, co_tcp_client_t* tcp_client, int error_co
         {
             // http/1.1
 
-            co_http_client_t* http1_client = co_tcp_upgrade_to_http(tcp_client);
+            co_http_client_t* http1_client = co_tcp_upgrade_to_http(tcp_client, NULL);
 
             // callback
             co_http_callbacks_st* callbacks = co_http_get_callbacks(http1_client);

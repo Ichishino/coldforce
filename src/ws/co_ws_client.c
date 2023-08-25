@@ -52,7 +52,7 @@ co_ws_client_cleanup(
 }
 
 void
-co_ws_client_on_frame(
+co_ws_client_on_receive_frame(
     co_thread_t* thread,
     co_ws_client_t* client,
     co_ws_frame_t* frame,
@@ -77,23 +77,6 @@ co_ws_client_on_frame(
     }
 
     co_ws_frame_destroy(frame);
-}
-
-static void
-co_ws_client_on_connect(
-    co_thread_t* thread,
-    co_tcp_client_t* tcp_client,
-    int error_code
-)
-{
-    co_ws_client_t* client =
-        (co_ws_client_t*)tcp_client->sock.sub_class;
-
-    if (client->callbacks.on_connect != NULL)
-    {
-        client->callbacks.on_connect(
-            thread, client, error_code);
-    }
 }
 
 static bool
@@ -162,8 +145,25 @@ co_ws_client_on_receive_http_response(
     return true;
 }
 
+static void
+co_ws_client_on_tcp_connect(
+    co_thread_t* thread,
+    co_tcp_client_t* tcp_client,
+    int error_code
+)
+{
+    co_ws_client_t* client =
+        (co_ws_client_t*)tcp_client->sock.sub_class;
+
+    if (client->callbacks.on_connect != NULL)
+    {
+        client->callbacks.on_connect(
+            thread, client, error_code);
+    }
+}
+
 void
-co_ws_client_on_receive_ready(
+co_ws_client_on_tcp_receive_ready(
     co_thread_t* thread,
     co_tcp_client_t* tcp_client
 )
@@ -211,7 +211,7 @@ co_ws_client_on_receive_ready(
                 (size_t)frame->header.payload_size,
                 "ws receive frame");
 
-            co_ws_client_on_frame(
+            co_ws_client_on_receive_frame(
                 thread, client, frame, 0);
 
             if (client->conn.tcp_client == NULL)
@@ -248,7 +248,7 @@ co_ws_client_on_receive_ready(
             }
             else
             {
-                co_ws_client_on_frame(
+                co_ws_client_on_receive_frame(
                     thread, client, NULL, result);
             }
 
@@ -261,7 +261,7 @@ co_ws_client_on_receive_ready(
 }
 
 void
-co_ws_client_on_close(
+co_ws_client_on_tcp_close(
     co_thread_t* thread,
     co_tcp_client_t* tcp_client
 )
@@ -341,9 +341,9 @@ co_ws_client_create(
     client->mask = true;
 
     client->conn.tcp_client->callbacks.on_receive =
-        (co_tcp_receive_fn)co_ws_client_on_receive_ready;
+        (co_tcp_receive_fn)co_ws_client_on_tcp_receive_ready;
     client->conn.tcp_client->callbacks.on_close =
-        (co_tcp_close_fn)co_ws_client_on_close;
+        (co_tcp_close_fn)co_ws_client_on_tcp_close;
 
     return client;
 }
@@ -382,7 +382,7 @@ co_ws_connect(
 )
 {
     client->conn.tcp_client->callbacks.on_connect =
-        (co_tcp_connect_fn)co_ws_client_on_connect;
+        (co_tcp_connect_fn)co_ws_client_on_tcp_connect;
 
     return client->conn.module.connect(
         client->conn.tcp_client,

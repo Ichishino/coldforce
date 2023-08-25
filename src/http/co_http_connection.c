@@ -146,43 +146,6 @@ co_http_connection_cleanup(
 }
 
 void
-co_tcp_upgrade_to_http_connection(
-    co_tcp_client_t* tcp_client,
-    co_http_connection_t* conn,
-    co_url_st* url_origin
-)
-{
-#ifdef CO_CAN_USE_TLS
-    if (tcp_client->sock.tls != NULL)
-    {
-        conn->module.destroy = co_tls_client_destroy;
-        conn->module.close = co_tls_close;
-        conn->module.connect = co_tls_connect;
-        conn->module.send = co_tls_send;
-        conn->module.receive_all = co_tls_receive_all;
-    }
-    else
-    {
-#endif
-        conn->module.destroy = co_tcp_client_destroy;
-        conn->module.close = co_tcp_close;
-        conn->module.connect = co_tcp_connect;
-        conn->module.send = co_tcp_send;
-        conn->module.receive_all = co_tcp_receive_all;
-
-#ifdef CO_CAN_USE_TLS
-    }
-#endif
-
-    conn->tcp_client = tcp_client;
-    conn->tcp_client->sock.sub_class = conn;
-    conn->url_origin = url_origin;
-    conn->receive_data.index = 0;
-    conn->receive_data.ptr = co_byte_array_create();
-    conn->receive_timer = NULL;
-}
-
-void
 co_http_connection_move(
     co_http_connection_t* from_conn,
     co_http_connection_t* to_conn

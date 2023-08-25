@@ -1,27 +1,30 @@
-#ifndef CO_WS_SERVER_H_INCLUDED
-#define CO_WS_SERVER_H_INCLUDED
+#ifndef CO_HTTP2_TCP_EXTENSION_H_INCLUDED
+#define CO_HTTP2_TCP_EXTENSION_H_INCLUDED
 
 #include <coldforce/net/co_tcp_client.h>
 
-#include <coldforce/ws/co_ws.h>
+#include <coldforce/http2/co_http2.h>
 
 CO_EXTERN_C_BEGIN
 
+struct co_http2_client_t;
+
 //---------------------------------------------------------------------------//
-// websocket server
+// tcp extension for http2
 //---------------------------------------------------------------------------//
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
 //---------------------------------------------------------------------------//
-// private
+// public
 //---------------------------------------------------------------------------//
 
-void
-co_ws_server_on_tcp_receive_ready(
-    co_thread_t* thread,
-    co_tcp_client_t* tcp_client
+CO_HTTP2_API
+struct co_http2_client_t*
+co_tcp_upgrade_to_http2(
+    co_tcp_client_t* tcp_client,
+    const char* url_origin
 );
 
 //---------------------------------------------------------------------------//
@@ -29,4 +32,4 @@ co_ws_server_on_tcp_receive_ready(
 
 CO_EXTERN_C_END
 
-#endif // CO_WS_SERVER_H_INCLUDED
+#endif // CO_HTTP2_TCP_EXTENSION_H_INCLUDED

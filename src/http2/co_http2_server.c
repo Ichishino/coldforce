@@ -252,32 +252,6 @@ co_http2_server_on_tcp_receive_ready(
 // public
 //---------------------------------------------------------------------------//
 
-co_http2_client_t*
-co_tcp_upgrade_to_http2(
-    co_tcp_client_t* tcp_client
-)
-{
-    co_http2_client_t* client =
-        (co_http2_client_t*)co_mem_alloc(sizeof(co_http2_client_t));
-
-    if (client == NULL)
-    {
-        return NULL;
-    }
-
-    co_tcp_upgrade_to_http_connection(
-        tcp_client, (co_http_connection_t*)client, NULL);
-
-    co_http2_client_setup(client);
-
-    client->conn.tcp_client->callbacks.on_receive =
-        (co_tcp_receive_fn)co_http2_server_on_tcp_receive_ready;
-    client->conn.tcp_client->callbacks.on_close =
-        (co_tcp_close_fn)co_http2_client_on_tcp_close;
-
-    return client;
-}
-
 bool
 co_http2_send_ping(
     co_http2_client_t* client,

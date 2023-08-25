@@ -181,8 +181,8 @@ co_http_client_on_tcp_connect(
     }
 }
 
-static void
-co_http_client_on_receive_ready(
+void
+co_http_client_on_tcp_receive_ready(
     co_thread_t* thread,
     co_tcp_client_t* tcp_client
 )
@@ -326,7 +326,7 @@ co_http_client_on_receive_ready(
     }
 }
 
-static void
+void
 co_http_client_on_tcp_close(
     co_thread_t* thread,
     co_tcp_client_t* tcp_client
@@ -335,10 +335,9 @@ co_http_client_on_tcp_close(
     co_http_client_t* client =
         (co_http_client_t*)tcp_client->sock.sub_class;
 
-    client->conn.module.close(client->conn.tcp_client);
+    co_timer_stop(client->conn.receive_timer);
 
-    co_http_client_on_resopnse(
-        thread, client, CO_HTTP_ERROR_CONNECTION_CLOSED);
+    client->conn.module.close(client->conn.tcp_client);
 
     if (client->callbacks.on_close != NULL)
     {
@@ -382,7 +381,7 @@ co_http_client_create(
     co_http_client_setup(client);
 
     client->conn.tcp_client->callbacks.on_receive =
-        (co_tcp_receive_fn)co_http_client_on_receive_ready;
+        (co_tcp_receive_fn)co_http_client_on_tcp_receive_ready;
     client->conn.tcp_client->callbacks.on_close =
         (co_tcp_close_fn)co_http_client_on_tcp_close;
 

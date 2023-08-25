@@ -81,6 +81,18 @@ co_http_client_setup(
     co_http_client_t* client
 );
 
+void
+co_http_client_on_tcp_receive_ready(
+    co_thread_t* thread,
+    co_tcp_client_t* tcp_client
+);
+
+void
+co_http_client_on_tcp_close(
+    co_thread_t* thread,
+    co_tcp_client_t* tcp_client
+);
+
 //---------------------------------------------------------------------------//
 // public
 //---------------------------------------------------------------------------//
