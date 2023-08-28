@@ -23,7 +23,6 @@ co_tcp_upgrade_to_http_connection(
     const char* url_origin
 )
 {
-#ifdef CO_CAN_USE_TLS
     if (tcp_client->sock.tls != NULL)
     {
         conn->module.destroy = co_tls_client_destroy;
@@ -34,16 +33,12 @@ co_tcp_upgrade_to_http_connection(
     }
     else
     {
-#endif
         conn->module.destroy = co_tcp_client_destroy;
         conn->module.close = co_tcp_close;
         conn->module.connect = co_tcp_connect;
         conn->module.send = co_tcp_send;
         conn->module.receive_all = co_tcp_receive_all;
-
-#ifdef CO_CAN_USE_TLS
     }
-#endif
 
     co_url_st* url = NULL;
 

@@ -24,13 +24,13 @@ CO_EXTERN_C_BEGIN
 // private
 //---------------------------------------------------------------------------//
 
-#ifdef CO_CAN_USE_TLS
-
+#ifdef CO_USE_OPENSSL
 void
 co_tls_log_write_certificate(
     int level,
     X509* x509
 );
+#endif
 
 #define co_tls_log_write(level, addr1, text, addr2, format, ...) \
     co_net_log_write(level, CO_LOG_CATEGORY_TLS, \
@@ -56,10 +56,10 @@ co_tls_log_write_certificate(
     co_net_log_write_hex_dump(CO_LOG_LEVEL_DEBUG, CO_LOG_CATEGORY_TLS, \
         addr1, text, addr2, data, size, format, ##__VA_ARGS__)
 
+#ifdef CO_USE_OPENSSL
 #define co_tls_log_debug_certificate(x509) \
     co_tls_log_write_certificate(CO_LOG_LEVEL_DEBUG, x509)
-
-#endif // CO_CAN_USE_TLS
+#endif
 
 //---------------------------------------------------------------------------//
 // public

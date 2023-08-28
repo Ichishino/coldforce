@@ -13,8 +13,7 @@
 // private
 //---------------------------------------------------------------------------//
 
-#ifdef CO_CAN_USE_TLS
-
+#ifdef CO_USE_OPENSSL
 void
 co_tls_log_write_certificate(
     int level,
@@ -78,8 +77,7 @@ co_tls_log_write_certificate(
     co_mem_free(str);
     BIO_free(mem);
 }
-
-#endif // CO_CAN_USE_TLS
+#endif // CO_USE_OPENSSL
 
 //---------------------------------------------------------------------------//
 // public

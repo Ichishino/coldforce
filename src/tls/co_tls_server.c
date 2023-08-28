@@ -4,8 +4,6 @@
 #include <coldforce/tls/co_tls_server.h>
 #include <coldforce/tls/co_tls_client.h>
 
-#ifdef CO_CAN_USE_TLS
-
 //---------------------------------------------------------------------------//
 // tls server
 //---------------------------------------------------------------------------//
@@ -16,6 +14,8 @@
 //---------------------------------------------------------------------------//
 // private
 //---------------------------------------------------------------------------//
+
+#ifdef CO_USE_OPENSSL
 
 static void
 co_tls_server_setup(
@@ -131,6 +131,8 @@ co_tls_server_on_alpn_select(
     return SSL_TLSEXT_ERR_NOACK;
 }
 
+#endif // CO_USE_OPENSSL
+
 //---------------------------------------------------------------------------//
 // public
 //---------------------------------------------------------------------------//
@@ -141,6 +143,8 @@ co_tls_server_create(
     co_tls_ctx_st* tls_ctx
 )
 {
+#ifdef CO_USE_OPENSSL
+
     co_tcp_server_t* server = co_tcp_server_create(local_net_addr);
 
     if (server == NULL)
@@ -163,6 +167,15 @@ co_tls_server_create(
     server->sock.tls = tls;
 
     return server;
+
+#else
+
+    (void)local_net_addr;
+    (void)tls_ctx;
+
+    return NULL;
+
+#endif // CO_USE_OPENSSL
 }
 
 void
@@ -172,9 +185,10 @@ co_tls_server_destroy(
 {
     if (server != NULL)
     {
+#ifdef CO_USE_OPENSSL
         co_tls_server_cleanup(server->sock.tls);
         co_mem_free(server->sock.tls);
-
+#endif
         co_tcp_server_destroy(server);
     }
 }
@@ -197,6 +211,8 @@ co_tls_server_set_available_protocols(
     size_t count
 )
 {
+#ifdef CO_USE_OPENSSL
+
     co_byte_array_t* buffer = co_byte_array_create();
 
     for (size_t index = 0; index < count; ++index)
@@ -216,6 +232,14 @@ co_tls_server_set_available_protocols(
     tls->protocols = co_byte_array_detach(buffer);
 
     co_byte_array_destroy(buffer);
+
+#else
+
+    (void)server;
+    (void)protocols;
+    (void)count;
+
+#endif // CO_USE_OPENSSL
 }
 
 bool
@@ -224,12 +248,21 @@ co_tls_server_start(
     int backlog
 )
 {
+#ifdef CO_USE_OPENSSL
+
     co_tls_server_t* tls = co_tcp_server_get_tls(server);
 
     tls->on_accept = server->callbacks.on_accept;
     server->callbacks.on_accept = (co_tcp_accept_fn)co_tls_server_on_accept_ready;
 
     return co_tcp_server_start(server, backlog);
-}
 
-#endif // CO_CAN_USE_TLS
+#else
+
+    (void)server;
+    (void)backlog;
+
+    return false;
+
+#endif // CO_USE_OPENSSL
+}

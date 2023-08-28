@@ -4,14 +4,14 @@
 #include <coldforce/core/co.h>
 
 #if defined __has_include
-#   if __has_include(<openssl/ssl.h>)
-#       define CO_CAN_USE_TLS       1
-#   endif
+#if __has_include(<openssl/ssl.h>)
+#define CO_USE_OPENSSL
+#endif
 #else
-#   define CO_CAN_USE_TLS           1
+#define CO_USE_OPENSSL
 #endif // __has_include
 
-#ifdef CO_CAN_USE_TLS
+#ifdef CO_USE_OPENSSL
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -25,7 +25,7 @@
 #pragma warning(pop)
 #endif
 
-#endif // CO_CAN_USE_TLS
+#endif // CO_USE_OPENSSL
 
 //---------------------------------------------------------------------------//
 // platform
@@ -48,7 +48,7 @@ CO_EXTERN_C_BEGIN
 
 #define CO_TLS_ERROR_HANDSHAKE_FAILED   -4001
 
-#ifdef CO_CAN_USE_TLS
+#ifdef CO_USE_OPENSSL
 
 typedef struct
 {
@@ -64,7 +64,7 @@ typedef struct
 
 } co_tls_ctx_st;
 
-#endif // CO_CAN_USE_TLS
+#endif // CO_USE_OPENSSL
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

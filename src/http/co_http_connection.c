@@ -47,7 +47,6 @@ co_http_connection_setup(
 
     if (tls_scheme)
     {
-#ifdef CO_CAN_USE_TLS
         conn->module.destroy = co_tls_client_destroy;
         conn->module.close = co_tls_close;
         conn->module.connect = co_tls_connect;
@@ -68,14 +67,6 @@ co_http_connection_setup(
                     conn->tcp_client, protocols, protocol_count);
             }
         }
-#else
-        (void)protocols;
-        (void)protocol_count;
-        (void)tls_ctx;
-
-        co_http_log_error(NULL, NULL, NULL,
-            "OpenSSL is not installed");
-#endif
     }
     else
     {

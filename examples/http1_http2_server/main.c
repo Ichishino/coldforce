@@ -2,19 +2,20 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
+#define CO_USE_OPENSSL
+
 #include <coldforce.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef CO_CAN_USE_TLS
-// openssl
 #ifdef _WIN32
+#ifdef CO_USE_OPENSSL
 #pragma comment(lib, "libssl.lib")
 #pragma comment(lib, "libcrypto.lib")
 #endif
-#endif // CO_CAN_USE_TLS
+#endif
 
 // my app object
 typedef struct
@@ -201,8 +202,6 @@ void on_my_http_close(my_app* self, co_http_client_t* http1_client)
 // tls
 //---------------------------------------------------------------------------//
 
-#ifdef CO_CAN_USE_TLS
-
 void on_my_tls_handshake(my_app* self, co_tcp_client_t* tcp_client, int error_code)
 {
     (void)self;
@@ -248,20 +247,50 @@ void on_my_tls_handshake(my_app* self, co_tcp_client_t* tcp_client, int error_co
     }
 }
 
-#endif // CO_CAN_USE_TLS
+bool my_tls_setup(co_tls_ctx_st* tls_ctx)
+{
+#ifdef CO_USE_OPENSSL
+    const char* certificate_file = "../../../test_file/server.crt";
+    const char* private_key_file = "../../../test_file/server.key";
+
+    SSL_CTX* ssl_ctx = SSL_CTX_new(TLS_server_method());
+
+    if (SSL_CTX_use_certificate_file(
+        ssl_ctx, certificate_file, SSL_FILETYPE_PEM) != 1)
+    {
+        SSL_CTX_free(ssl_ctx);
+
+        printf("SSL_CTX_use_certificate_file failed\n");
+
+        return false;
+    }
+
+    if (SSL_CTX_use_PrivateKey_file(
+        ssl_ctx, private_key_file, SSL_FILETYPE_PEM) != 1)
+    {
+        SSL_CTX_free(ssl_ctx);
+
+        printf("SSL_CTX_use_PrivateKey_file failed\n");
+
+        return false;
+    }
+
+    tls_ctx->ssl_ctx = ssl_ctx;
+#endif
+
+    return true;
+}
 
 //---------------------------------------------------------------------------//
 // tcp
 //---------------------------------------------------------------------------//
 
-#ifdef CO_CAN_USE_TLS
 void on_my_tcp_close(my_app* self, co_tcp_client_t* tcp_client)
 {
     (void)self;
 
     co_tls_client_destroy(tcp_client);
 }
-#endif
 
 void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t* tcp_client)
 {
@@ -272,8 +301,6 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t
     // accept
     co_tcp_accept((co_thread_t*)self, tcp_client);
 
-#ifdef CO_CAN_USE_TLS
-
     // callback
     co_tcp_callbacks_st* tcp_callbacks = co_tcp_get_callbacks(tcp_client);
     tcp_callbacks->on_close = (co_tcp_close_fn)on_my_tcp_close;
@@ -282,26 +309,6 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t
 
     // TLS handshake
     co_tls_start_handshake(tcp_client);
-
-#else
-
-    // cannot determine http protocol version
-#if 1
-    // http/1.1
-    co_http_client_t* http1_client = co_tcp_upgrade_to_http(tcp_client, NULL);
-    co_http_callbacks_st* callbacks = co_http_get_callbacks(http1_client);
-    callbacks->on_receive_finish = (co_http_receive_finish_fn)on_my_http_request;
-    callbacks->on_close = (co_http_close_fn)on_my_http_close;
-#else
-    // http/2
-    co_http2_client_t* http2_client = co_tcp_upgrade_to_http2(tcp_client, NULL);
-    co_http2_callbacks_st* callbacks = co_http2_get_callbacks(http2_client);
-    callbacks->on_receive_finish = (co_http2_receive_finish_fn)on_my_http2_request;
-    callbacks->on_close = (co_http2_close_fn)on_my_http2_close;
-    co_list_add_tail(self->http2_clients, http2_client);
-#endif
-
-#endif
 }
 
 //---------------------------------------------------------------------------//
@@ -332,33 +339,21 @@ bool on_my_app_create(my_app* self)
     co_net_addr_set_family(&local_net_addr, CO_NET_ADDR_FAMILY_IPV4);
     co_net_addr_set_port(&local_net_addr, port);
 
-#ifdef CO_CAN_USE_TLS
-
-    // TLS setting (openssl)
+    // tls setting
     co_tls_ctx_st tls_ctx = { 0 };
-    tls_ctx.ssl_ctx = SSL_CTX_new(TLS_server_method());
-
-    const char* certificate_file = "server.crt";
-    const char* private_key_file = "server.key";
-
-    if (SSL_CTX_use_certificate_file(
-        tls_ctx.ssl_ctx, certificate_file, SSL_FILETYPE_PEM) != 1)
+    if (!my_tls_setup(&tls_ctx))
     {
-        printf("SSL_CTX_use_certificate_file failed\n");
-
-        return false;
-    }
-
-    if (SSL_CTX_use_PrivateKey_file(
-        tls_ctx.ssl_ctx, private_key_file, SSL_FILETYPE_PEM) != 1)
-    {
-        printf("SSL_CTX_use_PrivateKey_file failed\n");
-
         return false;
     }
 
     // https server
     self->server = co_tls_server_create(&local_net_addr, &tls_ctx);
+    if (self->server == NULL)
+    {
+        printf("Failed to create tls server (maybe OpenSSL was not found)\n");
+
+        return false;
+    }
 
     // available protocols
     size_t protocol_count = 2;
@@ -379,38 +374,13 @@ bool on_my_app_create(my_app* self)
 
     printf("https://127.0.0.1:%d\n", port);
 
-#else
-
-    // http server
-    self->server = co_tcp_server_create(&local_net_addr);
-
-    // socket option
-    co_socket_option_set_reuse_addr(
-        co_tcp_server_get_socket(self->server), true);
-
-    // callback
-    co_tcp_server_callbacks_st* callbacks = co_tcp_server_get_callbacks(self->server);
-    callbacks->on_accept = (co_tcp_accept_fn)on_my_tcp_accept;
-
-    // listen start
-    co_tcp_server_start(self->server, SOMAXCONN);
-
-    printf("http://127.0.0.1:%d\n", port);
-
-#endif
-
     return true;
 }
 
 void on_my_app_destroy(my_app* self)
 {
     co_list_destroy(self->http2_clients);
-
-#ifdef CO_CAN_USE_TLS
     co_tls_server_destroy(self->server);
-#else
-    co_tcp_server_destroy(self->server);
-#endif
 }
 
 int main(int argc, char* argv[])

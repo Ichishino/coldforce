@@ -29,4 +29,3 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 include(../../examples/link_openssl.cmake)
-include(../../examples/copy_cert.cmake)

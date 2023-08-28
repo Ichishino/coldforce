@@ -17,8 +17,6 @@ CO_EXTERN_C_BEGIN
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-#ifdef CO_CAN_USE_TLS
-
 typedef void(*co_tls_handshake_fn)(
     co_thread_t* self, co_tcp_client_t* client, int error_code);
 
@@ -30,17 +28,19 @@ typedef struct
 
 typedef struct
 {
-    SSL* ssl;
     co_tls_ctx_st ctx;
     co_tls_callbacks_st callbacks;
 
     co_tcp_connect_fn on_connect;
     co_tcp_receive_fn on_receive;
 
-    BIO* network_bio;
-
     co_byte_array_t* send_data;
     co_queue_t* receive_data_queue;
+
+#ifdef CO_USE_OPENSSL
+    SSL* ssl;
+    BIO* network_bio;
+#endif
 
 } co_tls_client_t;
 
@@ -173,8 +173,6 @@ co_tls_get_remote_net_addr(
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
-
-#endif // CO_CAN_USE_TLS
 
 CO_EXTERN_C_END
 

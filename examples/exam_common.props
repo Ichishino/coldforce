@@ -1,14 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ImportGroup Label="PropertySheets" />
-  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Label="UserMacros">
+    <CO_INC_DIR>../../../inc</CO_INC_DIR>
+    <CO_LIB_DIR>../../../lib</CO_LIB_DIR>
+    <CO_BUILD_DIR>../../../build</CO_BUILD_DIR>
+    <CO_BUILD_MSVC_DIR>$(CO_BUILD_DIR)/msvc</CO_BUILD_MSVC_DIR>
+    <CO_BUILD_BIN_DIR>$(CO_BUILD_MSVC_DIR)/$(Configuration)$(PlatformArchitecture)</CO_BUILD_BIN_DIR>
+    <CO_BUILD_OBJ_DIR>$(CO_BUILD_MSVC_DIR)/$(Configuration)$(PlatformArchitecture)/examples/$(ProjectName)</CO_BUILD_OBJ_DIR>
+  </PropertyGroup>
   <PropertyGroup>
-    <OutDir>../../../build/msvc/$(Configuration)$(PlatformArchitecture)/</OutDir>
-    <IntDir>../../../build/msvc/$(Configuration)$(PlatformArchitecture)/examples/$(ProjectName)/</IntDir>
+    <OutDir>$(CO_BUILD_BIN_DIR)/</OutDir>
+    <IntDir>$(CO_BUILD_OBJ_DIR)/</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>../../../inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CO_INC_DIR)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup>
@@ -21,8 +28,32 @@
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>../../../lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CO_LIB_DIR)</AdditionalLibraryDirectories>
     </Link>
+    <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <BuildMacro Include="CO_INC_DIR">
+      <Value>$(CO_INC_DIR)</Value>
+    </BuildMacro>
+    <BuildMacro Include="CO_LIB_DIR">
+      <Value>$(CO_LIB_DIR)</Value>
+    </BuildMacro>
+    <BuildMacro Include="CO_BUILD_DIR">
+      <Value>$(CO_BUILD_DIR)</Value>
+    </BuildMacro>
+    <BuildMacro Include="CO_BUILD_MSVC_DIR">
+      <Value>$(CO_BUILD_MSVC_DIR)</Value>
+    </BuildMacro>
+    <BuildMacro Include="CO_BUILD_BIN_DIR">
+      <Value>$(CO_BUILD_BIN_DIR)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="CO_BUILD_OBJ_DIR">
+      <Value>$(CO_BUILD_OBJ_DIR)</Value>
+    </BuildMacro>
+  </ItemGroup>
 </Project>

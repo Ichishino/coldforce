@@ -6,9 +6,14 @@ on_test_app_create(
 )
 {
     self->http_server.port = 8443;
-    self->http_server.certificate_file = "server.crt";
-    self->http_server.private_key_file = "server.key";
- 
+#ifdef _WIN32
+    self->http_server.certificate_file = "../../test_file/server.crt";
+    self->http_server.private_key_file = "../../test_file/server.key";
+#else
+    self->http_server.certificate_file = "../../../test_file/server.crt";
+    self->http_server.private_key_file = "../../../test_file/server.key";
+#endif
+
     if (!http_server_thread_start(&self->http_server))
     {
         co_app_set_exit_code(-100);

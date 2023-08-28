@@ -4,12 +4,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef CO_CAN_USE_TLS
-
-// openssl
+#ifdef CO_USE_OPENSSL
 #ifdef _WIN32
 #pragma comment(lib, "libssl.lib")
 #pragma comment(lib, "libcrypto.lib")
+#endif
 #endif
 
 // my app object
@@ -71,6 +70,40 @@ void on_my_tls_close(my_app* self, co_tcp_client_t* client)
     co_list_remove(self->client_list, client);
 }
 
+bool my_tls_setup(co_tls_ctx_st* tls_ctx)
+{
+#ifdef CO_USE_OPENSSL
+    const char* certificate_file = "../../../test_file/server.crt";
+    const char* private_key_file = "../../../test_file/server.key";
+
+    SSL_CTX* ssl_ctx = SSL_CTX_new(TLS_server_method());
+
+    if (SSL_CTX_use_certificate_file(
+        ssl_ctx, certificate_file, SSL_FILETYPE_PEM) != 1)
+    {
+        SSL_CTX_free(ssl_ctx);
+
+        printf("SSL_CTX_use_certificate_file failed\n");
+
+        return false;
+    }
+
+    if (SSL_CTX_use_PrivateKey_file(
+        ssl_ctx, private_key_file, SSL_FILETYPE_PEM) != 1)
+    {
+        SSL_CTX_free(ssl_ctx);
+
+        printf("SSL_CTX_use_PrivateKey_file failed\n");
+
+        return false;
+    }
+
+    tls_ctx->ssl_ctx = ssl_ctx;
+#endif
+
+    return true;
+}
+
 void on_my_tcp_accept(my_app* self, co_tcp_server_t* server, co_tcp_client_t* client)
 {
     (void)server;
@@ -122,30 +155,21 @@ bool on_my_app_create(my_app* self)
     co_net_addr_set_family(&local_net_addr, CO_NET_ADDR_FAMILY_IPV4);
     co_net_addr_set_port(&local_net_addr, port);
     
-    // TLS setting (openssl)
-    co_tls_ctx_st tls_ctx;
-    tls_ctx.ssl_ctx = SSL_CTX_new(TLS_server_method());
-
-    const char* certificate_file = "server.crt";
-    const char* private_key_file = "server.key";
-
-    if (SSL_CTX_use_certificate_file(
-        tls_ctx.ssl_ctx, certificate_file, SSL_FILETYPE_PEM) != 1)
+    // tls setting
+    co_tls_ctx_st tls_ctx = { 0 };
+    if (!my_tls_setup(&tls_ctx))
     {
-        printf("SSL_CTX_use_certificate_file failed\n");
-
         return false;
     }
 
-    if (SSL_CTX_use_PrivateKey_file(
-        tls_ctx.ssl_ctx, private_key_file, SSL_FILETYPE_PEM) != 1)
-    {
-        printf("SSL_CTX_use_PrivateKey_file failed\n");
-
-        return false;
-    }
-
+    // tls server
     self->server = co_tls_server_create(&local_net_addr, &tls_ctx);
+    if (self->server == NULL)
+    {
+        printf("Failed to create tls server (maybe OpenSSL was not found)\n");
+
+        return false;
+    }
 
     // socket option
     co_socket_option_set_reuse_addr(
@@ -184,15 +208,3 @@ int main(int argc, char* argv[])
         (co_app_destroy_fn)on_my_app_destroy,
         argc, argv);
 }
-
-#else
-
-int main(int argc, char* argv[])
-{
-    (void)argc;
-    (void)argv;
-
-    return 0;
-}
-
-#endif // CO_CAN_USE_TLS

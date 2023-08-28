@@ -4,8 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef CO_CAN_USE_TLS
-
 // my app object
 typedef struct
 {
@@ -19,7 +17,7 @@ typedef struct
 
 } my_app;
 
-void my_connect(my_app* self);
+bool my_connect(my_app* self);
 
 void on_my_tls_receive(my_app* self, co_tcp_client_t* client)
 {
@@ -83,13 +81,19 @@ void on_my_retry_timer(my_app* self, co_timer_t* timer)
     my_connect(self);
 }
 
-void my_connect(my_app* self)
+bool my_connect(my_app* self)
 {
     // local address
     co_net_addr_t local_net_addr = { 0 };
     co_net_addr_set_family(&local_net_addr, CO_NET_ADDR_FAMILY_IPV4);
 
     self->client = co_tls_client_create(&local_net_addr, NULL);
+    if (self->client == NULL)
+    {
+        printf("Failed to create tls client (maybe OpenSSL was not found)\n");
+
+        return false;
+    }
 
     // remote address
     co_net_addr_t remote_net_addr = { 0 };
@@ -108,6 +112,8 @@ void my_connect(my_app* self)
     char remote_str[64];
     co_net_addr_to_string(&remote_net_addr, remote_str, sizeof(remote_str));
     printf("connect to %s\n", remote_str);
+
+    return true;
 }
 
 bool on_my_app_create(my_app* self)
@@ -130,7 +136,10 @@ bool on_my_app_create(my_app* self)
         5000, (co_timer_fn)on_my_retry_timer, false, 0);
 
     // connect
-    my_connect(self);
+    if (!my_connect(self))
+    {
+        return false;
+    }
 
     return true;
 }
@@ -154,15 +163,3 @@ int main(int argc, char* argv[])
         (co_app_destroy_fn)on_my_app_destroy,
         argc, argv);
 }
-
-#else
-
-int main(int argc, char* argv[])
-{
-    (void)argc;
-    (void)argv;
-
-    return 0;
-}
-
-#endif // CO_CAN_USE_TLS

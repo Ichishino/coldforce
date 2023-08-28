@@ -100,12 +100,18 @@ test_server_tls_setup(
     if (SSL_CTX_use_certificate_file(
         tls_ctx->ssl_ctx, self->certificate_file, SSL_FILETYPE_PEM) != 1)
     {
+        SSL_CTX_free(tls_ctx->ssl_ctx);
+        tls_ctx->ssl_ctx = NULL;
+
         return false;
     }
 
     if (SSL_CTX_use_PrivateKey_file(
         tls_ctx->ssl_ctx, self->private_key_file, SSL_FILETYPE_PEM) != 1)
     {
+        SSL_CTX_free(tls_ctx->ssl_ctx);
+        tls_ctx->ssl_ctx = NULL;
+
         return false;
     }
 

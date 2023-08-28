@@ -5,8 +5,6 @@
 #include <coldforce/tls/co_tls_client.h>
 #include <coldforce/tls/co_tls_log.h>
 
-#ifdef CO_CAN_USE_TLS
-
 //---------------------------------------------------------------------------//
 // tls client
 //---------------------------------------------------------------------------//
@@ -17,6 +15,8 @@
 //---------------------------------------------------------------------------//
 // private
 //---------------------------------------------------------------------------//
+
+#ifdef CO_USE_OPENSSL
 
 static void
 co_tls_on_info(
@@ -449,6 +449,8 @@ co_tls_on_receive_handshake(
     }
 }
 
+#endif // CO_USE_OPENSSL
+
 //---------------------------------------------------------------------------//
 // public
 //---------------------------------------------------------------------------//
@@ -459,6 +461,8 @@ co_tls_client_create(
     co_tls_ctx_st* tls_ctx
 )
 {
+#ifdef CO_USE_OPENSSL
+
     co_tcp_client_t* client = co_tcp_client_create(local_net_addr);
 
     if (client == NULL)
@@ -474,6 +478,15 @@ co_tls_client_create(
     }
 
     return client;
+
+#else
+
+    (void)local_net_addr;
+    (void)tls_ctx;
+
+    return NULL;
+
+#endif // CO_USE_OPENSSL
 }
 
 void
@@ -483,6 +496,7 @@ co_tls_client_destroy(
 {
     if (client != NULL)
     {
+#ifdef CO_USE_OPENSSL
         if (client->sock.tls != NULL)
         {
             co_tls_client_cleanup(client->sock.tls);
@@ -490,6 +504,7 @@ co_tls_client_destroy(
 
             client->sock.tls = NULL;
         }
+#endif // CO_USE_OPENSSL
 
         co_tcp_client_destroy(client);
     }
@@ -527,8 +542,17 @@ co_tls_set_host_name(
     const char* host_name
 )
 {
+#ifdef CO_USE_OPENSSL
+
     SSL_set_tlsext_host_name(
         co_tcp_client_get_tls(client)->ssl, host_name);
+
+#else
+
+    (void)client;
+    (void)host_name;
+
+#endif // CO_USE_OPENSSL
 }
 
 void
@@ -538,6 +562,8 @@ co_tls_set_available_protocols(
     size_t count
 )
 {
+#ifdef CO_USE_OPENSSL
+
     co_byte_array_t* buffer = co_byte_array_create();
 
     for (size_t index = 0; index < count; ++index)
@@ -554,6 +580,14 @@ co_tls_set_available_protocols(
         (unsigned int)co_byte_array_get_count(buffer));
 
     co_byte_array_destroy(buffer);
+
+#else
+
+    (void)client;
+    (void)protocols;
+    (void)count;
+
+#endif // CO_USE_OPENSSL
 }
 
 bool
@@ -563,6 +597,8 @@ co_tls_get_selected_protocol(
     size_t buffer_size
 )
 {
+#ifdef CO_USE_OPENSSL
+
     const unsigned char* data = NULL;
     unsigned int length = 0;
 
@@ -583,6 +619,16 @@ co_tls_get_selected_protocol(
     {
         return false;
     }
+
+#else
+
+    (void)client;
+    (void)buffer;
+    (void)buffer_size;
+
+    return false;
+
+#endif // CO_USE_OPENSSL
 }
 
 bool
@@ -591,12 +637,23 @@ co_tls_connect(
     const co_net_addr_t* remote_net_addr
 )
 {
+#ifdef CO_USE_OPENSSL
+
     co_tls_client_t* tls = co_tcp_client_get_tls(client);
 
     tls->on_connect = client->callbacks.on_connect;
     client->callbacks.on_connect = co_tls_on_connect;
 
     return co_tcp_connect(client, remote_net_addr);
+
+#else
+
+    (void)client;
+    (void)remote_net_addr;
+
+    return false;
+
+#endif // CO_USE_OPENSSL
 }
 
 bool
@@ -604,6 +661,8 @@ co_tls_start_handshake(
     co_tcp_client_t* client
 )
 {
+#ifdef CO_USE_OPENSSL
+
     co_tls_log_info(
         &client->sock.local_net_addr,
         "-->",
@@ -635,6 +694,14 @@ co_tls_start_handshake(
     }
 
     return false;
+
+#else
+
+    (void)client;
+
+    return false;
+
+#endif // CO_USE_OPENSSL
 }
 
 bool
@@ -644,6 +711,8 @@ co_tls_send(
     size_t data_size
 )
 {
+#ifdef CO_USE_OPENSSL
+
     co_tls_log_debug_hex_dump(
         &client->sock.local_net_addr,
         "-->",
@@ -666,6 +735,16 @@ co_tls_send(
     }
     
     return result;
+
+#else
+
+    (void)client;
+    (void)data;
+    (void)data_size;
+
+    return false;
+
+#endif // CO_USE_OPENSSL
 }
 
 bool
@@ -675,6 +754,8 @@ co_tls_send_async(
     size_t data_size
 )
 {
+#ifdef CO_USE_OPENSSL
+
     co_tls_log_debug_hex_dump(
         &client->sock.local_net_addr,
         "-->",
@@ -697,6 +778,16 @@ co_tls_send_async(
     }
 
     return result;
+
+#else
+
+    (void)client;
+    (void)data;
+    (void)data_size;
+
+    return false;
+
+#endif // CO_USE_OPENSSL
 }
 
 ssize_t
@@ -706,6 +797,8 @@ co_tls_receive(
     size_t buffer_size
 )
 {
+#ifdef CO_USE_OPENSSL
+
     co_tls_client_t* tls = co_tcp_client_get_tls(client);
 
     ssize_t raw_data_size =
@@ -749,6 +842,16 @@ co_tls_receive(
     }
 
     return ssl_result;
+
+#else
+
+    (void)client;
+    (void)buffer;
+    (void)buffer_size;
+
+    return -1;
+
+#endif // CO_USE_OPENSSL
 }
 
 ssize_t
@@ -757,6 +860,8 @@ co_tls_receive_all(
     co_byte_array_t* byte_array
 )
 {
+#ifdef CO_USE_OPENSSL
+
     ssize_t total = 0;
 
     for (;;)
@@ -777,6 +882,15 @@ co_tls_receive_all(
     }
 
     return total;
+
+#else
+
+    (void)client;
+    (void)byte_array;
+
+    return -1;
+
+#endif // CO_USE_OPENSSL
 }
 
 bool
@@ -794,5 +908,3 @@ co_tls_get_remote_net_addr(
 {
     return co_tcp_get_remote_net_addr(client);
 }
-
-#endif // CO_CAN_USE_TLS

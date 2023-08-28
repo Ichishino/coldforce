@@ -16,5 +16,3 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 include(../link_openssl.cmake)
-include(../copy_cert.cmake)
-
