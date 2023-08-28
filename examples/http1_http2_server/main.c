@@ -2,8 +2,6 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
-#define CO_USE_OPENSSL
-
 #include <coldforce.h>
 
 #include <stdio.h>
