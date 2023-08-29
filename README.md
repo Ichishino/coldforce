@@ -280,7 +280,7 @@ Visual Studio ([prj/msvc/coldforce.sln](https://github.com/Ichishino/coldforce/t
   {
       co_tcp_accept((co_thread_t*)self, tcp_client);
 
-      co_ws_client_t* ws_client = co_tcp_upgrade_to_ws(tcp_client);
+      co_ws_client_t* ws_client = co_tcp_upgrade_to_ws(tcp_client, NULL);
 
       co_ws_callbacks_st* callbacks = co_ws_get_callbacks(ws_client);
       callbacks->on_upgrade = (co_ws_upgrade_fn)on_my_ws_upgrade;
