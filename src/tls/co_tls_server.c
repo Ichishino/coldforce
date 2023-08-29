@@ -16,7 +16,6 @@
 //---------------------------------------------------------------------------//
 
 #ifdef CO_USE_OPENSSL
-
 static void
 co_tls_server_setup(
     co_tls_server_t* tls,
@@ -37,12 +36,15 @@ co_tls_server_setup(
 
     tls->on_accept = NULL;
 }
+#endif // CO_USE_OPENSSL
 
 static void
 co_tls_server_cleanup(
     co_tls_server_t* tls
 )
 {
+#ifdef CO_USE_OPENSSL
+
     if (tls != NULL)
     {
         co_mem_free(tls->protocols);
@@ -52,8 +54,15 @@ co_tls_server_cleanup(
         SSL_CTX_free(tls->ctx.ssl_ctx);
         tls->ctx.ssl_ctx = NULL;
     }
+
+#else
+
+    (void)tls;
+
+#endif // CO_USE_OPENSSL
 }
 
+#ifdef CO_USE_OPENSSL
 static void
 co_tls_server_on_accept_ready(
     co_thread_t* thread,
@@ -83,7 +92,9 @@ co_tls_server_on_accept_ready(
         server_tls->on_accept(thread, server, client);
     }
 }
+#endif // CO_USE_OPENSSL
 
+#ifdef CO_USE_OPENSSL
 static int
 co_tls_server_on_alpn_select(
     SSL* ssl,
@@ -130,7 +141,6 @@ co_tls_server_on_alpn_select(
 
     return SSL_TLSEXT_ERR_NOACK;
 }
-
 #endif // CO_USE_OPENSSL
 
 //---------------------------------------------------------------------------//
@@ -143,7 +153,7 @@ co_tls_server_create(
     co_tls_ctx_st* tls_ctx
 )
 {
-#ifdef CO_USE_OPENSSL
+#ifdef CO_USE_TLS
 
     co_tcp_server_t* server = co_tcp_server_create(local_net_addr);
 
@@ -175,7 +185,7 @@ co_tls_server_create(
 
     return NULL;
 
-#endif // CO_USE_OPENSSL
+#endif // CO_USE_TLS
 }
 
 void
@@ -185,10 +195,9 @@ co_tls_server_destroy(
 {
     if (server != NULL)
     {
-#ifdef CO_USE_OPENSSL
         co_tls_server_cleanup(server->sock.tls);
         co_mem_free(server->sock.tls);
-#endif
+
         co_tcp_server_destroy(server);
     }
 }
@@ -248,7 +257,7 @@ co_tls_server_start(
     int backlog
 )
 {
-#ifdef CO_USE_OPENSSL
+#ifdef CO_USE_TLS
 
     co_tls_server_t* tls = co_tcp_server_get_tls(server);
 
@@ -264,5 +273,5 @@ co_tls_server_start(
 
     return false;
 
-#endif // CO_USE_OPENSSL
+#endif // CO_USE_TLS
 }

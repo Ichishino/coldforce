@@ -13,13 +13,14 @@
 // private
 //---------------------------------------------------------------------------//
 
-#ifdef CO_USE_OPENSSL
 void
 co_tls_log_write_certificate(
     int level,
-    X509* x509
+    CO_X509_T* x509
 )
 {
+#ifdef CO_USE_OPENSSL
+
     co_log_t* log = co_log_get_default();
 
     if (level > log->category[CO_LOG_CATEGORY_TLS].level)
@@ -76,8 +77,14 @@ co_tls_log_write_certificate(
 
     co_mem_free(str);
     BIO_free(mem);
-}
+
+#else
+
+    (void)level;
+    (void)x509;
+
 #endif // CO_USE_OPENSSL
+}
 
 //---------------------------------------------------------------------------//
 // public

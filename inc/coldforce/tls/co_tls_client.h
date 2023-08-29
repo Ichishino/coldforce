@@ -37,10 +37,8 @@ typedef struct
     co_byte_array_t* send_data;
     co_queue_t* receive_data_queue;
 
-#ifdef CO_USE_OPENSSL
-    SSL* ssl;
-    BIO* network_bio;
-#endif
+    CO_SSL_T* ssl;
+    CO_BIO_T* network_bio;
 
 } co_tls_client_t;
 
