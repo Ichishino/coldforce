@@ -3,13 +3,30 @@
 
 #include <coldforce/core/co.h>
 
+#ifdef CO_USE_WOLFSSL
+
+// wolfssl(openssl compatible)
+
+#define OPENSSL_EXTRA
+#define WC_NO_HARDEN
+
+#include <wolfssl/openssl/ssl.h>
+
+#define CO_USE_OPENSSL
+
+#elif defined(CO_USE_OPENSSL) || !defined(CO_NO_TLS)
+
+// openssl(default)
+
+#ifndef CO_USE_OPENSSL
 #ifdef __has_include
 #   if __has_include(<openssl/ssl.h>)
 #       define CO_USE_OPENSSL
 #   endif
 #else
 #   define CO_USE_OPENSSL
-#endif // __has_include
+#endif
+#endif // !CO_USE_OPENSSL
 
 #ifdef CO_USE_OPENSSL
 #ifdef _MSC_VER
@@ -22,6 +39,8 @@
 #pragma warning(pop)
 #endif
 #endif // CO_USE_OPENSSL
+
+#endif //
 
 #if defined(CO_USE_OPENSSL) || defined(CO_USE_WOLFSSL)
 #define CO_USE_TLS

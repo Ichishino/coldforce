@@ -413,6 +413,13 @@ co_tls_on_receive_handshake(
             }
             else
             {
+                co_tls_log_error(
+                    &client->sock.local_net_addr,
+                    "---",
+                    &client->remote_net_addr,
+                    "handshake error: (%d)",
+                    ssl_error);
+
                 error_code = CO_TLS_ERROR_HANDSHAKE_FAILED;
             }
         }
@@ -426,31 +433,31 @@ co_tls_on_receive_handshake(
         error_code = CO_TLS_ERROR_HANDSHAKE_FAILED;
     }
 
-    char protocol[64];
-
-    if (co_tls_get_selected_protocol(
-        client, protocol, sizeof(protocol)))
-    {
-        co_tls_log_info(
-            &client->sock.local_net_addr,
-            ((SSL_is_server(tls->ssl) == 1) ? "-->" : "<--"),
-            &client->remote_net_addr,
-            "handshake alpn selected (%s)", protocol);
-    }
-    else if (error_code == 0)
-    {
-        co_tls_log_warning(
-            &client->sock.local_net_addr,
-            ((SSL_is_server(tls->ssl) == 1) ? "-->" : "<--"),
-            &client->remote_net_addr,
-            "handshake *** alpn unselected ***");
-    }
-
     if (error_code == 0)
     {
         co_tls_log_info(
             &client->sock.local_net_addr, "---", &client->remote_net_addr,
             "%s %s", SSL_get_version(tls->ssl), SSL_get_cipher_name(tls->ssl));
+
+        char protocol[64];
+
+        if (co_tls_get_selected_protocol(
+            client, protocol, sizeof(protocol)))
+        {
+            co_tls_log_info(
+                &client->sock.local_net_addr,
+                ((SSL_is_server(tls->ssl) == 1) ? "-->" : "<--"),
+                &client->remote_net_addr,
+                "handshake alpn selected (%s)", protocol);
+        }
+        else if (error_code == 0)
+        {
+            co_tls_log_warning(
+                &client->sock.local_net_addr,
+                ((SSL_is_server(tls->ssl) == 1) ? "-->" : "<--"),
+                &client->remote_net_addr,
+                "handshake *** alpn unselected ***");
+        }
 
         co_thread_send_event(
             client->sock.owner_thread,
@@ -834,9 +841,23 @@ co_tls_receive(
             buffer, ssl_result,
             "tls receive %d bytes", ssl_result);
     }
-    else if (raw_data_size == (ssize_t)buffer_size)
+    else if (raw_data_size > 0)
     {
-        return co_tls_receive(client, buffer, buffer_size);
+        int ssl_error =
+            SSL_get_error(tls->ssl, ssl_result);
+
+        if (ssl_error == SSL_ERROR_WANT_READ)
+        {
+            return co_tls_receive(client, buffer, buffer_size);
+        }
+        else
+        {
+            co_tls_log_error(
+                &client->sock.local_net_addr,
+                "<--",
+                &client->remote_net_addr,
+                "receive error: (%d)", ssl_error);
+        }
     }
 
     return ssl_result;

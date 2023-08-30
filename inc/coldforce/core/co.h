@@ -90,12 +90,12 @@ CO_EXTERN_C_BEGIN
 //---------------------------------------------------------------------------//
 
 #ifdef CO_OS_WIN
-#   ifdef _WIN64
-        typedef long ssize_t;
-#   else
-        typedef int ssize_t;
-#   endif
-#endif
+#ifndef HAVE_SSIZE_T
+#include <basetsd.h>
+typedef SSIZE_T ssize_t;
+#define HAVE_SSIZE_T
+#endif // !HAVE_SSIZE_T
+#endif // CO_OS_WIN
 
 #define CO_INFINITE     0xFFFFFFFF
 

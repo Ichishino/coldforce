@@ -39,9 +39,16 @@ co_http_client_clear_request_queue(
 
         while (receive_it != NULL)
         {
-            co_http_request_destroy(
+            co_http_request_t* request =
                 (co_http_request_t*)co_list_get_next(
-                    client->request_queue, &receive_it)->value);
+                    client->request_queue, &receive_it)->value;
+
+            if (client->request == request)
+            {
+                client->request = NULL;
+            }
+
+            co_http_request_destroy(request);
         }
 
         co_list_clear(client->request_queue);
