@@ -59,7 +59,7 @@ All of these support clients and servers (multi-client, C10K).
 * Windows  
 Visual Studio ([prj/msvc/coldforce.sln](https://github.com/Ichishino/coldforce/tree/master/prj/msvc))
 
-  for wolfSSL
+  for wolfSSL  
   Add `CO_USE_WOLFSSL` to `C/C++ Preprocessor Definitions` in both co_tls and your project property.
 
 * Linux  

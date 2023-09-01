@@ -5,7 +5,7 @@
 * Windows  
 Visual Studio ([examples/all_examples.sln](https://github.com/Ichishino/coldforce/tree/master/examples/))
 
-  for wolfSSL
+  for wolfSSL  
   Add `CO_USE_WOLFSSL` to `C/C++ Preprocessor Definitions` in both co_tls and your project property.
 
 * Linux, macOS  
