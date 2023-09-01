@@ -9,6 +9,7 @@
 
 #ifdef CO_OS_WIN
 #define OPENSSL_EXTRA
+#define WC_NO_HARDEN
 #else
 #include <wolfssl/options.h>
 #endif
