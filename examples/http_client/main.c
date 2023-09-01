@@ -8,6 +8,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef _WIN32
+#   ifdef CO_USE_WOLFSSL
+#       pragma comment(lib, "wolfssl.lib")
+#   elif defined(CO_USE_OPENSSL)
+#       pragma comment(lib, "libssl.lib")
+#       pragma comment(lib, "libcrypto.lib")
+#   endif
+#endif
+
 // my app object
 typedef struct
 {
@@ -119,36 +128,12 @@ void on_my_connect(my_app* self, co_http_client_t* client, int error_code)
     if (error_code == 0)
     {
         // GET request
-        {
-            co_http_request_t* request = co_http_request_create("GET", self->url->path_and_query);
 
-            // set header
-            co_http_header_t* header = co_http_request_get_header(request);
-            co_http_header_add_field(header, "Accept", "text/html");
+        co_http_request_t* request = co_http_request_create("GET", self->url->path_and_query);
+        co_http_header_t* header = co_http_request_get_header(request);
+        co_http_header_add_field(header, "Accept", "text/html");
 
-            // send request
-            co_http_send_request(self->client, request);
-        }
-/*
-        // POST request
-        {
-            co_http_request_t* request = co_http_request_create("POST", self->url->path_and_query);
-
-            // set header
-            co_http_header_t* header = co_http_request_get_header(request);
-            co_http_header_add_field(header, "Accept", "text/html");
-
-            // content
-            const char* data = "{\"data\":\"hello\"}";
-            size_t data_len = strlen(data);
-            co_http_header_add_field(header, "Content-Type", "application/json");
-            co_http_header_set_content_length(header, data_len);
-
-            // send request
-            co_http_send_request(self->client, request);
-            co_http_send_data(self->client, data, data_len);
-        }
-*/
+        co_http_send_request(self->client, request);
     }
     else
     {
@@ -173,6 +158,17 @@ void on_my_close(my_app* self, co_http_client_t* client)
     co_app_stop();
 }
 
+#ifdef CO_USE_TLS
+int on_my_verify_peer(int preverify_ok, X509_STORE_CTX* x509_ctx)
+{
+    (void)preverify_ok;
+    (void)x509_ctx;
+
+    // always OK for debug
+    return 1;
+}
+#endif
+
 bool on_my_app_create(my_app* self)
 {
     const co_args_st* args = co_app_get_args((co_app_t*)self);
@@ -195,11 +191,26 @@ bool on_my_app_create(my_app* self)
     co_net_addr_t local_net_addr = { 0 };
     co_net_addr_set_family(&local_net_addr, CO_NET_ADDR_FAMILY_IPV4);
 
-    self->client = co_http_client_create(self->url->origin, &local_net_addr, NULL);
+    co_tls_ctx_st tls_ctx = { 0 };
+
+#ifdef CO_USE_TLS
+    if (strcmp(self->url->scheme, "https") == 0)
+    {
+        SSL_CTX* ssl_ctx = SSL_CTX_new(TLS_client_method());
+        SSL_CTX_set_default_verify_paths(ssl_ctx);
+#if defined(CO_USE_WOLFSSL) && defined(_WIN32)
+        SSL_CTX_set_session_cache_mode(ssl_ctx, SSL_SESS_CACHE_OFF); // TODO
+#endif
+        SSL_CTX_set_verify(ssl_ctx, SSL_VERIFY_PEER, on_my_verify_peer);
+        tls_ctx.ssl_ctx = ssl_ctx;
+    }
+#endif
+
+    self->client = co_http_client_create(self->url->origin, &local_net_addr, &tls_ctx);
 
     if (self->client == NULL)
     {
-        printf("error: faild to resolve hostname or OpenSSL is not installed\n");
+        printf("error: faild to resolve hostname or SSL library is not installed\n");
 
         return false;
     }

@@ -10,7 +10,7 @@ The currently supported protocols are as follows.
 All of these support clients and servers (multi-client, C10K).
 
 * TCP/UDP (IPv4/IPv6)
-* TLS
+* TLS (OpenSSL or wolfSSL)
 * HTTP/1.1 (http/https, pipelining, basic/digest authentication)
 * HTTP/2 (server push)
 * WebSocket (ws/wss, over http2)
@@ -24,22 +24,44 @@ All of these support clients and servers (multi-client, C10K).
 ## Requirements
 
 * C99 or later
-* OpenSSL (only when using TLS, https, wss)
 * Use `-pthread` `-lm`
+* OpenSSL or wolfSSL (only when using TLS, https and wss)
+
+  wolfSSL build options
+
+  ```C
+  Windows
+
+  #define OPENSSL_EXTRA
+  #define OPENSSL_ALL
+  #define HAVE_ALPN
+  #define HAVE_SNI
+  #define WOLFSSL_SYS_CA_CERTS
+  ```
+
+  ```shellsession
+  Linux, macOS
+
+  --enable-opensslextra --enable-opensslall --enable-alpn --enable-sni --enable-sys-ca-certs
+  ```
 
 ## Modules
 
-* Coldforce core : `co_core.dll`, `libco_core.a`
-* Network core (TCP,UDP) : `co_net.dll`, `libco_net.a`
-* TLS : `co_tls.dll`, `libco_tls.a`
-* HTTP/1.1 : `co_http.dll`, `libco_http.a`
-* HTTP/2 : `co_http2.dll`, `libco_http2.a`
-* WebSocket : `co_ws.dll` `co_ws_http2.dll`, `libco_ws.a` `libco_ws_http2.a`
+* Coldforce core : `co_core.dll` / `libco_core.a`
+* Network core (TCP,UDP) : `co_net.dll` / `libco_net.a`
+* TLS : `co_tls.dll` / `libco_tls.a`
+* HTTP/1.1 : `co_http.dll` / `libco_http.a`
+* HTTP/2 : `co_http2.dll` / `libco_http2.a`
+* WebSocket : `co_ws.dll`, `co_ws_http2.dll` / `libco_ws.a`, `libco_ws_http2.a`
 
 ## Builds
 
 * Windows  
 Visual Studio ([prj/msvc/coldforce.sln](https://github.com/Ichishino/coldforce/tree/master/prj/msvc))
+
+  for wolfSSL
+  Add `CO_USE_WOLFSSL` to `C/C++ Preprocessor Definitions` in both co_tls and your project property.
+
 * Linux  
   cmake
 
@@ -47,6 +69,14 @@ Visual Studio ([prj/msvc/coldforce.sln](https://github.com/Ichishino/coldforce/t
   cd build
   cmake ..
   make
+  ```
+
+  for wolfSSL
+
+  ```shellsession
+  ...
+  cmake .. -DTLS_LIB=wolfssl
+  ...
   ```
 
 * macOS  

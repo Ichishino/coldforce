@@ -9,10 +9,12 @@
 #include <string.h>
 
 #ifdef _WIN32
-#ifdef CO_USE_OPENSSL
-#pragma comment(lib, "libssl.lib")
-#pragma comment(lib, "libcrypto.lib")
-#endif
+#   ifdef CO_USE_WOLFSSL
+#       pragma comment(lib, "wolfssl.lib")
+#   elif defined(CO_USE_OPENSSL)
+#       pragma comment(lib, "libssl.lib")
+#       pragma comment(lib, "libcrypto.lib")
+#   endif
 #endif
 
 // my app object
@@ -247,7 +249,7 @@ void on_my_tls_handshake(my_app* self, co_tcp_client_t* tcp_client, int error_co
 
 bool my_tls_setup(co_tls_ctx_st* tls_ctx)
 {
-#ifdef CO_USE_OPENSSL
+#ifdef CO_USE_TLS
     const char* certificate_file = "../../../test_file/server.crt";
     const char* private_key_file = "../../../test_file/server.key";
 
@@ -348,7 +350,7 @@ bool on_my_app_create(my_app* self)
     self->server = co_tls_server_create(&local_net_addr, &tls_ctx);
     if (self->server == NULL)
     {
-        printf("Failed to create tls server (maybe OpenSSL was not found)\n");
+        printf("Failed to create tls server (maybe SSL library was not found)\n");
 
         return false;
     }

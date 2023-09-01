@@ -19,7 +19,7 @@ co_tls_log_write_certificate(
     CO_X509_T* x509
 )
 {
-#ifdef CO_USE_OPENSSL
+#ifdef CO_USE_OPENSSL_COMPATIBLE
 
     co_log_t* log = co_log_get_default();
 
@@ -83,7 +83,7 @@ co_tls_log_write_certificate(
     (void)level;
     (void)x509;
 
-#endif // CO_USE_OPENSSL
+#endif // CO_USE_OPENSSL_COMPATIBLE
 }
 
 //---------------------------------------------------------------------------//

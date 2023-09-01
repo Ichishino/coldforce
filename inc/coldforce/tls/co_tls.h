@@ -7,12 +7,15 @@
 
 // wolfssl(openssl compatible)
 
+#ifdef CO_OS_WIN
 #define OPENSSL_EXTRA
-#define WC_NO_HARDEN
+#else
+#include <wolfssl/options.h>
+#endif
 
 #include <wolfssl/openssl/ssl.h>
 
-#define CO_USE_OPENSSL
+#define CO_USE_OPENSSL_COMPATIBLE
 
 #elif defined(CO_USE_OPENSSL) || !defined(CO_NO_TLS)
 
@@ -40,13 +43,15 @@
 #endif
 #endif // CO_USE_OPENSSL
 
+#define CO_USE_OPENSSL_COMPATIBLE
+
 #endif //
 
-#if defined(CO_USE_OPENSSL) || defined(CO_USE_WOLFSSL)
+#ifdef CO_USE_OPENSSL_COMPATIBLE
 #define CO_USE_TLS
 #endif
 
-#ifdef CO_USE_OPENSSL
+#ifdef CO_USE_OPENSSL_COMPATIBLE
 typedef SSL      CO_SSL_T;
 typedef SSL_CTX  CO_SSL_CTX_T;
 typedef BIO      CO_BIO_T;

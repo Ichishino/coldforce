@@ -168,6 +168,12 @@ co_http_client_on_receive_timer(
     co_http_client_t* client =
         (co_http_client_t*)co_timer_get_user_data(timer);
 
+    co_http_log_error(
+        &client->conn.tcp_client->sock.local_net_addr,
+        "<--",
+        &client->conn.tcp_client->remote_net_addr,
+        "receive timeout");
+
     co_http_client_on_resopnse(
         thread, client, CO_HTTP_ERROR_RECEIVE_TIMEOUT);
 }

@@ -15,7 +15,7 @@
 // private
 //---------------------------------------------------------------------------//
 
-#ifdef CO_USE_OPENSSL
+#ifdef CO_USE_OPENSSL_COMPATIBLE
 static void
 co_tls_server_setup(
     co_tls_server_t* tls,
@@ -36,14 +36,14 @@ co_tls_server_setup(
 
     tls->on_accept = NULL;
 }
-#endif // CO_USE_OPENSSL
+#endif // CO_USE_OPENSSL_COMPATIBLE
 
 static void
 co_tls_server_cleanup(
     co_tls_server_t* tls
 )
 {
-#ifdef CO_USE_OPENSSL
+#ifdef CO_USE_OPENSSL_COMPATIBLE
 
     if (tls != NULL)
     {
@@ -59,10 +59,10 @@ co_tls_server_cleanup(
 
     (void)tls;
 
-#endif // CO_USE_OPENSSL
+#endif // CO_USE_OPENSSL_COMPATIBLE
 }
 
-#ifdef CO_USE_OPENSSL
+#ifdef CO_USE_OPENSSL_COMPATIBLE
 static void
 co_tls_server_on_accept_ready(
     co_thread_t* thread,
@@ -92,9 +92,9 @@ co_tls_server_on_accept_ready(
         server_tls->on_accept(thread, server, client);
     }
 }
-#endif // CO_USE_OPENSSL
+#endif // CO_USE_OPENSSL_COMPATIBLE
 
-#ifdef CO_USE_OPENSSL
+#ifdef CO_USE_OPENSSL_COMPATIBLE
 static int
 co_tls_server_on_alpn_select(
     SSL* ssl,
@@ -141,7 +141,7 @@ co_tls_server_on_alpn_select(
 
     return SSL_TLSEXT_ERR_NOACK;
 }
-#endif // CO_USE_OPENSSL
+#endif // CO_USE_OPENSSL_COMPATIBLE
 
 //---------------------------------------------------------------------------//
 // public
@@ -220,7 +220,7 @@ co_tls_server_set_available_protocols(
     size_t count
 )
 {
-#ifdef CO_USE_OPENSSL
+#ifdef CO_USE_OPENSSL_COMPATIBLE
 
     co_byte_array_t* buffer = co_byte_array_create();
 
@@ -248,7 +248,7 @@ co_tls_server_set_available_protocols(
     (void)protocols;
     (void)count;
 
-#endif // CO_USE_OPENSSL
+#endif // CO_USE_OPENSSL_COMPATIBLE
 }
 
 bool

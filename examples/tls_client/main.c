@@ -4,6 +4,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef _WIN32
+#   ifdef CO_USE_WOLFSSL
+#       pragma comment(lib, "wolfssl.lib")
+#   elif defined(CO_USE_OPENSSL)
+#       pragma comment(lib, "libssl.lib")
+#       pragma comment(lib, "libcrypto.lib")
+#   endif
+#endif
+
 // my app object
 typedef struct
 {
@@ -81,16 +90,37 @@ void on_my_retry_timer(my_app* self, co_timer_t* timer)
     my_connect(self);
 }
 
+#ifdef CO_USE_TLS
+int on_my_verify_peer(int preverify_ok, X509_STORE_CTX* x509_ctx)
+{
+    (void)preverify_ok;
+    (void)x509_ctx;
+
+    // always OK for debug
+    return 1;
+}
+#endif
+
 bool my_connect(my_app* self)
 {
     // local address
     co_net_addr_t local_net_addr = { 0 };
     co_net_addr_set_family(&local_net_addr, CO_NET_ADDR_FAMILY_IPV4);
 
-    self->client = co_tls_client_create(&local_net_addr, NULL);
+    co_tls_ctx_st tls_ctx = { 0 };
+
+    SSL_CTX* ssl_ctx = SSL_CTX_new(TLS_client_method());
+    SSL_CTX_set_default_verify_paths(ssl_ctx);
+#if defined(CO_USE_WOLFSSL) && defined(_WIN32)
+    SSL_CTX_set_session_cache_mode(ssl_ctx, SSL_SESS_CACHE_OFF); // TODO
+#endif
+    SSL_CTX_set_verify(ssl_ctx, SSL_VERIFY_PEER, on_my_verify_peer);
+    tls_ctx.ssl_ctx = ssl_ctx;
+
+    self->client = co_tls_client_create(&local_net_addr, &tls_ctx);
     if (self->client == NULL)
     {
-        printf("Failed to create tls client (maybe OpenSSL was not found)\n");
+        printf("Failed to create tls client (maybe SSL library was not found)\n");
 
         return false;
     }
