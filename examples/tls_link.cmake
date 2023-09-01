@@ -1,4 +1,8 @@
-string(TOLOWER ${TLS_LIB} use_tls_lib)
+if (DEFINED TLS_LIB)
+    string(TOLOWER ${TLS_LIB} use_tls_lib)
+else()
+    set(use_tls_lib any)
+endif()
 
 if (${use_tls_lib} STREQUAL "wolfssl")
     find_package(PkgConfig)

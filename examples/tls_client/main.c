@@ -109,6 +109,7 @@ bool my_connect(my_app* self)
 
     co_tls_ctx_st tls_ctx = { 0 };
 
+#ifdef CO_USE_TLS
     SSL_CTX* ssl_ctx = SSL_CTX_new(TLS_client_method());
     SSL_CTX_set_default_verify_paths(ssl_ctx);
 #if defined(CO_USE_WOLFSSL) && defined(_WIN32)
@@ -116,6 +117,7 @@ bool my_connect(my_app* self)
 #endif
     SSL_CTX_set_verify(ssl_ctx, SSL_VERIFY_PEER, on_my_verify_peer);
     tls_ctx.ssl_ctx = ssl_ctx;
+#endif
 
     self->client = co_tls_client_create(&local_net_addr, &tls_ctx);
     if (self->client == NULL)
