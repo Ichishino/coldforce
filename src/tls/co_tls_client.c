@@ -815,13 +815,15 @@ co_tls_receive(
             tls->receive_data_queue, buffer, raw_data_size);
     }
 
-    if (co_queue_get_count(tls->receive_data_queue) > 0)
+    while (co_queue_get_count(tls->receive_data_queue) > 0)
     {
+        char temp_buffer[8192];
+
         size_t data_size = co_queue_peek_array(
-            tls->receive_data_queue, buffer, buffer_size);
+            tls->receive_data_queue, temp_buffer, sizeof(temp_buffer));
 
         int bio_result =
-            BIO_write(tls->network_bio, buffer, (int)data_size);
+            BIO_write(tls->network_bio, temp_buffer, (int)data_size);
 
         if (bio_result > 0)
         {
@@ -829,16 +831,7 @@ co_tls_receive(
         }
         else
         {
-            int ssl_error =
-                SSL_get_error(tls->ssl, bio_result);
-
-            co_tls_log_error(
-                &client->sock.local_net_addr,
-                "<--",
-                &client->remote_net_addr,
-                "tls receive data decrypt error: (%d)", ssl_error);
-
-            return -1;
+            break;
         }
     }
 
@@ -869,7 +862,7 @@ co_tls_receive(
                 &client->sock.local_net_addr,
                 "<--",
                 &client->remote_net_addr,
-                "tls receive data error: (%d)", ssl_error);
+                "tls receive error: (%d)", ssl_error);
         }
     }
 

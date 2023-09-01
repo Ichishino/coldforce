@@ -8,11 +8,42 @@
 // wolfssl(openssl compatible)
 
 #ifdef CO_OS_WIN
+
+#ifdef __has_include
+#   if __has_include(<wolfssl/user_settings.h>)
+#       include  <wolfssl/user_settings.h>
+#       define CO_USE_WOLFSSL_SETTING_FILE
+#   endif //
+#endif // __has_include
+
+#ifndef CO_USE_WOLFSSL_SETTING_FILE
+
+#define OPENSSL_ALL
 #define OPENSSL_EXTRA
-#define WC_NO_HARDEN
+#define HAVE_ALPN
+#define HAVE_SNI
+#define WOLFSSL_SYS_CA_CERTS
+#define WC_RSA_BLINDING
+#define NO_MULTIBYTE_PRINT
+#define NO_PSK
+#define USE_WOLFSSL_IO
+#define HAVE_AESGCM
+#define WOLFSSL_TLS13
+#define HAVE_HKDF
+#define HAVE_FFDHE_4096
+#define WC_RSA_PSS
+#define WOLFSSL_DTLS
+#define WOLFSSL_DTLS13
+#define WOLFSSL_SEND_HRR_COOKIE
+#define WOLFSSL_DTLS_CID
+
+#endif // !CO_USE_WOLFSSL_SETTING_FILE
+
 #else
+
 #include <wolfssl/options.h>
-#endif
+
+#endif // CO_OS_WIN
 
 #include <wolfssl/openssl/ssl.h>
 

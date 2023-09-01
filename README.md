@@ -29,18 +29,21 @@ All of these support clients and servers (multi-client, C10K).
 
   wolfSSL build options
 
-  ```C
-  Windows
+  ```shellsession
+  IDE
 
   #define OPENSSL_EXTRA
   #define OPENSSL_ALL
   #define HAVE_ALPN
   #define HAVE_SNI
   #define WOLFSSL_SYS_CA_CERTS
-  ```
 
+  mkdir inc/wolfssl  
+  copy your user_settings.h to inc/wolfssl/.
+  ```
+  
   ```shellsession
-  Linux, macOS
+  configure
 
   --enable-opensslextra --enable-opensslall --enable-alpn --enable-sni --enable-sys-ca-certs
   ```
