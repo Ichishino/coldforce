@@ -38,12 +38,11 @@
 #endif
 #include <openssl/ssl.h>
 #include <openssl/err.h>
+#define CO_USE_OPENSSL_COMPATIBLE
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
 #endif // CO_USE_OPENSSL
-
-#define CO_USE_OPENSSL_COMPATIBLE
 
 #endif //
 
