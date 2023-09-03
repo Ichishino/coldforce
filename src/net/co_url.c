@@ -132,27 +132,36 @@ co_url_create(
         head = ptr + 1;
     }
 
-    ptr = strchr(head, ':');
+    size_t temp_length = strlen(head);
 
-    if (ptr != NULL)
+    if (temp_length > 2 && head[temp_length - 1] != ']')
     {
-        if (strlen(ptr + 1) <= 5)
-        {
-            url->port = (uint16_t)strtol(ptr + 1, NULL, 10);
-        }
+        ptr = strrchr(head, ':');
 
-        url->host = co_string_duplicate_n(head, ptr - head);
-    }
-    else
-    {
-        if (strcmp(head, "*") == 0)
+        if (ptr != NULL)
         {
-            url->path = co_string_duplicate(head);
+            if (strlen(ptr + 1) <= 5)
+            {
+                url->port = (uint16_t)strtol(ptr + 1, NULL, 10);
+            }
+
+            url->host = co_string_duplicate_n(head, ptr - head);
         }
         else
         {
-            url->host = co_string_duplicate(head);
+            if (strcmp(head, "*") == 0)
+            {
+                url->path = co_string_duplicate(head);
+            }
+            else
+            {
+                url->host = co_string_duplicate(head);
+            }
         }
+    }
+    else
+    {
+        url->host = co_string_duplicate(head);
     }
 
     co_string_destroy(url_str);

@@ -95,7 +95,7 @@ co_net_addr_get_port(
 );
 
 CO_NET_API
-void
+bool
 co_net_addr_set_unix_path(
     co_net_addr_t* net_addr,
     const char* path
@@ -105,7 +105,8 @@ CO_NET_API
 bool
 co_net_addr_get_unix_path(
     const co_net_addr_t* net_addr,
-    char* path
+    char* buffer,
+    size_t buffer_size
 );
 
 CO_NET_API
@@ -128,6 +129,14 @@ co_net_addr_to_string(
     const co_net_addr_t* net_addr,
     char* buffer,
     size_t size
+);
+
+CO_NET_API
+bool
+co_net_addr_from_string(
+    co_net_addr_family_t family,
+    const char* str,
+    co_net_addr_t* net_addr
 );
 
 CO_NET_API

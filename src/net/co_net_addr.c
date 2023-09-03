@@ -1,6 +1,7 @@
 #include <coldforce/core/co_std.h>
 
 #include <coldforce/net/co_net_addr.h>
+#include <coldforce/net/co_url.h>
 
 #ifndef CO_OS_WIN
 #include <arpa/inet.h>
@@ -91,7 +92,8 @@ co_net_addr_get_address(
     if (co_net_is_ipv4(net_addr))
     {
         if (inet_ntop(
-            AF_INET, &net_addr->sa.v4.sin_addr, buffer, (socklen_t)size) != NULL)
+            AF_INET, &net_addr->sa.v4.sin_addr,
+            buffer, (socklen_t)size) != NULL)
         {
             return true;
         }
@@ -99,7 +101,8 @@ co_net_addr_get_address(
     else if (co_net_is_ipv6(net_addr))
     {
         if (inet_ntop(
-            AF_INET6, &net_addr->sa.v6.sin6_addr, buffer, (socklen_t)size) != NULL)
+            AF_INET6, &net_addr->sa.v6.sin6_addr,
+            buffer, (socklen_t)size) != NULL)
         {
             return true;
         }
@@ -152,26 +155,33 @@ co_net_addr_get_port(
     return true;
 }
 
-void
+bool
 co_net_addr_set_unix_path(
     co_net_addr_t* net_addr,
     const char* path
 )
 {
-    net_addr->sa.any.ss_family = AF_UNIX;
+    if (!co_net_is_unix(net_addr) ||
+        strlen(path) >= UNIX_PATH_MAX)
+    {
+        return false;
+    }
 
     strcpy(net_addr->sa.un.sun_path, path);
+
+    return true;
 }
 
 bool
 co_net_addr_get_unix_path(
     const co_net_addr_t* net_addr,
-    char* path
+    char* buffer,
+    size_t buffer_size
 )
 {
     if (co_net_is_unix(net_addr))
     {
-        strcpy(path, net_addr->sa.un.sun_path);
+        strncpy(buffer, net_addr->sa.un.sun_path, buffer_size);
 
         return true;
     }
@@ -259,6 +269,69 @@ co_net_addr_to_string(
     }
 
     return true;
+}
+
+bool
+co_net_addr_from_string(
+    co_net_addr_family_t family,
+    const char* str,
+    co_net_addr_t* net_addr
+)
+{
+    co_url_st* url = co_url_create(str);
+
+    if (url == NULL || url->host == NULL)
+    {
+        co_url_destroy(url);
+
+        return false;
+    }
+
+    co_net_addr_set_family(net_addr, family);
+    co_net_addr_set_port(net_addr, url->port);
+
+    size_t host_length = strlen(url->host);
+
+    if (host_length > 2 &&
+        url->host[0] == '[' &&
+        url->host[host_length - 1] == ']')
+    {
+        size_t ipv6_length = host_length - 2;
+        memcpy(url->host, &url->host[1], ipv6_length);
+        url->host[ipv6_length] = '\0';
+    }
+
+    bool result = false;
+
+    if (family == AF_INET)
+    {
+        if (inet_pton(
+            family, url->host,
+            &net_addr->sa.v4.sin_addr) == 1)
+        {
+            result = true;
+        }
+    }
+    else if (family == AF_INET6)
+    {
+        if (inet_pton(
+            family, url->host,
+            &net_addr->sa.v6.sin6_addr) == 1)
+        {
+            result = true;
+        }
+    }
+    else if (family == AF_UNIX)
+    {
+        if (co_net_addr_set_unix_path(net_addr, url->path))
+        {
+            result = true;
+        }
+    }
+
+    co_url_destroy(url);
+
+    return result;
 }
 
 bool

@@ -20,9 +20,8 @@ typedef struct
 
     // my app data
     co_tcp_client_t* client;
+    co_net_addr_t remote_net_addr;
     co_timer_t* retry_timer;
-    const char* server_ip_address;
-    uint16_t server_port;
 
 } my_app;
 
@@ -105,7 +104,7 @@ bool my_connect(my_app* self)
 {
     // local address
     co_net_addr_t local_net_addr = { 0 };
-    co_net_addr_set_family(&local_net_addr, CO_NET_ADDR_FAMILY_IPV4);
+    co_net_addr_set_family(&local_net_addr, co_net_addr_get_family(&self->remote_net_addr));
 
     co_tls_ctx_st tls_ctx = { 0 };
 
@@ -127,11 +126,6 @@ bool my_connect(my_app* self)
         return false;
     }
 
-    // remote address
-    co_net_addr_t remote_net_addr = { 0 };
-    co_net_addr_set_address(&remote_net_addr, self->server_ip_address);
-    co_net_addr_set_port(&remote_net_addr, self->server_port);
-
     // callback
     co_tcp_callbacks_st* callbacks = co_tcp_get_callbacks(self->client);
     callbacks->on_connect = (co_tcp_connect_fn)on_my_tls_connect;
@@ -139,10 +133,10 @@ bool my_connect(my_app* self)
     callbacks->on_close = (co_tcp_close_fn)on_my_tls_close;
 
     // connect
-    co_tls_connect(self->client, &remote_net_addr);
+    co_tls_connect(self->client, &self->remote_net_addr);
 
     char remote_str[64];
-    co_net_addr_to_string(&remote_net_addr, remote_str, sizeof(remote_str));
+    co_net_addr_to_string(&self->remote_net_addr, remote_str, sizeof(remote_str));
     printf("connect to %s\n", remote_str);
 
     return true;
@@ -152,16 +146,16 @@ bool on_my_app_create(my_app* self)
 {
     const co_args_st* args = co_app_get_args((co_app_t*)self);
 
-    if (args->count < 3)
+    if (args->count < 2 ||
+        !co_net_addr_from_string(
+        CO_NET_ADDR_FAMILY_IPV4, args->values[1],
+        &self->remote_net_addr))
     {
         printf("<Usage>\n");
-        printf("tls_client <server_ip_address> <port_number>\n");
+        printf("tls_client <ip_address:port>\n");
 
         return false;
     }
-
-    self->server_ip_address = args->values[1];
-    self->server_port = (uint16_t)atoi(args->values[2]);
 
     // connect retry timer
     self->retry_timer = co_timer_create(
