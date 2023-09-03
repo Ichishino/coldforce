@@ -162,7 +162,7 @@ co_net_addr_set_unix_path(
 )
 {
     if (!co_net_is_unix(net_addr) ||
-        strlen(path) >= UNIX_PATH_MAX)
+        strlen(path) >= sizeof(net_addr->sa.un.sun_path))
     {
         return false;
     }
