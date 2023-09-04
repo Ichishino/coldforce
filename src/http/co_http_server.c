@@ -168,19 +168,12 @@ co_http_server_on_tcp_receive_ready(
 }
 
 void
-co_http_server_on_tcp_close(
+co_http_server_on_http_connection_close(
     co_thread_t* thread,
-    co_tcp_client_t* tcp_client
+    co_http_connection_t* conn
 )
 {
-    co_http_client_t* client =
-        (co_http_client_t*)tcp_client->sock.sub_class;
-
-    if (client->request != NULL)
-    {
-        co_http_server_on_request(
-            thread, client, CO_HTTP_ERROR_CONNECTION_CLOSED);
-    }
+    co_http_client_t* client = (co_http_client_t*)conn;
 
     if (client->callbacks.on_close != NULL)
     {

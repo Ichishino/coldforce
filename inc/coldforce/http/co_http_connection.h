@@ -19,10 +19,27 @@ CO_EXTERN_C_BEGIN
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
+struct co_http_connection_t;
+
+typedef void(*co_http_connection_connect_fn)(
+    co_thread_t* self, struct co_http_connection_t* client,
+    int error_code);
+typedef void(*co_http_connection_close_fn)(
+    co_thread_t* self, struct co_http_connection_t* client);
+
 typedef struct
+{
+    co_http_connection_connect_fn on_connect;
+    co_http_connection_close_fn on_close;
+
+} co_http_connection_callbacks_st;
+
+typedef struct co_http_connection_t
 {
     co_tcp_client_t* tcp_client;
     co_tcp_client_module_t module;
+    co_http_connection_callbacks_st callbacks;
+
     co_url_st* url_origin;
 
     struct co_http_connection_receive_data_t
@@ -39,6 +56,19 @@ typedef struct
 //---------------------------------------------------------------------------//
 // private
 //---------------------------------------------------------------------------//
+
+void
+co_http_connection_on_tcp_connect(
+    co_thread_t* thread,
+    co_tcp_client_t* tcp_client,
+    int error_code
+);
+
+void
+co_http_connection_on_tcp_close(
+    co_thread_t* thread,
+    co_tcp_client_t* tcp_client
+);
 
 CO_HTTP_API
 bool

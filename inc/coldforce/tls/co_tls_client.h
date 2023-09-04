@@ -31,7 +31,6 @@ typedef struct
     co_tls_ctx_st ctx;
     co_tls_callbacks_st callbacks;
 
-    co_tcp_connect_fn on_connect;
     co_tcp_receive_fn on_receive;
 
     co_byte_array_t* send_data;
@@ -86,12 +85,6 @@ co_tls_get_callbacks(
 
 CO_TLS_API
 void
-co_tls_close(
-    co_tcp_client_t* client
-);
-
-CO_TLS_API
-void
 co_tls_set_host_name(
     co_tcp_client_t* client,
     const char* host_name
@@ -111,13 +104,6 @@ co_tls_get_selected_protocol(
     const co_tcp_client_t* client,
     char* buffer,
     size_t buffer_size
-);
-
-CO_TLS_API
-bool
-co_tls_connect(
-    co_tcp_client_t* client,
-    const co_net_addr_t* remote_net_addr
 );
 
 CO_TLS_API
@@ -155,18 +141,6 @@ ssize_t
 co_tls_receive_all(
     co_tcp_client_t* client,
     co_byte_array_t* byte_array
-);
-
-CO_TLS_API
-bool
-co_tls_is_open(
-    const co_tcp_client_t* client
-);
-
-CO_TLS_API
-const co_net_addr_t*
-co_tls_get_remote_net_addr(
-    const co_tcp_client_t* client
 );
 
 //---------------------------------------------------------------------------//

@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 2.8...3.5)
 
 project(test_http C)
 
+include(../../src/tls_option.cmake)
+
 add_executable(${PROJECT_NAME}
 
     main.c
@@ -28,4 +30,4 @@ target_link_libraries(${PROJECT_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}/../../build/libco_core.a
 )
 
-include(../../examples/link_openssl.cmake)
+include(../../examples/tls_link.cmake)

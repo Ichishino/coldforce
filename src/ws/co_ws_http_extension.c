@@ -76,12 +76,10 @@ co_http_upgrade_to_ws(
     co_http_connection_move(
         &http_client->conn, &ws_client->conn);
 
-    co_ws_client_setup(ws_client);
+    co_http_client_destroy(http_client);
 
     bool is_server =
         co_http_connection_is_server(&ws_client->conn);
-
-    ws_client->mask = !is_server;
 
     if (is_server)
     {
@@ -94,10 +92,13 @@ co_http_upgrade_to_ws(
             (co_tcp_receive_fn)co_ws_client_on_tcp_receive_ready;
     }
 
-    ws_client->conn.tcp_client->callbacks.on_close =
-        (co_tcp_close_fn)co_ws_client_on_tcp_close;
+    ws_client->conn.callbacks.on_close =
+        (co_http_connection_close_fn)
+            co_ws_client_on_http_connection_close;
 
-    co_http_client_destroy(http_client);
+    co_ws_client_setup(ws_client);
+
+    ws_client->mask = !is_server;
 
     return ws_client;
 }

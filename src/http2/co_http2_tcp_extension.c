@@ -39,8 +39,6 @@ co_tcp_upgrade_to_http2(
         return NULL;
     }
 
-    co_http2_client_setup(client);
-
     if (co_http_connection_is_server(&client->conn))
     {
         client->conn.tcp_client->callbacks.on_receive =
@@ -52,8 +50,11 @@ co_tcp_upgrade_to_http2(
             (co_tcp_receive_fn)co_http2_client_on_tcp_receive_ready;
     }
 
-    client->conn.tcp_client->callbacks.on_close =
-        (co_tcp_close_fn)co_http2_client_on_tcp_close;
+    client->conn.callbacks.on_close =
+        (co_http_connection_close_fn)
+            co_http2_client_on_http_connection_close;
+
+    co_http2_client_setup(client);
 
     return client;
 }

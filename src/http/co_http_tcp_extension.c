@@ -26,8 +26,8 @@ co_tcp_upgrade_to_http_connection(
     if (tcp_client->sock.tls != NULL)
     {
         conn->module.destroy = co_tls_client_destroy;
-        conn->module.close = co_tls_close;
-        conn->module.connect = co_tls_connect;
+        conn->module.close = co_tcp_close;
+        conn->module.connect = co_tcp_connect;
         conn->module.send = co_tls_send;
         conn->module.receive_all = co_tls_receive_all;
     }
@@ -59,6 +59,11 @@ co_tcp_upgrade_to_http_connection(
     conn->receive_data.ptr = co_byte_array_create();
     conn->receive_timer = NULL;
 
+    conn->tcp_client->callbacks.on_connect =
+        co_http_connection_on_tcp_connect;
+    conn->tcp_client->callbacks.on_close =
+        co_http_connection_on_tcp_close;
+
     return true;
 }
 
@@ -88,22 +93,28 @@ co_tcp_upgrade_to_http(
         return NULL;
     }
 
-    co_http_client_setup(client);
-
     if (co_http_connection_is_server(&client->conn))
     {
         client->conn.tcp_client->callbacks.on_receive =
-            (co_tcp_receive_fn)co_http_server_on_tcp_receive_ready;
-        client->conn.tcp_client->callbacks.on_close =
-            (co_tcp_close_fn)co_http_server_on_tcp_close;
+            (co_tcp_receive_fn)
+                co_http_server_on_tcp_receive_ready;
+
+        client->conn.callbacks.on_close =
+            (co_http_connection_close_fn)
+                co_http_server_on_http_connection_close;
     }
     else
     {
         client->conn.tcp_client->callbacks.on_receive =
-            (co_tcp_receive_fn)co_http_client_on_tcp_receive_ready;
-        client->conn.tcp_client->callbacks.on_close =
-            (co_tcp_close_fn)co_http_client_on_tcp_close;
+            (co_tcp_receive_fn)
+                co_http_client_on_tcp_receive_ready;
+
+        client->conn.callbacks.on_close =
+            (co_http_connection_close_fn)
+                co_http_client_on_http_connection_close;
     }
+
+    co_http_client_setup(client);
 
     return client;
 }

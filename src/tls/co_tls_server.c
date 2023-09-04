@@ -203,17 +203,6 @@ co_tls_server_destroy(
 }
 
 void
-co_tls_server_close(
-    co_tcp_server_t* server
-)
-{
-    if (server != NULL)
-    {
-        co_tcp_server_close(server);
-    }
-}
-
-void
 co_tls_server_set_available_protocols(
     co_tcp_server_t* server,
     const char* protocols[],

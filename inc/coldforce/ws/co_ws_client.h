@@ -81,9 +81,9 @@ co_ws_client_on_tcp_receive_ready(
 );
 
 void
-co_ws_client_on_tcp_close(
+co_ws_client_on_http_connection_close(
     co_thread_t* thread,
-    co_tcp_client_t* tcp_client
+    co_http_connection_t* conn
 );
 
 //---------------------------------------------------------------------------//

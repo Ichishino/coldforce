@@ -47,12 +47,6 @@ co_tls_server_destroy(
 
 CO_TLS_API
 void
-co_tls_server_close(
-    co_tcp_server_t* server
-);
-
-CO_TLS_API
-void
 co_tls_server_set_available_protocols(
     co_tcp_server_t* server,
     const char* protocols[],

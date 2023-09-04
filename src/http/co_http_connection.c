@@ -17,6 +17,67 @@
 // private
 //---------------------------------------------------------------------------//
 
+static void
+co_http_connection_on_tls_handshake(
+    co_thread_t* thread,
+    co_tcp_client_t* tcp_client,
+    int error_code
+)
+{
+    co_http_connection_t* client =
+        (co_http_connection_t*)tcp_client->sock.sub_class;
+
+    if (client->callbacks.on_connect != NULL)
+    {
+        client->callbacks.on_connect(thread, client, error_code);
+    }
+}
+
+void
+co_http_connection_on_tcp_connect(
+    co_thread_t* thread,
+    co_tcp_client_t* tcp_client,
+    int error_code
+)
+{
+    if (error_code == 0)
+    {
+        co_tls_client_t* tls = co_tcp_client_get_tls(tcp_client);
+
+        if (tls != NULL)
+        {
+            tls->callbacks.on_handshake = co_http_connection_on_tls_handshake;
+
+            co_tls_start_handshake(tcp_client);
+
+            return;
+        }
+    }
+
+    co_http_connection_t* conn =
+        (co_http_connection_t*)tcp_client->sock.sub_class;
+
+    if (conn->callbacks.on_connect != NULL)
+    {
+        conn->callbacks.on_connect(thread, conn, error_code);
+    }
+}
+
+void
+co_http_connection_on_tcp_close(
+    co_thread_t* thread,
+    co_tcp_client_t* tcp_client
+)
+{
+    co_http_connection_t* conn =
+        (co_http_connection_t*)tcp_client->sock.sub_class;
+
+    if (conn->callbacks.on_close != NULL)
+    {
+        conn->callbacks.on_close(thread, conn);
+    }
+}
+
 bool
 co_http_connection_setup(
     co_http_connection_t* conn,
@@ -48,8 +109,8 @@ co_http_connection_setup(
     if (tls_scheme)
     {
         conn->module.destroy = co_tls_client_destroy;
-        conn->module.close = co_tls_close;
-        conn->module.connect = co_tls_connect;
+        conn->module.close = co_tcp_close;
+        conn->module.connect = co_tcp_connect;
         conn->module.send = co_tls_send;
         conn->module.receive_all = co_tls_receive_all;
 
@@ -103,11 +164,18 @@ co_http_connection_setup(
         return false;
     }
 
-    conn->url_origin = url_origin;
     conn->tcp_client->sock.sub_class = conn;
+    conn->callbacks.on_connect = NULL;
+    conn->callbacks.on_close = NULL;
+    conn->url_origin = url_origin;
     conn->receive_data.index = 0;
     conn->receive_data.ptr = co_byte_array_create();
     conn->receive_timer = NULL;
+
+    conn->tcp_client->callbacks.on_connect =
+        co_http_connection_on_tcp_connect;
+    conn->tcp_client->callbacks.on_close =
+        co_http_connection_on_tcp_close;
 
     return true;
 }
@@ -148,6 +216,8 @@ co_http_connection_move(
     to_conn->receive_timer = NULL;
 
     from_conn->tcp_client = NULL;
+    from_conn->callbacks.on_connect = NULL;
+    from_conn->callbacks.on_close = NULL;
     from_conn->url_origin = NULL;
     from_conn->receive_data.ptr = NULL;
 }

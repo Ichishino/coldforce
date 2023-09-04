@@ -179,18 +179,35 @@ co_http_client_on_receive_timer(
 }
 
 static void
-co_http_client_on_tcp_connect(
+co_http_client_on_http_connection_connect(
     co_thread_t* thread,
-    co_tcp_client_t* tcp_client,
+    co_http_connection_t* conn,
     int error_code
 )
 {
-    co_http_client_t* client =
-        (co_http_client_t*)tcp_client->sock.sub_class;
+    co_http_client_t* client = (co_http_client_t*)conn;
 
     if (client->callbacks.on_connect != NULL)
     {
         client->callbacks.on_connect(thread, client, error_code);
+    }
+}
+
+void
+co_http_client_on_http_connection_close(
+    co_thread_t* thread,
+    co_http_connection_t* conn
+)
+{
+    co_http_client_t* client = (co_http_client_t*)conn;
+
+    co_timer_stop(client->conn.receive_timer);
+
+    client->conn.module.close(client->conn.tcp_client);
+
+    if (client->callbacks.on_close != NULL)
+    {
+        client->callbacks.on_close(thread, client);
     }
 }
 
@@ -339,25 +356,6 @@ co_http_client_on_tcp_receive_ready(
     }
 }
 
-void
-co_http_client_on_tcp_close(
-    co_thread_t* thread,
-    co_tcp_client_t* tcp_client
-)
-{
-    co_http_client_t* client =
-        (co_http_client_t*)tcp_client->sock.sub_class;
-
-    co_timer_stop(client->conn.receive_timer);
-
-    client->conn.module.close(client->conn.tcp_client);
-
-    if (client->callbacks.on_close != NULL)
-    {
-        client->callbacks.on_close(thread, client);
-    }
-}
-
 //---------------------------------------------------------------------------//
 // public
 //---------------------------------------------------------------------------//
@@ -391,12 +389,17 @@ co_http_client_create(
         return NULL;
     }
 
-    co_http_client_setup(client);
-
     client->conn.tcp_client->callbacks.on_receive =
         (co_tcp_receive_fn)co_http_client_on_tcp_receive_ready;
-    client->conn.tcp_client->callbacks.on_close =
-        (co_tcp_close_fn)co_http_client_on_tcp_close;
+
+    client->conn.callbacks.on_connect =
+        (co_http_connection_connect_fn)
+            co_http_client_on_http_connection_connect;
+    client->conn.callbacks.on_close =
+        (co_http_connection_close_fn)
+            co_http_client_on_http_connection_close;
+
+    co_http_client_setup(client);
 
     return client;
 }
@@ -428,9 +431,6 @@ co_http_connect(
     co_http_client_t* client
 )
 {
-    client->conn.tcp_client->callbacks.on_connect =
-        (co_tcp_connect_fn)co_http_client_on_tcp_connect;
-
     return client->conn.module.connect(
         client->conn.tcp_client,
         &client->conn.tcp_client->remote_net_addr);

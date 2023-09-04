@@ -1,5 +1,14 @@
 #include "test_app.h"
 
+#ifdef _WIN32
+#   ifdef CO_USE_WOLFSSL
+#       pragma comment(lib, "wolfssl.lib")
+#   elif defined(CO_USE_OPENSSL)
+#       pragma comment(lib, "libssl.lib")
+#       pragma comment(lib, "libcrypto.lib")
+#   endif
+#endif
+
 static bool
 on_test_app_create(
     test_app* self

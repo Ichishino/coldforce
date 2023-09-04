@@ -84,7 +84,6 @@ co_tls_client_setup(
     SSL_set_bio(tls->ssl, internal_bio, internal_bio);
 
     tls->callbacks.on_handshake = NULL;
-    tls->on_connect = NULL;
     tls->on_receive = NULL;
     tls->send_data = co_byte_array_create();
     tls->receive_data_queue = co_queue_create(sizeof(uint8_t), NULL);
@@ -333,57 +332,6 @@ co_tls_encrypt_data(
 #endif // CO_USE_OPENSSL_COMPATIBLE
 }
 
-static void
-co_tls_on_handshake_complete(
-    co_thread_t* thread,
-    co_tcp_client_t* client,
-    int error_code
-)
-{
-    if (error_code != 0)
-    {
-        co_tls_close(client);
-    }
-
-    co_tls_client_t* tls = co_tcp_client_get_tls(client);
-
-    client->callbacks.on_connect = tls->on_connect;
-    tls->on_connect = NULL;
-
-    if (client->callbacks.on_connect != NULL)
-    {
-        client->callbacks.on_connect(thread, client, error_code);
-    }
-}
-
-static void
-co_tls_on_connect(
-    co_thread_t* thread,
-    co_tcp_client_t* client,
-    int error_code
-)
-{
-    co_tls_client_t* tls = co_tcp_client_get_tls(client);
-
-    if (error_code == 0)
-    {
-        tls->callbacks.on_handshake =
-            (co_tls_handshake_fn)co_tls_on_handshake_complete;
-
-        co_tls_start_handshake(client);
-    }
-    else
-    {
-        client->callbacks.on_connect = tls->on_connect;
-        tls->on_connect = NULL;
-
-        if (client->callbacks.on_connect != NULL)
-        {
-            client->callbacks.on_connect(thread, client, error_code);
-        }
-    }
-}
-
 #ifdef CO_USE_OPENSSL_COMPATIBLE
 static void
 co_tls_on_receive_handshake(
@@ -566,17 +514,6 @@ co_tls_get_callbacks(
 }
 
 void
-co_tls_close(
-    co_tcp_client_t* client
-)
-{
-    if (client != NULL)
-    {
-        co_tcp_close(client);
-    }
-}
-
-void
 co_tls_set_host_name(
     co_tcp_client_t* client,
     const char* host_name
@@ -669,20 +606,6 @@ co_tls_get_selected_protocol(
     return false;
 
 #endif // CO_USE_OPENSSL_COMPATIBLE
-}
-
-bool
-co_tls_connect(
-    co_tcp_client_t* client,
-    const co_net_addr_t* remote_net_addr
-)
-{
-    co_tls_client_t* tls = co_tcp_client_get_tls(client);
-
-    tls->on_connect = client->callbacks.on_connect;
-    client->callbacks.on_connect = co_tls_on_connect;
-
-    return co_tcp_connect(client, remote_net_addr);
 }
 
 bool
@@ -905,20 +828,4 @@ co_tls_receive_all(
     }
 
     return total;
-}
-
-bool
-co_tls_is_open(
-    const co_tcp_client_t* client
-)
-{
-    return co_tcp_is_open(client);
-}
-
-const co_net_addr_t*
-co_tls_get_remote_net_addr(
-    const co_tcp_client_t* client
-)
-{
-    return co_tcp_get_remote_net_addr(client);
 }

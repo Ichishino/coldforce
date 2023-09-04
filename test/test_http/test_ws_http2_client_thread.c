@@ -172,12 +172,18 @@ ws_http2_client_tls_setup(
 {
     (void)self;
 
-    tls_ctx->ssl_ctx = SSL_CTX_new(TLS_client_method());
-
-    SSL_CTX_set_verify(
-        tls_ctx->ssl_ctx,
-        SSL_VERIFY_PEER,
-        ws_http2_client_on_tls_verify_callback);
+#ifdef CO_USE_TLS
+    if (strcmp(self->url->scheme, "https") == 0)
+    {
+        SSL_CTX* ssl_ctx = SSL_CTX_new(TLS_client_method());
+        SSL_CTX_set_default_verify_paths(ssl_ctx);
+#if defined(CO_USE_WOLFSSL) && defined(_WIN32)
+        SSL_CTX_set_session_cache_mode(ssl_ctx, SSL_SESS_CACHE_OFF); // TODO
+#endif
+        SSL_CTX_set_verify(ssl_ctx, SSL_VERIFY_PEER, ws_http2_client_on_tls_verify_callback);
+        tls_ctx->ssl_ctx = ssl_ctx;
+    }
+#endif
 
     return true;
 }

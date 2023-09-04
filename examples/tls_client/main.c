@@ -27,7 +27,7 @@ typedef struct
 
 bool my_connect(my_app* self);
 
-void on_my_tls_receive(my_app* self, co_tcp_client_t* client)
+void on_my_receive(my_app* self, co_tcp_client_t* client)
 {
     (void)self;
 
@@ -46,7 +46,40 @@ void on_my_tls_receive(my_app* self, co_tcp_client_t* client)
     }
 }
 
-void on_my_tls_close(my_app* self, co_tcp_client_t* client)
+#ifdef CO_USE_TLS
+int on_my_verify_peer(int preverify_ok, X509_STORE_CTX* x509_ctx)
+{
+    (void)preverify_ok;
+    (void)x509_ctx;
+
+    // always OK for debug
+    return 1;
+}
+#endif
+
+void on_my_handshake(my_app* self, co_tcp_client_t* client, int error_code)
+{
+    if (error_code == 0)
+    {
+        printf("handshake success\n");
+
+        // send
+        const char* data = "hello";
+        co_tls_send(client, data, strlen(data) + 1);
+    }
+    else
+    {
+        printf("handshake failed\n");
+
+        co_tls_client_destroy(self->client);
+        self->client = NULL;
+
+        // quit app
+        co_app_stop();
+    }
+}
+
+void on_my_close(my_app* self, co_tcp_client_t* client)
 {
     (void)client;
 
@@ -59,15 +92,15 @@ void on_my_tls_close(my_app* self, co_tcp_client_t* client)
     co_app_stop();
 }
 
-void on_my_tls_connect(my_app* self, co_tcp_client_t* client, int error_code)
+void on_my_connect(my_app* self, co_tcp_client_t* client, int error_code)
 {
     if (error_code == 0)
     {
         printf("connect success\n");
+        printf("handshake start\n");
 
-        // send
-        const char* data = "hello";
-        co_tls_send(client, data, strlen(data) + 1);
+        // handshake
+        co_tls_start_handshake(client);
     }
     else
     {
@@ -80,25 +113,6 @@ void on_my_tls_connect(my_app* self, co_tcp_client_t* client, int error_code)
         co_timer_start(self->retry_timer);
     }
 }
-
-void on_my_retry_timer(my_app* self, co_timer_t* timer)
-{
-    (void)timer;
-
-    // connect retry
-    my_connect(self);
-}
-
-#ifdef CO_USE_TLS
-int on_my_verify_peer(int preverify_ok, X509_STORE_CTX* x509_ctx)
-{
-    (void)preverify_ok;
-    (void)x509_ctx;
-
-    // always OK for debug
-    return 1;
-}
-#endif
 
 bool my_connect(my_app* self)
 {
@@ -119,6 +133,7 @@ bool my_connect(my_app* self)
 #endif
 
     self->client = co_tls_client_create(&local_net_addr, &tls_ctx);
+
     if (self->client == NULL)
     {
         printf("Failed to create tls client (maybe SSL library was not found)\n");
@@ -127,13 +142,15 @@ bool my_connect(my_app* self)
     }
 
     // callback
-    co_tcp_callbacks_st* callbacks = co_tcp_get_callbacks(self->client);
-    callbacks->on_connect = (co_tcp_connect_fn)on_my_tls_connect;
-    callbacks->on_receive = (co_tcp_receive_fn)on_my_tls_receive;
-    callbacks->on_close = (co_tcp_close_fn)on_my_tls_close;
+    co_tcp_callbacks_st* tcp_callbacks = co_tcp_get_callbacks(self->client);
+    tcp_callbacks->on_connect = (co_tcp_connect_fn)on_my_connect;
+    tcp_callbacks->on_receive = (co_tcp_receive_fn)on_my_receive;
+    tcp_callbacks->on_close = (co_tcp_close_fn)on_my_close;
+    co_tls_callbacks_st* tls_callbacks = co_tls_get_callbacks(self->client);
+    tls_callbacks->on_handshake = (co_tls_handshake_fn)on_my_handshake;
 
     // connect
-    co_tls_connect(self->client, &self->remote_net_addr);
+    co_tcp_connect(self->client, &self->remote_net_addr);
 
     char remote_str[64];
     co_net_addr_to_string(&self->remote_net_addr, remote_str, sizeof(remote_str));
@@ -142,14 +159,22 @@ bool my_connect(my_app* self)
     return true;
 }
 
+void on_my_retry_timer(my_app* self, co_timer_t* timer)
+{
+    (void)timer;
+
+    // connect retry
+    my_connect(self);
+}
+
 bool on_my_app_create(my_app* self)
 {
     const co_args_st* args = co_app_get_args((co_app_t*)self);
 
     if (args->count < 2 ||
         !co_net_addr_from_string(
-        CO_NET_ADDR_FAMILY_IPV4, args->values[1],
-        &self->remote_net_addr))
+            CO_NET_ADDR_FAMILY_IPV4, args->values[1],
+            &self->remote_net_addr))
     {
         printf("<Usage>\n");
         printf("tls_client <ip_address:port>\n");

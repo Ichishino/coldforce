@@ -382,23 +382,16 @@ co_http2_client_on_push_promise(
 }
 
 static void
-co_http2_client_on_tcp_connect(
+co_http2_client_on_http_connection_connect(
     co_thread_t* thread,
-    co_tcp_client_t* tcp_client,
+    co_http_connection_t* conn,
     int error_code
 )
 {
-    co_http2_client_t* client =
-        (co_http2_client_t*)tcp_client->sock.sub_class;
+    co_http2_client_t* client = (co_http2_client_t*)conn;
 
     if (error_code == 0)
     {
-        co_http2_log_info(
-            &client->conn.tcp_client->sock.local_net_addr,
-            "<--",
-            &client->conn.tcp_client->remote_net_addr,
-            "http2 connect success");
-
         co_http2_log_info(
             &client->conn.tcp_client->sock.local_net_addr,
             "-->",
@@ -427,6 +420,19 @@ co_http2_client_on_tcp_connect(
                 thread, client, error_code);
         }
     }
+}
+
+void
+co_http2_client_on_http_connection_close(
+    co_thread_t* thread,
+    co_http_connection_t* conn
+)
+{
+    (void)thread;
+
+    co_http2_client_t* client = (co_http2_client_t*)conn;
+
+    co_http2_client_on_close(client, 0);
 }
 
 void
@@ -534,20 +540,6 @@ co_http2_client_on_tcp_receive_ready(
     co_byte_array_clear(client->conn.receive_data.ptr);
 }
 
-void
-co_http2_client_on_tcp_close(
-    co_thread_t* thread,
-    co_tcp_client_t* tcp_client
-)
-{
-    (void)thread;
-
-    co_http2_client_t* client =
-        (co_http2_client_t*)tcp_client->sock.sub_class;
-
-    co_http2_client_on_close(client, 0);
-}
-
 bool
 co_http2_set_upgrade_settings(
     const char* b64_settings,
@@ -624,14 +616,19 @@ co_http2_client_create(
         return NULL;
     }
 
+    client->conn.tcp_client->callbacks.on_receive =
+        (co_tcp_receive_fn)co_http2_client_on_tcp_receive_ready;
+
+    client->conn.callbacks.on_connect =
+        (co_http_connection_connect_fn)
+            co_http2_client_on_http_connection_connect;
+    client->conn.callbacks.on_close =
+        (co_http_connection_close_fn)
+            co_http2_client_on_http_connection_close;
+
     co_http2_client_setup(client);
 
     client->new_stream_id = UINT32_MAX;
-
-    client->conn.tcp_client->callbacks.on_receive =
-        (co_tcp_receive_fn)co_http2_client_on_tcp_receive_ready;
-    client->conn.tcp_client->callbacks.on_close =
-        (co_tcp_close_fn)co_http2_client_on_tcp_close;
 
     return client;
 }
@@ -689,16 +686,6 @@ co_http2_connect(
     co_http2_client_t* client
 )
 {
-    co_http2_log_info(
-        &client->conn.tcp_client->sock.local_net_addr,
-        "-->",
-        &client->conn.tcp_client->remote_net_addr,
-        "http2 connect start (%s)",
-        client->conn.url_origin->src);
-
-    client->conn.tcp_client->callbacks.on_connect =
-        (co_tcp_connect_fn)co_http2_client_on_tcp_connect;
-
     return client->conn.module.connect(
         client->conn.tcp_client,
         &client->conn.tcp_client->remote_net_addr);
