@@ -398,7 +398,7 @@ co_tls_on_receive_handshake(
                 &client->remote_net_addr,
                 "tls handshake alpn selected (%s)", protocol);
         }
-        else if (error_code == 0)
+        else
         {
             co_tls_log_warning(
                 &client->sock.local_net_addr,
@@ -414,14 +414,16 @@ co_tls_on_receive_handshake(
             0);
     }
 
+    X509* x509 =
+        SSL_get_peer_certificate(tls->ssl);
+    co_tls_log_debug_certificate(x509);
+    X509_free(x509);
+
     co_tls_log_info(
         &client->sock.local_net_addr,
         "<--",
         &client->remote_net_addr,
         "tls handshake finished (%d)", error_code);
-
-    co_tls_log_debug_certificate(
-        SSL_get_peer_certificate(tls->ssl));
 
     client->callbacks.on_receive = tls->on_receive;
     tls->on_receive = NULL;
