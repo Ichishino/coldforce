@@ -16,7 +16,7 @@ void on_signal(int sig)
 
 int main(int argc, char** argv)
 {
-    co_win_crt_set_dbg();
+    co_win_debug_crt_set_flags();
     signal(SIGINT, on_signal);
 
     co_core_log_set_level(CO_LOG_LEVEL_MAX);

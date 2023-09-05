@@ -40,5 +40,8 @@
     <ClInclude Include="..\..\..\inc\coldforce\tls\co_tls_log.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\inc\coldforce\tls\co_tls_debug.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

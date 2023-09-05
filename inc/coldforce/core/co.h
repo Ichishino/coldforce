@@ -75,12 +75,8 @@
 #   define CO_EXTERN_C_END
 #endif
 
-#ifdef CO_OS_WIN
-#   ifdef CO_DEBUG
-#       include <coldforce/core/co_debug.h>
-#   endif
-#else
-#   include <unistd.h>
+#ifndef CO_OS_WIN
+#include <unistd.h>
 #endif
 
 CO_EXTERN_C_BEGIN

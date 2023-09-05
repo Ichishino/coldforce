@@ -11,7 +11,7 @@ void on_signal(int sig)
 
 int main(int argc, char** argv)
 {
-    co_win_crt_set_dbg();
+    co_win_debug_crt_set_flags();
     signal(SIGINT, on_signal);
 
     co_log_add_category(LOG_CATEGORY_TEST_TCP_SERVER, LOG_NAME_TEST_TCP_SERVER);
