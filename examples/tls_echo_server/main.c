@@ -205,7 +205,7 @@ int main(int argc, char* argv[])
     my_app app = { 0 };
 
     return co_net_app_start(
-        (co_app_t*)&app,
+        (co_app_t*)&app, "my_app",
         (co_app_create_fn)on_my_app_create,
         (co_app_destroy_fn)on_my_app_destroy,
         argc, argv);

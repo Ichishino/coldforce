@@ -16,6 +16,8 @@ CO_EXTERN_C_BEGIN
 typedef co_thread_create_fn co_app_create_fn;
 typedef co_thread_destroy_fn co_app_destroy_fn;
 
+typedef unsigned long co_app_id_t;
+
 typedef struct
 {
     int count;
@@ -26,6 +28,7 @@ typedef struct
 typedef struct
 {
     co_thread_t main_thread;
+    co_app_id_t id;
     co_args_st args;
 
 } co_app_t;
@@ -38,6 +41,7 @@ CO_CORE_API
 void
 co_app_setup_internal(
     co_app_t* app,
+    const char* name,
     co_app_create_fn create_handler,
     co_app_destroy_fn destroy_handler,
     co_event_worker_t* event_worker,
@@ -53,6 +57,7 @@ CO_CORE_API
 void
 co_app_setup(
     co_app_t* app,
+    const char* name,
     co_app_create_fn create_handler,
     co_app_destroy_fn destroy_handler,
     int argc,
@@ -86,6 +91,18 @@ co_app_get_args(
 CO_CORE_API
 co_app_t*
 co_app_get_current(
+    void
+);
+
+CO_CORE_API
+co_app_id_t
+co_app_get_id(
+    void
+);
+
+CO_CORE_API
+const char*
+co_app_get_name(
     void
 );
 

@@ -112,7 +112,7 @@ int my_server_run(int argc, char** argv)
     my_server_app server_app = { 0 };
 
     return co_net_app_start(
-        (co_app_t*)&server_app,
+        (co_app_t*)&server_app, "my_server_app",
         (co_app_create_fn)on_my_server_app_create,
         (co_app_destroy_fn)on_my_server_app_destroy,
         argc, argv);

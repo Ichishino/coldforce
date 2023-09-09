@@ -9,7 +9,7 @@
 // private
 //---------------------------------------------------------------------------//
 
-#if defined(CO_OS_WIN) && defined(CO_DEBUG)
+#if defined(_WIN32) && defined(_DEBUG)
 #define _CRTDBG_MAP_ALLOC
 #include <crtdbg.h>
 #define co_win_debug_crt_set_flags() \
@@ -19,9 +19,9 @@
         _CRTDBG_LEAK_CHECK_DF)
 #else
 #define co_win_debug_crt_set_flags() ((void)0)
-#endif // CO_OS_WIN && CO_DEBUG
+#endif // _WIN32 && _DEBUG
 
-#ifdef CO_DEBUG
+#ifdef _DEBUG
 
 #include <stdlib.h>
 
@@ -32,13 +32,13 @@ co_mem_alloc_dbg(
     int line
 )
 {
-#ifdef CO_OS_WIN
+#ifdef _WIN32
     return _malloc_dbg(size, _NORMAL_BLOCK, file, line);
 #else
     (void)file;
     (void)line;
     return malloc(size);
-#endif // CO_OS_WIN
+#endif // _WIN32
 }
 
 inline void*
@@ -49,13 +49,13 @@ co_mem_realloc_dbg(
     int line
 )
 {
-#ifdef CO_OS_WIN
+#ifdef _WIN32
     return _realloc_dbg(ptr, size, _NORMAL_BLOCK, file, line);
 #else
     (void)file;
     (void)line;
     return realloc(ptr, size);
-#endif // CO_OS_WIN
+#endif // _WIN32
 }
 
 inline void
@@ -68,11 +68,11 @@ co_mem_free_dbg(
     (void)file;
     (void)line;
 
-#ifdef CO_OS_WIN
+#ifdef _WIN32
     _free_dbg(ptr, _NORMAL_BLOCK);
 #else
     free(ptr);
-#endif // CO_OS_WIN
+#endif // _WIN32
 }
 
 #endif // CO_DEBUG

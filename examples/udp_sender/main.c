@@ -13,24 +13,18 @@ typedef struct
     co_udp_t* udp;
     co_timer_t* send_timer;
     int send_counter;
-    const char* peer_ip_address;
-    uint16_t peer_port;
+    co_net_addr_t remote_net_addr;
 
 } my_app;
 
 void on_my_send_timer(my_app* self, co_timer_t* timer)
 {
-    // remote address
-    co_net_addr_t remote_net_addr = { 0 };
-    co_net_addr_set_address(&remote_net_addr, self->peer_ip_address);
-    co_net_addr_set_port(&remote_net_addr, self->peer_port);
-
     // send
     const char* data = "hello";
-    co_udp_send(self->udp, &remote_net_addr, data, strlen(data) + 1);
+    co_udp_send(self->udp, &self->remote_net_addr, data, strlen(data) + 1);
 
     char remote_str[64];
-    co_net_addr_to_string(&remote_net_addr, remote_str, sizeof(remote_str));
+    co_net_addr_to_string(&self->remote_net_addr, remote_str, sizeof(remote_str));
     printf("send to %s\n", remote_str);
 
     self->send_counter++;
@@ -47,16 +41,17 @@ bool on_my_app_create(my_app* self)
 {
     const co_args_st* args = co_app_get_args((co_app_t*)self);
 
-    if (args->count < 3)
+    // remote address
+    if (args->count < 2 ||
+        !co_net_addr_from_string(
+            CO_NET_ADDR_FAMILY_IPV4, args->values[1],
+            &self->remote_net_addr))
     {
         printf("<Usage>\n");
-        printf("udp_sender <peer_ip_address> <port_number>\n");
+        printf("udp_sender <ip_address:port>\n");
 
         return false;
     }
-
-    self->peer_ip_address = args->values[1];
-    self->peer_port = (uint16_t)atoi(args->values[2]);
 
     // local address
     co_net_addr_t local_net_addr = { 0 };
@@ -89,7 +84,7 @@ int main(int argc, char* argv[])
     my_app app = { 0 };
 
     return co_net_app_start(
-        (co_app_t*)&app,
+        (co_app_t*)&app, "my_app",
         (co_app_create_fn)on_my_app_create,
         (co_app_destroy_fn)on_my_app_destroy,
         argc, argv);

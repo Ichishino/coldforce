@@ -1,6 +1,7 @@
 #include <coldforce/core/co_std.h>
 #include <coldforce/core/co_log.h>
 #include <coldforce/core/co_mutex.h>
+#include <coldforce/core/co_thread.h>
 
 #ifdef CO_OS_WIN
 #include <windows.h>
@@ -85,7 +86,7 @@ co_log_write_header(
 #endif
 
     fprintf((FILE*)g_log.category[category].output,
-        "<<COLDFORCE>> %d-%02d-%02d %02d:%02d:%02d:%03d [%s] <%s> ",
+        "%d-%02d-%02d %02d:%02d:%02d:%03d [%08x] [%s] <%s> ",
 #ifdef CO_OS_WIN
         st.wYear, st.wMonth, st.wDay,
         st.wHour, st.wMinute, st.wSecond, st.wMilliseconds,
@@ -93,6 +94,7 @@ co_log_write_header(
         lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday,
         lt->tm_hour, lt->tm_min, lt->tm_sec, (int)(tv.tv_usec / 1000),
 #endif
+        ((co_thread_get_current() != NULL) ? co_thread_get_current()->id : 0),
         g_level_name[level], g_log.category[category].name);
 }
 

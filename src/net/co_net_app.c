@@ -19,6 +19,7 @@
 static bool
 co_net_app_setup(
     co_app_t* app,
+    const char* name,
     co_app_create_fn create_handler,
     co_app_destroy_fn destroy_handler,
     int argc,
@@ -34,7 +35,8 @@ co_net_app_setup(
 
     net_worker->on_destroy = destroy_handler;
 
-    co_app_setup_internal(app,
+    co_app_setup_internal(
+        app, name,
         create_handler, (co_app_destroy_fn)co_net_worker_on_destroy,
         (co_event_worker_t*)net_worker,
         argc, argv);
@@ -64,6 +66,7 @@ co_net_app_cleanup(
 int
 co_net_app_start(
     co_app_t* app,
+    const char* name,
     co_app_create_fn create_handler,
     co_app_destroy_fn destroy_handler,
     int argc,
@@ -71,7 +74,7 @@ co_net_app_start(
 )
 {
     if (!co_net_app_setup(
-        app,
+        app, name,
         create_handler, destroy_handler,
         argc, argv))
     {

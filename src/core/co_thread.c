@@ -1,5 +1,6 @@
 #include <coldforce/core/co_std.h>
 #include <coldforce/core/co_thread.h>
+#include <coldforce/core/co_string.h>
 #include <coldforce/core/co_log.h>
 
 #ifdef CO_OS_WIN
@@ -7,6 +8,8 @@
 #   include <process.h>
 #else
 #   include <pthread.h>
+#   include <sys/syscall.h>
+#   include <sys/types.h>
 #endif
 
 //---------------------------------------------------------------------------//
@@ -43,11 +46,16 @@ co_thread_main(
         (struct co_thread_param_st*)param;
     co_thread_t* thread = thread_param->thread;
 
-    co_core_log_info(
-        "thread (%08x) start", thread->handle);
-
     co_assert(current_thread == NULL);
     current_thread = thread;
+
+#ifdef CO_OS_WIN
+    thread->id = GetCurrentThreadId();
+#else
+    thread->id = syscall(SYS_gettid);
+#endif
+    co_core_log_info(
+        "thread (%08x) start", thread->id);
 
     bool create_result = true;
 
@@ -75,7 +83,7 @@ co_thread_main(
     }
 
     co_core_log_info(
-        "thread (%08x) exit: %d", thread->handle, thread->exit_code);
+        "thread (%08x) exit: %d", thread->id, thread->exit_code);
 
 #ifdef CO_OS_WIN
     return thread->exit_code;
@@ -87,17 +95,24 @@ co_thread_main(
 void
 co_thread_setup_internal(
     co_thread_t* thread,
+    const char* name,
     co_thread_create_fn create_handler,
     co_thread_destroy_fn destroy_handler,
     co_event_worker_t* event_worker
 )
 {
+    thread->id = 0;
     thread->handle = NULL;
     thread->parent = NULL;
 
     thread->on_create = create_handler;
     thread->on_destroy = destroy_handler;
     thread->event_worker = event_worker;
+
+    if (name != NULL)
+    {
+        thread->name = co_string_duplicate(name);
+    }
 
     if (thread->event_worker == NULL)
     {
@@ -124,12 +139,13 @@ co_thread_run(
 void
 co_thread_setup(
     co_thread_t* thread,
+    const char* name,
     co_thread_create_fn create_handler,
     co_thread_destroy_fn destroy_handler
 )
 {
     co_thread_setup_internal(
-        thread, create_handler, destroy_handler, NULL);
+        thread, name, create_handler, destroy_handler, NULL);
 }
 
 void
@@ -143,6 +159,12 @@ co_thread_cleanup(
         co_event_worker_destroy(thread->event_worker);
      
         thread->event_worker = NULL;
+    }
+
+    if (thread->name != NULL)
+    {
+        co_string_destroy(thread->name);
+        thread->name = NULL;
     }
 
     if (thread->handle != NULL)
@@ -250,12 +272,18 @@ co_thread_get_exit_code(
 
 co_thread_t*
 co_thread_get_parent(
-    void
+    co_thread_t* thread
 )
 {
-    co_thread_t* thread = co_thread_get_current();
-
     return thread->parent;
+}
+
+co_thread_id_t
+co_thread_get_id(
+    const co_thread_t* thread
+)
+{
+    return thread->id;
 }
 
 co_thread_handle_t*
@@ -264,4 +292,12 @@ co_thread_get_handle(
 )
 {
     return thread->handle;
+}
+
+const char*
+co_thread_get_name(
+    const co_thread_t* thread
+)
+{
+    return thread->name;
 }

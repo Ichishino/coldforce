@@ -18,6 +18,8 @@ struct co_thread_t;
 typedef bool(*co_thread_create_fn)(struct co_thread_t* self);
 typedef void(*co_thread_destroy_fn)(struct co_thread_t* self);
 
+typedef unsigned long co_thread_id_t;
+
 typedef struct
 {
     uintptr_t unused;
@@ -29,9 +31,11 @@ typedef struct co_thread_t
     co_thread_create_fn on_create;
     co_thread_destroy_fn on_destroy;
 
+    co_thread_id_t id;
     co_thread_handle_t* handle;
     co_event_worker_t* event_worker;
     struct co_thread_t* parent;
+    char* name;
 
     int exit_code;
 
@@ -44,6 +48,7 @@ typedef struct co_thread_t
 CO_CORE_API
 void co_thread_setup_internal(
     co_thread_t* thread,
+    const char* name,
     co_thread_create_fn create_handler,
     co_thread_destroy_fn destroy_handler,
     co_event_worker_t* event_worker
@@ -62,6 +67,7 @@ CO_CORE_API
 void
 co_thread_setup(
     co_thread_t* thread,
+    const char* name,
     co_thread_create_fn create_handler,
     co_thread_destroy_fn destroy_handler
 );
@@ -99,7 +105,7 @@ co_thread_get_current(
 CO_CORE_API
 co_thread_t*
 co_thread_get_parent(
-    void
+    co_thread_t* thread
 );
 
 CO_CORE_API
@@ -115,9 +121,21 @@ co_thread_get_exit_code(
 );
 
 CO_CORE_API
+co_thread_id_t
+co_thread_get_id(
+    const co_thread_t* thread
+);
+
+CO_CORE_API
 co_thread_handle_t*
 co_thread_get_handle(
     co_thread_t* thread
+);
+
+CO_CORE_API
+const char*
+co_thread_get_name(
+    const co_thread_t* thread
 );
 
 //---------------------------------------------------------------------------//

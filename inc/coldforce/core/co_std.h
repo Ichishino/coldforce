@@ -13,6 +13,7 @@
 #   define _CRT_NONSTDC_NO_DEPRECATE
 #endif
 
+#include <coldforce/core/co_debug.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
