@@ -32,23 +32,23 @@ co_random_range(
 
 CO_CORE_API
 void
-co_random_string(
-    char* buffer,
+co_random_characters(
+    void* buffer,
     size_t length,
     const char* characters
 );
 
 CO_CORE_API
 void
-co_random_alnum_string(
-    char* buffer,
+co_random_alnum(
+    void* buffer,
     size_t length
 );
 
 CO_CORE_API
 void
-co_random_hex_string(
-    char* buffer,
+co_random_hex(
+    void* buffer,
     size_t length
 );
 

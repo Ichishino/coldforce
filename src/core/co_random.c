@@ -49,8 +49,8 @@ co_random_range(
 }
 
 void
-co_random_string(
-    char* buffer,
+co_random_characters(
+    void* buffer,
     size_t length,
     const char* characters
 )
@@ -60,16 +60,14 @@ co_random_string(
 
     for (size_t index = 0; index < length; ++index)
     {
-        buffer[index] = characters[
+        ((char*)buffer)[index] = characters[
             co_random_range(0, characters_length - 1)];
     }
-
-    buffer[length] = '\0';
 }
 
 void
-co_random_alnum_string(
-    char* buffer,
+co_random_alnum(
+    void* buffer,
     size_t length
 )
 {
@@ -78,17 +76,17 @@ co_random_alnum_string(
         "abcdefghijklmnopqrstuvwxyz"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-    co_random_string(buffer, length, alnum);
+    co_random_characters(buffer, length, alnum);
 }
 
 void
-co_random_hex_string(
-    char* buffer,
+co_random_hex(
+    void* buffer,
     size_t length
 )
 {
     static const char* hex =
         "0123456789abcdef";
 
-    co_random_string(buffer, length, hex);
+    co_random_characters(buffer, length, hex);
 }

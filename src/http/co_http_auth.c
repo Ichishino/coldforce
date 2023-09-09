@@ -716,7 +716,8 @@ co_http_digest_auth_create_request(
     co_http_auth_set_item(auth, "algorithm", algorithm);
 
     char cnonce[16+1];
-    co_random_hex_string(cnonce, 16);
+    co_random_hex(cnonce, 16);
+    cnonce[16] = '\0';
     co_http_auth_set_item(auth, "cnonce", cnonce);
 
     const char* opaque =
