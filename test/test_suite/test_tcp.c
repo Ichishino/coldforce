@@ -3,6 +3,19 @@
 
 #include <assert.h>
 
+static void test_tcp_thread_on_send_async(test_tcp_thread_t* self, co_tcp_client_t* tcp_client, bool result)
+{
+    (void)self;
+
+    test_tcp_client_t* test_tcp_client =
+        (test_tcp_client_t*)co_tcp_get_user_data(tcp_client);
+    assert(test_tcp_client != NULL);
+
+    test_tcp_client->send_async_comp_count++;
+
+    co_assert(result);
+}
+
 static void test_tcp_thread_on_receive(test_tcp_thread_t* self, co_tcp_client_t* tcp_client)
 {
     test_tcp_client_t* test_tcp_client =
@@ -105,13 +118,15 @@ void test_tcp_thread_on_timer(test_tcp_thread_t* self, co_timer_t* timer)
                 test_tcp_client->send_data, test_tcp_client->send_index);
         test_tcp_client->send_index += size;
 
-        if (co_random_range(0, 0) == 0)
+        if (co_random_range(0, 1) == 0)
         {
             if (!co_tcp_send_async(test_tcp_client->tcp_client, data, size))
             {
                 test_error("Failed: test_tcp_thread_on_timer(co_tcp_send_async)");
                 exit(-1);
             }
+
+            test_tcp_client->send_async_count++;
         }
         else
         {
@@ -120,6 +135,8 @@ void test_tcp_thread_on_timer(test_tcp_thread_t* self, co_timer_t* timer)
                 test_error("Failed: test_tcp_thread_on_timer(co_tcp_send)");
                 exit(-1);
             }
+
+            test_tcp_client->send_count++;
         }
     }
     else
@@ -135,7 +152,7 @@ void test_tcp_thread_on_timer(test_tcp_thread_t* self, co_timer_t* timer)
 
     if (test_tcp_client->send_index != total_size)
     {
-        co_timer_set_time(test_tcp_client->send_timer, co_random_range(10, 200));
+        co_timer_set_time(test_tcp_client->send_timer, co_random_range(1, 200));
     }
     else
     {
@@ -150,7 +167,11 @@ static void test_tcp_client_destroy(test_tcp_client_t* test_tcp_client)
     test_tcp_thread_t* self =
         (test_tcp_thread_t*)co_thread_get_current();
 
-    test_info("tcp client: %d", co_list_get_count(self->test_tcp_clients) - 1);
+    test_info("tcp client: %d (%d-%d/%d)",
+        co_list_get_count(self->test_tcp_clients) - 1,
+        test_tcp_client->send_count,
+        test_tcp_client->send_async_comp_count,
+        test_tcp_client->send_async_count);
 
     co_tcp_client_destroy(test_tcp_client->tcp_client);
     co_byte_array_destroy(test_tcp_client->send_data);
@@ -190,6 +211,7 @@ bool test_tcp_thread_on_create(test_tcp_thread_t* self)
         callbacks->on_connect = (co_tcp_connect_fn)test_tcp_thread_on_connect;
         callbacks->on_close = (co_tcp_close_fn)test_tcp_thread_on_close;
         callbacks->on_receive = (co_tcp_receive_fn)test_tcp_thread_on_receive;
+        callbacks->on_send_async = (co_tcp_send_fn)test_tcp_thread_on_send_async;
 
         test_tcp_client_t* test_tcp_client =
             (test_tcp_client_t*)malloc(sizeof(test_tcp_client_t));
@@ -198,9 +220,12 @@ bool test_tcp_thread_on_create(test_tcp_thread_t* self)
         test_tcp_client->send_data = co_byte_array_create();
         test_tcp_client->receive_data = co_byte_array_create();
         test_tcp_client->send_timer =
-            co_timer_create(co_random_range(10, 200),
+            co_timer_create(co_random_range(1, 200),
                 (co_timer_fn)test_tcp_thread_on_timer, false, test_tcp_client);
         test_tcp_client->send_index = 0;
+        test_tcp_client->send_count = 0;
+        test_tcp_client->send_async_count = 0;
+        test_tcp_client->send_async_comp_count = 0;
 
         co_list_add_tail(self->test_tcp_clients, test_tcp_client);
 

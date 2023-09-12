@@ -5,6 +5,8 @@
 
 static void test_udp_thread_on_send_async(test_udp_thread_t* self, co_udp_t* udp_client, bool result)
 {
+    (void)self;
+
     test_udp_client_t* test_udp_client =
         (test_udp_client_t*)co_udp_get_user_data(udp_client);
     assert(test_udp_client != NULL);
@@ -95,11 +97,13 @@ static void test_udp_thread_on_timer(test_udp_thread_t* self, co_timer_t* timer)
             test_error("Failed: test_udp_thread_on_timer(co_udp_send)");
             exit(-1);
         }
+
+        test_udp_client->send_count++;
     }
 
     if (test_udp_client->send_index != total_size)
     {
-        co_timer_set_time(test_udp_client->send_timer, co_random_range(10, 200));
+        co_timer_set_time(test_udp_client->send_timer, co_random_range(1, 200));
         co_timer_start(test_udp_client->send_timer);
     }
 }
@@ -109,8 +113,9 @@ static void test_udp_client_destroy(test_udp_client_t* test_udp_client)
     test_udp_thread_t* self =
         (test_udp_thread_t*)co_thread_get_current();
 
-    test_info("udp client: %d (%d/%d)",
+    test_info("udp client: %d (%d-%d/%d)",
         co_list_get_count(self->test_udp_clients) - 1,
+        test_udp_client->send_count,
         test_udp_client->send_async_comp_count,
         test_udp_client->send_async_count);
 
@@ -165,9 +170,10 @@ static bool test_udp_thread_on_create(test_udp_thread_t* self)
         test_udp_client->send_data = co_byte_array_create();
         test_udp_client->receive_data = co_byte_array_create();
         test_udp_client->send_timer =
-            co_timer_create(co_random_range(1, 100),
+            co_timer_create(co_random_range(1, 200),
                 (co_timer_fn)test_udp_thread_on_timer, false, test_udp_client);
         test_udp_client->send_index = 0;
+        test_udp_client->send_count = 0;
         test_udp_client->send_async_count = 0;
         test_udp_client->send_async_comp_count = 0;
 

@@ -3,6 +3,8 @@
 
 static void test_udp_server_on_receive(test_udp_server_thread_t* self, co_udp_t* udp)
 {
+    (void)self;
+
     for (;;)
     {
         char data[1024];

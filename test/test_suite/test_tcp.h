@@ -11,6 +11,9 @@ typedef struct
     co_byte_array_t* receive_data;
     co_timer_t* send_timer;
     size_t send_index;
+    size_t send_count;
+    size_t send_async_count;
+    size_t send_async_comp_count;
 
 } test_tcp_client_t;
 

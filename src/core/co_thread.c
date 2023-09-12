@@ -55,7 +55,7 @@ co_thread_main(
     thread->id = syscall(SYS_gettid);
 #endif
     co_core_log_info(
-        "thread (%08x) start", thread->id);
+        "thread (%08lx) start", thread->id);
 
     bool create_result = true;
 
@@ -83,7 +83,7 @@ co_thread_main(
     }
 
     co_core_log_info(
-        "thread (%08x) exit: %d", thread->id, thread->exit_code);
+        "thread (%08lx) exit: %d", thread->id, thread->exit_code);
 
 #ifdef CO_OS_WIN
     return thread->exit_code;

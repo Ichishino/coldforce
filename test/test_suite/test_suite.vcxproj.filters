@@ -17,13 +17,7 @@
     <ClCompile Include="test_app.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="test_http_server_thread.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="test_tcp_server_thread.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="test_tls_server_thread.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="test_udp_server_thread.c">
@@ -40,16 +34,10 @@
     <ClInclude Include="test_app.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="test_http_server_thread.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="test_tcp_server_thread.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="test_udp_server_thread.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="test_tls_server_thread.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="test_tcp.h">

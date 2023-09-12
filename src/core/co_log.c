@@ -86,7 +86,7 @@ co_log_write_header(
 #endif
 
     fprintf((FILE*)g_log.category[category].output,
-        "%d-%02d-%02d %02d:%02d:%02d:%03d [%08x] [%s] <%s> ",
+        "%d-%02d-%02d %02d:%02d:%02d:%03d [%08lx] [%s] <%s> ",
 #ifdef CO_OS_WIN
         st.wYear, st.wMonth, st.wDay,
         st.wHour, st.wMinute, st.wSecond, st.wMilliseconds,

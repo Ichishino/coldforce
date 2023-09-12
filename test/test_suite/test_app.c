@@ -24,7 +24,7 @@ static bool test_app_on_create(test_app_t* self)
     self->test_tcp_thread.family = CO_NET_ADDR_FAMILY_IPV6;
     self->test_tcp_thread.server_address = "::1";
     self->test_tcp_thread.server_port = 9002;
-    self->test_tcp_thread.data_size = 10000;
+    self->test_tcp_thread.data_size = 100000;
     self->test_tcp_thread.client_count = 10;
     test_tcp_run(&self->test_tcp_thread);
     co_thread_join((co_thread_t*)&self->test_tcp_thread);
@@ -46,7 +46,7 @@ static bool test_app_on_create(test_app_t* self)
     self->test_udp_thread.family = CO_NET_ADDR_FAMILY_IPV6;
     self->test_udp_thread.server_address = "::1";
     self->test_udp_thread.server_port = 9004;
-    self->test_udp_thread.data_size = 10000;
+    self->test_udp_thread.data_size = 100000;
     self->test_udp_thread.client_count = 10;
     test_udp_run(&self->test_udp_thread);
     co_thread_join((co_thread_t*)&self->test_udp_thread);
