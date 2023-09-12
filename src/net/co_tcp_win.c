@@ -164,7 +164,7 @@ co_win_tcp_server_accept_start(
     {
         int error = co_socket_get_error();
 
-        if (error != ERROR_IO_PENDING)
+        if (error != WSA_IO_PENDING)
         {
             return false;
         }
@@ -321,13 +321,6 @@ co_win_tcp_client_send_async(
         return false;
     }
 
-    if (client->win.io_send_ctxs == NULL)
-    {
-        co_list_ctx_st list_ctx = { 0 };
-        list_ctx.destroy_value = (co_item_destroy_fn)co_win_destroy_io_ctx;
-        client->win.io_send_ctxs = co_list_create(&list_ctx);
-    }
-
     co_win_net_io_ctx_t* io_ctx =
         (co_win_net_io_ctx_t*)co_mem_alloc(sizeof(co_win_net_io_ctx_t));
 
@@ -356,14 +349,31 @@ co_win_tcp_client_send_async(
     {
         int error = co_socket_get_error();
 
-        if (error != ERROR_IO_PENDING)
+        if (error != WSA_IO_PENDING)
         {
             return false;
         }
-    }
 
-    co_list_add_tail(
-        client->win.io_send_ctxs, io_ctx);
+        if (client->win.io_send_ctxs == NULL)
+        {
+            co_list_ctx_st list_ctx = { 0 };
+            list_ctx.destroy_value = (co_item_destroy_fn)co_win_destroy_io_ctx;
+            client->win.io_send_ctxs = co_list_create(&list_ctx);
+        }
+
+        co_list_add_tail(
+            client->win.io_send_ctxs, io_ctx);
+    }
+    else
+    {
+        co_mem_free(io_ctx);
+
+        co_thread_send_event(
+            client->sock.owner_thread,
+            CO_NET_EVENT_ID_TCP_SEND_COMPLETE,
+            (uintptr_t)client,
+            (uintptr_t)data_size);
+    }
 
     return true;
 }
@@ -416,13 +426,21 @@ co_win_tcp_client_receive_start(
     {
         int error = co_socket_get_error();
 
-        if (error != ERROR_IO_PENDING)
+        if (error != WSA_IO_PENDING)
         {
             co_thread_send_event(client->sock.owner_thread,
                 CO_NET_EVENT_ID_TCP_CLOSE, (uintptr_t)client, 0);
 
             return false;
         }
+    }
+    else
+    {
+        co_thread_send_event(
+            client->sock.owner_thread,
+            CO_NET_EVENT_ID_TCP_RECEIVE_READY,
+            (uintptr_t)client,
+            (uintptr_t)data_size);
     }
 
     return true;
@@ -486,7 +504,7 @@ co_win_tcp_client_connect_start(
     {
         int error = co_socket_get_error();
 
-        if (error != ERROR_IO_PENDING)
+        if (error != WSA_IO_PENDING)
         {
             return false;
         }

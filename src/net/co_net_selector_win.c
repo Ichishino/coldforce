@@ -6,6 +6,7 @@
 #include <coldforce/net/co_socket.h>
 #include <coldforce/net/co_tcp_client.h>
 #include <coldforce/net/co_tcp_win.h>
+#include <coldforce/net/co_udp.h>
 
 #ifdef CO_OS_WIN
 
@@ -22,7 +23,7 @@
 // private
 //---------------------------------------------------------------------------//
 
-#define CO_WIN_NET_IOCP_COMP_KEY_CANCEL     1
+#define CO_WIN_NET_IOCP_COMP_KEY_CANCEL     0
 
 co_net_selector_t*
 co_net_selector_create(
@@ -47,11 +48,7 @@ co_net_selector_create(
         return NULL;
     }
 
-    net_selector->ol_entries =
-        co_array_create(sizeof(OVERLAPPED_ENTRY));
-
     net_selector->sock_count = 0;
-    co_array_set_count(net_selector->ol_entries, 1);
 
     co_list_ctx_st list_ctx = { 0 };
     list_ctx.destroy_value = (co_item_destroy_fn)co_mem_free;
@@ -70,8 +67,6 @@ co_net_selector_destroy(
     co_list_destroy(net_selector->io_ctx_trash);
     net_selector->io_ctx_trash = NULL;
 
-    co_array_destroy(net_selector->ol_entries);
-
     CloseHandle(net_selector->iocp);
 
     co_mem_free(net_selector);
@@ -87,10 +82,14 @@ co_net_selector_register(
     (void)flags;
 
     if (CreateIoCompletionPort(
-        (HANDLE)sock->handle, (HANDLE)net_selector->iocp, 0, 0) == NULL)
+        (HANDLE)sock->handle, (HANDLE)net_selector->iocp,
+        sock->handle, 0) == NULL)
     {
         return false;
     }
+
+    SetFileCompletionNotificationModes(
+        (HANDLE)sock->handle, FILE_SKIP_COMPLETION_PORT_ON_SUCCESS);
 
     co_socket_handle_set_blocking(sock->handle, false);
 
@@ -118,7 +117,8 @@ bool
 co_net_selector_update(
     co_net_selector_t* net_selector,
     co_socket_t* sock,
-    uint32_t flags)
+    uint32_t flags
+)
 {
     (void)net_selector;
     (void)sock;
@@ -133,18 +133,13 @@ co_net_selector_wait(
     uint32_t msec
 )
 {
-    co_array_set_count(
-        net_selector->ol_entries, net_selector->sock_count + 1);
-    co_array_zero_clear(net_selector->ol_entries);
-
-    LPOVERLAPPED_ENTRY entries =
-        (LPOVERLAPPED_ENTRY)co_array_get_ptr(net_selector->ol_entries, 0);
-
-    ULONG count = (ULONG)co_array_get_count(net_selector->ol_entries);
+    OVERLAPPED_ENTRY entries[256];
     ULONG removed = 0;
 
     if (GetQueuedCompletionStatusEx(
-        net_selector->iocp, entries, count, &removed, msec, FALSE))
+        net_selector->iocp,
+        entries, (sizeof(entries) / sizeof(OVERLAPPED_ENTRY)),
+        &removed, msec, FALSE))
     {
         for (ULONG index = 0; index < removed; ++index)
         {
@@ -156,15 +151,17 @@ co_net_selector_wait(
             co_win_net_io_ctx_t* io_ctx =
                 (co_win_net_io_ctx_t*)entries[index].lpOverlapped;
 
-            switch (io_ctx->id)
+            if (io_ctx->sock == NULL)
+            {
+                continue;
+            }
+
+            co_win_net_io_id_t io_id = io_ctx->id;
+
+            switch (io_id)
             {
             case CO_WIN_NET_IO_ID_TCP_RECEIVE:
             {
-                if (io_ctx->sock == NULL)
-                {
-                    break;
-                }
-
                 size_t data_length =
                     (size_t)entries[index].dwNumberOfBytesTransferred;
 
@@ -190,37 +187,29 @@ co_net_selector_wait(
             }
             case CO_WIN_NET_IO_ID_TCP_SEND:
             {
-                if (io_ctx->sock != NULL)
-                {
-                    co_thread_send_event(
-                        io_ctx->sock->owner_thread,
-                        CO_NET_EVENT_ID_TCP_SEND_COMPLETE,
-                        (uintptr_t)io_ctx->sock,
-                        (uintptr_t)entries[index].dwNumberOfBytesTransferred);
-                }
+                co_thread_send_event(
+                    io_ctx->sock->owner_thread,
+                    CO_NET_EVENT_ID_TCP_SEND_COMPLETE,
+                    (uintptr_t)io_ctx->sock,
+                    (uintptr_t)entries[index].dwNumberOfBytesTransferred);
+
+                co_tcp_client_t* tcp_client = (co_tcp_client_t*)io_ctx->sock;
+                co_list_remove(tcp_client->win.io_send_ctxs, io_ctx);
 
                 break;
             }
             case CO_WIN_NET_IO_ID_TCP_ACCEPT:
             {
-                if (io_ctx->sock != NULL)
-                {
-                    co_thread_send_event(
-                        io_ctx->sock->owner_thread,
-                        CO_NET_EVENT_ID_TCP_ACCEPT_READY,
-                        (uintptr_t)io_ctx->sock,
-                        0);
-                }
+                co_thread_send_event(
+                    io_ctx->sock->owner_thread,
+                    CO_NET_EVENT_ID_TCP_ACCEPT_READY,
+                    (uintptr_t)io_ctx->sock,
+                    0);
 
                 break;
             }
             case CO_WIN_NET_IO_ID_TCP_CONNECT:
             {
-                if (io_ctx->sock == NULL)
-                {
-                    break;
-                }
-
                 int error_code = CO_NET_ERROR_TCP_CONNECT_FAILED;
                 int seconds = -1;
 
@@ -243,27 +232,24 @@ co_net_selector_wait(
             }
             case CO_WIN_NET_IO_ID_UDP_SEND:
             {
-                if (io_ctx->sock != NULL)
-                {
-                    co_thread_send_event(
-                        io_ctx->sock->owner_thread,
-                        CO_NET_EVENT_ID_UDP_SEND_COMPLETE,
-                        (uintptr_t)io_ctx->sock,
-                        (uintptr_t)entries[index].dwNumberOfBytesTransferred);
-                }
+                co_thread_send_event(
+                    io_ctx->sock->owner_thread,
+                    CO_NET_EVENT_ID_UDP_SEND_COMPLETE,
+                    (uintptr_t)io_ctx->sock,
+                    (uintptr_t)entries[index].dwNumberOfBytesTransferred);
+
+                co_udp_t* udp = (co_udp_t*)io_ctx->sock;
+                co_list_remove(udp->win.io_send_ctxs, io_ctx);
 
                 break;
             }
             case CO_WIN_NET_IO_ID_UDP_RECEIVE:
             {
-                if (io_ctx->sock != NULL)
-                {
-                    co_thread_send_event(
-                        io_ctx->sock->owner_thread,
-                        CO_NET_EVENT_ID_UDP_RECEIVE_READY,
-                        (uintptr_t)io_ctx->sock,
-                        (uintptr_t)entries[index].dwNumberOfBytesTransferred);
-                }
+                co_thread_send_event(
+                    io_ctx->sock->owner_thread,
+                    CO_NET_EVENT_ID_UDP_RECEIVE_READY,
+                    (uintptr_t)io_ctx->sock,
+                    (uintptr_t)entries[index].dwNumberOfBytesTransferred);
 
                 break;
             }
@@ -307,7 +293,7 @@ co_win_destroy_io_ctx(
     co_win_net_io_ctx_t* io_ctx
 )
 {
-    if (HasOverlappedIoCompleted((LPOVERLAPPED)io_ctx))
+    if (HasOverlappedIoCompleted((LPWSAOVERLAPPED)io_ctx))
     {
         co_mem_free(io_ctx);
     }
@@ -334,7 +320,7 @@ co_win_try_clear_io_ctx_trash(
         co_list_data_st* data =
             co_list_get(net_selector->io_ctx_trash, it);
 
-        if (HasOverlappedIoCompleted((LPOVERLAPPED)data->value))
+        if (HasOverlappedIoCompleted((LPWSAOVERLAPPED)data->value))
         {
             co_list_iterator_t* temp = it;
             it = co_list_get_next_iterator(net_selector->io_ctx_trash, it);

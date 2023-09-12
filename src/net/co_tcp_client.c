@@ -255,10 +255,6 @@ co_tcp_client_on_send_complete(
         &client->remote_net_addr,
         "tcp send async complete");
 
-#ifdef CO_OS_WIN
-    co_list_remove_head(client->win.io_send_ctxs);
-#endif
-
     if (client->callbacks.on_send_async != NULL)
     {
         client->callbacks.on_send_async(

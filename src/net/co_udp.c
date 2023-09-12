@@ -86,10 +86,6 @@ co_udp_on_send_complete(
         NULL,
         "udp send complete");
 
-#ifdef CO_OS_WIN
-    co_list_remove_head(udp->win.io_send_ctxs);
-#endif
-
     if (udp->callbacks.on_send_async != NULL)
     {
         udp->callbacks.on_send_async(
@@ -201,8 +197,6 @@ co_udp_destroy(
 {
     if (udp != NULL)
     {
-        co_udp_close(udp);
-
 #ifdef CO_OS_WIN
         co_win_udp_cleanup(udp);
 #else
@@ -219,6 +213,7 @@ co_udp_destroy(
             udp->send_queue = NULL;
         }
 #endif
+        co_udp_close(udp);
         co_socket_cleanup(&udp->sock);
         co_mem_free_later(udp);
     }

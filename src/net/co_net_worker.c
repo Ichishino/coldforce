@@ -19,10 +19,11 @@ co_net_worker_on_idle(
     co_net_worker_t* net_worker
 )
 {
+    co_event_worker_on_idle(&net_worker->event_worker);
+
 #ifdef CO_OS_WIN
     co_win_try_clear_io_ctx_trash(net_worker->net_selector);
 #endif
-    co_event_worker_on_idle(&net_worker->event_worker);
 }
 
 static void

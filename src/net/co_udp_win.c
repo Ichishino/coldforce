@@ -3,6 +3,8 @@
 #include <coldforce/net/co_udp_win.h>
 #include <coldforce/net/co_udp.h>
 #include <coldforce/net/co_net_worker.h>
+#include <coldforce/net/co_net_event.h>
+#include <coldforce/net/co_net_log.h>
 
 #ifdef CO_OS_WIN
 
@@ -57,18 +59,6 @@ co_win_udp_setup(
     {
         return false;
     }
-
-    co_list_ctx_st list_ctx = { 0 };
-    list_ctx.destroy_value = (co_item_destroy_fn)co_win_destroy_io_ctx;
-    udp->win.io_send_ctxs = co_list_create(&list_ctx);
-
-    if (udp->win.io_send_ctxs == NULL)
-    {
-        co_socket_handle_close(handle);
-
-        return false;
-    }
-
     udp->win.receive.io_ctx =
         (co_win_net_io_ctx_t*)co_mem_alloc(sizeof(co_win_net_io_ctx_t));
 
@@ -81,6 +71,8 @@ co_win_udp_setup(
 
         return false;
     }
+
+    udp->win.io_send_ctxs = NULL;
 
     udp->win.receive.io_ctx->id = CO_WIN_NET_IO_ID_UDP_RECEIVE;
     udp->win.receive.io_ctx->sock = &udp->sock;
@@ -155,6 +147,17 @@ co_win_udp_send(
         sizeof(co_net_addr_t),
         NULL, NULL);
 
+    if (result != 0)
+    {
+        int error = co_socket_get_error();
+
+        co_udp_log_error(
+            &udp->sock.local_net_addr,
+            "-->",
+            remote_net_addr,
+            "udp send error: (%d)", error);
+    }
+
     return (result == 0);
 }
 
@@ -196,14 +199,33 @@ co_win_udp_send_async(
     {
         int error = co_socket_get_error();
 
-        if (error != ERROR_IO_PENDING)
+        if (error != WSA_IO_PENDING)
         {
+            co_mem_free(io_ctx);
+
             return false;
         }
-    }
 
-    co_list_add_tail(
-        udp->win.io_send_ctxs, io_ctx);
+        if (udp->win.io_send_ctxs == NULL)
+        {
+            co_list_ctx_st list_ctx = { 0 };
+            list_ctx.destroy_value = (co_item_destroy_fn)co_win_destroy_io_ctx;
+            udp->win.io_send_ctxs = co_list_create(&list_ctx);
+        }
+
+        co_list_add_tail(
+            udp->win.io_send_ctxs, io_ctx);
+    }
+    else
+    {
+        co_mem_free(io_ctx);
+
+        co_thread_send_event(
+            udp->sock.owner_thread,
+            CO_NET_EVENT_ID_UDP_SEND_COMPLETE,
+            (uintptr_t)udp,
+            (uintptr_t)data_size);
+    }
 
     return true;
 }
@@ -258,10 +280,18 @@ co_win_udp_receive_start(
     {
         int error = co_socket_get_error();
 
-        if (error != ERROR_IO_PENDING)
+        if (error != WSA_IO_PENDING)
         {
             return false;
         }
+    }
+    else
+    {
+        co_thread_send_event(
+            udp->sock.owner_thread,
+            CO_NET_EVENT_ID_UDP_RECEIVE_READY,
+            (uintptr_t)udp,
+            (uintptr_t)data_size);
     }
 
     return true;

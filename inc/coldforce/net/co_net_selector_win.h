@@ -49,10 +49,7 @@ typedef struct
 typedef struct co_net_selector_t
 {
     void* iocp;
-
     size_t sock_count;
-    co_array_t* ol_entries;
-
     co_list_t* io_ctx_trash;
 
 } co_net_selector_t;
