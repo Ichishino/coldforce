@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros">
+    <CO_INC_DIR>../../inc</CO_INC_DIR>
+    <CO_LIB_DIR>../../lib</CO_LIB_DIR>
+    <CO_BUILD_DIR>../../build</CO_BUILD_DIR>
+    <CO_BUILD_MSVC_DIR>$(CO_BUILD_DIR)/msvc</CO_BUILD_MSVC_DIR>
+    <CO_BUILD_BIN_DIR>$(CO_BUILD_MSVC_DIR)/$(Configuration)$(PlatformArchitecture)</CO_BUILD_BIN_DIR>
+    <CO_BUILD_OBJ_DIR>$(CO_BUILD_MSVC_DIR)/$(Configuration)$(PlatformArchitecture)/test/$(ProjectName)</CO_BUILD_OBJ_DIR>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OutDir>$(CO_BUILD_BIN_DIR)/</OutDir>
+    <IntDir>$(CO_BUILD_OBJ_DIR)/</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(CO_INC_DIR)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <TreatWarningAsError>true</TreatWarningAsError>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(CO_LIB_DIR)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>ws2_32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <BuildMacro Include="CO_INC_DIR">
+      <Value>$(CO_INC_DIR)</Value>
+    </BuildMacro>
+    <BuildMacro Include="CO_LIB_DIR">
+      <Value>$(CO_LIB_DIR)</Value>
+    </BuildMacro>
+    <BuildMacro Include="CO_BUILD_DIR">
+      <Value>$(CO_BUILD_DIR)</Value>
+    </BuildMacro>
+    <BuildMacro Include="CO_BUILD_MSVC_DIR">
+      <Value>$(CO_BUILD_MSVC_DIR)</Value>
+    </BuildMacro>
+    <BuildMacro Include="CO_BUILD_BIN_DIR">
+      <Value>$(CO_BUILD_BIN_DIR)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="CO_BUILD_OBJ_DIR">
+      <Value>$(CO_BUILD_OBJ_DIR)</Value>
+    </BuildMacro>
+  </ItemGroup>
+</Project>
