@@ -15,7 +15,7 @@ CO_EXTERN_C_BEGIN
 
 CO_CORE_API
 uint64_t
-co_get_current_time_in_msecs(
+co_get_current_time_in_msec(
     void
 );
 

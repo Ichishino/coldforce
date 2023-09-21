@@ -89,7 +89,7 @@ co_net_worker_wake_up(
 bool
 co_net_worker_dispatch(
     co_net_worker_t* net_worker,
-    co_event_t* event
+    co_event_st* event
 );
 
 bool

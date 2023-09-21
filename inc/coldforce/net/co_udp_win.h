@@ -24,8 +24,6 @@ struct co_udp_t;
 
 typedef struct
 {
-    co_net_addr_t local_net_addr;
-
     co_list_t* io_send_ctxs;
 
     struct co_udp_receive_ctx_t

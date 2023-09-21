@@ -60,7 +60,7 @@ co_event_worker_setup(
     event_worker->stop_receiving = false;
 
     event_worker->event_queue =
-        co_queue_create(sizeof(co_event_t), NULL);
+        co_queue_create(sizeof(co_event_st), NULL);
     event_worker->event_queue_mutex = co_mutex_create();
     event_worker->event_handler_map = co_map_create(NULL);
     event_worker->wait_semaphore = co_semaphore_create(0);
@@ -164,7 +164,7 @@ co_event_worker_run(
         long event_count =
             (long)co_event_worker_get_event_count(event_worker);
 
-        co_event_t event = { 0 };
+        co_event_st event = { 0 };
 
         while ((event_count > 0) &&
             co_event_worker_pump(event_worker, &event))
@@ -216,7 +216,7 @@ co_event_worker_wake_up(
 bool
 co_event_worker_dispatch(
     co_event_worker_t* event_worker,
-    co_event_t* event
+    co_event_st* event
 )
 {
     switch (event->event_id)
@@ -295,7 +295,7 @@ co_event_worker_on_idle(
 bool
 co_event_worker_add(
     co_event_worker_t* event_worker,
-    const co_event_t* event
+    const co_event_st* event
 )
 {
     bool result = false;
@@ -324,7 +324,7 @@ co_event_worker_add(
 bool
 co_event_worker_pump(
     co_event_worker_t* event_worker,
-    co_event_t* event
+    co_event_st* event
 )
 {
     co_event_worker_check_timer(event_worker);
@@ -351,8 +351,8 @@ co_event_worker_register_timer(
 
 static int
 co_compare_event(
-    const co_event_t* event1,
-    const co_event_t* event2
+    const co_event_st* event1,
+    const co_event_st* event2
 )
 {
     return
@@ -369,10 +369,10 @@ co_event_worker_unregister_timer(
 {
     if (timer->queued)
     {
-        co_event_t timer_event = {
+        co_event_st timer_event = {
             CO_EVENT_ID_TIMER, (uintptr_t)timer, true };
 
-        co_event_t* queued_event = (co_event_t*)
+        co_event_st* queued_event = (co_event_st*)
             co_queue_find(event_worker->event_queue,
                 &timer_event, (co_item_compare_fn)co_compare_event);
         co_assert(queued_event != NULL);
@@ -401,7 +401,7 @@ co_event_worker_check_timer(
         co_timer_t* timer =
             co_timer_manager_remove_head_timer(event_worker->timer_manager);
 
-        co_event_t timer_event = {
+        co_event_st timer_event = {
             CO_EVENT_ID_TIMER, (uintptr_t)timer, true };
 
         if (co_event_worker_add(event_worker, &timer_event))

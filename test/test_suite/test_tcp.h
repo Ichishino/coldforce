@@ -4,6 +4,9 @@
 
 #include "test_tcp_server_thread.h"
 
+#define TEST_EVENT_TCP_SERVER_REQ_CLOSE  1
+#define TEST_EVENT_TCP_SERVER_RES_CLOSE  2
+
 typedef struct
 {
     co_tcp_client_t* tcp_client;
@@ -15,7 +18,7 @@ typedef struct
     size_t send_async_count;
     size_t send_async_comp_count;
 
-} test_tcp_client_t;
+} test_tcp_client_st;
 
 typedef struct
 {
@@ -28,8 +31,8 @@ typedef struct
     size_t client_count;
 
     co_list_t* test_tcp_clients;
-    test_tcp_server_thread_t test_tcp_server_thread;
+    test_tcp_server_thread_st test_tcp_server_thread;
 
-} test_tcp_thread_t;
+} test_tcp_thread_st;
 
-void test_tcp_run(test_tcp_thread_t* thread);
+void test_tcp_run(test_tcp_thread_st* thread);

@@ -99,7 +99,9 @@ co_app_run(
     co_app_t* app
 )
 {
-    co_core_log_info("app start");
+    co_core_log_info(
+        "app [%08lx] start",
+        app->main_thread.id);
 
     bool create_result = true;
 
@@ -120,7 +122,9 @@ co_app_run(
     }
 
     co_core_log_info(
-        "app exit: %d", app->main_thread.exit_code);
+        "app [%08lx] exit: (%d)",
+        app->main_thread.id,
+        app->main_thread.exit_code);
 
     return app->main_thread.exit_code;
 }

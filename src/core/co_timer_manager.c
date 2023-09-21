@@ -67,7 +67,7 @@ co_timer_manager_register(
         return false;
     }
 
-    new_item->end = co_get_current_time_in_msecs() + timer->msec;
+    new_item->end = co_get_current_time_in_msec() + timer->msec;
     new_item->timer = timer;
 
     co_list_iterator_t* it =
@@ -132,7 +132,7 @@ co_timer_manager_get_next_timeout(
     }
     else
     {
-        uint64_t now = co_get_current_time_in_msecs();
+        uint64_t now = co_get_current_time_in_msec();
 
         const co_list_data_st* data =
             co_list_get_head(timer_manager->timers);

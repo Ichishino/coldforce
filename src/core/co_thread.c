@@ -10,6 +10,7 @@
 #   include <pthread.h>
 #   include <sys/syscall.h>
 #   include <sys/types.h>
+#   include <errno.h>
 #endif
 
 //---------------------------------------------------------------------------//
@@ -55,7 +56,7 @@ co_thread_main(
     thread->id = syscall(SYS_gettid);
 #endif
     co_core_log_info(
-        "thread (%08lx) start", thread->id);
+        "thread [%08lx] start", thread->id);
 
     bool create_result = true;
 
@@ -83,12 +84,12 @@ co_thread_main(
     }
 
     co_core_log_info(
-        "thread (%08lx) exit: %d", thread->id, thread->exit_code);
+        "thread [%08lx] exit: (%d)", thread->id, thread->exit_code);
 
 #ifdef CO_OS_WIN
     return thread->exit_code;
 #else
-    return NULL;
+    return (void*)(uintptr_t)thread->exit_code;
 #endif
 }
 
@@ -202,12 +203,24 @@ co_thread_start(
         NULL, 0, co_thread_main, &thread_param, 0, NULL);
 #else
     pthread_t* pthread = (pthread_t*)co_mem_alloc(sizeof(pthread_t));
-    pthread_create(pthread, NULL, co_thread_main, &thread_param);
+    memset(pthread, 0x00, sizeof(pthread_t));
+
+    if (pthread_create(pthread, NULL, co_thread_main, &thread_param) != 0)
+    {
+        co_core_log_error("pthread_create error: (%d)", errno);
+        co_mem_free(pthread);
+        co_semaphore_destroy(thread_param.semaphore);
+
+        return false;
+    }
+
     thread->handle = (co_thread_handle_t*)pthread;
 #endif
 
     if (thread->handle == NULL)
     {
+        co_semaphore_destroy(thread_param.semaphore);
+
         return false;
     }
 

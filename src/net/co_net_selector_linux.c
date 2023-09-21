@@ -32,10 +32,10 @@ static const struct co_net_event_ids net_event_ids[4] =
 
     { CO_NET_EVENT_ID_TCP_CONNECT_COMPLETE, 0 },
 
-    { CO_NET_EVENT_ID_TCP_SEND_READY,
+    { CO_NET_EVENT_ID_TCP_SEND_ASYNC_READY,
       CO_NET_EVENT_ID_TCP_RECEIVE_READY },
 
-    { CO_NET_EVENT_ID_UDP_SEND_READY,
+    { CO_NET_EVENT_ID_UDP_SEND_ASYNC_READY,
       CO_NET_EVENT_ID_UDP_RECEIVE_READY }
 };
 
@@ -177,7 +177,7 @@ co_net_selector_update(
 {
     co_assert(net_selector->sock_count > 0);
 
-    struct epoll_event e;
+    struct epoll_event e = { 0 };
 
     e.events = flags | EPOLLET;
     e.data.ptr = sock;

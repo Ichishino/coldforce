@@ -11,11 +11,10 @@
 #   endif
 #endif
 
-void ctrl_c_handler(int sig)
+void on_signal(int sig)
 {
-    (void)sig;
+    test_info("**** signal: (%d)", sig);
 
-    // quit app safely
     co_app_stop();
 }
 
@@ -25,7 +24,7 @@ void ctrl_c_handler(int sig)
 
 int main(int argc, char** argv)
 {
-    signal(SIGINT, ctrl_c_handler);
+    signal(SIGINT, on_signal);
 
     return test_app_run(argc, argv);
 }

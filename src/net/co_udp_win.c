@@ -179,7 +179,7 @@ co_win_udp_send_async(
 
     memset(&io_ctx->ol, 0x00, sizeof(WSAOVERLAPPED));
 
-    io_ctx->id = CO_WIN_NET_IO_ID_UDP_SEND;
+    io_ctx->id = CO_WIN_NET_IO_ID_UDP_SEND_ASYNC;
     io_ctx->sock = &udp->sock;
 
     WSABUF buf;
@@ -215,14 +215,27 @@ co_win_udp_send_async(
 
         co_list_add_tail(
             udp->win.io_send_ctxs, io_ctx);
+
+        co_udp_log_debug(
+            &udp->sock.local_net_addr,
+            "-->",
+            remote_net_addr,
+            "udp send async QUEUED %d bytes", data_size);
     }
     else
     {
+        co_udp_log_debug_hex_dump(
+            &udp->sock.local_net_addr,
+            "-->",
+            remote_net_addr,
+            data, data_size,
+            "udp send async %d bytes", data_size);
+
         co_mem_free(io_ctx);
 
         co_thread_send_event(
             udp->sock.owner_thread,
-            CO_NET_EVENT_ID_UDP_SEND_COMPLETE,
+            CO_NET_EVENT_ID_UDP_SEND_ASYNC_COMPLETE,
             (uintptr_t)udp,
             (uintptr_t)data_size);
     }

@@ -23,7 +23,7 @@ struct co_event_worker_t;
 typedef void(*co_event_run_fn)(struct co_event_worker_t*);
 typedef co_wait_result_t(*co_event_wait_fn)(struct co_event_worker_t*, uint32_t);
 typedef void(*co_event_wake_up_fn)(struct co_event_worker_t*);
-typedef bool(*co_event_dispatch_fn)(struct co_event_worker_t*, co_event_t*);
+typedef bool(*co_event_dispatch_fn)(struct co_event_worker_t*, co_event_st*);
 typedef void(*co_event_idle_fn)(struct co_event_worker_t*);
 
 typedef struct co_event_worker_t
@@ -78,13 +78,13 @@ co_event_worker_run(
 bool
 co_event_worker_add(
     co_event_worker_t* event_worker,
-    const co_event_t* event
+    const co_event_st* event
 );
 
 bool
 co_event_worker_pump(
     co_event_worker_t* event_worker,
-    co_event_t* event
+    co_event_st* event
 );
 
 bool
@@ -126,7 +126,7 @@ CO_CORE_API
 bool
 co_event_worker_dispatch(
     co_event_worker_t* event_worker,
-    co_event_t* event
+    co_event_st* event
 );
 
 CO_CORE_API

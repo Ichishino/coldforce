@@ -27,9 +27,9 @@ typedef struct
     uintptr_t param1;
     uintptr_t param2;
 
-} co_event_t;
+} co_event_st;
 
-typedef void(*co_event_fn)(struct co_thread_t* self, const co_event_t* event);
+typedef void(*co_event_fn)(struct co_thread_t* self, const co_event_st* event);
 typedef void(*co_task_fn)(uintptr_t param1, uintptr_t param2);
 
 typedef struct

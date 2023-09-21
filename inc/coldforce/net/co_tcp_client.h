@@ -28,8 +28,8 @@ struct co_tcp_client_t;
 typedef void(*co_tcp_close_fn)(
     co_thread_t* self, struct co_tcp_client_t* client);
 
-typedef void(*co_tcp_send_fn)(
-    co_thread_t* self, struct co_tcp_client_t* client, bool result);
+typedef void(*co_tcp_send_async_fn)(
+    co_thread_t* self, struct co_tcp_client_t* client, void* user_data, bool result);
 
 typedef void(*co_tcp_receive_fn)(
     co_thread_t* self, struct co_tcp_client_t* client);
@@ -39,8 +39,16 @@ typedef void(*co_tcp_connect_fn)(
 
 typedef struct
 {
+    const void* data;
+    size_t data_size;
+    void* user_data;
+
+} co_tcp_send_async_data_t;
+
+typedef struct
+{
     co_tcp_connect_fn on_connect;
-    co_tcp_send_fn on_send_async;
+    co_tcp_send_async_fn on_send_async;
     co_tcp_receive_fn on_receive;
     co_tcp_close_fn on_close;
 
@@ -57,11 +65,10 @@ typedef struct co_tcp_client_t
     bool destroy_later;
 
     co_timer_t* close_timer;
+    co_queue_t* send_async_queue;
 
 #ifdef CO_OS_WIN
     co_win_tcp_client_extension_t win;
-#else
-    co_queue_t* send_queue;
 #endif
 
 } co_tcp_client_t;
@@ -103,14 +110,14 @@ co_tcp_client_on_connect_complete(
 );
 
 void
-co_tcp_client_on_send_ready(
+co_tcp_client_on_send_async_ready(
     co_tcp_client_t* client
 );
 
 void
-co_tcp_client_on_send_complete(
+co_tcp_client_on_send_async_complete(
     co_tcp_client_t* client,
-    size_t data_size
+    bool result
 );
 
 void
@@ -172,7 +179,8 @@ bool
 co_tcp_send_async(
     co_tcp_client_t* client,
     const void* data,
-    size_t data_size
+    size_t data_size,
+    void* user_data
 );
 
 CO_NET_API

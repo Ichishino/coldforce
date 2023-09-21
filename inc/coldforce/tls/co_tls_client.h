@@ -125,7 +125,8 @@ bool
 co_tls_send_async(
     co_tcp_client_t* client,
     const void* data,
-    size_t data_size
+    size_t data_size,
+    void* user_data
 );
 
 CO_TLS_API

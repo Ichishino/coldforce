@@ -1,7 +1,7 @@
 #include "test_udp_server_thread.h"
 #include "test_app.h"
 
-static void test_udp_server_on_receive(test_udp_server_thread_t* self, co_udp_t* udp)
+static void test_udp_server_on_receive(test_udp_server_thread_st* self, co_udp_t* udp)
 {
     (void)self;
 
@@ -25,7 +25,7 @@ static void test_udp_server_on_receive(test_udp_server_thread_t* self, co_udp_t*
     }
 }
 
-static bool test_udp_server_thread_on_create(test_udp_server_thread_t* self)
+static bool test_udp_server_thread_on_create(test_udp_server_thread_st* self)
 {
     co_net_addr_t local_net_addr = { 0 };
     co_net_addr_set_family(&local_net_addr, self->family);
@@ -41,6 +41,9 @@ static bool test_udp_server_thread_on_create(test_udp_server_thread_t* self)
     co_udp_callbacks_st* callbacks = co_udp_get_callbacks(self->udp_server);
     callbacks->on_receive = (co_udp_receive_fn)test_udp_server_on_receive;
 
+    co_socket_option_set_reuse_addr(
+        co_udp_get_socket(self->udp_server), true);
+
     if (!co_udp_receive_start(self->udp_server))
     {
         test_error("Failed: test_udp_server_thread_on_create(%d, %d)", self->family, self->port);
@@ -54,12 +57,12 @@ static bool test_udp_server_thread_on_create(test_udp_server_thread_t* self)
     return true;
 }
 
-static void test_udp_server_thread_on_destroy(test_udp_server_thread_t* self)
+static void test_udp_server_thread_on_destroy(test_udp_server_thread_st* self)
 {
     co_udp_destroy(self->udp_server);
 }
 
-void test_udp_server_thread_start(test_udp_server_thread_t* test_udp_server_thread)
+void test_udp_server_thread_start(test_udp_server_thread_st* test_udp_server_thread)
 {
     co_net_thread_setup(
         (co_thread_t*)test_udp_server_thread, "test_udp_server_thread",
@@ -73,7 +76,7 @@ void test_udp_server_thread_start(test_udp_server_thread_t* test_udp_server_thre
     }
 }
 
-void test_udp_server_thread_stop(test_udp_server_thread_t* test_udp_server_thread)
+void test_udp_server_thread_stop(test_udp_server_thread_st* test_udp_server_thread)
 {
     co_thread_stop((co_thread_t*)test_udp_server_thread);
     co_thread_join((co_thread_t*)test_udp_server_thread);

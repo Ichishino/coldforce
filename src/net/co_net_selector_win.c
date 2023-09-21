@@ -185,11 +185,11 @@ co_net_selector_wait(
 
                 break;
             }
-            case CO_WIN_NET_IO_ID_TCP_SEND:
+            case CO_WIN_NET_IO_ID_TCP_SEND_ASYNC:
             {
                 co_thread_send_event(
                     io_ctx->sock->owner_thread,
-                    CO_NET_EVENT_ID_TCP_SEND_COMPLETE,
+                    CO_NET_EVENT_ID_TCP_SEND_ASYNC_COMPLETE,
                     (uintptr_t)io_ctx->sock,
                     (uintptr_t)entries[index].dwNumberOfBytesTransferred);
 
@@ -230,11 +230,11 @@ co_net_selector_wait(
 
                 break;
             }
-            case CO_WIN_NET_IO_ID_UDP_SEND:
+            case CO_WIN_NET_IO_ID_UDP_SEND_ASYNC:
             {
                 co_thread_send_event(
                     io_ctx->sock->owner_thread,
-                    CO_NET_EVENT_ID_UDP_SEND_COMPLETE,
+                    CO_NET_EVENT_ID_UDP_SEND_ASYNC_COMPLETE,
                     (uintptr_t)io_ctx->sock,
                     (uintptr_t)entries[index].dwNumberOfBytesTransferred);
 

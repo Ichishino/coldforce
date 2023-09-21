@@ -693,7 +693,8 @@ bool
 co_tls_send_async(
     co_tcp_client_t* client,
     const void* data,
-    size_t data_size
+    size_t data_size,
+    void* user_data
 )
 {
     co_tls_log_debug_hex_dump(
@@ -714,7 +715,8 @@ co_tls_send_async(
     {
         result = co_tcp_send_async(client,
             co_byte_array_get_ptr(tls->send_data, 0),
-            co_byte_array_get_count(tls->send_data));
+            co_byte_array_get_count(tls->send_data),
+            user_data);
     }
 
     return result;

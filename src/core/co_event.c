@@ -57,7 +57,7 @@ co_thread_send_event(
     uintptr_t param2
 )
 {
-    co_event_t event = { event_id, param1, param2 };
+    co_event_st event = { event_id, param1, param2 };
 
     return co_event_worker_add(thread->event_worker, &event);
 }
@@ -82,7 +82,7 @@ co_thread_send_task_event(
     task->param1 = param1;
     task->param2 = param2;
 
-    co_event_t event = { CO_EVENT_ID_TASK, (uintptr_t)task, 0 };
+    co_event_st event = { CO_EVENT_ID_TASK, (uintptr_t)task, 0 };
 
     if (!co_event_worker_add(thread->event_worker, &event))
     {

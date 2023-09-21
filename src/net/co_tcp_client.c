@@ -74,6 +74,7 @@ co_tcp_client_setup(
     client->open_remote = false;
 
     client->destroy_later = false;
+    client->send_async_queue = NULL;
 
     client->callbacks.on_connect = NULL;
     client->callbacks.on_send_async = NULL;
@@ -83,15 +84,11 @@ co_tcp_client_setup(
     client->close_timer = NULL;
 
 #ifdef CO_OS_WIN
-
     if (!co_win_tcp_client_setup(
         client, CO_WIN_TCP_DEFAULT_RECEIVE_BUFFER_SIZE))
     {
         return false;
     }
-
-#else
-    client->send_queue = NULL;
 #endif
 
     return true;
@@ -105,22 +102,13 @@ co_tcp_client_cleanup(
 #ifdef CO_OS_WIN
     co_win_tcp_client_connector_cleanup(client);
     co_win_tcp_client_cleanup(client);
-#else
-
-    if (client->send_queue != NULL)
-    {
-        co_buffer_st data;
-
-        while (co_queue_pop(client->send_queue, &data))
-        {
-            co_mem_free(data.ptr);
-        }
-
-        co_queue_destroy(client->send_queue);
-        client->send_queue = NULL;
-    }
-
 #endif
+
+    if (client->send_async_queue != NULL)
+    {
+        co_queue_destroy(client->send_async_queue);
+        client->send_async_queue = NULL;
+    }
 
     client->destroy_later = false;
 
@@ -191,7 +179,7 @@ co_tcp_client_on_connect_complete(
 }
 
 void
-co_tcp_client_on_send_ready(
+co_tcp_client_on_send_async_ready(
     co_tcp_client_t* client
 )
 {
@@ -205,12 +193,8 @@ co_tcp_client_on_send_ready(
     (void)client;
 #else
 
-    co_buffer_st* send_data = NULL;
-
-    if (client->send_queue != NULL)
-    {
-        send_data = (co_buffer_st*)co_queue_peek_head(client->send_queue);
-    }
+    co_tcp_send_async_data_t* send_data =
+        (co_tcp_send_async_data_t*)co_queue_peek_head(client->send_async_queue);
 
     if (send_data == NULL)
     {
@@ -222,43 +206,48 @@ co_tcp_client_on_send_ready(
     }
 
     ssize_t sent_size = co_socket_handle_send(
-        client->sock.handle, send_data->ptr, send_data->size, 0);
+        client->sock.handle, send_data->data, send_data->data_size, 0);
 
-    if ((sent_size > 0) && ((size_t)sent_size == send_data->size))
+    if ((size_t)sent_size == send_data->data_size)
     {
-        co_buffer_st used_data;
-        co_queue_pop(client->send_queue, &used_data);
-
-        co_mem_free(used_data.ptr);
-
         co_thread_send_event(
             client->sock.owner_thread,
-            CO_NET_EVENT_ID_TCP_SEND_COMPLETE,
+            CO_NET_EVENT_ID_TCP_SEND_ASYNC_COMPLETE,
             (uintptr_t)client,
             (uintptr_t)sent_size);
 
-        co_tcp_client_on_send_ready(client);
+        co_tcp_client_on_send_async_ready(client);
     }
 
 #endif
 }
 
 void
-co_tcp_client_on_send_complete(
+co_tcp_client_on_send_async_complete(
     co_tcp_client_t* client,
-    size_t data_size
+    bool result
 )
 {
     co_tcp_log_debug(
         &client->sock.local_net_addr,
         "<--",
         &client->remote_net_addr,
-        "tcp send async complete");
+        "tcp send async complete: (%d)",
+        result);
+
+    co_tcp_send_async_data_t send_data;
+
+    if ((client->send_async_queue == NULL) ||
+        !co_queue_pop(client->send_async_queue, &send_data))
+    {
+        return;
+    }
 
     if (client->callbacks.on_send_async != NULL)
     {
         client->callbacks.on_send_async(
-            client->sock.owner_thread, client, (data_size > 0));
+            client->sock.owner_thread, client,
+            send_data.user_data, result);
     }
 }
 
@@ -535,19 +524,30 @@ bool
 co_tcp_send_async(
     co_tcp_client_t* client,
     const void* data,
-    size_t data_size
+    size_t data_size,
+    void* user_data
 )
 {
-    co_tcp_log_debug_hex_dump(
-        &client->sock.local_net_addr,
-        "-->",
-        &client->remote_net_addr,
-        data, data_size,
-        "tcp send async %zd bytes", data_size);
+    if (client->send_async_queue == NULL)
+    {
+        client->send_async_queue = co_queue_create(
+            sizeof(co_tcp_send_async_data_t), NULL);
+    }
+
+    co_tcp_send_async_data_t send_data = { 0 };
+
+    send_data.data = data;
+    send_data.data_size = data_size;
+    send_data.user_data = user_data;
+
+    co_queue_push(client->send_async_queue, &send_data);
 
 #ifdef CO_OS_WIN
 
-    return co_win_tcp_client_send_async(client, data, data_size);
+    if (co_win_tcp_client_send_async(client, data, data_size))
+    {
+        return true;
+    }
 
 #else
 
@@ -556,14 +556,32 @@ co_tcp_send_async(
 
     co_net_worker_set_tcp_send(net_worker, client, true);
 
+    if (co_queue_get_count(client->send_async_queue) > 1)
+    {
+        co_tcp_log_debug(
+            &client->sock.local_net_addr,
+            "-->",
+            &client->remote_net_addr,
+            "tcp send async QUEUED %d bytes", data_size);
+
+        return true;
+    }
+
     if (co_socket_handle_send(
         client->sock.handle, data, data_size, 0) == (ssize_t)data_size)
     {
+        co_tcp_log_debug_hex_dump(
+            &client->sock.local_net_addr,
+            "-->",
+            &client->remote_net_addr,
+            data, data_size,
+            "tcp send async %d bytes", data_size);
+
         co_net_worker_set_tcp_send(net_worker, client, false);
 
         co_thread_send_event(
             client->sock.owner_thread,
-            CO_NET_EVENT_ID_TCP_SEND_COMPLETE,
+            CO_NET_EVENT_ID_TCP_SEND_ASYNC_COMPLETE,
             (uintptr_t)client,
             (uintptr_t)data_size);
 
@@ -575,38 +593,23 @@ co_tcp_send_async(
 
         if ((error_code == EAGAIN) || (error_code == EWOULDBLOCK))
         {
-            if (client->send_queue == NULL)
-            {
-                client->send_queue = co_queue_create(sizeof(co_buffer_st), NULL);
-            }
+            co_tcp_log_debug(
+                &client->sock.local_net_addr,
+                "-->",
+                &client->remote_net_addr,
+                "tcp send async QUEUED %d bytes", data_size);
 
-            co_buffer_st buffer;
-
-            buffer.size = data_size;
-            buffer.ptr = co_mem_alloc(buffer.size);
-
-            if (buffer.ptr == NULL)
-            {
-                co_net_worker_set_tcp_send(net_worker, client, false);
-
-                return false;
-            }
-
-            memcpy(buffer.ptr, data, buffer.size);
-
-            co_queue_push(client->send_queue, &buffer);
-        }
-        else
-        {
-            co_net_worker_set_tcp_send(net_worker, client, false);
-
-            return false;
+            return true;
         }
     }
 
-    return true;
+    co_net_worker_set_tcp_send(net_worker, client, false);
 
 #endif
+
+    co_queue_remove(client->send_async_queue, 1);
+
+    return false;
 }
 
 ssize_t

@@ -3,7 +3,7 @@
 
 #include <assert.h>
 
-static void test_tcp_server_on_receive(test_tcp_server_thread_t* self, co_tcp_client_t* tcp_client)
+static void test_tcp_server_on_receive(test_tcp_server_thread_st* self, co_tcp_client_t* tcp_client)
 {
     for (;;)
     {
@@ -16,6 +16,7 @@ static void test_tcp_server_on_receive(test_tcp_server_thread_t* self, co_tcp_cl
             break;
         }
 
+        // TODO
         if (size == 5 &&
             memcmp(data, "close", 5) == 0)
         {
@@ -30,12 +31,24 @@ static void test_tcp_server_on_receive(test_tcp_server_thread_t* self, co_tcp_cl
     }
 }
 
-static void test_tcp_server_on_close(test_tcp_server_thread_t* self, co_tcp_client_t* tcp_client)
+static void test_tcp_server_on_close(test_tcp_server_thread_st* self, co_tcp_client_t* tcp_client)
 {
     co_list_remove(self->tcp_clients, tcp_client);
+
+    if (self->close)
+    {
+        if (co_list_get_count(self->tcp_clients) == 0)
+        {
+            co_thread_t* parent = co_thread_get_parent((co_thread_t*)self);
+
+            co_thread_send_event(parent, TEST_EVENT_TCP_SERVER_RES_CLOSE, 0, 0);
+
+            test_info("tcp server send res-close");
+        }
+    }
 }
 
-static void test_tcp_server_on_tcp_accept(test_tcp_server_thread_t* self,
+static void test_tcp_server_on_tcp_accept(test_tcp_server_thread_st* self,
     co_tcp_server_t* tcp_server, co_tcp_client_t* tcp_client)
 {
     assert(self->tcp_server == tcp_server);
@@ -49,8 +62,35 @@ static void test_tcp_server_on_tcp_accept(test_tcp_server_thread_t* self,
     co_list_add_tail(self->tcp_clients, tcp_client);
 }
 
-static bool test_tcp_server_on_thread_create(test_tcp_server_thread_t* self)
+static void test_tcp_server_on_req_close(test_tcp_server_thread_st* self, const co_event_st* event)
 {
+    (void)event;
+
+    co_assert(!self->close);
+
+    test_info("tcp server receive req-close");
+
+    self->close = true;
+
+    if (co_list_get_count(self->tcp_clients) == 0)
+    {
+        co_thread_t* parent = co_thread_get_parent((co_thread_t*)self);
+
+        co_thread_send_event(parent, TEST_EVENT_TCP_SERVER_RES_CLOSE, 0, 0);
+
+        test_info("tcp server send res-close");
+    }
+}
+
+static bool test_tcp_server_on_thread_create(test_tcp_server_thread_st* self)
+{
+    self->close = false;
+
+    co_thread_set_event_handler(
+        (co_thread_t*)self,
+        TEST_EVENT_TCP_SERVER_REQ_CLOSE,
+        (co_event_fn)test_tcp_server_on_req_close);
+
     // clients
 
     co_list_ctx_st list_ctx = { 0 };
@@ -74,6 +114,9 @@ static bool test_tcp_server_on_thread_create(test_tcp_server_thread_t* self)
     co_tcp_server_callbacks_st* callbacks = co_tcp_server_get_callbacks(self->tcp_server);
     callbacks->on_accept = (co_tcp_accept_fn)test_tcp_server_on_tcp_accept;
 
+    co_socket_option_set_reuse_addr(
+        co_tcp_server_get_socket(self->tcp_server), true);
+
     // server start
 
     if (!co_tcp_server_start(self->tcp_server, SOMAXCONN))
@@ -89,20 +132,21 @@ static bool test_tcp_server_on_thread_create(test_tcp_server_thread_t* self)
     return true;
 }
 
-static void test_tcp_server_on_thread_destroy(test_tcp_server_thread_t* self)
+static void test_tcp_server_on_thread_destroy(test_tcp_server_thread_st* self)
 {
     co_tcp_server_destroy(self->tcp_server);
 
     if (co_list_get_count(self->tcp_clients) != 0)
     {
-        test_error("Failed: test_tcp_server_on_thread_destroy(%d, %d)\n", self->family, self->port);
-        exit(-1);
+        test_error("Failed: test_tcp_server_on_thread_destroy(%d, %d)", self->family, self->port);
+
+        co_thread_set_exit_code(-1);
     }
 
     co_list_destroy(self->tcp_clients);
 }
 
-void test_tcp_server_thread_start(test_tcp_server_thread_t* test_tcp_server_thread)
+void test_tcp_server_thread_start(test_tcp_server_thread_st* test_tcp_server_thread)
 {
     co_net_thread_setup(
         (co_thread_t*)test_tcp_server_thread, "test_tcp_server_thread",
@@ -116,7 +160,7 @@ void test_tcp_server_thread_start(test_tcp_server_thread_t* test_tcp_server_thre
     }
 }
 
-void test_tcp_server_thread_stop(test_tcp_server_thread_t* test_tcp_server_thread)
+void test_tcp_server_thread_stop(test_tcp_server_thread_st* test_tcp_server_thread)
 {
     co_thread_stop((co_thread_t*)test_tcp_server_thread);
     co_thread_join((co_thread_t*)test_tcp_server_thread);
