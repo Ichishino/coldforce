@@ -109,10 +109,12 @@ co_tcp_client_on_connect_complete(
     int error_code
 );
 
+#ifndef CO_OS_WIN
 void
 co_tcp_client_on_send_async_ready(
     co_tcp_client_t* client
 );
+#endif
 
 void
 co_tcp_client_on_send_async_complete(

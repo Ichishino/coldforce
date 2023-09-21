@@ -178,6 +178,7 @@ co_tcp_client_on_connect_complete(
     }
 }
 
+#ifndef CO_OS_WIN
 void
 co_tcp_client_on_send_async_ready(
     co_tcp_client_t* client
@@ -188,10 +189,6 @@ co_tcp_client_on_send_async_ready(
         "<--",
         &client->remote_net_addr,
         "tcp send async ready");
-
-#ifdef CO_OS_WIN
-    (void)client;
-#else
 
     co_tcp_send_async_data_t* send_data =
         (co_tcp_send_async_data_t*)co_queue_peek_head(client->send_async_queue);
@@ -218,9 +215,8 @@ co_tcp_client_on_send_async_ready(
 
         co_tcp_client_on_send_async_ready(client);
     }
-
-#endif
 }
+#endif // !CO_OS_WIN
 
 void
 co_tcp_client_on_send_async_complete(
@@ -421,6 +417,11 @@ co_tcp_client_destroy(
     {
         return;
     }
+
+    client->callbacks.on_connect = NULL;
+    client->callbacks.on_send_async = NULL;
+    client->callbacks.on_receive = NULL;
+    client->callbacks.on_close = NULL;
 
     co_tcp_close(client);
 

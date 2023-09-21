@@ -186,12 +186,14 @@ co_net_worker_dispatch(
             (co_tcp_client_t*)event->param1, (int)event->param2);
         break;
     }
+#ifndef CO_OS_WIN
     case CO_NET_EVENT_ID_TCP_SEND_ASYNC_READY:
     {
         co_tcp_client_on_send_async_ready(
             (co_tcp_client_t*)event->param1);
         break;
     }
+#endif
     case CO_NET_EVENT_ID_TCP_SEND_ASYNC_COMPLETE:
     {
         co_tcp_client_on_send_async_complete(
@@ -216,12 +218,14 @@ co_net_worker_dispatch(
             net_worker, (co_tcp_client_t*)event->param1);
         break;
     }
+#ifndef CO_OS_WIN
     case CO_NET_EVENT_ID_UDP_SEND_ASYNC_READY:
     {
         co_udp_on_send_async_ready(
             (co_udp_t*)event->param1);
         break;
     }
+#endif
     case CO_NET_EVENT_ID_UDP_SEND_ASYNC_COMPLETE:
     {
         co_udp_on_send_async_complete(

@@ -65,10 +65,12 @@ typedef struct co_udp_t
 // private
 //---------------------------------------------------------------------------//
 
+#ifndef CO_OS_WIN
 void
 co_udp_on_send_async_ready(
     co_udp_t* udp
 );
+#endif
 
 void
 co_udp_on_send_async_complete(

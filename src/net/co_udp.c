@@ -20,6 +20,7 @@
 // private
 //---------------------------------------------------------------------------//
 
+#ifndef CO_OS_WIN
 void
 co_udp_on_send_async_ready(
     co_udp_t* udp
@@ -30,11 +31,6 @@ co_udp_on_send_async_ready(
         NULL,
         NULL,
         "udp send async ready");
-
-#ifdef CO_OS_WIN
-    (void)udp;
-    co_assert(false);
-#else
 
     co_assert(udp->send_async_queue != NULL);
 
@@ -64,9 +60,8 @@ co_udp_on_send_async_ready(
 
         co_udp_on_send_async_ready(udp);
     }
-
-#endif
 }
+#endif // !CO_OS_WIN
 
 void
 co_udp_on_send_async_complete(
@@ -209,6 +204,9 @@ co_udp_destroy(
             udp->send_async_queue = NULL;
         }
 
+        udp->callbacks.on_send_async = NULL;
+        udp->callbacks.on_receive = NULL;
+
         co_udp_close(udp);
         co_socket_cleanup(&udp->sock);
         co_mem_free_later(udp);
@@ -242,9 +240,6 @@ co_udp_close(
         udp->sock.handle = CO_SOCKET_INVALID_HANDLE;
 
         udp->sock.open_local = false;
-
-        udp->callbacks.on_send_async = NULL;
-        udp->callbacks.on_receive = NULL;
     }
 }
 
