@@ -135,10 +135,11 @@ co_net_worker_set_tcp_send(
     bool enable
 );
 
-void
+bool
 co_net_worker_close_tcp_client_local(
     co_net_worker_t* net_worker,
-    co_tcp_client_t* client
+    co_tcp_client_t* client,
+    uint32_t timeout_msec
 );
 
 bool

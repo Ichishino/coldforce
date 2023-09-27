@@ -133,12 +133,13 @@ co_net_selector_wait(
     uint32_t msec
 )
 {
-    OVERLAPPED_ENTRY entries[256];
+    OVERLAPPED_ENTRY entries[256] = { 0 };
+    static const ULONG entry_count =
+        sizeof(entries) / sizeof(OVERLAPPED_ENTRY);
     ULONG removed = 0;
 
     if (GetQueuedCompletionStatusEx(
-        net_selector->iocp,
-        entries, (sizeof(entries) / sizeof(OVERLAPPED_ENTRY)),
+        net_selector->iocp, entries, entry_count,
         &removed, msec, FALSE))
     {
         for (ULONG index = 0; index < removed; ++index)

@@ -62,7 +62,6 @@ typedef struct co_tcp_client_t
 
     co_net_addr_t remote_net_addr;
     bool open_remote;
-    bool destroy_later;
 
     co_timer_t* close_timer;
     co_queue_t* send_async_queue;
@@ -153,6 +152,13 @@ CO_NET_API
 co_tcp_callbacks_st*
 co_tcp_get_callbacks(
     co_tcp_client_t* client
+);
+
+CO_NET_API
+bool
+co_tcp_half_close(
+    co_tcp_client_t* client,
+    uint32_t timeout_msec
 );
 
 CO_NET_API

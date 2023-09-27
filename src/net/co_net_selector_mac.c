@@ -72,8 +72,6 @@ co_net_selector_create(
     }
 
     net_selector->sock_count = 0;
-    net_selector->entries =
-        co_array_create(sizeof(struct kevent));
 
     co_socket_t sock = { 0 };
     sock.handle = net_selector->cancel_fds[0];
@@ -101,8 +99,6 @@ co_net_selector_destroy(
         close(net_selector->cancel_fds[0]);
         close(net_selector->cancel_fds[1]);
         close(net_selector->kqueue_fd);
-
-        co_array_destroy(net_selector->entries);
 
         co_mem_free(net_selector);
     }
@@ -250,12 +246,9 @@ co_net_selector_wait(
         ts.tv_nsec = msec % 1000 * 1000000;
     }
 
-    co_array_set_count(net_selector->entries, net_selector->sock_count);
-    co_array_zero_clear(net_selector->entries);
-
-    struct kevent* events =
-        (struct kevent*)co_array_get_ptr(net_selector->entries, 0);
-    int event_count = (int)co_array_get_count(net_selector->entries);
+    struct kevent events[256] = { 0 };
+    static const int event_count =
+        (int)(sizeof(events) / sizeof(struct kevent));
 
     int count = kevent(net_selector->kqueue_fd,
         0, 0, events, event_count, ((msec == CO_INFINITE) ? NULL : &ts));

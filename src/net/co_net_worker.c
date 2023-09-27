@@ -2,6 +2,7 @@
 
 #include <coldforce/net/co_net_worker.h>
 #include <coldforce/net/co_net_event.h>
+#include <coldforce/net/co_net_log.h>
 
 //---------------------------------------------------------------------------//
 // net worker
@@ -405,9 +406,6 @@ co_net_worker_unregister_tcp_connection(
             co_net_selector_unregister(net_worker->net_selector, &client->sock);
         }
     }
-
-    co_socket_handle_close(client->sock.handle);
-    client->sock.handle = CO_SOCKET_INVALID_HANDLE;
 }
 
 bool
@@ -443,48 +441,52 @@ co_net_worker_tcp_client_close_timer(
     co_tcp_client_t* client =
         (co_tcp_client_t*)co_timer_get_user_data(timer);
 
+    co_tcp_log_warning(
+        &client->sock.local_net_addr,
+        "<--",
+        &client->remote_net_addr,
+        "tcp close timeout");
+
     client->open_remote = false;
 
     co_net_worker_unregister_tcp_connection(
         (co_net_worker_t*)thread->event_worker, client);
 
-    co_tcp_client_destroy(client);
+    co_tcp_client_on_close(client);
 }
 
-void
+bool
 co_net_worker_close_tcp_client_local(
     co_net_worker_t* net_worker,
-    co_tcp_client_t* client
+    co_tcp_client_t* client,
+    uint32_t timeout_msec
 )
 {
     if (!client->sock.open_local)
     {
-        return;
+        return false;
     }
 
     client->sock.open_local = false;
 
-    if (client->open_remote)
-    {
-        co_socket_handle_shutdown(
-            client->sock.handle,
-#ifdef CO_OS_WIN
-             SD_SEND
-#else
-             SHUT_WR
-#endif
-        );
-
-        client->close_timer = co_timer_create((30 * 1000),
-            (co_timer_fn)co_net_worker_tcp_client_close_timer,
-            false, client);
-
-        co_timer_start(client->close_timer);
-    }
-    else
+    if (!client->open_remote)
     {
         co_net_worker_unregister_tcp_connection(net_worker, client);
+
+        return false;
     }
+
+    co_socket_handle_shutdown(
+        client->sock.handle,
+        CO_SOCKET_SHUTDOWN_SEND);
+
+    client->close_timer = co_timer_create(timeout_msec,
+        (co_timer_fn)co_net_worker_tcp_client_close_timer,
+        false, client);
+
+    co_timer_start(client->close_timer);
+
+    return true;
 }
 
 bool

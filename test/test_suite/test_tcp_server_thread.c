@@ -16,23 +16,64 @@ static void test_tcp_server_on_receive(test_tcp_server_thread_st* self, co_tcp_c
             break;
         }
 
-        // TODO
-        if (size == 5 &&
-            memcmp(data, "close", 5) == 0)
-        {
-            co_list_remove(self->tcp_clients, tcp_client);
+        co_queue_t* receive_buffer =
+            (co_queue_t*)co_tcp_get_user_data(tcp_client);
 
-            break;
-        }
-        else
+        co_queue_push_array(receive_buffer, data, size);
+
+        for (;;)
         {
-            co_tcp_send(tcp_client, data, size);
+            if (co_queue_get_count(receive_buffer) >= TEST_TCP_PACKET_HEADER_SIZE)
+            {
+                test_tcp_packet_header_st header;
+                co_queue_peek_array(receive_buffer, &header, TEST_TCP_PACKET_HEADER_SIZE);
+
+                header.id =
+                    co_byte_order_32_network_to_host(header.id);
+                header.size =
+                    co_byte_order_32_network_to_host(header.size);
+
+                size_t packet_size =
+                    header.size + TEST_TCP_PACKET_HEADER_SIZE;
+
+                if (co_queue_get_count(receive_buffer) >= packet_size)
+                {
+                    if (header.id == 1)
+                    {
+                        char send_data[2048];
+                        co_queue_pop_array(receive_buffer, send_data, packet_size);
+
+                        co_tcp_send(
+                            tcp_client,
+                            &send_data[TEST_TCP_PACKET_HEADER_SIZE], header.size);
+                    }
+                    else if (header.id == 2)
+                    {
+                        co_queue_destroy(receive_buffer);
+
+                        co_list_remove(self->tcp_clients, tcp_client);
+
+                        return;
+                    }
+                    else
+                    {
+                        test_error("Failed: test_tcp_server_on_receive id error (%d)", header.id);
+                        exit(-1);
+                    }
+                }
+            }
+            else
+            {
+                break;
+            }
         }
     }
 }
 
 static void test_tcp_server_on_close(test_tcp_server_thread_st* self, co_tcp_client_t* tcp_client)
 {
+    co_queue_destroy((co_queue_t*)co_tcp_get_user_data(tcp_client));
+
     co_list_remove(self->tcp_clients, tcp_client);
 
     if (self->close)
@@ -58,6 +99,8 @@ static void test_tcp_server_on_tcp_accept(test_tcp_server_thread_st* self,
     co_tcp_callbacks_st* callbacks = co_tcp_get_callbacks(tcp_client);
     callbacks->on_receive = (co_tcp_receive_fn)test_tcp_server_on_receive;
     callbacks->on_close = (co_tcp_close_fn)test_tcp_server_on_close;
+
+    co_tcp_set_user_data(tcp_client, co_queue_create(1, NULL));
 
     co_list_add_tail(self->tcp_clients, tcp_client);
 }
@@ -107,7 +150,7 @@ static bool test_tcp_server_on_thread_create(test_tcp_server_thread_st* self)
 
     if (self->tcp_server == NULL)
     {
-        test_error("Failed: co_tcp_server_create(%d, %d)\n", self->family, self->port);
+        test_error("Failed: co_tcp_server_create(%d, %d)", self->family, self->port);
         exit(-1);
     }
 
@@ -121,7 +164,7 @@ static bool test_tcp_server_on_thread_create(test_tcp_server_thread_st* self)
 
     if (!co_tcp_server_start(self->tcp_server, SOMAXCONN))
     {
-        test_error("Failed: co_tcp_server_start(%d, %d)\n", self->family, self->port);
+        test_error("Failed: co_tcp_server_start(%d, %d)", self->family, self->port);
         exit(-1);
     }
 
@@ -155,7 +198,7 @@ void test_tcp_server_thread_start(test_tcp_server_thread_st* test_tcp_server_thr
 
     if (!co_thread_start((co_thread_t*)test_tcp_server_thread))
     {
-        test_error("Failed: co_thread_start(test_tcp_server_thread)\n");
+        test_error("Failed: co_thread_start(test_tcp_server_thread)");
         exit(-1);
     }
 }

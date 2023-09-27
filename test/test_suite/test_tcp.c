@@ -5,7 +5,7 @@
 
 typedef struct
 {
-    uint8_t* data;
+    test_tcp_packet_header_st* data;
     size_t size;
 
 } test_tcp_data_block_st;
@@ -19,7 +19,35 @@ static void test_tcp_client_stop(test_tcp_thread_st* self, test_tcp_client_st* t
     if (test_tcp_client->send_async_comp_count ==
         test_tcp_client->send_async_count)
     {
-        co_list_remove(self->test_tcp_clients, test_tcp_client);
+        if (!co_tcp_is_open(test_tcp_client->tcp_client))
+        {
+            co_list_remove(self->test_tcp_clients, test_tcp_client);
+        }
+        else
+        {
+            uint32_t rand = co_random_range(0, 2);
+
+            if (rand == 1)
+            {
+                test_tcp_packet_header_st packet;
+                packet.id = co_byte_order_32_host_to_network(2);
+                packet.size = 0;
+
+                if (!co_tcp_send(test_tcp_client->tcp_client, &packet, sizeof(packet)))
+                {
+                    test_error("Failed: test_tcp_thread_on_timer(co_tcp_send)");
+                    exit(-1);
+                }
+            }
+            else if (rand == 2)
+            {
+                co_list_remove(self->test_tcp_clients, test_tcp_client);
+            }
+            else
+            {
+                co_tcp_half_close(test_tcp_client->tcp_client, 30000);
+            }
+        }
 
         if (co_list_get_count(self->test_tcp_clients) == 0)
         {
@@ -63,18 +91,7 @@ static void test_tcp_thread_on_send_async(test_tcp_thread_st* self, co_tcp_clien
     test_tcp_data_block_st* data_block =
         (test_tcp_data_block_st*)user_data;
 
-    uint8_t* data =
-        co_byte_array_get_ptr(
-            test_tcp_client->send_data, 0);
-
-    if ((data_block->data < data) ||
-        ((data_block->data + data_block->size) >
-            (data + co_byte_array_get_count(test_tcp_client->send_data))))
-    {
-        test_error("Failed: test_tcp_thread_on_send_async\n");
-        exit(-1);
-    }
-
+    co_mem_free(data_block->data);
     co_mem_free(data_block);
 
     test_tcp_client->send_async_comp_count++;
@@ -123,10 +140,7 @@ static void test_tcp_thread_on_receive(test_tcp_thread_st* self, co_tcp_client_t
                 exit(-1);
             }
 
-            if (co_random_range(0, 1) == 0)
-            {
-                test_tcp_client_stop(self, test_tcp_client);
-            }
+            test_tcp_client_stop(self, test_tcp_client);
         }
     }
 }
@@ -181,15 +195,23 @@ void test_tcp_thread_on_timer(test_tcp_thread_st* self, co_timer_t* timer)
                 test_tcp_client->send_data, test_tcp_client->send_index);
         test_tcp_client->send_index += size;
 
+        size_t packet_size = TEST_TCP_PACKET_HEADER_SIZE + size;
+
+        test_tcp_packet_header_st* packet =
+            (test_tcp_packet_header_st*)co_mem_alloc(packet_size);
+        packet->id = co_byte_order_32_host_to_network(1);
+        packet->size = co_byte_order_32_host_to_network((uint32_t)size);
+        memcpy(((uint8_t*)packet) + TEST_TCP_PACKET_HEADER_SIZE, data, size);
+
         if (co_random_range(0, 1) == 0)
         {
             test_tcp_data_block_st* data_block =
                 (test_tcp_data_block_st*)co_mem_alloc(sizeof(test_tcp_data_block_st));
 
-            data_block->data = data;
-            data_block->size = size;
+            data_block->data = packet;
+            data_block->size = packet_size;
 
-            if (!co_tcp_send_async(test_tcp_client->tcp_client, data, size, data_block))
+            if (!co_tcp_send_async(test_tcp_client->tcp_client, packet, packet_size, data_block))
             {
                 test_error("Failed: test_tcp_thread_on_timer(co_tcp_send_async)");
                 exit(-1);
@@ -199,36 +221,23 @@ void test_tcp_thread_on_timer(test_tcp_thread_st* self, co_timer_t* timer)
         }
         else
         {
-            if (!co_tcp_send(test_tcp_client->tcp_client, data, size))
+            if (!co_tcp_send(test_tcp_client->tcp_client, packet, packet_size))
             {
                 test_error("Failed: test_tcp_thread_on_timer(co_tcp_send)");
                 exit(-1);
             }
 
             test_tcp_client->send_count++;
-        }
-    }
-    else
-    {
-        if (!co_tcp_send(test_tcp_client->tcp_client, "close", 5))
-        {
-            test_error("Failed: test_tcp_thread_on_timer(co_tcp_send)");
-            exit(-1);
-        }
 
-        return;
+            co_mem_free(packet);
+        }
     }
 
     if (test_tcp_client->send_index != total_size)
     {
         co_timer_set_time(test_tcp_client->send_timer, co_random_range(1, 200));
+        co_timer_start(test_tcp_client->send_timer);
     }
-    else
-    {
-        co_timer_set_time(test_tcp_client->send_timer, 1000);
-    }
-
-    co_timer_start(test_tcp_client->send_timer);
 }
 
 static void test_tcp_thread_on_res_close(test_tcp_thread_st* self, const co_event_st* event)

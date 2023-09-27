@@ -93,9 +93,6 @@ co_net_selector_create(
     net_selector->cancel_e_fd = cancel_e_fd;
     net_selector->sock_count = 0;
 
-    net_selector->e_entries =
-        co_array_create(sizeof(struct epoll_event));
-
     return net_selector;
 }
 
@@ -121,8 +118,6 @@ co_net_selector_destroy(
     {
         close(net_selector->e_fd);
     }
-
-    co_array_destroy(net_selector->e_entries);
 
     co_mem_free(net_selector);
 }
@@ -198,15 +193,11 @@ co_net_selector_wait(
 {
     co_wait_result_t result = CO_WAIT_RESULT_SUCCESS;
 
-    co_array_set_count(net_selector->e_entries, net_selector->sock_count + 1);
-    co_array_zero_clear(net_selector->e_entries);
+    struct epoll_event events[256] = { 0 };
+    static const int event_count =
+        (int)(sizeof(events) / sizeof(struct epoll_event));
 
-    struct epoll_event* events =
-        (struct epoll_event*)co_array_get_ptr(net_selector->e_entries, 0);
-
-    int e_count = (int)co_array_get_count(net_selector->e_entries);
-
-    int count = epoll_wait(net_selector->e_fd, events, e_count, (int)msec);
+    int count = epoll_wait(net_selector->e_fd, events, event_count, (int)msec);
 
     if (count > 0)
     {

@@ -127,12 +127,11 @@ co_win_tcp_client_receive_start(
     struct co_tcp_client_t* client
 );
 
-bool
+ssize_t
 co_win_tcp_client_receive(
     struct co_tcp_client_t* client,
     void* buffer,
-    size_t buffer_size,
-    size_t* data_size
+    size_t buffer_size
 );
 
 bool

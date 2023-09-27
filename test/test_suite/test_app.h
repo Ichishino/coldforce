@@ -1,7 +1,8 @@
 #pragma once
 
 #include <coldforce.h>
-    
+#include <coldforce/net/co_byte_order.h>
+
 #include "test_tcp.h"
 #include "test_udp.h"
 

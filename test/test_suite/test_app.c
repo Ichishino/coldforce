@@ -219,7 +219,7 @@ int test_app_run(int argc, char** argv)
     co_tls_debug_mem_check();
 
     co_core_log_set_level(CO_LOG_LEVEL_MAX);
-//    co_tcp_log_set_level(CO_LOG_LEVEL_INFO);
+    co_tcp_log_set_level(CO_LOG_LEVEL_WARNING);
 //    co_udp_log_set_level(CO_LOG_LEVEL_INFO);
 //    co_tls_log_set_level(CO_LOG_LEVEL_MAX);
 

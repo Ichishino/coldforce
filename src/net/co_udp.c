@@ -37,6 +37,7 @@ co_udp_on_send_async_ready(
     co_udp_send_async_data_t* send_data =
         (co_udp_send_async_data_t*)co_queue_peek_head(udp->send_async_queue);
 
+
     if (send_data == NULL)
     {
         udp->sock_event_flags &= ~CO_SOCKET_EVENT_SEND;
@@ -56,7 +57,7 @@ co_udp_on_send_async_ready(
 
     if ((size_t)sent_size == send_data->data_size)
     {
-        co_udp_on_send_async_complete(udp, send_data->data_size);
+        co_udp_on_send_async_complete(udp, true);
 
         co_udp_on_send_async_ready(udp);
     }

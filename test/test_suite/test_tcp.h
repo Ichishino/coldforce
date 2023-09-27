@@ -9,6 +9,15 @@
 
 typedef struct
 {
+    uint32_t id;
+    uint32_t size;
+
+} test_tcp_packet_header_st;
+
+#define TEST_TCP_PACKET_HEADER_SIZE    sizeof(test_tcp_packet_header_st)
+
+typedef struct
+{
     co_tcp_client_t* tcp_client;
     co_byte_array_t* send_data;
     co_byte_array_t* receive_data;

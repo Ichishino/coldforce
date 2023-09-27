@@ -459,40 +459,30 @@ co_win_tcp_client_receive_start(
     return true;
 }
 
-bool
+ssize_t
 co_win_tcp_client_receive(
     co_tcp_client_t* client,
     void* buffer,
-    size_t buffer_size,
-    size_t* data_size
+    size_t buffer_size
 )
 {
     if (client->win.receive.size == 0)
     {
-        ssize_t received = co_socket_handle_receive(
+        return co_socket_handle_receive(
             client->sock.handle, buffer, buffer_size, 0);
-
-        if (received > 0)
-        {
-            *data_size = (size_t)received;
-
-            return true;
-        }
-
-        return false;
     }
 
-    *data_size =
+    size_t data_size =
         co_min(client->win.receive.size, buffer_size);
 
     memcpy(buffer,
         &client->win.receive.buffer.buf[client->win.receive.index],
-        *data_size);
+        data_size);
 
-    client->win.receive.index += *data_size;
-    client->win.receive.size -= *data_size;
+    client->win.receive.index += data_size;
+    client->win.receive.size -= data_size;
 
-    return true;
+    return (ssize_t)data_size;
 }
 
 bool

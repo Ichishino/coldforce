@@ -73,7 +73,6 @@ co_tcp_client_setup(
     co_net_addr_init(&client->remote_net_addr);
     client->open_remote = false;
 
-    client->destroy_later = false;
     client->send_async_queue = NULL;
 
     client->callbacks.on_connect = NULL;
@@ -109,8 +108,6 @@ co_tcp_client_cleanup(
         co_queue_destroy(client->send_async_queue);
         client->send_async_queue = NULL;
     }
-
-    client->destroy_later = false;
 
     client->callbacks.on_connect = NULL;
     client->callbacks.on_send_async = NULL;
@@ -207,11 +204,7 @@ co_tcp_client_on_send_async_ready(
 
     if ((size_t)sent_size == send_data->data_size)
     {
-        co_thread_send_event(
-            client->sock.owner_thread,
-            CO_NET_EVENT_ID_TCP_SEND_ASYNC_COMPLETE,
-            (uintptr_t)client,
-            (uintptr_t)sent_size);
+        co_tcp_client_on_send_async_complete(client, true);
 
         co_tcp_client_on_send_async_ready(client);
     }
@@ -268,7 +261,7 @@ co_tcp_client_on_receive_ready(
     (void)data_size;
 #endif
 
-    if ((client->callbacks.on_receive != NULL) && client->sock.open_local)
+    if (client->callbacks.on_receive != NULL)
     {
         client->callbacks.on_receive(
             client->sock.owner_thread, client);
@@ -308,39 +301,24 @@ co_tcp_client_on_close(
         return;
     }
 
-    if (!co_net_worker_close_tcp_client_remote(
-        co_socket_get_net_worker(&client->sock), client))
+    co_net_worker_close_tcp_client_remote(
+        co_socket_get_net_worker(&client->sock), client);
+
+    co_tcp_log_info(
+        &client->sock.local_net_addr,
+        "<--",
+        &client->remote_net_addr,
+        "tcp closed by peer");
+
+    client->sock.open_local = false;
+
+    if (client->callbacks.on_close != NULL)
     {
-        return;
-    }
-
-    if (client->sock.open_local)
-    {
-        co_tcp_log_info(
-            &client->sock.local_net_addr,
-            "<--",
-            &client->remote_net_addr,
-            "tcp closed by peer");
-
-        client->sock.open_local = false;
-
-        if (client->callbacks.on_close != NULL)
-        {
-            client->callbacks.on_close(client->sock.owner_thread, client);
-        }
+        client->callbacks.on_close(client->sock.owner_thread, client);
     }
     else
     {
-        co_tcp_log_info(
-            &client->sock.local_net_addr,
-            "-->",
-            &client->remote_net_addr,
-            "tcp closed");
-
-        if (client->destroy_later)
-        {
-            co_tcp_client_destroy(client);
-        }
+        co_tcp_client_destroy(client);
     }
 }
 
@@ -418,21 +396,26 @@ co_tcp_client_destroy(
         return;
     }
 
-    client->callbacks.on_connect = NULL;
-    client->callbacks.on_send_async = NULL;
-    client->callbacks.on_receive = NULL;
-    client->callbacks.on_close = NULL;
+    if (client->sock.owner_thread != NULL)
+    {
+        client->callbacks.on_connect = NULL;
+        client->callbacks.on_send_async = NULL;
+        client->callbacks.on_receive = NULL;
+        client->callbacks.on_close = NULL;
 
-    co_tcp_close(client);
+        co_net_worker_close_tcp_client_local(
+            co_socket_get_net_worker(&client->sock),
+            client, 3*1000);
+    }
+    else
+    {
+        co_tcp_close(client);
+    }
 
     if (!client->sock.open_local && !client->open_remote)
     {
         co_tcp_client_cleanup(client);
         co_mem_free_later(client);
-    }
-    else
-    {
-        client->destroy_later = true;
     }
 }
 
@@ -621,31 +604,14 @@ co_tcp_receive(
 )
 {
 #ifdef CO_OS_WIN
-
-    size_t data_size = 0;
-
-    if (co_win_tcp_client_receive(
-        client, buffer, buffer_size, &data_size))
-    {
-        co_tcp_log_debug_hex_dump(
-            &client->sock.local_net_addr,
-            "<--",
-            &client->remote_net_addr,
-            buffer, data_size,
-            "tcp receive %zd bytes", data_size);
-
-        return (ssize_t)data_size;
-    }
-    else
-    {
-        return -1;
-    }
-
+    ssize_t data_size =
+        co_win_tcp_client_receive(
+            client, buffer, buffer_size);
 #else
-
     ssize_t data_size =
         co_socket_handle_receive(
             client->sock.handle, buffer, buffer_size, 0);
+#endif
 
     if (data_size > 0)
     {
@@ -658,13 +624,14 @@ co_tcp_receive(
     }
     else if (data_size == 0)
     {
-        co_thread_send_event(client->sock.owner_thread,
-            CO_NET_EVENT_ID_TCP_CLOSE, (uintptr_t)client, 0);
+        co_thread_send_event(
+            client->sock.owner_thread,
+            CO_NET_EVENT_ID_TCP_CLOSE,
+            (uintptr_t)client,
+            0);
     }
 
     return data_size;
-
-#endif
 }
 
 ssize_t
@@ -703,6 +670,22 @@ co_tcp_get_callbacks(
     return &client->callbacks;
 }
 
+bool
+co_tcp_half_close(
+    co_tcp_client_t* client,
+    uint32_t timeout_msec
+)
+{
+    if (client == NULL)
+    {
+        return false;
+    }
+
+    return co_net_worker_close_tcp_client_local(
+        co_socket_get_net_worker(&client->sock),
+        client, timeout_msec);
+}
+
 void
 co_tcp_close(
     co_tcp_client_t* client
@@ -713,19 +696,27 @@ co_tcp_close(
         return;
     }
 
+    if (client->sock.handle == CO_SOCKET_INVALID_HANDLE)
+    {
+        return;
+    }
+
     if (client->sock.owner_thread != NULL)
     {
-        co_net_worker_close_tcp_client_local(
+        co_net_worker_unregister_tcp_connection(
             co_socket_get_net_worker(&client->sock), client);
     }
-    else
-    {
-        client->open_remote = false;
 
-        co_socket_handle_close(client->sock.handle);
-        client->sock.handle = CO_SOCKET_INVALID_HANDLE;
-        client->sock.open_local = false;
-    }
+    client->callbacks.on_connect = NULL;
+    client->callbacks.on_send_async = NULL;
+    client->callbacks.on_receive = NULL;
+    client->callbacks.on_close = NULL;
+
+    co_socket_handle_close(client->sock.handle);
+    client->sock.handle = CO_SOCKET_INVALID_HANDLE;
+
+    client->sock.open_local = false;
+    client->open_remote = false;
 }
 
 const co_net_addr_t*

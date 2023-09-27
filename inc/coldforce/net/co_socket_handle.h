@@ -14,12 +14,32 @@ CO_EXTERN_C_BEGIN
 //---------------------------------------------------------------------------//
 
 #ifdef CO_OS_WIN
+
 typedef SOCKET co_socket_handle_t;
 #define CO_SOCKET_INVALID_HANDLE    ((co_socket_handle_t)INVALID_SOCKET)
+
+typedef enum
+{
+    CO_SOCKET_SHUTDOWN_SEND = SD_SEND,
+    CO_SOCKET_SHUTDOWN_RECEIVE = SD_RECEIVE,
+    CO_SOCKET_SHUTDOWN_BOTH = SD_BOTH
+
+} co_socket_shutdown_t;
+
 #else
+
 typedef int co_socket_handle_t;
 #define CO_SOCKET_INVALID_HANDLE    (-1)
-#endif
+
+typedef enum
+{
+    CO_SOCKET_SHUTDOWN_SEND = SHUT_WR,
+    CO_SOCKET_SHUTDOWN_RECEIVE = SHUT_RD,
+    CO_SOCKET_SHUTDOWN_BOTH = SHUT_RDWR
+
+} co_socket_shutdown_t;
+
+#endif // CO_OS_WIN
 
 //---------------------------------------------------------------------------//
 // private

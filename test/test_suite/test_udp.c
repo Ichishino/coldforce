@@ -1,8 +1,6 @@
 #include "test_udp.h"
 #include "test_app.h"
 
-#include <coldforce/net/co_byte_order.h>
-
 #include <assert.h>
 
 typedef struct

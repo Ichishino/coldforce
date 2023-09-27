@@ -1,8 +1,6 @@
 #ifndef CO_NET_SELECTOR_LINUX_H_INCLUDED
 #define CO_NET_SELECTOR_LINUX_H_INCLUDED
 
-#include <coldforce/core/co_array.h>
-
 #include <coldforce/net/co_net.h>
 
 #ifdef CO_OS_LINUX
@@ -30,7 +28,6 @@ typedef struct
     int cancel_e_fd;
 
     size_t sock_count;
-    co_array_t* e_entries;
 
 } co_net_selector_t;
 
