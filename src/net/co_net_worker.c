@@ -173,7 +173,7 @@ co_net_worker_dispatch(
     co_event_st* event
 )
 {
-    switch (event->event_id)
+    switch (event->id)
     {
     case CO_NET_EVENT_ID_TCP_ACCEPT_READY:
     {

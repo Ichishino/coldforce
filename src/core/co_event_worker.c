@@ -174,7 +174,7 @@ co_event_worker_run(
             --event_count;
         }
 
-        if (event.event_id == 0)
+        if (event.id == 0)
         {
             event_worker->on_idle(event_worker);
         }
@@ -219,7 +219,7 @@ co_event_worker_dispatch(
     co_event_st* event
 )
 {
-    switch (event->event_id)
+    switch (event->id)
     {
     case CO_EVENT_ID_TIMER:
     {
@@ -250,11 +250,10 @@ co_event_worker_dispatch(
     }
     case CO_EVENT_ID_TASK:
     {
-        co_task_t* task = (co_task_t*)event->param1;
+        co_task_fn handler = (co_task_fn)event->param1;
+        uintptr_t param = event->param2;
 
-        task->handler(task->param1, task->param2);
-
-        co_mem_free(task);
+        handler(param);
 
         break;
     }
@@ -263,7 +262,7 @@ co_event_worker_dispatch(
         const co_map_data_st* data =
             co_map_get(
                 event_worker->event_handler_map,
-                (void*)(uintptr_t)event->event_id);
+                (void*)(uintptr_t)event->id);
 
         if (data == NULL)
         {
@@ -304,7 +303,7 @@ co_event_worker_add(
 
     if (!event_worker->stop_receiving)
     {
-        if (event->event_id == CO_EVENT_ID_STOP)
+        if (event->id == CO_EVENT_ID_STOP)
         {
             event_worker->stop_receiving = true;
         }
@@ -356,7 +355,7 @@ co_compare_event(
 )
 {
     return
-        ((event1->event_id == event2->event_id) &&
+        ((event1->id == event2->id) &&
          (event1->param1 == event2->param1) &&
          (event1->param2 == event2->param2)) ? 0 : 1;
 }
@@ -370,7 +369,8 @@ co_event_worker_unregister_timer(
     if (timer->queued)
     {
         co_event_st timer_event = {
-            CO_EVENT_ID_TIMER, (uintptr_t)timer, true };
+            CO_EVENT_ID_TIMER, (uintptr_t)timer, true
+        };
 
         co_event_st* queued_event = (co_event_st*)
             co_queue_find(event_worker->event_queue,
@@ -402,7 +402,8 @@ co_event_worker_check_timer(
             co_timer_manager_remove_head_timer(event_worker->timer_manager);
 
         co_event_st timer_event = {
-            CO_EVENT_ID_TIMER, (uintptr_t)timer, true };
+            CO_EVENT_ID_TIMER, (uintptr_t)timer, true
+        };
 
         if (co_event_worker_add(event_worker, &timer_event))
         {

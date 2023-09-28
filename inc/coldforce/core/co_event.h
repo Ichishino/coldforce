@@ -22,7 +22,7 @@ typedef uint16_t co_event_id_t;
 
 typedef struct
 {
-    co_event_id_t event_id;
+    co_event_id_t id;
 
     uintptr_t param1;
     uintptr_t param2;
@@ -30,16 +30,7 @@ typedef struct
 } co_event_st;
 
 typedef void(*co_event_fn)(struct co_thread_t* self, const co_event_st* event);
-typedef void(*co_task_fn)(uintptr_t param1, uintptr_t param2);
-
-typedef struct
-{
-    co_task_fn handler;
-
-    uintptr_t param1;
-    uintptr_t param2;
-
-} co_task_t;
+typedef void(*co_task_fn)(uintptr_t param);
 
 //---------------------------------------------------------------------------//
 // public
@@ -81,8 +72,7 @@ bool
 co_thread_send_task_event(
     struct co_thread_t* thread,
     co_task_fn task,
-    uintptr_t param1,
-    uintptr_t param2
+    uintptr_t param
 );
 
 //---------------------------------------------------------------------------//
