@@ -43,21 +43,21 @@ co_tcp_client_create_with(
 
     client->sock.handle = handle;
     client->sock.type = CO_SOCKET_TYPE_TCP_CONNECTION;
-    client->sock.open_local = true;
-    client->open_remote = true;
+    client->sock.local.is_open = true;
+    client->sock.remote.is_open = true;
 
     co_socket_handle_get_local_net_addr(
-        client->sock.handle, &client->sock.local_net_addr);
+        client->sock.handle, &client->sock.local.net_addr);
 
     if (remote_net_addr != NULL)
     {
-        memcpy(&client->remote_net_addr,
+        memcpy(&client->sock.remote.net_addr,
             remote_net_addr, sizeof(co_net_addr_t));
     }
     else
     {
         co_socket_handle_get_remote_net_addr(
-            client->sock.handle, &client->remote_net_addr);
+            client->sock.handle, &client->sock.remote.net_addr);
     }
 
     return client;
@@ -70,9 +70,6 @@ co_tcp_client_setup(
 {
     co_socket_setup(&client->sock);
 
-    co_net_addr_init(&client->remote_net_addr);
-    client->open_remote = false;
-
     client->send_async_queue = NULL;
 
     client->callbacks.on_connect = NULL;
@@ -83,8 +80,10 @@ co_tcp_client_setup(
     client->close_timer = NULL;
 
 #ifdef CO_OS_WIN
-    if (!co_win_tcp_client_setup(
-        client, CO_WIN_TCP_DEFAULT_RECEIVE_BUFFER_SIZE))
+    if (!co_win_net_extension_setup(
+        &client->sock,
+        CO_WIN_TCP_DEFAULT_RECEIVE_BUFFER_SIZE,
+        &client->win))
     {
         return false;
     }
@@ -99,8 +98,7 @@ co_tcp_client_cleanup(
 )
 {
 #ifdef CO_OS_WIN
-    co_win_tcp_client_connector_cleanup(client);
-    co_win_tcp_client_cleanup(client);
+    co_win_net_extension_cleanup(&client->win);
 #endif
 
     if (client->send_async_queue != NULL)
@@ -124,17 +122,17 @@ co_tcp_client_on_connect_complete(
 )
 {
     co_socket_handle_get_local_net_addr(
-        client->sock.handle, &client->sock.local_net_addr);
+        client->sock.handle, &client->sock.local.net_addr);
 
     if (error_code == 0)
     {
         client->sock.type = CO_SOCKET_TYPE_TCP_CONNECTION;
-        client->open_remote = true;
+        client->sock.remote.is_open = true;
 
 #ifdef CO_OS_WIN
 
         co_win_socket_option_update_connect_context(&client->sock);
-        co_win_tcp_client_receive_start(client);
+        co_win_net_receive_start(&client->sock, &client->win);
 
 #else
 
@@ -148,23 +146,23 @@ co_tcp_client_on_connect_complete(
 #endif
 
         co_socket_handle_get_remote_net_addr(
-            client->sock.handle, &client->remote_net_addr);
+            client->sock.handle, &client->sock.remote.net_addr);
     }
 
     if (error_code == 0)
     {
         co_tcp_log_info(
-            &client->sock.local_net_addr,
+            &client->sock.local.net_addr,
             "<--",
-            &client->remote_net_addr,
+            &client->sock.remote.net_addr,
             "tcp connect success");
     }
     else
     {
         co_tcp_log_error(
-            &client->sock.local_net_addr,
+            &client->sock.local.net_addr,
             "<--",
-            &client->remote_net_addr,
+            &client->sock.remote.net_addr,
             "tcp connect error (%d)", error_code);
     }
 
@@ -182,9 +180,9 @@ co_tcp_client_on_send_async_ready(
 )
 {
     co_tcp_log_debug(
-        &client->sock.local_net_addr,
+        &client->sock.local.net_addr,
         "<--",
-        &client->remote_net_addr,
+        &client->sock.remote.net_addr,
         "tcp send async ready");
 
     co_tcp_send_async_data_t* send_data =
@@ -218,9 +216,9 @@ co_tcp_client_on_send_async_complete(
 )
 {
     co_tcp_log_debug(
-        &client->sock.local_net_addr,
+        &client->sock.local.net_addr,
         "<--",
-        &client->remote_net_addr,
+        &client->sock.remote.net_addr,
         "tcp send async complete: (%d)",
         result);
 
@@ -247,9 +245,9 @@ co_tcp_client_on_receive_ready(
 )
 {
     co_tcp_log_debug(
-        &client->sock.local_net_addr,
+        &client->sock.local.net_addr,
         "<--",
-        &client->remote_net_addr,
+        &client->sock.remote.net_addr,
         "tcp receive ready");
 
 #ifdef CO_OS_WIN
@@ -277,7 +275,8 @@ co_tcp_client_on_receive_ready(
     {
         if (client->win.receive.size == 0)
         {
-            co_win_tcp_client_receive_start(client);
+            co_win_net_receive_start(
+                &client->sock, &client->win);
         }
         else
         {
@@ -305,12 +304,12 @@ co_tcp_client_on_close(
         co_socket_get_net_worker(&client->sock), client);
 
     co_tcp_log_info(
-        &client->sock.local_net_addr,
+        &client->sock.local.net_addr,
         "<--",
-        &client->remote_net_addr,
+        &client->sock.remote.net_addr,
         "tcp closed by peer");
 
-    client->sock.open_local = false;
+    client->sock.local.is_open = false;
 
     if (client->callbacks.on_close != NULL)
     {
@@ -348,22 +347,22 @@ co_tcp_client_create(
 
     client->sock.type = CO_SOCKET_TYPE_TCP_CONNECTOR;
     client->sock.owner_thread = co_thread_get_current();
-    client->sock.open_local = true;
+    client->sock.local.is_open = true;
 
-    memcpy(&client->sock.local_net_addr,
+    memcpy(&client->sock.local.net_addr,
         local_net_addr, sizeof(co_net_addr_t));
 
 #ifdef CO_OS_WIN
-    co_win_tcp_client_connector_setup(client, &client->sock.local_net_addr);
+    co_win_tcp_client_connector_setup(client, &client->sock.local.net_addr);
 #else
     client->sock.handle = co_socket_handle_create(
-        client->sock.local_net_addr.sa.any.ss_family, SOCK_STREAM, IPPROTO_TCP);
+        client->sock.local.net_addr.sa.any.ss_family, SOCK_STREAM, IPPROTO_TCP);
 #endif
 
     if (client->sock.handle == CO_SOCKET_INVALID_HANDLE)
     {
 #ifdef CO_OS_WIN
-        co_win_tcp_client_connector_cleanup(client);
+        co_win_net_extension_cleanup(&client->win);
 #endif
         co_mem_free(client);
 
@@ -372,7 +371,7 @@ co_tcp_client_create(
 
     if (!co_socket_handle_bind(
         client->sock.handle,
-        &client->sock.local_net_addr))
+        &client->sock.local.net_addr))
     {
         co_socket_handle_close(client->sock.handle);
         client->sock.handle = CO_SOCKET_INVALID_HANDLE;
@@ -412,7 +411,7 @@ co_tcp_client_destroy(
         co_tcp_close(client);
     }
 
-    if (!client->sock.open_local && !client->open_remote)
+    if (!client->sock.local.is_open && !client->sock.remote.is_open)
     {
         co_tcp_client_cleanup(client);
         co_mem_free_later(client);
@@ -460,10 +459,10 @@ co_tcp_connect(
 #endif
 
     co_socket_handle_get_local_net_addr(
-        client->sock.handle, &client->sock.local_net_addr);
+        client->sock.handle, &client->sock.local.net_addr);
 
     co_tcp_log_info(
-        &client->sock.local_net_addr,
+        &client->sock.local.net_addr,
         "-->",
         remote_net_addr,
         "tcp connect start");
@@ -479,15 +478,16 @@ co_tcp_send(
 )
 {
     co_tcp_log_debug_hex_dump(
-        &client->sock.local_net_addr,
+        &client->sock.local.net_addr,
         "-->",
-        &client->remote_net_addr,
+        &client->sock.remote.net_addr,
         data, data_size,
         "tcp send %zd bytes", data_size);
 
 #ifdef CO_OS_WIN
 
-    return co_win_tcp_client_send(client, data, data_size);
+    return co_win_net_send(
+        &client->sock, &client->win, data, data_size);
 
 #else
 
@@ -528,8 +528,28 @@ co_tcp_send_async(
 
 #ifdef CO_OS_WIN
 
-    if (co_win_tcp_client_send_async(client, data, data_size))
+    ssize_t result = co_win_net_send_async(
+        &client->sock, &client->win, data, data_size);
+
+    if (result == 0)
     {
+        co_tcp_log_debug(
+            &client->sock.local.net_addr,
+            "-->",
+            &client->sock.remote.net_addr,
+            "tcp send async QUEUED %d bytes", data_size);
+
+        return true;
+    }
+    else if (result > 0)
+    {
+        co_tcp_log_debug_hex_dump(
+            &client->sock.local.net_addr,
+            "-->",
+            &client->sock.remote.net_addr,
+            data, data_size,
+            "tcp send async %d bytes", data_size);
+
         return true;
     }
 
@@ -543,9 +563,9 @@ co_tcp_send_async(
     if (co_queue_get_count(client->send_async_queue) > 1)
     {
         co_tcp_log_debug(
-            &client->sock.local_net_addr,
+            &client->sock.local.net_addr,
             "-->",
-            &client->remote_net_addr,
+            &client->sock.remote.net_addr,
             "tcp send async QUEUED %d bytes", data_size);
 
         return true;
@@ -555,9 +575,9 @@ co_tcp_send_async(
         client->sock.handle, data, data_size, 0) == (ssize_t)data_size)
     {
         co_tcp_log_debug_hex_dump(
-            &client->sock.local_net_addr,
+            &client->sock.local.net_addr,
             "-->",
-            &client->remote_net_addr,
+            &client->sock.remote.net_addr,
             data, data_size,
             "tcp send async %d bytes", data_size);
 
@@ -578,9 +598,9 @@ co_tcp_send_async(
         if ((error_code == EAGAIN) || (error_code == EWOULDBLOCK))
         {
             co_tcp_log_debug(
-                &client->sock.local_net_addr,
+                &client->sock.local.net_addr,
                 "-->",
-                &client->remote_net_addr,
+                &client->sock.remote.net_addr,
                 "tcp send async QUEUED %d bytes", data_size);
 
             return true;
@@ -605,8 +625,8 @@ co_tcp_receive(
 {
 #ifdef CO_OS_WIN
     ssize_t data_size =
-        co_win_tcp_client_receive(
-            client, buffer, buffer_size);
+        co_win_net_receive(
+            &client->sock, &client->win, buffer, buffer_size);
 #else
     ssize_t data_size =
         co_socket_handle_receive(
@@ -616,9 +636,9 @@ co_tcp_receive(
     if (data_size > 0)
     {
         co_tcp_log_debug_hex_dump(
-            &client->sock.local_net_addr,
+            &client->sock.local.net_addr,
             "<--",
-            &client->remote_net_addr,
+            &client->sock.remote.net_addr,
             buffer, data_size,
             "tcp receive %zd bytes", data_size);
     }
@@ -715,8 +735,8 @@ co_tcp_close(
     co_socket_handle_close(client->sock.handle);
     client->sock.handle = CO_SOCKET_INVALID_HANDLE;
 
-    client->sock.open_local = false;
-    client->open_remote = false;
+    client->sock.local.is_open = false;
+    client->sock.remote.is_open = false;
 }
 
 const co_net_addr_t*
@@ -724,7 +744,7 @@ co_tcp_get_remote_net_addr(
     const co_tcp_client_t* client
 )
 {
-    return &client->remote_net_addr;
+    return &client->sock.remote.net_addr;
 }
 
 bool
@@ -733,7 +753,7 @@ co_tcp_is_open(
 )
 {
     return (client != NULL &&
-        client->sock.open_local && client->open_remote);
+        client->sock.local.is_open && client->sock.remote.is_open);
 }
 
 co_socket_t*

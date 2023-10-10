@@ -393,9 +393,9 @@ co_http2_client_on_http_connection_connect(
     if (error_code == 0)
     {
         co_http2_log_info(
-            &client->conn.tcp_client->sock.local_net_addr,
+            &client->conn.tcp_client->sock.local.net_addr,
             "-->",
-            &client->conn.tcp_client->remote_net_addr,
+            &client->conn.tcp_client->sock.remote.net_addr,
             "http2 send connection preface");
 
         co_http_connection_send_data(
@@ -408,9 +408,9 @@ co_http2_client_on_http_connection_connect(
     else
     {
         co_http2_log_error(
-            &client->conn.tcp_client->sock.local_net_addr,
+            &client->conn.tcp_client->sock.local.net_addr,
             "<--",
-            &client->conn.tcp_client->remote_net_addr,
+            &client->conn.tcp_client->sock.remote.net_addr,
             "http2 connect error (%d)",
             error_code);
 
@@ -484,8 +484,8 @@ co_http2_client_on_tcp_receive_ready(
             }
 
             co_http2_log_debug_frame(
-                &client->conn.tcp_client->sock.local_net_addr, "<--",
-                &client->conn.tcp_client->remote_net_addr,
+                &client->conn.tcp_client->sock.local.net_addr, "<--",
+                &client->conn.tcp_client->sock.remote.net_addr,
                 frame,
                 "http2 receive frame");
 
@@ -688,7 +688,7 @@ co_http2_connect(
 {
     return client->conn.module.connect(
         client->conn.tcp_client,
-        &client->conn.tcp_client->remote_net_addr);
+        &client->conn.tcp_client->sock.remote.net_addr);
 }
 
 void
@@ -900,7 +900,7 @@ co_http2_get_remote_net_addr(
 )
 {
     return ((client->conn.tcp_client != NULL) ?
-        &client->conn.tcp_client->remote_net_addr : NULL);
+        &client->conn.tcp_client->sock.remote.net_addr : NULL);
 }
 
 co_socket_t*

@@ -106,9 +106,9 @@ co_ws_client_on_receive_http_response(
     }
 
     co_http_log_debug_response_header(
-        &client->conn.tcp_client->sock.local_net_addr,
+        &client->conn.tcp_client->sock.local.net_addr,
         "<--",
-        &client->conn.tcp_client->remote_net_addr,
+        &client->conn.tcp_client->sock.remote.net_addr,
         response,
         "http receive response");
 
@@ -215,9 +215,9 @@ co_ws_client_on_tcp_receive_ready(
         if (result == CO_WS_PARSE_COMPLETE)
         {
             co_ws_log_debug_frame(
-                &client->conn.tcp_client->sock.local_net_addr,
+                &client->conn.tcp_client->sock.local.net_addr,
                 "<--",
-                &client->conn.tcp_client->remote_net_addr,
+                &client->conn.tcp_client->sock.remote.net_addr,
                 frame->header.fin,
                 frame->header.opcode,
                 frame->payload_data,
@@ -387,7 +387,7 @@ co_ws_connect(
 {
     return client->conn.module.connect(
         client->conn.tcp_client,
-        &client->conn.tcp_client->remote_net_addr);
+        &client->conn.tcp_client->sock.remote.net_addr);
 }
 
 bool
@@ -434,9 +434,9 @@ co_ws_send(
 )
 {
     co_ws_log_debug_frame(
-        &client->conn.tcp_client->sock.local_net_addr,
+        &client->conn.tcp_client->sock.local.net_addr,
         "-->",
-        &client->conn.tcp_client->remote_net_addr,
+        &client->conn.tcp_client->sock.remote.net_addr,
         fin, opcode, data, data_size,
         "ws send frame");
 
@@ -605,7 +605,7 @@ co_ws_get_remote_net_addr(
 )
 {
     return ((client->conn.tcp_client != NULL) ?
-        &client->conn.tcp_client->remote_net_addr : NULL);
+        &client->conn.tcp_client->sock.remote.net_addr : NULL);
 }
 
 co_socket_t*

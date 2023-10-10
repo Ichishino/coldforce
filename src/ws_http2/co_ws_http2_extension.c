@@ -151,9 +151,9 @@ co_http2_stream_receive_ws_frame(
     }
 
     co_ws_log_debug_frame(
-        &stream->client->conn.tcp_client->sock.local_net_addr,
+        &stream->client->conn.tcp_client->sock.local.net_addr,
         "<--",
-        &stream->client->conn.tcp_client->remote_net_addr,
+        &stream->client->conn.tcp_client->sock.remote.net_addr,
         frame->header.fin,
         frame->header.opcode,
         frame->payload_data,
@@ -173,9 +173,9 @@ co_http2_stream_send_ws_frame(
 )
 {
     co_ws_log_debug_frame(
-        &stream->client->conn.tcp_client->sock.local_net_addr,
+        &stream->client->conn.tcp_client->sock.local.net_addr,
         "-->",
-        &stream->client->conn.tcp_client->remote_net_addr,
+        &stream->client->conn.tcp_client->sock.remote.net_addr,
         fin, opcode, data, data_size,
         "ws send frame (over http2)");
 

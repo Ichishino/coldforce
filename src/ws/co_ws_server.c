@@ -45,9 +45,9 @@ co_ws_server_on_receive_http_request(
     }
 
     co_http_log_debug_request_header(
-        &client->conn.tcp_client->sock.local_net_addr,
+        &client->conn.tcp_client->sock.local.net_addr,
         "<--",
-        &client->conn.tcp_client->remote_net_addr,
+        &client->conn.tcp_client->sock.remote.net_addr,
         request,
         "http receive request");
 
@@ -122,9 +122,9 @@ co_ws_server_on_tcp_receive_ready(
         if (result == CO_WS_PARSE_COMPLETE)
         {
             co_ws_log_debug_frame(
-                &client->conn.tcp_client->sock.local_net_addr,
+                &client->conn.tcp_client->sock.local.net_addr,
                 "<--",
-                &client->conn.tcp_client->remote_net_addr,
+                &client->conn.tcp_client->sock.remote.net_addr,
                 frame->header.fin,
                 frame->header.opcode,
                 frame->payload_data,

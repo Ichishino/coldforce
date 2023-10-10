@@ -56,7 +56,7 @@ typedef struct co_udp_t
     co_queue_t* send_async_queue;
 
 #ifdef CO_OS_WIN
-    co_win_udp_extension_t win;
+    co_win_net_extension_t win;
 #endif
 
 } co_udp_t;
@@ -114,7 +114,7 @@ co_udp_close(
 
 CO_NET_API
 bool
-co_udp_send(
+co_udp_send_to(
     co_udp_t* udp,
     const co_net_addr_t* remote_net_addr,
     const void* data,
@@ -123,7 +123,7 @@ co_udp_send(
 
 CO_NET_API
 bool
-co_udp_send_async(
+co_udp_send_to_async(
     co_udp_t* udp,
     const co_net_addr_t* remote_net_addr,
     const void* data,
@@ -133,13 +133,13 @@ co_udp_send_async(
 
 CO_NET_API
 bool
-co_udp_receive_start(
+co_udp_receive_from_start(
     co_udp_t* udp
 );
 
 CO_NET_API
 ssize_t
-co_udp_receive(
+co_udp_receive_from(
     co_udp_t* udp,
     co_net_addr_t* remote_net_addr,
     void* buffer,

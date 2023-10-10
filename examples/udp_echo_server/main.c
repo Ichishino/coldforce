@@ -24,7 +24,7 @@ void on_my_udp_receive(my_app* self, co_udp_t* udp)
         char buffer[1024];
 
         // receive
-        ssize_t size = co_udp_receive(
+        ssize_t size = co_udp_receive_from(
             udp, &remote_net_addr, buffer, sizeof(buffer));
 
         if (size <= 0)
@@ -37,7 +37,7 @@ void on_my_udp_receive(my_app* self, co_udp_t* udp)
         printf("receive %zd bytes from %s\n", (size_t)size, remote_str);
 
         // send (echo)
-        co_udp_send(udp, &remote_net_addr, buffer, size);
+        co_udp_send_to(udp, &remote_net_addr, buffer, size);
     }
 }
 
@@ -75,7 +75,7 @@ bool on_my_app_create(my_app* self)
     callbacks->on_receive = (co_udp_receive_fn)on_my_udp_receive;
 
     // receive start
-    co_udp_receive_start(self->udp);
+    co_udp_receive_from_start(self->udp);
 
     char local_str[64];
     co_net_addr_to_string(&local_net_addr, local_str, sizeof(local_str));

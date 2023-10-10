@@ -21,7 +21,7 @@ void on_my_send_timer(my_app* self, co_timer_t* timer)
 {
     // send
     const char* data = "hello";
-    co_udp_send(self->udp, &self->remote_net_addr, data, strlen(data) + 1);
+    co_udp_send_to(self->udp, &self->remote_net_addr, data, strlen(data) + 1);
 
     char remote_str[64];
     co_net_addr_to_string(&self->remote_net_addr, remote_str, sizeof(remote_str));

@@ -169,9 +169,9 @@ co_http_client_on_receive_timer(
         (co_http_client_t*)co_timer_get_user_data(timer);
 
     co_http_log_error(
-        &client->conn.tcp_client->sock.local_net_addr,
+        &client->conn.tcp_client->sock.local.net_addr,
         "<--",
-        &client->conn.tcp_client->remote_net_addr,
+        &client->conn.tcp_client->sock.remote.net_addr,
         "receive timeout");
 
     co_http_client_on_resopnse(
@@ -265,8 +265,8 @@ co_http_client_on_tcp_receive_ready(
             if (result == CO_HTTP_PARSE_COMPLETE)
             {
                 co_http_log_debug_response_header(
-                    &client->conn.tcp_client->sock.local_net_addr, "<--",
-                    &client->conn.tcp_client->remote_net_addr,
+                    &client->conn.tcp_client->sock.local.net_addr, "<--",
+                    &client->conn.tcp_client->sock.remote.net_addr,
                     client->response, "http receive response");
 
                 co_http_content_receiver_clear(&client->content_receiver);
@@ -433,7 +433,7 @@ co_http_connect(
 {
     return client->conn.module.connect(
         client->conn.tcp_client,
-        &client->conn.tcp_client->remote_net_addr);
+        &client->conn.tcp_client->sock.remote.net_addr);
 }
 
 void
@@ -484,9 +484,9 @@ co_http_send_data(
 )
 {
     co_tcp_log_debug(
-        &client->conn.tcp_client->sock.local_net_addr,
+        &client->conn.tcp_client->sock.local.net_addr,
         "-->",
-        &client->conn.tcp_client->remote_net_addr,
+        &client->conn.tcp_client->sock.remote.net_addr,
         "http send data %zd bytes", data_size);
 
     return co_http_connection_send_data(
@@ -508,7 +508,7 @@ co_http_get_remote_net_addr(
 )
 {
     return ((client->conn.tcp_client != NULL) ?
-        &client->conn.tcp_client->remote_net_addr : NULL);
+        &client->conn.tcp_client->sock.remote.net_addr : NULL);
 }
 
 co_socket_t*

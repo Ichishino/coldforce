@@ -149,11 +149,11 @@ co_http_connection_setup(
     int address_family =
         co_net_addr_get_family(local_net_addr);
 
-    co_net_addr_init(&conn->tcp_client->remote_net_addr);
+    co_net_addr_init(&conn->tcp_client->sock.remote.net_addr);
 
     if (!co_url_to_net_addr(
         url_origin, address_family,
-        &conn->tcp_client->remote_net_addr))
+        &conn->tcp_client->sock.remote.net_addr))
     {
         conn->module.destroy(conn->tcp_client);
         conn->tcp_client = NULL;
@@ -241,8 +241,8 @@ co_http_connection_send_request(
 )
 {
     co_http_log_debug_request_header(
-        &conn->tcp_client->sock.local_net_addr, "-->",
-        &conn->tcp_client->remote_net_addr,
+        &conn->tcp_client->sock.local.net_addr, "-->",
+        &conn->tcp_client->sock.remote.net_addr,
         request, "http send request");
 
     co_byte_array_t* buffer = co_byte_array_create();
@@ -277,8 +277,8 @@ co_http_connection_send_response(
 )
 {
     co_http_log_debug_response_header(
-        &conn->tcp_client->sock.local_net_addr, "-->",
-        &conn->tcp_client->remote_net_addr,
+        &conn->tcp_client->sock.local.net_addr, "-->",
+        &conn->tcp_client->sock.remote.net_addr,
         response, "http send response");
 
     co_byte_array_t* buffer = co_byte_array_create();

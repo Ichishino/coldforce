@@ -442,12 +442,12 @@ co_net_worker_tcp_client_close_timer(
         (co_tcp_client_t*)co_timer_get_user_data(timer);
 
     co_tcp_log_warning(
-        &client->sock.local_net_addr,
+        &client->sock.local.net_addr,
         "<--",
-        &client->remote_net_addr,
+        &client->sock.remote.net_addr,
         "tcp close timeout");
 
-    client->open_remote = false;
+    client->sock.remote.is_open = false;
 
     co_net_worker_unregister_tcp_connection(
         (co_net_worker_t*)thread->event_worker, client);
@@ -462,14 +462,14 @@ co_net_worker_close_tcp_client_local(
     uint32_t timeout_msec
 )
 {
-    if (!client->sock.open_local)
+    if (!client->sock.local.is_open)
     {
         return false;
     }
 
-    client->sock.open_local = false;
+    client->sock.local.is_open = false;
 
-    if (!client->open_remote)
+    if (!client->sock.remote.is_open)
     {
         co_net_worker_unregister_tcp_connection(net_worker, client);
 
@@ -501,12 +501,12 @@ co_net_worker_close_tcp_client_remote(
         return false;
     }
 
-    if (!client->open_remote)
+    if (!client->sock.remote.is_open)
     {
         return true;
     }
 
-    client->open_remote = false;
+    client->sock.remote.is_open = false;
 
     co_net_worker_unregister_tcp_connection(net_worker, client);
 

@@ -51,49 +51,21 @@ co_win_udp_setup(
     size_t receive_buffer_size
 )
 {
+    if (!co_win_net_extension_setup(
+        &udp->sock, receive_buffer_size, &udp->win))
+    {
+        return false;
+    }
+
+    udp->win.receive.remote_net_addr =
+        (co_net_addr_t*)co_mem_alloc(sizeof(co_net_addr_t));
+
     co_socket_handle_t handle =
         co_win_udp_socket_create(
-            udp->sock.local_net_addr.sa.any.ss_family);
+            udp->sock.local.net_addr.sa.any.ss_family);
 
     if (handle == CO_SOCKET_INVALID_HANDLE)
     {
-        return false;
-    }
-    udp->win.receive.io_ctx =
-        (co_win_net_io_ctx_t*)co_mem_alloc(sizeof(co_win_net_io_ctx_t));
-
-    if (udp->win.receive.io_ctx == NULL)
-    {
-        co_mem_free(udp->win.io_send_ctxs);
-        udp->win.io_send_ctxs = NULL;
-
-        co_socket_handle_close(handle);
-
-        return false;
-    }
-
-    udp->win.io_send_ctxs = NULL;
-
-    udp->win.receive.io_ctx->id = CO_WIN_NET_IO_ID_UDP_RECEIVE;
-    udp->win.receive.io_ctx->sock = &udp->sock;
-
-    udp->win.receive.size = 0;
-    udp->win.receive.index = 0;
-    udp->win.receive.new_size = 0;
-    udp->win.receive.buffer.len = (ULONG)receive_buffer_size;
-    udp->win.receive.buffer.buf =
-        co_mem_alloc(udp->win.receive.buffer.len);
-
-    if (udp->win.receive.buffer.buf == NULL)
-    {
-        co_mem_free(udp->win.receive.io_ctx);
-        udp->win.receive.io_ctx = NULL;
-
-        co_mem_free(udp->win.io_send_ctxs);
-        udp->win.io_send_ctxs = NULL;
-
-        co_socket_handle_close(handle);
-
         return false;
     }
 
@@ -102,32 +74,8 @@ co_win_udp_setup(
     return true;
 }
 
-void
-co_win_udp_cleanup(
-    co_udp_t* udp
-)
-{
-    if (udp->win.receive.io_ctx != NULL)
-    {
-        co_win_destroy_io_ctx(udp->win.receive.io_ctx);
-        udp->win.receive.io_ctx = NULL;
-    }
-
-    if (udp->win.receive.buffer.buf != NULL)
-    {
-        co_mem_free_later(udp->win.receive.buffer.buf);
-        udp->win.receive.buffer.buf = NULL;
-    }
-
-    if (udp->win.io_send_ctxs != NULL)
-    {
-        co_list_destroy(udp->win.io_send_ctxs);
-        udp->win.io_send_ctxs = NULL;
-    }
-}
-
 bool
-co_win_udp_send(
+co_win_udp_send_to(
     co_udp_t* udp,
     const co_net_addr_t* remote_net_addr,
     const void* data,
@@ -152,7 +100,7 @@ co_win_udp_send(
         int error = co_socket_get_error();
 
         co_udp_log_error(
-            &udp->sock.local_net_addr,
+            &udp->sock.local.net_addr,
             "-->",
             remote_net_addr,
             "udp send error: (%d)", error);
@@ -162,7 +110,7 @@ co_win_udp_send(
 }
 
 bool
-co_win_udp_send_async(
+co_win_udp_send_to_async(
     co_udp_t* udp,
     const co_net_addr_t* remote_net_addr,
     const void* data,
@@ -206,18 +154,18 @@ co_win_udp_send_async(
             return false;
         }
 
-        if (udp->win.io_send_ctxs == NULL)
+        if (udp->win.io_ctxs == NULL)
         {
             co_list_ctx_st list_ctx = { 0 };
             list_ctx.destroy_value = (co_item_destroy_fn)co_win_destroy_io_ctx;
-            udp->win.io_send_ctxs = co_list_create(&list_ctx);
+            udp->win.io_ctxs = co_list_create(&list_ctx);
         }
 
         co_list_add_tail(
-            udp->win.io_send_ctxs, io_ctx);
+            udp->win.io_ctxs, io_ctx);
 
         co_udp_log_debug(
-            &udp->sock.local_net_addr,
+            &udp->sock.local.net_addr,
             "-->",
             remote_net_addr,
             "udp send async QUEUED %d bytes", data_size);
@@ -225,7 +173,7 @@ co_win_udp_send_async(
     else
     {
         co_udp_log_debug_hex_dump(
-            &udp->sock.local_net_addr,
+            &udp->sock.local.net_addr,
             "-->",
             remote_net_addr,
             data, data_size,
@@ -244,7 +192,7 @@ co_win_udp_send_async(
 }
 
 bool
-co_win_udp_receive_start(
+co_win_udp_receive_from_start(
     co_udp_t* udp
 )
 {
@@ -284,7 +232,7 @@ co_win_udp_receive_start(
         &udp->win.receive.buffer, 1,
         &data_size,
         &flags,
-        (struct sockaddr*)&udp->win.receive.remote_net_addr,
+        (struct sockaddr*)udp->win.receive.remote_net_addr,
         &sender_net_addr_size,
         (LPWSAOVERLAPPED)udp->win.receive.io_ctx,
         NULL);
@@ -311,7 +259,7 @@ co_win_udp_receive_start(
 }
 
 bool
-co_win_udp_receive(
+co_win_udp_receive_from(
     co_udp_t* udp,
     co_net_addr_t* remote_net_addr,
     void* buffer,
@@ -335,7 +283,7 @@ co_win_udp_receive(
     }
 
     memcpy(remote_net_addr,
-        &udp->win.receive.remote_net_addr, sizeof(co_net_addr_t));
+        udp->win.receive.remote_net_addr, sizeof(co_net_addr_t));
 
     *data_size = co_min(udp->win.receive.size, buffer_size);
 

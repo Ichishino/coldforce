@@ -41,9 +41,9 @@ co_http2_server_on_upgrade_request(
             CO_HTTP2_CONNECTION_PREFACE_LENGTH) == 0)
         {
             co_http2_log_debug(
-                &client->conn.tcp_client->sock.local_net_addr,
+                &client->conn.tcp_client->sock.local.net_addr,
                 "<--",
-                &client->conn.tcp_client->remote_net_addr,
+                &client->conn.tcp_client->sock.remote.net_addr,
                 "http2 receive connection preface");
 
             client->conn.receive_data.index +=
@@ -68,9 +68,9 @@ co_http2_server_on_upgrade_request(
     }
 
     co_http_log_debug_request_header(
-        &client->conn.tcp_client->sock.local_net_addr,
+        &client->conn.tcp_client->sock.local.net_addr,
         "<--",
-        &client->conn.tcp_client->remote_net_addr,
+        &client->conn.tcp_client->sock.remote.net_addr,
         request,
         "http receive request");
 
@@ -177,8 +177,8 @@ co_http2_server_on_tcp_receive_ready(
             }
 
             co_http2_log_debug_frame(
-                &client->conn.tcp_client->sock.local_net_addr, "<--",
-                &client->conn.tcp_client->remote_net_addr,
+                &client->conn.tcp_client->sock.local.net_addr, "<--",
+                &client->conn.tcp_client->sock.remote.net_addr,
                 frame,
                 "http2 receive frame");
 

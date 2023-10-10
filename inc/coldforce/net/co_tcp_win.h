@@ -6,6 +6,7 @@
 #include <coldforce/net/co_net.h>
 #include <coldforce/net/co_net_addr.h>
 #include <coldforce/net/co_net_selector.h>
+#include <coldforce/net/co_net_win.h>
 #include <coldforce/net/co_socket_handle.h>
 #include <coldforce/net/co_socket.h>
 
@@ -32,25 +33,6 @@ typedef struct
     uint8_t buffer[512];
 
 } co_win_tcp_server_extention_t;
-
-typedef struct
-{
-    co_win_net_io_ctx_t* io_connect_ctx;
-    co_list_t* io_send_ctxs;
-
-    struct co_tcp_receive_ctx_t
-    {
-        co_win_net_io_ctx_t* io_ctx;
-
-        WSABUF buffer;
-        size_t size;
-        size_t index;
-
-        size_t new_size;
-
-    } receive;
-
-} co_win_tcp_client_extension_t;
 
 //---------------------------------------------------------------------------//
 // private
@@ -87,51 +69,9 @@ co_win_tcp_server_accept_stop(
 );
 
 bool
-co_win_tcp_client_setup(
-    struct co_tcp_client_t* client,
-    size_t receive_buffer_size
-);
-
-void
-co_win_tcp_client_cleanup(
-    struct co_tcp_client_t* client
-);
-
-bool
 co_win_tcp_client_connector_setup(
     struct co_tcp_client_t* client,
     const co_net_addr_t* local_net_addr
-);
-
-void
-co_win_tcp_client_connector_cleanup(
-    struct co_tcp_client_t* client
-);
-
-bool
-co_win_tcp_client_send(
-    struct co_tcp_client_t* client,
-    const void* data,
-    size_t data_size
-);
-
-bool
-co_win_tcp_client_send_async(
-    struct co_tcp_client_t* client,
-    const void* data,
-    size_t data_size
-);
-
-bool
-co_win_tcp_client_receive_start(
-    struct co_tcp_client_t* client
-);
-
-ssize_t
-co_win_tcp_client_receive(
-    struct co_tcp_client_t* client,
-    void* buffer,
-    size_t buffer_size
 );
 
 bool

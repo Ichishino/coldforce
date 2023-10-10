@@ -30,7 +30,7 @@ co_tls_on_info(
     if (where & SSL_CB_ALERT)
     {
         co_tls_log_warning(
-            &client->sock.local_net_addr, "---", &client->remote_net_addr,
+            &client->sock.local.net_addr, "---", &client->sock.remote.net_addr,
             "0x%08X-%s %s (%d) %s",
             where, SSL_alert_type_string_long(ret), SSL_state_string_long(ssl),
             ret, SSL_alert_desc_string_long(ret));
@@ -38,7 +38,7 @@ co_tls_on_info(
     else
     {
         co_tls_log_info(
-            &client->sock.local_net_addr, "---", &client->remote_net_addr,
+            &client->sock.local.net_addr, "---", &client->sock.remote.net_addr,
             "0x%08X %s",
             where, SSL_state_string_long(ssl));
     }
@@ -46,7 +46,7 @@ co_tls_on_info(
     if (where == SSL_CB_HANDSHAKE_DONE)
     {
         co_tls_log_info(
-            &client->sock.local_net_addr, "---", &client->remote_net_addr,
+            &client->sock.local.net_addr, "---", &client->sock.remote.net_addr,
             "tls handshake done");
     }
 }
@@ -156,9 +156,9 @@ co_tls_send_handshake(
 )
 {
     co_tls_log_info(
-        &client->sock.local_net_addr,
+        &client->sock.local.net_addr,
         "-->",
-        &client->remote_net_addr,
+        &client->sock.remote.net_addr,
         "tls handshake send");
 
     co_tls_client_t* tls = co_tcp_client_get_tls(client);
@@ -173,9 +173,9 @@ co_tls_send_handshake(
         co_socket_handle_set_blocking(client->sock.handle, true);
 
         co_tcp_log_debug_hex_dump(
-            &client->sock.local_net_addr,
+            &client->sock.local.net_addr,
             "-->",
-            &client->remote_net_addr,
+            &client->sock.remote.net_addr,
             buffer, bio_result,
             "tcp send %d bytes", bio_result);
 
@@ -227,9 +227,9 @@ co_tls_receive_handshake(
         }
 
         co_tcp_log_debug_hex_dump(
-            &client->sock.local_net_addr,
+            &client->sock.local.net_addr,
             "<--",
-            &client->remote_net_addr,
+            &client->sock.remote.net_addr,
             buffer, data_size,
             "tcp receive %d bytes", data_size);
 
@@ -240,9 +240,9 @@ co_tls_receive_handshake(
 #endif
 
     co_tls_log_info(
-        &client->sock.local_net_addr,
+        &client->sock.local.net_addr,
         "<--",
-        &client->remote_net_addr,
+        &client->sock.remote.net_addr,
         "tls handshake receive");
 
     while (co_queue_get_count(tls->receive_data_queue) > 0)
@@ -362,9 +362,9 @@ co_tls_on_receive_handshake(
             else
             {
                 co_tls_log_error(
-                    &client->sock.local_net_addr,
+                    &client->sock.local.net_addr,
                     "---",
-                    &client->remote_net_addr,
+                    &client->sock.remote.net_addr,
                     "tls handshake error: (%d)",
                     ssl_error);
 
@@ -384,7 +384,7 @@ co_tls_on_receive_handshake(
     if (error_code == 0)
     {
         co_tls_log_info(
-            &client->sock.local_net_addr, "---", &client->remote_net_addr,
+            &client->sock.local.net_addr, "---", &client->sock.remote.net_addr,
             "%s %s", SSL_get_version(tls->ssl), SSL_get_cipher_name(tls->ssl));
 
         char protocol[64];
@@ -393,17 +393,17 @@ co_tls_on_receive_handshake(
             client, protocol, sizeof(protocol)))
         {
             co_tls_log_info(
-                &client->sock.local_net_addr,
+                &client->sock.local.net_addr,
                 ((SSL_is_server(tls->ssl) == 1) ? "-->" : "<--"),
-                &client->remote_net_addr,
+                &client->sock.remote.net_addr,
                 "tls handshake alpn selected (%s)", protocol);
         }
         else
         {
             co_tls_log_warning(
-                &client->sock.local_net_addr,
+                &client->sock.local.net_addr,
                 ((SSL_is_server(tls->ssl) == 1) ? "-->" : "<--"),
-                &client->remote_net_addr,
+                &client->sock.remote.net_addr,
                 "tls handshake *** alpn unselected ***");
         }
 
@@ -420,9 +420,9 @@ co_tls_on_receive_handshake(
     X509_free(x509);
 
     co_tls_log_info(
-        &client->sock.local_net_addr,
+        &client->sock.local.net_addr,
         "<--",
-        &client->remote_net_addr,
+        &client->sock.remote.net_addr,
         "tls handshake finished (%d)", error_code);
 
     client->callbacks.on_receive = tls->on_receive;
@@ -618,9 +618,9 @@ co_tls_start_handshake(
 #ifdef CO_USE_OPENSSL_COMPATIBLE
 
     co_tls_log_info(
-        &client->sock.local_net_addr,
+        &client->sock.local.net_addr,
         "-->",
-        &client->remote_net_addr,
+        &client->sock.remote.net_addr,
         "tls handshake start");
 
     co_tls_client_t* tls = co_tcp_client_get_tls(client);
@@ -666,9 +666,9 @@ co_tls_send(
 )
 {
     co_tls_log_debug_hex_dump(
-        &client->sock.local_net_addr,
+        &client->sock.local.net_addr,
         "-->",
-        &client->remote_net_addr,
+        &client->sock.remote.net_addr,
         data, data_size,
         "tls send %zd bytes", data_size);
 
@@ -698,9 +698,9 @@ co_tls_send_async(
 )
 {
     co_tls_log_debug_hex_dump(
-        &client->sock.local_net_addr,
+        &client->sock.local.net_addr,
         "-->",
-        &client->remote_net_addr,
+        &client->sock.remote.net_addr,
         data, data_size,
         "tls send async %zd bytes", data_size);
 
@@ -768,9 +768,9 @@ co_tls_receive(
     if (ssl_result > 0)
     {
         co_tls_log_debug_hex_dump(
-            &client->sock.local_net_addr,
+            &client->sock.local.net_addr,
             "<--",
-            &client->remote_net_addr,
+            &client->sock.remote.net_addr,
             buffer, ssl_result,
             "tls receive %d bytes", ssl_result);
     }
@@ -786,9 +786,9 @@ co_tls_receive(
         else
         {
             co_tls_log_error(
-                &client->sock.local_net_addr,
+                &client->sock.local.net_addr,
                 "<--",
-                &client->remote_net_addr,
+                &client->sock.remote.net_addr,
                 "tls receive error: (%d)", ssl_error);
         }
     }

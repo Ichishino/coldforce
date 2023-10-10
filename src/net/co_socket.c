@@ -19,15 +19,18 @@ co_socket_setup(
     co_socket_t* sock
 )
 {
-    co_net_addr_init(&sock->local_net_addr);
-
-    sock->type = 0;
+    sock->type = CO_SOCKET_TYPE_UNKNOWN;
     sock->owner_thread = NULL;
     sock->handle = CO_SOCKET_INVALID_HANDLE;
-    sock->open_local = false;
+
+    co_net_addr_init(&sock->local.net_addr);
+    co_net_addr_init(&sock->remote.net_addr);
+    sock->local.is_open = false;
+    sock->remote.is_open = false;
+
     sock->sub_class = NULL;
     sock->tls = NULL;
-    sock->user_data = 0;
+    sock->user_data = NULL;
 }
 
 void
@@ -36,13 +39,16 @@ co_socket_cleanup(
 )
 {
     co_socket_handle_close(sock->handle);
-
-    co_net_addr_init(&sock->local_net_addr);
-
-    sock->type = 0;
-    sock->owner_thread = NULL;
     sock->handle = CO_SOCKET_INVALID_HANDLE;
-    sock->open_local = false;
+
+    sock->type = CO_SOCKET_TYPE_UNKNOWN;
+    sock->owner_thread = NULL;
+
+    co_net_addr_init(&sock->local.net_addr);
+    co_net_addr_init(&sock->remote.net_addr);
+    sock->local.is_open = false;
+    sock->remote.is_open = false;
+
     sock->sub_class = NULL;
     sock->tls = NULL;
     sock->user_data = 0;
@@ -81,5 +87,13 @@ co_socket_get_local_net_addr(
     const co_socket_t* sock
 )
 {
-    return &sock->local_net_addr;
+    return &sock->local.net_addr;
+}
+
+const co_net_addr_t*
+co_socket_get_remote_net_addr(
+    const co_socket_t* sock
+)
+{
+    return &sock->remote.net_addr;
 }

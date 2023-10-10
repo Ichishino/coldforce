@@ -57,17 +57,13 @@ typedef struct
 typedef struct co_tcp_client_t
 {
     co_socket_t sock;
-
     co_tcp_callbacks_st callbacks;
-
-    co_net_addr_t remote_net_addr;
-    bool open_remote;
 
     co_timer_t* close_timer;
     co_queue_t* send_async_queue;
 
 #ifdef CO_OS_WIN
-    co_win_tcp_client_extension_t win;
+    co_win_net_extension_t win;
 #endif
 
 } co_tcp_client_t;

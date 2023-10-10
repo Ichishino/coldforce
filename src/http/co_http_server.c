@@ -84,8 +84,8 @@ co_http_server_on_tcp_receive_ready(
             if (result == CO_HTTP_PARSE_COMPLETE)
             {
                 co_http_log_debug_request_header(
-                    &client->conn.tcp_client->sock.local_net_addr, "<--",
-                    &client->conn.tcp_client->remote_net_addr,
+                    &client->conn.tcp_client->sock.local.net_addr, "<--",
+                    &client->conn.tcp_client->sock.remote.net_addr,
                     client->request, "http receive request");
 
                 co_http_content_receiver_clear(&client->content_receiver);

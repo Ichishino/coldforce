@@ -9,6 +9,8 @@
 
 #ifdef CO_OS_WIN
 
+#include <coldforce/net/co_net_win.h>
+
 CO_EXTERN_C_BEGIN
 
 //---------------------------------------------------------------------------//
@@ -21,26 +23,6 @@ CO_EXTERN_C_BEGIN
 #define CO_WIN_UDP_DEFAULT_RECEIVE_BUFFER_SIZE    65535
 
 struct co_udp_t;
-
-typedef struct
-{
-    co_list_t* io_send_ctxs;
-
-    struct co_udp_receive_ctx_t
-    {
-        co_win_net_io_ctx_t* io_ctx;
-
-        WSABUF buffer;
-        size_t size;
-        size_t index;
-
-        size_t new_size;
-
-        co_net_addr_t remote_net_addr;
-
-    } receive;
-
-} co_win_udp_extension_t;
 
 //---------------------------------------------------------------------------//
 // private
@@ -57,13 +39,8 @@ co_win_udp_setup(
     size_t receive_buffer_size
 );
 
-void
-co_win_udp_cleanup(
-    struct co_udp_t* udp
-);
-
 bool
-co_win_udp_send(
+co_win_udp_send_to(
     struct co_udp_t* udp,
     const co_net_addr_t* remote_net_addr,
     const void* data,
@@ -71,7 +48,7 @@ co_win_udp_send(
 );
 
 bool
-co_win_udp_send_async(
+co_win_udp_send_to_async(
     struct co_udp_t* udp,
     const co_net_addr_t* remote_net_addr,
     const void* data,
@@ -79,12 +56,12 @@ co_win_udp_send_async(
 );
 
 bool
-co_win_udp_receive_start(
+co_win_udp_receive_from_start(
     struct co_udp_t* udp
 );
 
 bool
-co_win_udp_receive(
+co_win_udp_receive_from(
     struct co_udp_t* udp,
     co_net_addr_t* remote_net_addr,
     void* buffer,

@@ -104,7 +104,7 @@ static void test_udp_thread_on_receive(test_udp_thread_st* self, co_udp_t* udp_c
         char data[2048];
 
         co_net_addr_t remote_net_addr;
-        ssize_t size = co_udp_receive(udp_client, &remote_net_addr, data, sizeof(data));
+        ssize_t size = co_udp_receive_from(udp_client, &remote_net_addr, data, sizeof(data));
 
         if (size <= 0)
         {
@@ -203,7 +203,7 @@ static void test_udp_thread_on_timer(test_udp_thread_st* self, co_timer_t* timer
         data_block->data = packet;
         data_block->size = packet_size;
 
-        if (!co_udp_send_async(
+        if (!co_udp_send_to_async(
             test_udp_client->udp_client,
             &self->remote_net_addr, packet, packet_size, data_block))
         {
@@ -215,7 +215,7 @@ static void test_udp_thread_on_timer(test_udp_thread_st* self, co_timer_t* timer
     }
     else
     {
-        if (!co_udp_send(
+        if (!co_udp_send_to(
             test_udp_client->udp_client,
             &self->remote_net_addr, packet, packet_size))
         {
@@ -271,7 +271,7 @@ static bool test_udp_thread_on_create(test_udp_thread_st* self)
         callbacks->on_receive = (co_udp_receive_fn)test_udp_thread_on_receive;
         callbacks->on_send_async = (co_udp_send_async_fn)test_udp_thread_on_send_async;
 
-        if (!co_udp_receive_start(udp_client))
+        if (!co_udp_receive_from_start(udp_client))
         {
             test_error("Failed: test_udp_thread_on_create(co_udp_receive_start)");
             exit(-1);

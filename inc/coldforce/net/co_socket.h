@@ -20,7 +20,8 @@ struct co_net_worker_t;
 
 typedef enum
 {
-    CO_SOCKET_TYPE_TCP_SERVER           = 1,
+    CO_SOCKET_TYPE_UNKNOWN          = 0,
+    CO_SOCKET_TYPE_TCP_SERVER,
     CO_SOCKET_TYPE_TCP_CONNECTOR,
     CO_SOCKET_TYPE_TCP_CONNECTION,
     CO_SOCKET_TYPE_UDP
@@ -30,15 +31,18 @@ typedef enum
 typedef struct
 {
     co_socket_handle_t handle;
-
-    co_thread_t* owner_thread;
-    co_net_addr_t local_net_addr;
     co_socket_type_t type;
+    co_thread_t* owner_thread;
 
-    bool open_local;
+    struct co_socket_net_addr_t
+    {
+        co_net_addr_t net_addr;
+        bool is_open;
+
+    } local, remote;
+
     void* sub_class;
     void* tls;
-
     void* user_data;
 
 } co_socket_t;
@@ -81,6 +85,12 @@ co_socket_get_owner_thread(
 CO_NET_API
 const co_net_addr_t*
 co_socket_get_local_net_addr(
+    const co_socket_t* sock
+);
+
+CO_NET_API
+const co_net_addr_t*
+co_socket_get_remote_net_addr(
     const co_socket_t* sock
 );
 

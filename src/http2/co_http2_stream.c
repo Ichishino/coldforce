@@ -384,9 +384,9 @@ co_http2_stream_change_state(
     if (error_code != CO_HTTP2_STREAM_ERROR_NO_ERROR)
     {
         co_http2_log_error(
-            &stream->client->conn.tcp_client->sock.local_net_addr,
+            &stream->client->conn.tcp_client->sock.local.net_addr,
             (send ? "-->" : "<--"),
-            &stream->client->conn.tcp_client->remote_net_addr,
+            &stream->client->conn.tcp_client->sock.remote.net_addr,
             "stream-%u *** state error: %d state(%d) frame(%d)",
             stream->id, error_code, stream->state, frame->header.type);
     }
@@ -414,8 +414,8 @@ co_http2_stream_send_frame(
     frame->header.stream_id = stream->id;
 
     co_http2_log_debug_frame(
-        &stream->client->conn.tcp_client->sock.local_net_addr, "-->",
-        &stream->client->conn.tcp_client->remote_net_addr,
+        &stream->client->conn.tcp_client->sock.local.net_addr, "-->",
+        &stream->client->conn.tcp_client->sock.remote.net_addr,
         frame,
         "http2 send frame");
 
@@ -641,8 +641,8 @@ co_http2_stream_on_receive_frame(
             }
 
             co_http2_log_debug_header(
-                &stream->client->conn.tcp_client->sock.local_net_addr, "<--",
-                &stream->client->conn.tcp_client->remote_net_addr,
+                &stream->client->conn.tcp_client->sock.local.net_addr, "<--",
+                &stream->client->conn.tcp_client->sock.remote.net_addr,
                 stream->receive_header,
                 "http2 receive header");
 
@@ -768,8 +768,8 @@ co_http2_stream_on_receive_frame(
             }
 
             co_http2_log_debug_header(
-                &stream->client->conn.tcp_client->sock.local_net_addr, "<--",
-                &stream->client->conn.tcp_client->remote_net_addr,
+                &stream->client->conn.tcp_client->sock.local.net_addr, "<--",
+                &stream->client->conn.tcp_client->sock.remote.net_addr,
                 header,
                 "http2 receive header (push-promise)");
 
@@ -1049,8 +1049,8 @@ co_http2_stream_send_header(
     }
 
     co_http2_log_debug_header(
-        &stream->client->conn.tcp_client->sock.local_net_addr, "-->",
-        &stream->client->conn.tcp_client->remote_net_addr,
+        &stream->client->conn.tcp_client->sock.local.net_addr, "-->",
+        &stream->client->conn.tcp_client->sock.remote.net_addr,
         header,
         "http2 send header");
 
@@ -1167,8 +1167,8 @@ co_http2_stream_send_server_push_request(
     }
 
     co_http2_log_debug_header(
-        &stream->client->conn.tcp_client->sock.local_net_addr, "-->",
-        &stream->client->conn.tcp_client->remote_net_addr,
+        &stream->client->conn.tcp_client->sock.local.net_addr, "-->",
+        &stream->client->conn.tcp_client->sock.remote.net_addr,
         header,
         "http2 send push-promise");
 
