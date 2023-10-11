@@ -5,7 +5,6 @@
 #include <coldforce/net/co_net_event.h>
 #include <coldforce/net/co_socket.h>
 #include <coldforce/net/co_tcp_client.h>
-#include <coldforce/net/co_tcp_win.h>
 #include <coldforce/net/co_udp.h>
 
 #ifdef CO_OS_WIN
@@ -195,7 +194,7 @@ co_net_selector_wait(
                     (uintptr_t)entries[index].dwNumberOfBytesTransferred);
 
                 co_tcp_client_t* tcp_client = (co_tcp_client_t*)io_ctx->sock;
-                co_list_remove(tcp_client->win.io_ctxs, io_ctx);
+                co_list_remove(tcp_client->sock.win.client.io_ctxs, io_ctx);
 
                 break;
             }
@@ -240,7 +239,7 @@ co_net_selector_wait(
                     (uintptr_t)entries[index].dwNumberOfBytesTransferred);
 
                 co_udp_t* udp = (co_udp_t*)io_ctx->sock;
-                co_list_remove(udp->win.io_ctxs, io_ctx);
+                co_list_remove(udp->sock.win.client.io_ctxs, io_ctx);
 
                 break;
             }

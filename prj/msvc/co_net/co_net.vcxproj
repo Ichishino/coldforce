@@ -288,9 +288,7 @@
     <ClInclude Include="..\..\..\inc\coldforce\net\co_socket_option.h" />
     <ClInclude Include="..\..\..\inc\coldforce\net\co_tcp_client.h" />
     <ClInclude Include="..\..\..\inc\coldforce\net\co_tcp_server.h" />
-    <ClInclude Include="..\..\..\inc\coldforce\net\co_tcp_win.h" />
     <ClInclude Include="..\..\..\inc\coldforce\net\co_udp.h" />
-    <ClInclude Include="..\..\..\inc\coldforce\net\co_udp_win.h" />
     <ClInclude Include="..\..\..\inc\coldforce\net\co_url.h" />
   </ItemGroup>
   <ItemGroup>
@@ -308,9 +306,7 @@
     <ClCompile Include="..\..\..\src\net\co_socket_option.c" />
     <ClCompile Include="..\..\..\src\net\co_tcp_client.c" />
     <ClCompile Include="..\..\..\src\net\co_tcp_server.c" />
-    <ClCompile Include="..\..\..\src\net\co_tcp_win.c" />
     <ClCompile Include="..\..\..\src\net\co_udp.c" />
-    <ClCompile Include="..\..\..\src\net\co_udp_win.c" />
     <ClCompile Include="..\..\..\src\net\co_url.c" />
   </ItemGroup>
   <ItemGroup>

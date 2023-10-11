@@ -16,10 +16,11 @@
 
 void
 co_socket_setup(
-    co_socket_t* sock
+    co_socket_t* sock,
+    co_socket_type_t type
 )
 {
-    sock->type = CO_SOCKET_TYPE_UNKNOWN;
+    sock->type = type;
     sock->owner_thread = NULL;
     sock->handle = CO_SOCKET_INVALID_HANDLE;
 

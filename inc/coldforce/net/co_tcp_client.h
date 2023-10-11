@@ -3,16 +3,11 @@
 
 #include <coldforce/core/co_timer.h>
 #include <coldforce/core/co_byte_array.h>
+#include <coldforce/core/co_queue.h>
 
 #include <coldforce/net/co_net.h>
 #include <coldforce/net/co_net_addr.h>
 #include <coldforce/net/co_socket.h>
-
-#ifdef CO_OS_WIN
-#include <coldforce/net/co_tcp_win.h>
-#else
-#include <coldforce/core/co_queue.h>
-#endif
 
 CO_EXTERN_C_BEGIN
 
@@ -62,10 +57,6 @@ typedef struct co_tcp_client_t
     co_timer_t* close_timer;
     co_queue_t* send_async_queue;
 
-#ifdef CO_OS_WIN
-    co_win_net_extension_t win;
-#endif
-
 } co_tcp_client_t;
 
 typedef struct
@@ -90,7 +81,8 @@ co_tcp_client_create_with(
 
 bool
 co_tcp_client_setup(
-    co_tcp_client_t* client
+    co_tcp_client_t* client,
+    co_socket_type_t type
 );
 
 void
@@ -232,41 +224,6 @@ void*
 co_tcp_get_user_data(
     const co_tcp_client_t* client
 );
-
-#ifdef CO_OS_WIN
-
-CO_NET_API
-size_t
-co_win_tcp_get_receive_data_size(
-    const co_tcp_client_t* client
-);
-
-CO_NET_API
-void
-co_win_tcp_set_receive_buffer_size(
-    co_tcp_client_t* client,
-    size_t size
-);
-
-CO_NET_API
-size_t
-co_win_tcp_get_receive_buffer_size(
-    const co_tcp_client_t* client
-);
-
-CO_NET_API
-void*
-co_win_tcp_get_receive_buffer(
-    co_tcp_client_t* client
-);
-
-CO_NET_API
-void
-co_win_tcp_clear_receive_buffer(
-    co_tcp_client_t* client
-);
-
-#endif // CO_OS_WIN
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

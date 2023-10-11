@@ -206,10 +206,10 @@ co_tls_receive_handshake(
 
     co_queue_push_array(
         tls->receive_data_queue,
-        co_win_tcp_get_receive_buffer(client),
-        co_win_tcp_get_receive_data_size(client));
+        co_win_socket_get_receive_buffer(&client->sock),
+        co_win_socket_get_receive_data_size(&client->sock));
 
-    co_win_tcp_clear_receive_buffer(client);
+    co_win_socket_clear_receive_buffer(&client->sock);
 
 #else
 

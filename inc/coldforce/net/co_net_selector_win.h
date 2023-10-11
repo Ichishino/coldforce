@@ -2,14 +2,14 @@
 #define CO_NET_SELECTOR_WIN_H_INCLUDED
 
 #include <coldforce/core/co_list.h>
-#include <coldforce/core/co_array.h>
 
 #include <coldforce/net/co_net.h>
-#include <coldforce/net/co_socket.h>
 
 #ifdef CO_OS_WIN
 
 CO_EXTERN_C_BEGIN
+
+struct co_socket_t;
 
 //---------------------------------------------------------------------------//
 // net selector (windows)
@@ -42,7 +42,7 @@ typedef struct
     WSAOVERLAPPED ol;
 
     co_win_net_io_id_t id;
-    co_socket_t* sock;
+    struct co_socket_t* sock;
 
 } co_win_net_io_ctx_t;
 

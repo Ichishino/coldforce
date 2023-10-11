@@ -25,20 +25,24 @@ co_tcp_server_on_accept_ready(
 #ifdef CO_OS_WIN
 
     co_win_socket_option_update_accept_context(
-        (co_socket_t*)&server->win.accept_handle, &server->sock);
+        &server->sock, server->sock.win.server.accept.handle);
 
     co_tcp_client_t* win_client =
-        co_tcp_client_create_with(server->win.accept_handle, NULL);
+        co_tcp_client_create_with(
+            server->sock.win.server.accept.handle, NULL);
 
     if (win_client == NULL)
     {
-        co_socket_handle_close(server->win.accept_handle);
-        server->win.accept_handle = CO_SOCKET_INVALID_HANDLE;
+        co_socket_handle_close(
+            server->sock.win.server.accept.handle);
+        server->sock.win.server.accept.handle =
+            CO_SOCKET_INVALID_HANDLE;
 
         return;
     }
 
-    server->win.accept_handle = CO_SOCKET_INVALID_HANDLE;
+    server->sock.win.server.accept.handle =
+        CO_SOCKET_INVALID_HANDLE;
 
     co_tcp_log_info(
         &server->sock.local.net_addr,
@@ -105,7 +109,7 @@ co_tcp_server_on_accept_ready(
     }
 
 #ifdef CO_OS_WIN
-    co_win_tcp_server_accept_start(server);
+    co_win_net_accept_start(&server->sock);
 #endif
 }
 
@@ -126,9 +130,9 @@ co_tcp_server_create(
         return NULL;
     }
 
-    co_socket_setup(&server->sock);
+    co_socket_setup(
+        &server->sock, CO_SOCKET_TYPE_TCP_SERVER);
 
-    server->sock.type = CO_SOCKET_TYPE_TCP_SERVER;
     server->sock.owner_thread = co_thread_get_current();
     server->sock.local.is_open = true;
 
@@ -138,16 +142,32 @@ co_tcp_server_create(
     server->callbacks.on_accept = NULL;
 
 #ifdef CO_OS_WIN
-    if (!co_win_tcp_server_setup(server))
+
+    if (!co_win_net_server_extension_setup(
+        &server->sock.win.server, &server->sock))
     {
         co_mem_free(server);
 
         return NULL;
     }
+
+    server->sock.handle = co_win_socket_handle_create_tcp(
+        local_net_addr->sa.any.ss_family);
 #else
     server->sock.handle = co_socket_handle_create(
         local_net_addr->sa.any.ss_family, SOCK_STREAM, IPPROTO_TCP);
 #endif
+
+    if (server->sock.handle == CO_SOCKET_INVALID_HANDLE)
+    {
+#ifdef CO_OS_WIN
+        co_win_net_server_extension_cleanup(
+            &server->sock.win.server);
+#endif
+        co_mem_free(server);
+
+        return NULL;
+    }
 
     return server;
 }
@@ -204,7 +224,7 @@ co_tcp_server_start(
         server->sock.handle, &server->sock.local.net_addr);
 
 #ifdef CO_OS_WIN
-    co_win_tcp_server_accept_start(server);
+    co_win_net_accept_start(&server->sock);
 #endif
 
     co_tcp_log_info(
@@ -242,8 +262,8 @@ co_tcp_server_close (
         server);
 
 #ifdef CO_OS_WIN
-    co_win_tcp_server_accept_stop(server);
-    co_win_tcp_server_cleanup(server);
+    co_win_net_server_extension_cleanup(
+        &server->sock.win.server);
 #endif
 
     server->callbacks.on_accept = NULL;
@@ -276,7 +296,7 @@ co_tcp_accept(
     }
 
 #ifdef CO_OS_WIN
-    co_win_net_receive_start(&client->sock, &client->win);
+    co_win_net_receive_start(&client->sock);
 #endif
 
     return true;

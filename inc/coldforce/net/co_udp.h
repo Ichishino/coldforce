@@ -1,15 +1,11 @@
 #ifndef CO_UDP_H_INCLUDED
 #define CO_UDP_H_INCLUDED
 
+#include <coldforce/core/co_queue.h>
+
 #include <coldforce/net/co_net.h>
 #include <coldforce/net/co_net_addr.h>
 #include <coldforce/net/co_socket.h>
-
-#ifdef CO_OS_WIN
-#include <coldforce/net/co_udp_win.h>
-#else
-#include <coldforce/core/co_queue.h>
-#endif
 
 CO_EXTERN_C_BEGIN
 
@@ -54,10 +50,6 @@ typedef struct co_udp_t
     bool bound_local_net_addr;
     uint32_t sock_event_flags;
     co_queue_t* send_async_queue;
-
-#ifdef CO_OS_WIN
-    co_win_net_extension_t win;
-#endif
 
 } co_udp_t;
 
@@ -170,41 +162,6 @@ void*
 co_udp_get_user_data(
     const co_udp_t* udp
 );
-
-#ifdef CO_OS_WIN
-
-CO_NET_API
-size_t
-co_win_udp_get_receive_data_size(
-    const co_udp_t* udp
-);
-
-CO_NET_API
-void
-co_win_udp_set_receive_buffer_size(
-    co_udp_t* udp,
-    size_t new_size
-);
-
-CO_NET_API
-size_t
-co_win_udp_get_receive_buffer_size(
-    const co_udp_t* udp
-);
-
-CO_NET_API
-void*
-co_win_udp_get_receive_buffer(
-    co_udp_t* udp
-);
-
-CO_NET_API
-void
-co_win_udp_clear_receive_buffer(
-    co_udp_t* udp
-);
-
-#endif // CO_OS_WIN
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

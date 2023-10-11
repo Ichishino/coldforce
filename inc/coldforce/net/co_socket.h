@@ -7,6 +7,10 @@
 #include <coldforce/net/co_net_addr.h>
 #include <coldforce/net/co_socket_handle.h>
 
+#ifdef CO_OS_WIN
+#include <coldforce/net/co_net_win.h>
+#endif
+
 CO_EXTERN_C_BEGIN
 
 struct co_net_worker_t;
@@ -28,7 +32,7 @@ typedef enum
 
 } co_socket_type_t;
 
-typedef struct
+typedef struct co_socket_t
 {
     co_socket_handle_t handle;
     co_socket_type_t type;
@@ -45,6 +49,15 @@ typedef struct
     void* tls;
     void* user_data;
 
+#ifdef CO_OS_WIN
+    union co_win_net_extension_un
+    {
+        co_win_net_client_extesion_t client;
+        co_win_net_server_extension_t server;
+
+    } win;
+#endif
+
 } co_socket_t;
 
 //---------------------------------------------------------------------------//
@@ -53,7 +66,8 @@ typedef struct
 
 void
 co_socket_setup(
-    co_socket_t* sock
+    co_socket_t* sock,
+    co_socket_type_t type
 );
 
 void

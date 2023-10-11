@@ -7,10 +7,6 @@
 #include <coldforce/net/co_socket.h>
 #include <coldforce/net/co_tcp_client.h>
 
-#ifdef CO_OS_WIN
-#include <coldforce/net/co_tcp_win.h>
-#endif
-
 CO_EXTERN_C_BEGIN
 
 //---------------------------------------------------------------------------//
@@ -34,12 +30,7 @@ typedef struct
 typedef struct co_tcp_server_t
 {
     co_socket_t sock;
-
     co_tcp_server_callbacks_st callbacks;
-
-#ifdef CO_OS_WIN
-    co_win_tcp_server_extention_t win;
-#endif
 
 } co_tcp_server_t;
 
