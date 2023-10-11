@@ -65,7 +65,7 @@ bool on_my_app_create(my_app* self)
     // socket option
     co_socket_option_set_reuse_addr(co_udp_get_socket(self->udp), true);
 #ifdef _WIN32
-    co_win_socket_set_receive_buffer_size(self->udp, 65535);
+    co_win_socket_set_receive_buffer_size(co_udp_get_socket(self->udp), 65535);
 #else
     co_socket_option_set_receive_buffer(co_udp_get_socket(self->udp), 65535);
 #endif
