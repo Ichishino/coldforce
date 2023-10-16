@@ -35,7 +35,7 @@ co_tcp_client_create_with(
     }
 
     if (!co_tcp_client_setup(
-        client, CO_SOCKET_TYPE_TCP_CONNECTION))
+        client, CO_SOCKET_TYPE_TCP))
     {
         co_mem_free(client);
 
@@ -127,7 +127,7 @@ co_tcp_client_on_connect_complete(
 
     if (error_code == 0)
     {
-        client->sock.type = CO_SOCKET_TYPE_TCP_CONNECTION;
+        client->sock.type = CO_SOCKET_TYPE_TCP;
         client->sock.remote.is_open = true;
 
 #ifdef CO_OS_WIN
@@ -252,20 +252,17 @@ co_tcp_client_on_receive_ready(
         "tcp receive ready");
 
 #ifdef CO_OS_WIN
+
     if (data_size > 0)
     {
         client->sock.win.client.receive.size = data_size;
     }
-#else
-    (void)data_size;
-#endif
 
     if (client->callbacks.on_receive != NULL)
     {
         client->callbacks.on_receive(
             client->sock.owner_thread, client);
     }
-#ifdef CO_OS_WIN
     else
     {
         client->sock.win.client.receive.index = 0;
@@ -287,7 +284,18 @@ co_tcp_client_on_receive_ready(
                 0);
         }
     }
-#endif
+
+#else
+
+    (void)data_size;
+
+    if (client->callbacks.on_receive != NULL)
+    {
+        client->callbacks.on_receive(
+            client->sock.owner_thread, client);
+    }
+
+#endif // CO_OS_WIN
 }
 
 void
@@ -341,6 +349,7 @@ co_tcp_client_create(
     if (!co_tcp_client_setup(
         client, CO_SOCKET_TYPE_TCP_CONNECTOR))
     {
+        co_tcp_client_cleanup(client);
         co_mem_free(client);
 
         return NULL;

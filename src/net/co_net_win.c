@@ -420,11 +420,6 @@ co_win_net_send_async(
     size_t data_size
 )
 {
-    if (!sock->remote.is_open)
-    {
-        return -1;
-    }
-
     co_win_net_io_ctx_t* io_ctx =
         (co_win_net_io_ctx_t*)co_mem_alloc(sizeof(co_win_net_io_ctx_t));
 
@@ -435,13 +430,19 @@ co_win_net_send_async(
 
     memset(&io_ctx->ol, 0x00, sizeof(WSAOVERLAPPED));
 
-    if (sock->type == CO_SOCKET_TYPE_UDP)
+    if (sock->type == CO_SOCKET_TYPE_TCP)
+    {
+        io_ctx->id = CO_WIN_NET_IO_ID_TCP_SEND_ASYNC;
+    }
+    else if (sock->type == CO_SOCKET_TYPE_UDP_CONNECTED)
     {
         io_ctx->id = CO_WIN_NET_IO_ID_UDP_SEND_ASYNC;
     }
     else
     {
-        io_ctx->id = CO_WIN_NET_IO_ID_TCP_SEND_ASYNC;
+        co_mem_free(io_ctx);
+
+        return -1;
     }
 
     io_ctx->sock = sock;
@@ -483,13 +484,13 @@ co_win_net_send_async(
 
         co_event_id_t event_id;
 
-        if (sock->type == CO_SOCKET_TYPE_UDP)
+        if (sock->type == CO_SOCKET_TYPE_TCP)
         {
-            event_id = CO_NET_EVENT_ID_UDP_SEND_ASYNC_COMPLETE;
+            event_id = CO_NET_EVENT_ID_TCP_SEND_ASYNC_COMPLETE;
         }
         else
         {
-            event_id = CO_NET_EVENT_ID_TCP_SEND_ASYNC_COMPLETE;
+            event_id = CO_NET_EVENT_ID_UDP_SEND_ASYNC_COMPLETE;
         }
 
         co_thread_send_event(
@@ -507,6 +508,11 @@ co_win_net_receive_start(
     co_socket_t* sock
 )
 {
+    if (sock->handle == CO_SOCKET_INVALID_HANDLE)
+    {
+        return false;
+    }
+
     memset(&sock->win.client.receive.io_ctx->ol,
         0x00, sizeof(WSAOVERLAPPED));
 
@@ -547,7 +553,7 @@ co_win_net_receive_start(
 
         if (error != WSA_IO_PENDING)
         {
-            if (sock->type != CO_SOCKET_TYPE_UDP)
+            if (sock->type == CO_SOCKET_TYPE_TCP)
             {
                 co_thread_send_event(
                     sock->owner_thread,
@@ -563,13 +569,13 @@ co_win_net_receive_start(
     {
         co_event_id_t event_id;
 
-        if (sock->type == CO_SOCKET_TYPE_UDP)
+        if (sock->type == CO_SOCKET_TYPE_TCP)
         {
-            event_id = CO_NET_EVENT_ID_UDP_RECEIVE_READY;
+            event_id = CO_NET_EVENT_ID_TCP_RECEIVE_READY;
         }
         else
         {
-            event_id = CO_NET_EVENT_ID_TCP_RECEIVE_READY;
+            event_id = CO_NET_EVENT_ID_UDP_RECEIVE_READY;
         }
 
         co_thread_send_event(
@@ -771,46 +777,36 @@ co_win_net_receive_from_start(
     return true;
 }
 
-bool
+ssize_t
 co_win_net_receive_from(
     co_socket_t* sock,
     co_net_addr_t* remote_net_addr,
     void* buffer,
-    size_t buffer_size,
-    size_t* data_size
+    size_t buffer_size
 )
 {
     if (sock->win.client.receive.size == 0)
     {
-        ssize_t received = co_socket_handle_receive_from(
+        return co_socket_handle_receive_from(
             sock->handle, remote_net_addr, buffer, buffer_size, 0);
-
-        if (received > 0)
-        {
-            *data_size = (size_t)received;
-
-            return true;
-        }
-
-        return false;
     }
 
     memcpy(remote_net_addr,
         sock->win.client.receive.remote_net_addr,
         sizeof(co_net_addr_t));
 
-    *data_size =
-        co_min(sock->win.client.receive.size, buffer_size);
+    ssize_t data_size =
+        (ssize_t)co_min(sock->win.client.receive.size, buffer_size);
 
     memcpy(buffer,
         &sock->win.client.receive.buffer.buf[
             sock->win.client.receive.index],
-        *data_size);
+        data_size);
 
-    sock->win.client.receive.index += *data_size;
-    sock->win.client.receive.size -= *data_size;
+    sock->win.client.receive.index += data_size;
+    sock->win.client.receive.size -= data_size;
 
-    return true;
+    return data_size;
 }
 
 bool

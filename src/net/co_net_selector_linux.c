@@ -26,14 +26,19 @@ struct co_net_event_ids
     co_event_id_t read;
 };
 
-static const struct co_net_event_ids net_event_ids[4] =
+static const struct co_net_event_ids net_event_ids[5] =
 {
-    { 0, CO_NET_EVENT_ID_TCP_ACCEPT_READY },
+    { 0,
+      CO_NET_EVENT_ID_TCP_ACCEPT_READY },
 
-    { CO_NET_EVENT_ID_TCP_CONNECT_COMPLETE, 0 },
+    { CO_NET_EVENT_ID_TCP_CONNECT_COMPLETE,
+      0 },
 
     { CO_NET_EVENT_ID_TCP_SEND_ASYNC_READY,
       CO_NET_EVENT_ID_TCP_RECEIVE_READY },
+
+    { CO_NET_EVENT_ID_UDP_SEND_ASYNC_READY,
+      CO_NET_EVENT_ID_UDP_RECEIVE_READY },
 
     { CO_NET_EVENT_ID_UDP_SEND_ASYNC_READY,
       CO_NET_EVENT_ID_UDP_RECEIVE_READY }
@@ -223,7 +228,7 @@ co_net_selector_wait(
 
                 if (e->events & EPOLLHUP)
                 {
-                    if (sock->type == CO_SOCKET_TYPE_TCP_CONNECTION)
+                    if (sock->type == CO_SOCKET_TYPE_TCP)
                     {
                         if (!co_thread_send_event(sock->owner_thread,
                             CO_NET_EVENT_ID_TCP_CLOSE, (uintptr_t)sock, error_code))

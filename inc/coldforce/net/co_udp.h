@@ -24,9 +24,12 @@ typedef void(*co_udp_send_async_fn)(
 typedef void (*co_udp_receive_fn)(
     co_thread_t* self, struct co_udp_t* udp);
 
+typedef void(*co_udp_accept_fn)(
+    co_thread_t* self, struct co_udp_t* udp_server, struct co_udp_t* udp_conn);
+
 typedef struct
 {
-    co_net_addr_t remote_net_addr;
+    const co_net_addr_t* remote_net_addr;
 
     const void* data;
     size_t data_size;
@@ -48,8 +51,11 @@ typedef struct co_udp_t
     co_udp_callbacks_st callbacks;
 
     bool bound_local_net_addr;
-    uint32_t sock_event_flags;
     co_queue_t* send_async_queue;
+
+#ifndef CO_OS_WIN
+    uint32_t sock_event_flags;
+#endif
 
 } co_udp_t;
 
@@ -142,6 +148,52 @@ CO_NET_API
 bool
 co_udp_bind_local_net_addr(
     co_udp_t* udp
+);
+
+CO_NET_API
+bool
+co_udp_connect(
+    co_udp_t* udp,
+    const co_net_addr_t* remote_net_addr
+);
+
+CO_NET_API
+bool
+co_udp_send(
+    co_udp_t* udp,
+    const void* data,
+    size_t data_size
+);
+
+CO_NET_API
+bool
+co_udp_send_async(
+    co_udp_t* udp,
+    const void* data,
+    size_t data_size,
+    void* user_data
+);
+
+CO_NET_API
+ssize_t
+co_udp_receive(
+    co_udp_t* udp,
+    void* buffer,
+    size_t buffer_size
+);
+
+CO_NET_API
+co_udp_t*
+co_udp_create_connection(
+    const co_udp_t* udp_server,
+    const co_net_addr_t* remote_net_addr
+);
+
+CO_NET_API
+bool
+co_udp_accept(
+    co_thread_t* owner_thread,
+    co_udp_t* udp_conn
 );
 
 CO_NET_API

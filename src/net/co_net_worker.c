@@ -33,13 +33,27 @@ co_net_worker_on_tcp_accept(
     co_tcp_client_t* client
 )
 {
-    co_thread_t* thread = co_thread_get_current();
-
     if (net_worker->callbacks.on_tcp_accept != NULL)
     {
         CO_DEBUG_SOCKET_COUNTER_INC();
 
-        net_worker->callbacks.on_tcp_accept(thread, NULL, client);
+        net_worker->callbacks.on_tcp_accept(
+            co_thread_get_current(), NULL, client);
+    }
+}
+
+static void
+co_net_worker_on_udp_accept(
+    co_net_worker_t* net_worker,
+    co_udp_t* udp_conn
+)
+{
+    if (net_worker->callbacks.on_udp_accept != NULL)
+    {
+        CO_DEBUG_SOCKET_COUNTER_INC();
+
+        net_worker->callbacks.on_udp_accept(
+            co_thread_get_current(), NULL, udp_conn);
     }
 }
 
@@ -67,6 +81,8 @@ co_net_worker_create(
     net_worker->udps = NULL;
 
     net_worker->callbacks.on_tcp_accept = NULL;
+    net_worker->callbacks.on_udp_accept = NULL;
+
     net_worker->on_destroy = NULL;
 
 #ifdef CO_DEBUG
@@ -217,6 +233,12 @@ co_net_worker_dispatch(
     {
         co_net_worker_on_tcp_accept(
             net_worker, (co_tcp_client_t*)event->param1);
+        break;
+    }
+    case CO_NET_EVENT_ID_UDP_ACCEPT_ON_THREAD:
+    {
+        co_net_worker_on_udp_accept(
+            net_worker, (co_udp_t*)event->param1);
         break;
     }
 #ifndef CO_OS_WIN
@@ -524,11 +546,19 @@ co_net_worker_register_udp(
         net_worker->udps = co_list_create(NULL);
     }
 
+#ifdef CO_OS_WIN
+    if (!co_net_selector_register(
+        net_worker->net_selector, &udp->sock, 0))
+    {
+        return false;
+    }
+#else
     if (!co_net_selector_register(
         net_worker->net_selector, &udp->sock, udp->sock_event_flags))
     {
         return false;
     }
+#endif
 
     co_list_add_tail(net_worker->udps, udp);
 
@@ -560,6 +590,7 @@ co_net_worker_unregister_udp(
         net_worker->net_selector, &udp->sock);
 }
 
+#ifndef CO_OS_WIN
 bool
 co_net_worker_update_udp(
     co_net_worker_t* net_worker,
@@ -577,3 +608,4 @@ co_net_worker_update_udp(
 
     return co_net_worker_register_udp(net_worker, udp);
 }
+#endif // CO_OS_WIN

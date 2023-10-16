@@ -23,7 +23,7 @@ struct co_socket_t;
 //---------------------------------------------------------------------------//
 
 #define CO_WIN_TCP_DEFAULT_RECEIVE_BUFFER_SIZE      8192
-#define CO_WIN_UDP_DEFAULT_RECEIVE_BUFFER_SIZE      65535
+#define CO_WIN_UDP_DEFAULT_RECEIVE_BUFFER_SIZE      65536
 
 typedef struct
 {
@@ -167,13 +167,12 @@ co_win_net_receive_from_start(
     struct co_socket_t* sock
 );
 
-bool
+ssize_t
 co_win_net_receive_from(
     struct co_socket_t* sock,
     co_net_addr_t* remote_net_addr,
     void* buffer,
-    size_t buffer_size,
-    size_t* data_size
+    size_t buffer_size
 );
 
 bool

@@ -24,6 +24,7 @@ struct co_net_selector_t;
 typedef struct
 {
     co_tcp_accept_fn on_tcp_accept;
+    co_udp_accept_fn on_udp_accept;
 
 } co_net_thread_callbacks_st;
 
@@ -160,11 +161,13 @@ co_net_worker_unregister_udp(
     co_udp_t* udp
 );
 
+#ifndef CO_OS_WIN
 bool
 co_net_worker_update_udp(
     co_net_worker_t* net_worker,
     co_udp_t* udp
 );
+#endif
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
