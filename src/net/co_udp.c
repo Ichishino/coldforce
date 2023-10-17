@@ -86,17 +86,19 @@ co_udp_on_send_async_ready(
     co_udp_t* udp
 )
 {
+    if (udp->sock.handle == CO_SOCKET_INVALID_HANDLE)
+    {
+        return;
+    }
+
     co_udp_log_debug(
         &udp->sock.local.net_addr,
         NULL,
         NULL,
         "udp send(to) async ready");
 
-    co_assert(udp->send_async_queue != NULL);
-
     co_udp_send_async_data_t* send_data =
         (co_udp_send_async_data_t*)co_queue_peek_head(udp->send_async_queue);
-
 
     if (send_data == NULL)
     {
@@ -127,6 +129,14 @@ co_udp_on_send_async_ready(
 
     if ((size_t)sent_size == send_data->data_size)
     {
+        co_udp_log_debug_hex_dump(
+            &udp->sock.local.net_addr,
+            "-->",
+            (send_data->remote_net_addr != NULL) ?
+                send_data->remote_net_addr : &udp->sock.remote.net_addr,
+            send_data->data, send_data->data_size,
+            "udp send(to) async %d bytes", send_data->data_size);
+
         co_udp_on_send_async_complete(udp, true);
 
         co_udp_on_send_async_ready(udp);
@@ -140,12 +150,10 @@ co_udp_on_send_async_complete(
     bool result
 )
 {
-    co_udp_log_debug(
-        &udp->sock.local.net_addr,
-        NULL,
-        NULL,
-        "udp send async complete: (%d)",
-        result);
+    if (udp->sock.handle == CO_SOCKET_INVALID_HANDLE)
+    {
+        return;
+    }
 
     co_udp_send_async_data_t send_data;
 
@@ -154,6 +162,13 @@ co_udp_on_send_async_complete(
     {
         return;
     }
+
+    co_udp_log_debug(
+        &udp->sock.local.net_addr,
+        NULL,
+        NULL,
+        "udp send async complete: (%d)",
+        result);
 
     if (udp->callbacks.on_send_async != NULL)
     {
@@ -169,6 +184,11 @@ co_udp_on_receive_ready(
     size_t data_size
 )
 {
+    if (udp->sock.handle == CO_SOCKET_INVALID_HANDLE)
+    {
+        return;
+    }
+
     co_udp_log_debug(
         &udp->sock.local.net_addr,
         NULL,
@@ -636,37 +656,37 @@ co_udp_connect(
 
 bool
 co_udp_send(
-    co_udp_t* udp,
+    co_udp_t* udp_conn,
     const void* data,
     size_t data_size
 )
 {
-    if (udp->sock.type != CO_SOCKET_TYPE_UDP_CONNECTED)
+    if (udp_conn->sock.type != CO_SOCKET_TYPE_UDP_CONNECTED)
     {
         return false;
     }
 
     co_udp_log_debug_hex_dump(
-        &udp->sock.local.net_addr,
+        &udp_conn->sock.local.net_addr,
         "-->",
-        &udp->sock.remote.net_addr,
+        &udp_conn->sock.remote.net_addr,
         data, data_size,
         "udp send %zd bytes", data_size);
 
 #ifdef CO_OS_WIN
 
     return co_win_net_send(
-        &udp->sock, data, data_size);
+        &udp_conn->sock, data, data_size);
 
 #else
 
-    co_socket_handle_set_blocking(udp->sock.handle, true);
+    co_socket_handle_set_blocking(udp_conn->sock.handle, true);
 
     ssize_t sent_size =
         co_socket_handle_send(
-            udp->sock.handle, data, data_size, 0);
+            udp_conn->sock.handle, data, data_size, 0);
 
-    co_socket_handle_set_blocking(udp->sock.handle, false);
+    co_socket_handle_set_blocking(udp_conn->sock.handle, false);
 
     return (data_size == (size_t)sent_size);
 
@@ -675,21 +695,22 @@ co_udp_send(
 
 bool
 co_udp_send_async(
-    co_udp_t* udp,
+    co_udp_t* udp_conn,
     const void* data,
     size_t data_size,
     void* user_data
 )
 {
-    if (udp->sock.type != CO_SOCKET_TYPE_UDP_CONNECTED)
+    if (udp_conn->sock.type != CO_SOCKET_TYPE_UDP_CONNECTED)
     {
         return false;
     }
 
-    if (udp->send_async_queue == NULL)
+    if (udp_conn->send_async_queue == NULL)
     {
-        udp->send_async_queue = co_queue_create(
-            sizeof(co_udp_send_async_data_t), NULL);
+        udp_conn->send_async_queue =
+            co_queue_create(
+                sizeof(co_udp_send_async_data_t), NULL);
     }
 
     co_udp_send_async_data_t send_data = { 0 };
@@ -698,20 +719,20 @@ co_udp_send_async(
     send_data.data_size = data_size;
     send_data.user_data = user_data;
 
-    co_queue_push(udp->send_async_queue, &send_data);
+    co_queue_push(udp_conn->send_async_queue, &send_data);
 
 #ifdef CO_OS_WIN
 
     ssize_t result =
         co_win_net_send_async(
-            &udp->sock, data, data_size);
+            &udp_conn->sock, data, data_size);
 
     if (result == 0)
     {
         co_udp_log_debug(
-            &udp->sock.local.net_addr,
+            &udp_conn->sock.local.net_addr,
             "-->",
-            &udp->sock.remote.net_addr,
+            &udp_conn->sock.remote.net_addr,
             "udp send async QUEUED %d bytes", data_size);
 
         return true;
@@ -719,9 +740,9 @@ co_udp_send_async(
     else if (result > 0)
     {
         co_udp_log_debug_hex_dump(
-            &udp->sock.local.net_addr,
+            &udp_conn->sock.local.net_addr,
             "-->",
-            &udp->sock.remote.net_addr,
+            &udp_conn->sock.remote.net_addr,
             data, data_size,
             "udp send async %d bytes", data_size);
 
@@ -731,40 +752,40 @@ co_udp_send_async(
 #else
 
     co_net_worker_t* net_worker =
-        co_socket_get_net_worker(&udp->sock);
+        co_socket_get_net_worker(&udp_conn->sock);
 
-    udp->sock_event_flags |= CO_SOCKET_EVENT_SEND;
-    co_net_worker_update_udp(net_worker, udp);
+    udp_conn->sock_event_flags |= CO_SOCKET_EVENT_SEND;
+    co_net_worker_update_udp(net_worker, udp_conn);
 
-    if (udp->send_async_queue != NULL &&
-        co_queue_get_count(udp->send_async_queue) > 0)
+    if (udp_conn->send_async_queue != NULL &&
+        co_queue_get_count(udp_conn->send_async_queue) > 0)
     {
         co_udp_log_debug(
-            &udp->sock.local.net_addr,
+            &udp_conn->sock.local.net_addr,
             "-->",
-            &udp->sock.remote.net_addr,
-            "udp sendto async QUEUED %d bytes", data_size);
+            &udp_conn->sock.remote.net_addr,
+            "udp send async QUEUED %d bytes", data_size);
 
         return true;
     }
 
     if (co_socket_handle_send(
-        udp->sock.handle, data, data_size, 0) == (ssize_t)data_size)
+        udp_conn->sock.handle, data, data_size, 0) == (ssize_t)data_size)
     {
         co_udp_log_debug_hex_dump(
-            &udp->sock.local.net_addr,
+            &udp_conn->sock.local.net_addr,
             "-->",
-            &udp->sock.remote.net_addr,
+            &udp_conn->sock.remote.net_addr,
             data, data_size,
-            "udp sendto async %d bytes", data_size);
+            "udp send async %d bytes", data_size);
 
-        udp->sock_event_flags &= ~CO_SOCKET_EVENT_SEND;
-        co_net_worker_update_udp(net_worker, udp);
+        udp_conn->sock_event_flags &= ~CO_SOCKET_EVENT_SEND;
+        co_net_worker_update_udp(net_worker, udp_conn);
 
         co_thread_send_event(
-            udp->sock.owner_thread,
+            udp_conn->sock.owner_thread,
             CO_NET_EVENT_ID_UDP_SEND_ASYNC_COMPLETE,
-            (uintptr_t)udp,
+            (uintptr_t)udp_conn,
             (uintptr_t)data_size);
 
         return true;
@@ -776,33 +797,33 @@ co_udp_send_async(
         if ((error_code == EAGAIN) || (error_code == EWOULDBLOCK))
         {
             co_udp_log_debug(
-                &udp->sock.local.net_addr,
+                &udp_conn->sock.local.net_addr,
                 "-->",
-                &udp->sock.remote.net_addr,
+                &udp_conn->sock.remote.net_addr,
                 "udp send async QUEUED %d bytes", data_size);
 
             return true;
+        }
     }
-}
 
-    udp->sock_event_flags &= ~CO_SOCKET_EVENT_SEND;
-    co_net_worker_update_udp(net_worker, udp);
+    udp_conn->sock_event_flags &= ~CO_SOCKET_EVENT_SEND;
+    co_net_worker_update_udp(net_worker, udp_conn);
 
 #endif
 
-    co_queue_remove(udp->send_async_queue, 1);
+    co_queue_remove(udp_conn->send_async_queue, 1);
 
     return false;
 }
 
 ssize_t
 co_udp_receive(
-    co_udp_t* udp,
+    co_udp_t* udp_conn,
     void* buffer,
     size_t buffer_size
 )
 {
-    if (udp->sock.type != CO_SOCKET_TYPE_UDP_CONNECTED)
+    if (udp_conn->sock.type != CO_SOCKET_TYPE_UDP_CONNECTED)
     {
         return -1;
     }
@@ -810,19 +831,19 @@ co_udp_receive(
 #ifdef CO_OS_WIN
     ssize_t data_size =
         co_win_net_receive(
-            &udp->sock, buffer, buffer_size);
+            &udp_conn->sock, buffer, buffer_size);
 #else
     ssize_t data_size =
         co_socket_handle_receive(
-            udp->sock.handle, buffer, buffer_size, 0);
+            udp_conn->sock.handle, buffer, buffer_size, 0);
 #endif
 
     if (data_size > 0)
     {
         co_udp_log_debug_hex_dump(
-            &udp->sock.local.net_addr,
+            &udp_conn->sock.local.net_addr,
             "<--",
-            &udp->sock.remote.net_addr,
+            &udp_conn->sock.remote.net_addr,
             buffer, data_size,
             "udp receive %zd bytes", data_size);
     }
@@ -832,18 +853,18 @@ co_udp_receive(
 
 co_udp_t*
 co_udp_create_connection(
-    const co_udp_t* udp_server,
+    const co_udp_t* udp,
     const co_net_addr_t* remote_net_addr
 )
 {
 #ifdef CO_OS_WIN
     co_socket_handle_t handle =
         co_win_socket_handle_create_udp(
-            udp_server->sock.local.net_addr.sa.any.ss_family);
+            udp->sock.local.net_addr.sa.any.ss_family);
 #else
     co_socket_handle_t handle =
         co_socket_handle_create(
-            udp_server->sock.local.net_addr.sa.any.ss_family,
+            udp->sock.local.net_addr.sa.any.ss_family,
             SOCK_DGRAM, IPPROTO_UDP);
 #endif
 
@@ -874,7 +895,7 @@ co_udp_create_connection(
     co_socket_option_set_reuse_addr(&udp_conn->sock, true);
 
     if (!co_socket_handle_bind(
-        udp_conn->sock.handle, &udp_server->sock.local.net_addr))
+        udp_conn->sock.handle, &udp->sock.local.net_addr))
     {
         co_udp_cleanup(udp_conn);
         co_mem_free(udp_conn);

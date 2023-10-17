@@ -160,7 +160,7 @@ co_udp_connect(
 CO_NET_API
 bool
 co_udp_send(
-    co_udp_t* udp,
+    co_udp_t* udp_conn,
     const void* data,
     size_t data_size
 );
@@ -168,7 +168,7 @@ co_udp_send(
 CO_NET_API
 bool
 co_udp_send_async(
-    co_udp_t* udp,
+    co_udp_t* udp_conn,
     const void* data,
     size_t data_size,
     void* user_data
@@ -177,7 +177,7 @@ co_udp_send_async(
 CO_NET_API
 ssize_t
 co_udp_receive(
-    co_udp_t* udp,
+    co_udp_t* udp_conn,
     void* buffer,
     size_t buffer_size
 );
@@ -185,7 +185,7 @@ co_udp_receive(
 CO_NET_API
 co_udp_t*
 co_udp_create_connection(
-    const co_udp_t* udp_server,
+    const co_udp_t* udp,
     const co_net_addr_t* remote_net_addr
 );
 

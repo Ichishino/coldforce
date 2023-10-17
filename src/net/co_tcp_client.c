@@ -203,6 +203,13 @@ co_tcp_client_on_send_async_ready(
 
     if ((size_t)sent_size == send_data->data_size)
     {
+        co_tcp_log_debug_hex_dump(
+            &client->sock.local.net_addr,
+            "-->",
+            &client->sock.remote.net_addr,
+            send_data->data, send_data->data_size,
+            "tcp send async %d bytes", send_data->data_size);
+
         co_tcp_client_on_send_async_complete(client, true);
 
         co_tcp_client_on_send_async_ready(client);

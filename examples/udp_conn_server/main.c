@@ -17,8 +17,6 @@ typedef struct
 
 void on_my_udp_client_receive(my_app* self, co_udp_t* udp_client)
 {
-    (void)self;
-
     for (;;)
     {
         char buffer[1024];
@@ -36,6 +34,16 @@ void on_my_udp_client_receive(my_app* self, co_udp_t* udp_client)
 
         char remote_str[64];
         co_net_addr_to_string(remote_net_addr, remote_str, sizeof(remote_str));
+
+        if (memcmp(buffer, "close", 5) == 0)
+        {
+            printf("close %s\n", remote_str);
+
+            co_list_remove(self->udp_clients, udp_client);
+
+            break;
+        }
+
         printf("client receive %zd bytes from %s\n", (size_t)size, remote_str);
 
         co_udp_send(udp_client, buffer, size);
