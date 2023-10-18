@@ -91,12 +91,6 @@ co_udp_on_send_async_ready(
         return;
     }
 
-    co_udp_log_debug(
-        &udp->sock.local.net_addr,
-        NULL,
-        NULL,
-        "udp send(to) async ready");
-
     co_udp_send_async_data_t* send_data =
         (co_udp_send_async_data_t*)co_queue_peek_head(udp->send_async_queue);
 
@@ -110,6 +104,12 @@ co_udp_on_send_async_ready(
 
         return;
     }
+
+    co_udp_log_debug(
+        &udp->sock.local.net_addr,
+        NULL,
+        NULL,
+        "udp send(to) async ready");
 
     ssize_t sent_size;
 

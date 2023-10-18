@@ -130,13 +130,6 @@ co_net_worker_unregister_tcp_connection(
 );
 
 bool
-co_net_worker_set_tcp_send(
-    co_net_worker_t* net_worker,
-    co_tcp_client_t* client,
-    bool enable
-);
-
-bool
 co_net_worker_close_tcp_client_local(
     co_net_worker_t* net_worker,
     co_tcp_client_t* client,
@@ -163,11 +156,18 @@ co_net_worker_unregister_udp(
 
 #ifndef CO_OS_WIN
 bool
+co_net_worker_set_tcp_send(
+    co_net_worker_t* net_worker,
+    co_tcp_client_t* client,
+    bool enable
+);
+
+bool
 co_net_worker_update_udp(
     co_net_worker_t* net_worker,
     co_udp_t* udp
 );
-#endif
+#endif // !CO_OS_WIN
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

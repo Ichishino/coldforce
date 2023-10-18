@@ -122,6 +122,11 @@ co_tcp_client_on_connect_complete(
     int error_code
 )
 {
+    if (client->sock.handle == CO_SOCKET_INVALID_HANDLE)
+    {
+        return;
+    }
+
     co_socket_handle_get_local_net_addr(
         client->sock.handle, &client->sock.local.net_addr);
 
@@ -180,11 +185,10 @@ co_tcp_client_on_send_async_ready(
     co_tcp_client_t* client
 )
 {
-    co_tcp_log_debug(
-        &client->sock.local.net_addr,
-        "<--",
-        &client->sock.remote.net_addr,
-        "tcp send async ready");
+    if (client->sock.handle == CO_SOCKET_INVALID_HANDLE)
+    {
+        return;
+    }
 
     co_tcp_send_async_data_t* send_data =
         (co_tcp_send_async_data_t*)co_queue_peek_head(client->send_async_queue);
@@ -197,6 +201,12 @@ co_tcp_client_on_send_async_ready(
 
         return;
     }
+
+    co_tcp_log_debug(
+        &client->sock.local.net_addr,
+        "<--",
+        &client->sock.remote.net_addr,
+        "tcp send async ready");
 
     ssize_t sent_size = co_socket_handle_send(
         client->sock.handle, send_data->data, send_data->data_size, 0);
@@ -223,6 +233,11 @@ co_tcp_client_on_send_async_complete(
     bool result
 )
 {
+    if (client->sock.handle == CO_SOCKET_INVALID_HANDLE)
+    {
+        return;
+    }
+
     co_tcp_log_debug(
         &client->sock.local.net_addr,
         "<--",
@@ -252,6 +267,11 @@ co_tcp_client_on_receive_ready(
     size_t data_size
 )
 {
+    if (client->sock.handle == CO_SOCKET_INVALID_HANDLE)
+    {
+        return;
+    }
+
     co_tcp_log_debug(
         &client->sock.local.net_addr,
         "<--",
