@@ -131,7 +131,7 @@ co_udp_send_to_async(
 
 CO_NET_API
 bool
-co_udp_receive_from_start(
+co_udp_receive_start(
     co_udp_t* udp
 );
 

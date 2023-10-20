@@ -75,7 +75,7 @@ bool on_my_app_create(my_app* self)
     callbacks->on_receive = (co_udp_receive_fn)on_my_udp_receive;
 
     // receive start
-    co_udp_receive_from_start(self->udp);
+    co_udp_receive_start(self->udp);
 
     char local_str[64];
     co_net_addr_to_string(&local_net_addr, local_str, sizeof(local_str));
