@@ -1,8 +1,7 @@
 #pragma once
 
-#include <coldforce.h>
-
-#include "test_tcp_server_thread.h"
+#include "test_std.h"
+#include "test_tcp_server.h"
 
 #define TEST_EVENT_TCP_SERVER_REQ_CLOSE  1
 #define TEST_EVENT_TCP_SERVER_RES_CLOSE  2

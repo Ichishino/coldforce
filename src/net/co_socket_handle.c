@@ -205,7 +205,16 @@ co_socket_handle_receive_from(
     int flags
 )
 {
-    socklen_t net_addr_size = sizeof(co_net_addr_t);
+    socklen_t net_addr_size;
+
+    if (net_addr != NULL)
+    {
+        net_addr_size = sizeof(co_net_addr_t);
+    }
+    else
+    {
+        net_addr_size = 0;
+    }
 
     ssize_t result = recvfrom(handle, buffer, (int)buffer_size, flags,
         (struct sockaddr*)net_addr, &net_addr_size);

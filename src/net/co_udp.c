@@ -610,26 +610,8 @@ co_udp_connect(
             "udp connect");
     }
 
+    udp->bound_local_net_addr = true;
     udp->sock.type = CO_SOCKET_TYPE_UDP_CONNECTED;
-
-#ifdef CO_OS_WIN
-
-    if (!co_win_net_receive_start(&udp->sock))
-    {
-        return false;
-    }
-
-#else
-
-    udp->sock_event_flags |= CO_SOCKET_EVENT_RECEIVE;
-
-    if (!co_net_worker_update_udp(
-        co_socket_get_net_worker(&udp->sock), udp))
-    {
-        return false;
-    }
-
-#endif
 
     return true;
 }
@@ -863,6 +845,7 @@ co_udp_create_connection(
     }
 
     udp_conn->sock.local.is_open = true;
+    udp_conn->bound_local_net_addr = true;
 
     co_socket_handle_get_local_net_addr(
         udp_conn->sock.handle, &udp_conn->sock.local.net_addr);
@@ -888,14 +871,21 @@ co_udp_accept(
 
     udp_conn->sock.owner_thread = owner_thread;
 
+#ifdef CO_OS_WIN
     if (!co_net_worker_register_udp(
         co_socket_get_net_worker(&udp_conn->sock), udp_conn))
     {
         return false;
     }
+#endif
 
     if (!co_udp_connect(
         udp_conn, &udp_conn->sock.remote.net_addr))
+    {
+        return false;
+    }
+
+    if (!co_udp_receive_start(udp_conn))
     {
         return false;
     }

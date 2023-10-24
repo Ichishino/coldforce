@@ -791,9 +791,12 @@ co_win_net_receive_from(
             sock->handle, remote_net_addr, buffer, buffer_size, 0);
     }
 
-    memcpy(remote_net_addr,
-        sock->win.client.receive.remote_net_addr,
-        sizeof(co_net_addr_t));
+    if (remote_net_addr != NULL)
+    {
+        memcpy(remote_net_addr,
+            sock->win.client.receive.remote_net_addr,
+            sizeof(co_net_addr_t));
+    }
 
     ssize_t data_size =
         (ssize_t)co_min(sock->win.client.receive.size, buffer_size);

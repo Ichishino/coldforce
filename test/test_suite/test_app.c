@@ -1,10 +1,6 @@
 #include "test_app.h"
 #include "test_tcp.h"
 
-#include <coldforce/core/co_time.h>
-
-#include <assert.h>
-
 //---------------------------------------------------------------------------//
 // test_app
 //---------------------------------------------------------------------------//
@@ -64,6 +60,19 @@ static void test_udp_2(test_app_st* self)
     test_udp_run(&self->test_udp_2_thread);
 }
 
+static void test_udp_3(test_app_st* self)
+{
+    test_info("test udp2 (ipv4)");
+
+    self->test_udp_3_thread.family = CO_NET_ADDR_FAMILY_IPV4;
+    self->test_udp_3_thread.server_address = "127.0.0.1";
+    self->test_udp_3_thread.server_port = 9005;
+    self->test_udp_3_thread.data_size = 100000;
+    self->test_udp_3_thread.client_count = 100;
+
+    test_udp2_run(&self->test_udp_3_thread);
+}
+
 static void test_app_init_items(test_app_st* self)
 {
     size_t index = 0;
@@ -85,6 +94,11 @@ static void test_app_init_items(test_app_st* self)
 
     self->item[index].thread = (co_thread_t*)&self->test_udp_2_thread;
     self->item[index].func = test_udp_2;
+    self->item[index].time_limit_sec = 5 * 60;
+    index++;
+
+    self->item[index].thread = (co_thread_t*)&self->test_udp_3_thread;
+    self->item[index].func = test_udp_3;
     self->item[index].time_limit_sec = 5 * 60;
     index++;
 
@@ -220,7 +234,7 @@ int test_app_run(int argc, char** argv)
 
     co_core_log_set_level(CO_LOG_LEVEL_MAX);
     co_tcp_log_set_level(CO_LOG_LEVEL_WARNING);
-//    co_udp_log_set_level(CO_LOG_LEVEL_INFO);
+    co_udp_log_set_level(CO_LOG_LEVEL_WARNING);
 //    co_tls_log_set_level(CO_LOG_LEVEL_MAX);
 
     co_log_add_category(TEST_LOG_CATEGORY, "TEST");

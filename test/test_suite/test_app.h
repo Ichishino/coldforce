@@ -1,10 +1,9 @@
 #pragma once
 
-#include <coldforce.h>
-#include <coldforce/net/co_byte_order.h>
-
+#include "test_std.h"
 #include "test_tcp.h"
 #include "test_udp.h"
+#include "test_udp2.h"
 
 #define TEST_EVENT_ID_TEST_FINISHED    100
 
@@ -32,6 +31,7 @@ typedef struct test_app_st
     test_tcp_thread_st test_tcp_2_thread;
     test_udp_thread_st test_udp_1_thread;
     test_udp_thread_st test_udp_2_thread;
+    test_udp2_thread_st test_udp_3_thread;
 
     test_item_st item[32];
     size_t item_index;

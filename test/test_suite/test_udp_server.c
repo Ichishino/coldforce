@@ -1,4 +1,4 @@
-#include "test_udp_server_thread.h"
+#include "test_udp_server.h"
 #include "test_app.h"
 
 static void test_udp_server_on_receive(test_udp_server_thread_st* self, co_udp_t* udp)
@@ -7,7 +7,7 @@ static void test_udp_server_on_receive(test_udp_server_thread_st* self, co_udp_t
 
     for (;;)
     {
-        char data[1024];
+        char data[2048];
 
         co_net_addr_t remote_net_addr;
         ssize_t size = co_udp_receive_from(udp, &remote_net_addr, data, sizeof(data));
@@ -44,7 +44,7 @@ static bool test_udp_server_thread_on_create(test_udp_server_thread_st* self)
     co_socket_option_set_reuse_addr(
         co_udp_get_socket(self->udp_server), true);
 
-    if (!co_udp_receive_from_start(self->udp_server))
+    if (!co_udp_receive_start(self->udp_server))
     {
         test_error("Failed: test_udp_server_thread_on_create(%d, %d)", self->family, self->port);
         exit(-1);

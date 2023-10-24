@@ -123,7 +123,7 @@ bool on_my_app_create(my_app* self)
     co_udp_callbacks_st* callbacks = co_udp_get_callbacks(self->udp_server);
     callbacks->on_receive = (co_udp_receive_fn)on_my_udp_server_receive;
 
-    // server start
+    // receive start
     co_udp_receive_start(self->udp_server);
 
     char local_str[64];

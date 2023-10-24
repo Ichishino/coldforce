@@ -250,3 +250,104 @@ co_socket_option_get_tcp_no_delay(
 
     return true;
 }
+
+// SO_REUSEPORT
+
+#ifdef SO_REUSEPORT
+
+bool
+co_socket_option_set_reuse_port(
+    co_socket_t* sock,
+    bool enable
+)
+{
+    int value = enable ? 1 : 0;
+
+    return co_socket_option_set(
+        sock, SOL_SOCKET, SO_REUSEPORT, &value, sizeof(value));
+}
+
+bool
+co_socket_option_get_reuse_port(
+    const co_socket_t* sock,
+    bool* enable
+)
+{
+    int value = 0;
+    size_t value_size = sizeof(value);
+
+    if (!co_socket_option_get(
+        sock, SOL_SOCKET, SO_REUSEPORT, &value, &value_size))
+    {
+        return false;
+    }
+
+    *enable = (value == 0) ? false : true;
+
+    return true;
+}
+
+#endif // SO_REUSEPORT
+
+// IP_ADD_MEMBERSHIP
+
+bool
+co_socket_option_set_add_membership(
+    co_socket_t* sock,
+    const struct ip_mreq* mreq
+)
+{
+    return co_socket_option_set(
+        sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, mreq, sizeof(struct ip_mreq));
+}
+
+bool
+co_socket_option_get_add_membership(
+    const co_socket_t* sock,
+    struct ip_mreq* mreq
+)
+{
+    size_t value_size = sizeof(struct ip_mreq);
+
+    if (!co_socket_option_get(
+        sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, mreq, &value_size))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+// SO_BROADCAST
+
+bool
+co_socket_option_set_broadcast(
+    co_socket_t* sock,
+    bool enable
+)
+{
+    int value = enable ? 1 : 0;
+
+    return co_socket_option_set(
+        sock, SOL_SOCKET, SO_BROADCAST, &value, sizeof(value));
+}
+
+bool
+co_socket_option_get_broadcast(
+    const co_socket_t* sock,
+    bool* enable
+)
+{
+    int value = 0;
+    size_t value_size = sizeof(value);
+
+    if (!co_socket_option_get(
+        sock, SOL_SOCKET, SO_BROADCAST, &value, &value_size))
+    {
+        return false;
+    }
+
+    *enable = (value == 0) ? false : true;
+
+    return true;
+}

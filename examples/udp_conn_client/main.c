@@ -91,6 +91,8 @@ bool on_my_app_create(my_app* self)
     // connect
     co_udp_connect(self->udp, &self->remote_net_addr);
 
+    co_udp_receive_start(self->udp);
+
     // send timer
     self->send_counter = 0;
     self->send_timer = co_timer_create(1000, (co_timer_fn)on_my_send_timer, true, 0);

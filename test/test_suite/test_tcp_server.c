@@ -1,7 +1,5 @@
-#include "test_tcp_server_thread.h"
+#include "test_tcp_server.h"
 #include "test_app.h"
-
-#include <assert.h>
 
 static void test_tcp_server_on_receive(test_tcp_server_thread_st* self, co_tcp_client_t* tcp_client)
 {

@@ -345,29 +345,39 @@ co_net_addr_is_equal(
         return false;
     }
 
-    char address1[256] = { 0 };
-    char address2[256] = { 0 };
-
-    co_net_addr_get_address(net_addr1, address1, sizeof(address1));
-    co_net_addr_get_address(net_addr2, address2, sizeof(address2));
-
-    if (strcmp(address1, address2) != 0)
+    if (co_net_is_ipv4(net_addr1))
     {
-        return false;
+        if ((net_addr1->sa.v4.sin_addr.s_addr ==
+                net_addr2->sa.v4.sin_addr.s_addr) &&
+            (net_addr1->sa.v4.sin_port ==
+                net_addr2->sa.v4.sin_port))
+        {
+            return true;
+        }
+    }
+    else if (co_net_is_ipv6(net_addr1))
+    {
+        if (memcmp(
+            &net_addr1->sa.v6.sin6_addr, &net_addr2->sa.v6.sin6_addr,
+            sizeof(struct in6_addr)) == 0)
+        {
+            if (net_addr1->sa.v6.sin6_port == net_addr2->sa.v6.sin6_port)
+            {
+                return true;
+            }
+        }
+    }
+    else if (co_net_is_unix(net_addr1))
+    {
+        if (strncmp(
+            net_addr1->sa.un.sun_path, net_addr2->sa.un.sun_path,
+            sizeof(net_addr1->sa.un.sun_path)) == 0)
+        {
+            return true;
+        }
     }
 
-    uint16_t port1 = 0;
-    uint16_t port2 = 0;
-
-    co_net_addr_get_port(net_addr1, &port1);
-    co_net_addr_get_port(net_addr2, &port2);
-
-    if (port1 != port2)
-    {
-        return false;
-    }
-
-    return true;
+    return false;
 }
 
 bool

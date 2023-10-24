@@ -142,6 +142,58 @@ co_socket_option_get_tcp_no_delay(
     bool* enable
 );
 
+// SO_REUSEPORT
+
+#ifdef SO_REUSEPORT
+
+CO_NET_API
+bool
+co_socket_option_set_reuse_port(
+    co_socket_t* sock,
+    bool enable
+);
+
+CO_NET_API
+bool
+co_socket_option_get_reuse_port(
+    const co_socket_t* sock,
+    bool* enable
+);
+
+#endif // SO_REUSEPORT
+
+// IP_ADD_MEMBERSHIP
+
+CO_NET_API
+bool
+co_socket_option_set_add_membership(
+    co_socket_t* sock,
+    const struct ip_mreq* mreq
+);
+
+CO_NET_API
+bool
+co_socket_option_get_add_membership(
+    const co_socket_t* sock,
+    struct ip_mreq* mreq
+);
+
+// SO_BROADCAST
+
+CO_NET_API
+bool
+co_socket_option_set_broadcast(
+    co_socket_t* sock,
+    bool enable
+);
+
+CO_NET_API
+bool
+co_socket_option_get_broadcast(
+    const co_socket_t* sock,
+    bool* enable
+);
+
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 

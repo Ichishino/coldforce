@@ -1,14 +1,17 @@
 #include "test_tcp.h"
 #include "test_app.h"
 
-#include <assert.h>
-
 typedef struct
 {
     test_tcp_packet_header_st* data;
     size_t size;
 
 } test_tcp_data_block_st;
+
+static uint32_t test_tcp_get_send_timer_interval()
+{
+    return co_random_range(1, 200);
+}
 
 static void test_tcp_client_stop(test_tcp_thread_st* self, test_tcp_client_st* test_tcp_client)
 {
@@ -235,7 +238,7 @@ void test_tcp_thread_on_timer(test_tcp_thread_st* self, co_timer_t* timer)
 
     if (test_tcp_client->send_index != total_size)
     {
-        co_timer_set_time(test_tcp_client->send_timer, co_random_range(1, 200));
+        co_timer_set_time(test_tcp_client->send_timer, test_tcp_get_send_timer_interval());
         co_timer_start(test_tcp_client->send_timer);
     }
 }
@@ -294,7 +297,7 @@ static bool test_tcp_thread_on_create(test_tcp_thread_st* self)
         test_tcp_client->send_data = co_byte_array_create();
         test_tcp_client->receive_data = co_byte_array_create();
         test_tcp_client->send_timer =
-            co_timer_create(co_random_range(1, 200),
+            co_timer_create(test_tcp_get_send_timer_interval(),
                 (co_timer_fn)test_tcp_thread_on_timer, false, test_tcp_client);
         test_tcp_client->send_index = 0;
         test_tcp_client->send_count = 0;

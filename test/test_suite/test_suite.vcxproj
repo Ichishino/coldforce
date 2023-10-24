@@ -146,16 +146,21 @@
     <ClCompile Include="main.c" />
     <ClCompile Include="test_app.c" />
     <ClCompile Include="test_tcp.c" />
-    <ClCompile Include="test_tcp_server_thread.c" />
+    <ClCompile Include="test_tcp_server.c" />
     <ClCompile Include="test_udp.c" />
-    <ClCompile Include="test_udp_server_thread.c" />
+    <ClCompile Include="test_udp2.c" />
+    <ClCompile Include="test_udp2_server.c" />
+    <ClCompile Include="test_udp_server.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="test_app.h" />
+    <ClInclude Include="test_std.h" />
     <ClInclude Include="test_tcp.h" />
-    <ClInclude Include="test_tcp_server_thread.h" />
+    <ClInclude Include="test_tcp_server.h" />
     <ClInclude Include="test_udp.h" />
-    <ClInclude Include="test_udp_server_thread.h" />
+    <ClInclude Include="test_udp2.h" />
+    <ClInclude Include="test_udp2_server.h" />
+    <ClInclude Include="test_udp_server.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\prj\msvc\co_core\co_core.vcxproj">

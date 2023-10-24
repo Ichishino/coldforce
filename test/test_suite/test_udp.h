@@ -1,19 +1,7 @@
 #pragma once
 
-#include <coldforce.h>
-
-#include "test_udp_server_thread.h"
-
-typedef struct
-{
-    uint32_t seq;
-    uint32_t size;
-    uint32_t index;
-    uint32_t dummy;
-
-} test_udp_packet_header_st;
-
-#define TEST_UDP_PACKET_HEADER_SIZE    sizeof(test_udp_packet_header_st)
+#include "test_std.h"
+#include "test_udp_server.h"
 
 typedef struct
 {
@@ -26,7 +14,7 @@ typedef struct
     size_t send_async_count;
     size_t send_async_comp_count;
 
-    size_t total_sent_count;
+    size_t total_send_count;
     size_t receive_count;
 
 } test_udp_client_st;

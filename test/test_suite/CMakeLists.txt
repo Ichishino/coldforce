@@ -9,9 +9,11 @@ add_executable(${PROJECT_NAME}
     main.c
     test_app.c
     test_tcp.c
-    test_tcp_server_thread.c
+    test_tcp_server.c
     test_udp.c
-    test_udp_server_thread.c    
+    test_udp_server.c
+    test_udp2.c
+    test_udp2_server.c
 )
 
 target_compile_options(${PROJECT_NAME} PUBLIC -Wall)

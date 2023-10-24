@@ -17,10 +17,10 @@
     <ClCompile Include="test_app.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="test_tcp_server_thread.c">
+    <ClCompile Include="test_tcp_server.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="test_udp_server_thread.c">
+    <ClCompile Include="test_udp_server.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="test_tcp.c">
@@ -29,21 +29,36 @@
     <ClCompile Include="test_udp.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="test_udp2.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test_udp2_server.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="test_app.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="test_tcp_server_thread.h">
+    <ClInclude Include="test_tcp_server.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="test_udp_server_thread.h">
+    <ClInclude Include="test_udp_server.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="test_tcp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="test_udp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="test_udp2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="test_udp2_server.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="test_std.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
