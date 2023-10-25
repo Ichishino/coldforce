@@ -593,22 +593,11 @@ co_udp_connect(
     co_socket_handle_get_remote_net_addr(
         udp->sock.handle, &udp->sock.remote.net_addr);
 
-    if (&udp->sock.remote.net_addr == remote_net_addr)
-    {
-        co_udp_log_info(
-            &udp->sock.local.net_addr,
-            "<--",
-            &udp->sock.remote.net_addr,
-            "udp accept");
-    }
-    else
-    {
-        co_udp_log_info(
-            &udp->sock.local.net_addr,
-            "-->",
-            &udp->sock.remote.net_addr,
-            "udp connect");
-    }
+    co_udp_log_info(
+        &udp->sock.local.net_addr,
+        "-->",
+        &udp->sock.remote.net_addr,
+        "udp connect");
 
     udp->bound_local_net_addr = true;
     udp->sock.type = CO_SOCKET_TYPE_UDP_CONNECTED;
@@ -832,23 +821,10 @@ co_udp_create_connection(
     }
 
     udp_conn->sock.handle = handle;
-
-    co_socket_option_set_reuse_addr(&udp_conn->sock, true);
-
-    if (!co_socket_handle_bind(
-        udp_conn->sock.handle, &udp->sock.local.net_addr))
-    {
-        co_udp_cleanup(udp_conn);
-        co_mem_free(udp_conn);
-
-        return NULL;
-    }
-
     udp_conn->sock.local.is_open = true;
-    udp_conn->bound_local_net_addr = true;
 
-    co_socket_handle_get_local_net_addr(
-        udp_conn->sock.handle, &udp_conn->sock.local.net_addr);
+    memcpy(&udp_conn->sock.local.net_addr,
+        &udp->sock.local.net_addr, sizeof(co_net_addr_t));
     memcpy(&udp_conn->sock.remote.net_addr,
         remote_net_addr, sizeof(co_net_addr_t));
 
@@ -869,6 +845,12 @@ co_udp_accept(
             CO_NET_EVENT_ID_UDP_ACCEPT_ON_THREAD, (uintptr_t)udp_conn, 0);
     }
 
+    co_udp_log_info(
+        &udp_conn->sock.local.net_addr,
+        "<--",
+        &udp_conn->sock.remote.net_addr,
+        "udp accept");
+
     udp_conn->sock.owner_thread = owner_thread;
 
 #ifdef CO_OS_WIN
@@ -878,6 +860,13 @@ co_udp_accept(
         return false;
     }
 #endif
+
+    co_socket_option_set_reuse_addr(&udp_conn->sock, true);
+
+    if (!co_udp_bind_local_net_addr(udp_conn))
+    {
+        return false;
+    }
 
     if (!co_udp_connect(
         udp_conn, &udp_conn->sock.remote.net_addr))

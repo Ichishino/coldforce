@@ -13,9 +13,17 @@ static void test_udp2_server_on_client_receive(test_udp2_server_thread_st* self,
     for (;;)
     {
         char data[2048];
-        co_net_addr_t remote_net_addr;
+        uint16_t remote_port;
+// TODO
+#if 0
+        ssize_t size = co_udp_receive(udp_client, data, sizeof(data));
 
-//        ssize_t size = co_udp_receive(udp_client, data, sizeof(data));
+        if (size <= 0)
+        {
+            break;
+        }
+#else
+        co_net_addr_t remote_net_addr;
         ssize_t size = co_udp_receive_from(udp_client, &remote_net_addr, data, sizeof(data));
 
         if (size <= 0)
@@ -23,7 +31,6 @@ static void test_udp2_server_on_client_receive(test_udp2_server_thread_st* self,
             break;
         }
         
-        uint16_t remote_port;
         co_net_addr_get_port(&remote_net_addr, &remote_port);
         
         if (port != remote_port)
@@ -34,7 +41,7 @@ static void test_udp2_server_on_client_receive(test_udp2_server_thread_st* self,
         
             continue;
         }
-
+#endif
         test_udp_packet_header_st* header = (test_udp_packet_header_st*)data;
 
         if (header->close != 0)
@@ -56,7 +63,7 @@ static void test_udp2_server_on_client_receive(test_udp2_server_thread_st* self,
             break;
         }
         
-        remote_port = co_byte_order_32_network_to_host((uint32_t)header->port);
+        remote_port = (uint16_t)co_byte_order_32_network_to_host((uint32_t)header->port);
         
         if (port != remote_port)
         {
