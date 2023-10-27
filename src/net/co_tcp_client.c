@@ -404,7 +404,7 @@ co_tcp_client_create(
         client->sock.local.net_addr.sa.any.ss_family);
 #else
     client->sock.handle = co_socket_handle_create(
-        client->sock.local.net_addr.sa.any.ss_family, SOCK_STREAM, IPPROTO_TCP);
+        client->sock.local.net_addr.sa.any.ss_family, SOCK_STREAM, 0);
 #endif
 
     if (client->sock.handle == CO_SOCKET_INVALID_HANDLE)
@@ -449,13 +449,10 @@ co_tcp_client_destroy(
             co_socket_get_net_worker(&client->sock),
             client, 3*1000);
     }
-    else
-    {
-        co_tcp_close(client);
-    }
 
     if (!client->sock.local.is_open && !client->sock.remote.is_open)
     {
+        co_tcp_close(client);
         co_tcp_client_cleanup(client);
         co_mem_free_later(client);
     }
@@ -764,6 +761,9 @@ co_tcp_close(
 
     client->sock.local.is_open = false;
     client->sock.remote.is_open = false;
+
+    co_net_addr_remove_unix_path_file(
+        &client->sock.local.net_addr);
 }
 
 const co_net_addr_t*

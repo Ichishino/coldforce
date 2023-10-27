@@ -241,6 +241,7 @@ static bool test_udp_thread_on_create(test_udp_thread_st* self)
     // server
 
     self->test_udp_server_thread.family = self->family;
+    self->test_udp_server_thread.address = self->server_address;
     self->test_udp_server_thread.port = self->server_port;
     test_udp_server_thread_start(&self->test_udp_server_thread);
 
@@ -255,6 +256,13 @@ static bool test_udp_thread_on_create(test_udp_thread_st* self)
 
     for (size_t n = 0; n < self->client_count; n++)
     {
+        if (self->family == CO_NET_ADDR_FAMILY_UNIX)
+        {
+            char unix_path[128];
+            sprintf(unix_path, "./test_udp_client_%zd.sock", n + 1);
+            co_net_addr_set_unix_path(&local_net_addr, unix_path);
+        }
+
         co_udp_t* udp_client = co_udp_create(&local_net_addr);
 
         if (udp_client == NULL)
@@ -299,8 +307,17 @@ static bool test_udp_thread_on_create(test_udp_thread_st* self)
 
         co_udp_set_user_data(udp_client, test_udp_client);
 
-        co_net_addr_set_address(&self->remote_net_addr, self->server_address);
-        co_net_addr_set_port(&self->remote_net_addr, self->server_port);
+        co_net_addr_set_family(&self->remote_net_addr, self->family);
+
+        if (self->family == CO_NET_ADDR_FAMILY_UNIX)
+        {
+            co_net_addr_set_unix_path(&self->remote_net_addr, self->server_address);
+        }
+        else
+        {
+            co_net_addr_set_address(&self->remote_net_addr, self->server_address);
+            co_net_addr_set_port(&self->remote_net_addr, self->server_port);
+        }
 
         co_timer_start(test_udp_client->send_timer);
     }

@@ -18,6 +18,26 @@
 #define co_net_is_ipv6(net_addr)    (net_addr->sa.any.ss_family == AF_INET6)
 #define co_net_is_unix(net_addr)    (net_addr->sa.any.ss_family == AF_UNIX)
 
+void
+co_net_addr_remove_unix_path_file(
+    const co_net_addr_t* net_addr
+)
+{
+    if (co_net_is_unix(net_addr))
+    {
+        char unix_path[128];
+        unix_path[0] = '\0';
+
+        co_net_addr_get_unix_path(
+            net_addr, unix_path, sizeof(unix_path));
+
+        if (strlen(unix_path) > 0)
+        {
+            unlink(unix_path);
+        }
+    }
+}
+
 //---------------------------------------------------------------------------//
 // public
 //---------------------------------------------------------------------------//
@@ -37,19 +57,6 @@ co_net_addr_set_family(
 )
 {
     net_addr->sa.any.ss_family = family;
-
-    if (co_net_is_ipv4(net_addr))
-    {
-        net_addr->sa.v4.sin_addr.s_addr = INADDR_ANY;
-        net_addr->sa.v4.sin_port = htons(0);
-    }
-    else if (co_net_is_ipv6(net_addr))
-    {
-        net_addr->sa.v6.sin6_addr = in6addr_any;
-        net_addr->sa.v6.sin6_port = htons(0);
-        net_addr->sa.v6.sin6_flowinfo = 0;
-        net_addr->sa.v6.sin6_scope_id = 0;
-    }
 }
 
 co_net_addr_family_t
@@ -66,20 +73,18 @@ co_net_addr_set_address(
     const char* address
 )
 {
-    if (inet_pton(AF_INET, address, &net_addr->sa.v4.sin_addr) == 1)
+    if (co_net_is_ipv4(net_addr))
     {
-        net_addr->sa.v4.sin_family = AF_INET;
+        return (inet_pton(AF_INET,
+            address, &net_addr->sa.v4.sin_addr) == 1);
     }
-    else if (inet_pton(AF_INET6, address, &net_addr->sa.v6.sin6_addr) == 1)
+    else if (co_net_is_ipv6(net_addr))
     {
-        net_addr->sa.v6.sin6_family = AF_INET6;
-    }
-    else
-    {
-        return false;
+        return (inet_pton(AF_INET6,
+            address, &net_addr->sa.v6.sin6_addr) == 1);
     }
 
-    return true;
+    return false;
 }
 
 bool

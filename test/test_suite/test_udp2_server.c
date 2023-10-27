@@ -186,7 +186,15 @@ static bool test_udp2_server_thread_on_create(test_udp2_server_thread_st* self)
 
     co_net_addr_t local_net_addr = { 0 };
     co_net_addr_set_family(&local_net_addr, self->family);
-    co_net_addr_set_port(&local_net_addr, self->port);
+
+    if (self->family == CO_NET_ADDR_FAMILY_UNIX)
+    {
+        co_net_addr_set_unix_path(&local_net_addr, self->address);
+    }
+    else
+    {
+        co_net_addr_set_port(&local_net_addr, self->port);
+    }
 
     self->udp_server = co_udp_create(&local_net_addr);
 

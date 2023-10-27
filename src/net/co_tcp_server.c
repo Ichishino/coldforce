@@ -155,7 +155,7 @@ co_tcp_server_create(
         local_net_addr->sa.any.ss_family);
 #else
     server->sock.handle = co_socket_handle_create(
-        local_net_addr->sa.any.ss_family, SOCK_STREAM, IPPROTO_TCP);
+        local_net_addr->sa.any.ss_family, SOCK_STREAM, 0);
 #endif
 
     if (server->sock.handle == CO_SOCKET_INVALID_HANDLE)
@@ -271,6 +271,9 @@ co_tcp_server_close (
     co_socket_handle_close(server->sock.handle);
     server->sock.handle = CO_SOCKET_INVALID_HANDLE;
     server->sock.local.is_open = false;
+
+    co_net_addr_remove_unix_path_file(
+        &server->sock.local.net_addr);
 }
 
 bool

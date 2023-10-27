@@ -279,7 +279,7 @@ co_udp_create(
     udp->sock.handle =
         co_socket_handle_create(
             local_net_addr->sa.any.ss_family,
-            SOCK_DGRAM, IPPROTO_UDP);
+            SOCK_DGRAM, 0);
 
     if (udp->sock.handle == CO_SOCKET_INVALID_HANDLE)
     {
@@ -333,6 +333,9 @@ co_udp_close(
         udp->sock.handle = CO_SOCKET_INVALID_HANDLE;
 
         udp->sock.local.is_open = false;
+
+        co_net_addr_remove_unix_path_file(
+            &udp->sock.local.net_addr);
     }
 }
 
@@ -795,7 +798,7 @@ co_udp_create_connection(
     co_socket_handle_t handle =
         co_socket_handle_create(
             udp->sock.local.net_addr.sa.any.ss_family,
-            SOCK_DGRAM, IPPROTO_UDP);
+            SOCK_DGRAM, 0);
 #endif
 
     if (handle == CO_SOCKET_INVALID_HANDLE)

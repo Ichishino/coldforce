@@ -8,6 +8,7 @@ typedef struct
     co_thread_t base;
 
     bool close;
+    const char* address;
     uint16_t port;
     co_net_addr_family_t family;
     co_udp_t* udp_server;
