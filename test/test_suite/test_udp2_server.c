@@ -5,7 +5,7 @@ static void test_udp2_server_on_client_receive(test_udp2_server_thread_st* self,
 {
     co_assert(self->udp_server != udp_client);
 
-    uint16_t port;
+    uint16_t port = 0;
     co_net_addr_get_port(
         co_socket_get_remote_net_addr(co_udp_get_socket(
             udp_client)), &port);
@@ -23,7 +23,7 @@ static void test_udp2_server_on_client_receive(test_udp2_server_thread_st* self,
             break;
         }
 #else
-        co_net_addr_t remote_net_addr;
+        co_net_addr_t remote_net_addr = { 0 };
         ssize_t size = co_udp_receive_from(udp_client, &remote_net_addr, data, sizeof(data));
 
         if (size <= 0)
@@ -87,7 +87,7 @@ static void test_udp2_server_on_server_receive(test_udp2_server_thread_st* self,
     {
         char data[2048];
 
-        co_net_addr_t remote_net_addr;
+        co_net_addr_t remote_net_addr = { 0 };
         ssize_t size = co_udp_receive_from(udp_server, &remote_net_addr, data, sizeof(data));
 
         if (size <= 0)
@@ -122,7 +122,7 @@ static void test_udp2_server_on_server_receive(test_udp2_server_thread_st* self,
             exit(-1);
         }
         
-        uint16_t port;
+        uint16_t port = 0;
         co_net_addr_get_port(
             co_socket_get_remote_net_addr(co_udp_get_socket(
                 udp_client)), &port);

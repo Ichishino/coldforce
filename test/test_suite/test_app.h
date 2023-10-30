@@ -33,7 +33,7 @@ typedef struct test_app_st
     test_udp_thread_st test_udp_1_thread;
     test_udp_thread_st test_udp_2_thread;
     test_udp_thread_st test_udp_3_thread;
-    test_udp2_thread_st test_udp_4_thread;
+    test_udp2_thread_st test_udp2_1_thread;
 
     test_item_st item[32];
     size_t item_index;

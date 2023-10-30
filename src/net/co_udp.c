@@ -29,7 +29,7 @@ co_udp_setup(
 {
     co_socket_setup(&udp->sock, type);
 
-    udp->bound_local_net_addr = false;
+    udp->is_bound = false;
     udp->send_async_queue = NULL;
     udp->callbacks.on_send_async = NULL;
     udp->callbacks.on_receive = NULL;
@@ -340,11 +340,11 @@ co_udp_close(
 }
 
 bool
-co_udp_bind_local_net_addr(
+co_udp_bind(
     co_udp_t* udp
 )
 {
-    if (!udp->bound_local_net_addr)
+    if (!udp->is_bound)
     {
         if (!co_socket_handle_bind(
             udp->sock.handle,
@@ -356,7 +356,7 @@ co_udp_bind_local_net_addr(
         co_socket_handle_get_local_net_addr(
             udp->sock.handle, &udp->sock.local.net_addr);
 
-        udp->bound_local_net_addr = true;
+        udp->is_bound = true;
     }
 
     return true;
@@ -508,7 +508,7 @@ co_udp_receive_start(
     }
 #endif
 
-    if (!co_udp_bind_local_net_addr(udp))
+    if (!co_udp_bind(udp))
     {
         return false;
     }
@@ -585,6 +585,11 @@ co_udp_connect(
         return false;
     }
 
+    if (!co_udp_bind(udp))
+    {
+        return false;
+    }
+
     if (!co_socket_handle_connect(
         udp->sock.handle, remote_net_addr))
     {
@@ -602,7 +607,6 @@ co_udp_connect(
         &udp->sock.remote.net_addr,
         "udp connect");
 
-    udp->bound_local_net_addr = true;
     udp->sock.type = CO_SOCKET_TYPE_UDP_CONNECTED;
 
     return true;
@@ -865,11 +869,6 @@ co_udp_accept(
 #endif
 
     co_socket_option_set_reuse_addr(&udp_conn->sock, true);
-
-    if (!co_udp_bind_local_net_addr(udp_conn))
-    {
-        return false;
-    }
 
     if (!co_udp_connect(
         udp_conn, &udp_conn->sock.remote.net_addr))

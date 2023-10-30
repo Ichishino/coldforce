@@ -50,7 +50,7 @@ typedef struct co_udp_t
 
     co_udp_callbacks_st callbacks;
 
-    bool bound_local_net_addr;
+    bool is_bound;
     co_queue_t* send_async_queue;
 
 #ifndef CO_OS_WIN
@@ -146,7 +146,7 @@ co_udp_receive_from(
 
 CO_NET_API
 bool
-co_udp_bind_local_net_addr(
+co_udp_bind(
     co_udp_t* udp
 );
 

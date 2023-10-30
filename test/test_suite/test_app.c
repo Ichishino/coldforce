@@ -85,17 +85,17 @@ static void test_udp_3(test_app_st* self)
     test_udp_run(&self->test_udp_3_thread);
 }
 
-static void test_udp_4(test_app_st* self)
+static void test_udp2_1(test_app_st* self)
 {
     test_info("test udp2 (ipv4)");
 
-    self->test_udp_4_thread.family = CO_NET_ADDR_FAMILY_IPV4;
-    self->test_udp_4_thread.server_address = "127.0.0.1";
-    self->test_udp_4_thread.server_port = 9006;
-    self->test_udp_4_thread.data_size = 100000;
-    self->test_udp_4_thread.client_count = 100;
+    self->test_udp2_1_thread.family = CO_NET_ADDR_FAMILY_IPV4;
+    self->test_udp2_1_thread.server_address = "127.0.0.1";
+    self->test_udp2_1_thread.server_port = 9006;
+    self->test_udp2_1_thread.data_size = 100000;
+    self->test_udp2_1_thread.client_count = 100;
 
-    test_udp2_run(&self->test_udp_4_thread);
+    test_udp2_run(&self->test_udp2_1_thread);
 }
 
 static void test_app_init_items(test_app_st* self)
@@ -132,8 +132,8 @@ static void test_app_init_items(test_app_st* self)
     self->item[index].time_limit_sec = 5 * 60;
     index++;
 
-    self->item[index].thread = (co_thread_t*)&self->test_udp_4_thread;
-    self->item[index].func = test_udp_4;
+    self->item[index].thread = (co_thread_t*)&self->test_udp2_1_thread;
+    self->item[index].func = test_udp2_1;
     self->item[index].time_limit_sec = 5 * 60;
     index++;
 

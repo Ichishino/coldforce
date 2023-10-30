@@ -245,6 +245,18 @@ static bool test_udp_thread_on_create(test_udp_thread_st* self)
     self->test_udp_server_thread.port = self->server_port;
     test_udp_server_thread_start(&self->test_udp_server_thread);
 
+    co_net_addr_set_family(&self->remote_net_addr, self->family);
+
+    if (self->family == CO_NET_ADDR_FAMILY_UNIX)
+    {
+        co_net_addr_set_unix_path(&self->remote_net_addr, self->server_address);
+    }
+    else
+    {
+        co_net_addr_set_address(&self->remote_net_addr, self->server_address);
+        co_net_addr_set_port(&self->remote_net_addr, self->server_port);
+    }
+
     // clients
 
     co_list_ctx_st list_ctx = { 0 };
@@ -306,18 +318,6 @@ static bool test_udp_thread_on_create(test_udp_thread_st* self)
         co_byte_array_set_count(test_udp_client->receive_data, self->data_size);
 
         co_udp_set_user_data(udp_client, test_udp_client);
-
-        co_net_addr_set_family(&self->remote_net_addr, self->family);
-
-        if (self->family == CO_NET_ADDR_FAMILY_UNIX)
-        {
-            co_net_addr_set_unix_path(&self->remote_net_addr, self->server_address);
-        }
-        else
-        {
-            co_net_addr_set_address(&self->remote_net_addr, self->server_address);
-            co_net_addr_set_port(&self->remote_net_addr, self->server_port);
-        }
 
         co_timer_start(test_udp_client->send_timer);
     }

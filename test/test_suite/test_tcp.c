@@ -266,6 +266,19 @@ static bool test_tcp_thread_on_create(test_tcp_thread_st* self)
     self->test_tcp_server_thread.port = self->server_port;
     test_tcp_server_thread_start(&self->test_tcp_server_thread);
 
+    co_net_addr_t remote_net_addr = { 0 };
+    co_net_addr_set_family(&remote_net_addr, self->family);
+
+    if (self->family == CO_NET_ADDR_FAMILY_UNIX)
+    {
+        co_net_addr_set_unix_path(&remote_net_addr, self->server_address);
+    }
+    else
+    {
+        co_net_addr_set_address(&remote_net_addr, self->server_address);
+        co_net_addr_set_port(&remote_net_addr, self->server_port);
+    }
+
     // clients
 
     co_list_ctx_st list_ctx = { 0 };
@@ -320,19 +333,6 @@ static bool test_tcp_thread_on_create(test_tcp_thread_st* self)
             self->data_size);
 
         co_tcp_set_user_data(tcp_client, test_tcp_client);
-
-        co_net_addr_t remote_net_addr = { 0 };
-        co_net_addr_set_family(&remote_net_addr, self->family);
-
-        if (self->family == CO_NET_ADDR_FAMILY_UNIX)
-        {
-            co_net_addr_set_unix_path(&remote_net_addr, self->server_address);
-        }
-        else
-        {
-            co_net_addr_set_address(&remote_net_addr, self->server_address);
-            co_net_addr_set_port(&remote_net_addr, self->server_port);
-        }
 
         if (!co_tcp_connect(tcp_client, &remote_net_addr))
         {
