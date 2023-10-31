@@ -1,6 +1,8 @@
 #include "test_udp2.h"
 #include "test_app.h"
 
+#ifndef CO_OS_WIN
+
 static uint32_t test_udp2_get_send_timer_interval()
 {
     return co_random_range(1, 200);
@@ -414,3 +416,5 @@ void test_udp2_run(test_udp2_thread_st* test_udp2_thread)
         exit(-1);
     }
 }
+
+#endif // !CO_OS_WIN

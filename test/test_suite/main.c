@@ -2,7 +2,7 @@
 
 #include <signal.h>
 
-#ifdef _WIN32
+#ifdef CO_OS_WIN
 #   ifdef CO_USE_WOLFSSL
 #       pragma comment(lib, "wolfssl.lib")
 #   elif defined(CO_USE_OPENSSL)

@@ -4,6 +4,8 @@
 #include "test_udp.h"
 #include "test_udp2_server.h"
 
+#ifndef CO_OS_WIN
+
 #define TEST_EVENT_UDP2_SERVER_REQ_CLOSE  1
 #define TEST_EVENT_UDP2_SERVER_RES_CLOSE  2
 
@@ -25,3 +27,5 @@ typedef struct
 } test_udp2_thread_st;
 
 void test_udp2_run(test_udp2_thread_st* thread);
+
+#endif // !CO_OS_WIN

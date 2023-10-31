@@ -3,6 +3,8 @@
 #include "test_std.h"
 #include "test_udp_server.h"
 
+#ifndef CO_OS_WIN
+
 typedef struct
 {
     co_thread_t base;
@@ -18,3 +20,5 @@ typedef struct
 
 void test_udp2_server_thread_start(test_udp2_server_thread_st* test_udp2_server_thread);
 void test_udp2_server_thread_stop(test_udp2_server_thread_st* test_udp2_server_thread);
+
+#endif // !CO_OS_WIN

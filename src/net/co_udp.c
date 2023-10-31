@@ -788,22 +788,18 @@ co_udp_receive(
     return data_size;
 }
 
+#ifndef CO_OS_WIN
+
 co_udp_t*
 co_udp_create_connection(
     const co_udp_t* udp,
     const co_net_addr_t* remote_net_addr
 )
 {
-#ifdef CO_OS_WIN
-    co_socket_handle_t handle =
-        co_win_socket_handle_create_udp(
-            udp->sock.local.net_addr.sa.any.ss_family);
-#else
     co_socket_handle_t handle =
         co_socket_handle_create(
             udp->sock.local.net_addr.sa.any.ss_family,
             SOCK_DGRAM, 0);
-#endif
 
     if (handle == CO_SOCKET_INVALID_HANDLE)
     {
@@ -860,14 +856,6 @@ co_udp_accept(
 
     udp_conn->sock.owner_thread = owner_thread;
 
-#ifdef CO_OS_WIN
-    if (!co_net_worker_register_udp(
-        co_socket_get_net_worker(&udp_conn->sock), udp_conn))
-    {
-        return false;
-    }
-#endif
-
     co_socket_option_set_reuse_addr(&udp_conn->sock, true);
 
     if (!co_udp_connect(
@@ -883,6 +871,8 @@ co_udp_accept(
 
     return true;
 }
+
+#endif // !CO_OS_WIN
 
 co_socket_t*
 co_udp_get_socket(

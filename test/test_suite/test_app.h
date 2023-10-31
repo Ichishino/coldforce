@@ -3,7 +3,10 @@
 #include "test_std.h"
 #include "test_tcp.h"
 #include "test_udp.h"
+
+#ifndef CO_OS_WIN
 #include "test_udp2.h"
+#endif
 
 #define TEST_EVENT_ID_TEST_FINISHED    100
 
@@ -33,7 +36,9 @@ typedef struct test_app_st
     test_udp_thread_st test_udp_1_thread;
     test_udp_thread_st test_udp_2_thread;
     test_udp_thread_st test_udp_3_thread;
+#ifndef CO_OS_WIN
     test_udp2_thread_st test_udp2_1_thread;
+#endif
 
     test_item_st item[32];
     size_t item_index;

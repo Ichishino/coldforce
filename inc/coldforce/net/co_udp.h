@@ -182,6 +182,8 @@ co_udp_receive(
     size_t buffer_size
 );
 
+#ifndef CO_OS_WIN
+
 CO_NET_API
 co_udp_t*
 co_udp_create_connection(
@@ -195,6 +197,8 @@ co_udp_accept(
     co_thread_t* owner_thread,
     co_udp_t* udp_conn
 );
+
+#endif // !CO_OS_WIN
 
 CO_NET_API
 co_socket_t*

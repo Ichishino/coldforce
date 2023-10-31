@@ -1,5 +1,7 @@
 #include <coldforce.h>
 
+#ifndef CO_OS_WIN
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -151,3 +153,17 @@ int main(int argc, char* argv[])
         (co_app_destroy_fn)on_my_app_destroy,
         argc, argv);
 }
+
+#else
+
+int main(int argc, char* argv[])
+{
+    (void)argc;
+    (void)argv;
+
+    printf("UDP connection server is not supported on Windows.\n");
+
+    return 0;
+}
+
+#endif // !CO_OS_WIN

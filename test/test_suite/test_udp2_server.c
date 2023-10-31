@@ -1,6 +1,8 @@
 #include "test_udp2_server.h"
 #include "test_app.h"
 
+#ifndef CO_OS_WIN
+
 static void test_udp2_server_on_client_receive(test_udp2_server_thread_st* self, co_udp_t* udp_client)
 {
     co_assert(self->udp_server != udp_client);
@@ -248,3 +250,5 @@ void test_udp2_server_thread_stop(test_udp2_server_thread_st* test_udp2_server_t
     co_thread_join((co_thread_t*)test_udp2_server_thread);
     co_net_thread_cleanup((co_thread_t*)test_udp2_server_thread);
 }
+
+#endif // !CO_OS_WIN
