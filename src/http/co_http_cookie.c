@@ -2,6 +2,7 @@
 #include <coldforce/core/co_string.h>
 
 #include <coldforce/http/co_http_cookie.h>
+#include <coldforce/http/co_http_log.h>
 
 //---------------------------------------------------------------------------//
 // http cookie
@@ -280,7 +281,9 @@ co_http_response_cookie_deserialize(
             {
                 char* item = co_string_duplicate_n(str, item_length);
 
-                printf("Unknown Cookie: [%s]\n", item);
+                co_http_log_warning(
+                    NULL, NULL, NULL,
+                    "unsupported cookie attr: [%s]", item);
 
                 co_string_destroy(item);
                 co_string_destroy(value);
@@ -304,7 +307,9 @@ co_http_response_cookie_deserialize(
             }
             else
             {
-                printf("Unknown Cookie: [%s]\n", item);
+                co_http_log_warning(
+                    NULL, NULL, NULL,
+                    "unsupported cookie attr: [%s]", item);
             }
 
             co_string_destroy(item);
@@ -341,4 +346,6 @@ co_http_cookie_cleanup(
         co_string_destroy(cookies[index].attr.version);
         co_string_destroy(cookies[index].attr.comment);
     }
+
+    memset(cookies, 0x00, sizeof(co_http_cookie_st) * count);
 }
