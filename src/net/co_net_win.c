@@ -116,13 +116,13 @@ co_win_net_client_extension_setup(
         return false;
     }
 
-    if (sock->type == CO_SOCKET_TYPE_UDP)
+    if (co_socket_type_is_tcp(sock))
     {
-        win_client->receive.io_ctx->id = CO_WIN_NET_IO_ID_UDP_RECEIVE;
+        win_client->receive.io_ctx->id = CO_WIN_NET_IO_ID_TCP_RECEIVE;
     }
     else
     {
-        win_client->receive.io_ctx->id = CO_WIN_NET_IO_ID_TCP_RECEIVE;
+        win_client->receive.io_ctx->id = CO_WIN_NET_IO_ID_UDP_RECEIVE;
     }
 
     win_client->receive.io_ctx->sock = sock;
@@ -430,11 +430,11 @@ co_win_net_send_async(
 
     memset(&io_ctx->ol, 0x00, sizeof(WSAOVERLAPPED));
 
-    if (sock->type == CO_SOCKET_TYPE_TCP)
+    if (co_socket_type_is_tcp(sock))
     {
         io_ctx->id = CO_WIN_NET_IO_ID_TCP_SEND_ASYNC;
     }
-    else if (sock->type == CO_SOCKET_TYPE_UDP_CONNECTED)
+    else if (co_socket_type_is_udp(sock))
     {
         io_ctx->id = CO_WIN_NET_IO_ID_UDP_SEND_ASYNC;
     }
@@ -484,7 +484,7 @@ co_win_net_send_async(
 
         co_event_id_t event_id;
 
-        if (sock->type == CO_SOCKET_TYPE_TCP)
+        if (co_socket_type_is_tcp(sock))
         {
             event_id = CO_NET_EVENT_ID_TCP_SEND_ASYNC_COMPLETE;
         }
@@ -553,7 +553,7 @@ co_win_net_receive_start(
 
         if (error != WSA_IO_PENDING)
         {
-            if (sock->type == CO_SOCKET_TYPE_TCP)
+            if (co_socket_type_is_tcp(sock))
             {
                 co_thread_send_event(
                     sock->owner_thread,
@@ -569,7 +569,7 @@ co_win_net_receive_start(
     {
         co_event_id_t event_id;
 
-        if (sock->type == CO_SOCKET_TYPE_TCP)
+        if (co_socket_type_is_tcp(sock))
         {
             event_id = CO_NET_EVENT_ID_TCP_RECEIVE_READY;
         }

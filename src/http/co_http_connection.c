@@ -1,7 +1,7 @@
 #include <coldforce/core/co_std.h>
 #include <coldforce/core/co_string.h>
 
-#include <coldforce/tls/co_tls_client.h>
+#include <coldforce/tls/co_tls_tcp_client.h>
 
 #include <coldforce/http/co_http_client.h>
 #include <coldforce/http/co_http_log.h>
@@ -42,13 +42,15 @@ co_http_connection_on_tcp_connect(
 {
     if (error_code == 0)
     {
-        co_tls_client_t* tls = co_tcp_client_get_tls(tcp_client);
+        co_tls_client_t* tls =
+            (co_tls_client_t*)tcp_client->sock.tls;
 
         if (tls != NULL)
         {
-            tls->callbacks.on_handshake = co_http_connection_on_tls_handshake;
+            tls->callbacks.on_handshake =
+                (co_tls_handshake_fn)co_http_connection_on_tls_handshake;
 
-            co_tls_start_handshake(tcp_client);
+            co_tls_tcp_start_handshake(tcp_client);
 
             return;
         }
@@ -108,23 +110,23 @@ co_http_connection_setup(
 
     if (tls_scheme)
     {
-        conn->module.destroy = co_tls_client_destroy;
+        conn->module.destroy = co_tls_tcp_client_destroy;
         conn->module.close = co_tcp_close;
         conn->module.connect = co_tcp_connect;
-        conn->module.send = co_tls_send;
-        conn->module.receive_all = co_tls_receive_all;
+        conn->module.send = co_tls_tcp_send;
+        conn->module.receive_all = co_tls_tcp_receive_all;
 
         conn->tcp_client =
-            co_tls_client_create(local_net_addr, tls_ctx);
+            co_tls_tcp_client_create(local_net_addr, tls_ctx);
 
         if (conn->tcp_client != NULL)
         {
-            co_tls_set_host_name(
+            co_tls_tcp_set_host_name(
                 conn->tcp_client, url_origin->host);
 
             if (protocols != NULL && protocol_count > 0)
             {
-                co_tls_set_available_protocols(
+                co_tls_tcp_set_available_protocols(
                     conn->tcp_client, protocols, protocol_count);
             }
         }

@@ -12,6 +12,8 @@ add_library(${PROJECT_NAME} STATIC
     co_tls_client.c
     co_tls_log.c
     co_tls_server.c
+    co_tls_tcp_client.c
+    co_tls_tcp_server.c
 )
 
 if (APPLE)

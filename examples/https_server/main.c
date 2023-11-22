@@ -214,7 +214,7 @@ void on_my_tls_handshake(my_app* self, co_tcp_client_t* tcp_client, int error_co
     {
         my_client_log(tcp, tcp_client, "TLS handshake failed");
 
-        co_tls_client_destroy(tcp_client);
+        co_tls_tcp_client_destroy(tcp_client);
     }
 }
 
@@ -256,7 +256,7 @@ void on_my_tcp_close(my_app* self, co_tcp_client_t* tcp_client)
 {
     (void)self;
 
-    co_tls_client_destroy(tcp_client);
+    co_tls_tcp_client_destroy(tcp_client);
 }
 
 void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t* tcp_client)
@@ -271,11 +271,11 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t
     // callback
     co_tcp_callbacks_st* tcp_callbacks = co_tcp_get_callbacks(tcp_client);
     tcp_callbacks->on_close = (co_tcp_close_fn)on_my_tcp_close;
-    co_tls_callbacks_st* tls_callbacks = co_tls_get_callbacks(tcp_client);
+    co_tls_tcp_callbacks_st* tls_callbacks = co_tls_tcp_get_callbacks(tcp_client);
     tls_callbacks->on_handshake = (co_tls_handshake_fn)on_my_tls_handshake;
 
     // TLS handshake
-    co_tls_start_handshake(tcp_client);
+    co_tls_tcp_start_handshake(tcp_client);
 }
 
 bool on_my_app_create(my_app* self)
@@ -305,7 +305,7 @@ bool on_my_app_create(my_app* self)
     }
 
     // https server
-    self->server = co_tls_server_create(&local_net_addr, &tls_ctx);
+    self->server = co_tls_tcp_server_create(&local_net_addr, &tls_ctx);
     if (self->server == NULL)
     {
         printf("Failed to create tls server (maybe OpenSSL was not found)\n");
@@ -316,7 +316,7 @@ bool on_my_app_create(my_app* self)
     // available protocols
     size_t protocol_count = 1;
     const char* protocols[] = { CO_HTTP_PROTOCOL };
-    co_tls_server_set_available_protocols(
+    co_tls_tcp_server_set_available_protocols(
         self->server, protocols, protocol_count);
 
     // socket option
@@ -328,7 +328,7 @@ bool on_my_app_create(my_app* self)
     callbacks->on_accept = (co_tcp_accept_fn)on_my_tcp_accept;
 
     // listen start
-    co_tls_server_start(self->server, SOMAXCONN);
+    co_tls_tcp_server_start(self->server, SOMAXCONN);
 
     printf("https://127.0.0.1:%d\n", port);
 
@@ -337,7 +337,7 @@ bool on_my_app_create(my_app* self)
 
 void on_my_app_destroy(my_app* self)
 {
-    co_tls_server_destroy(self->server);
+    co_tls_tcp_server_destroy(self->server);
 }
 
 int main(int argc, char* argv[])

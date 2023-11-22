@@ -14,13 +14,19 @@
     <ClCompile Include="..\..\..\src\tls\co_tls.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\tls\co_tls_tcp_client.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\tls\co_tls_tcp_server.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\tls\co_tls_log.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\src\tls\co_tls_client.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\tls\co_tls_server.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\tls\co_tls_log.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -31,16 +37,22 @@
     <ClInclude Include="..\..\..\inc\coldforce\coldforce_tls.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\inc\coldforce\tls\co_tls_client.h">
+    <ClInclude Include="..\..\..\inc\coldforce\tls\co_tls_tcp_client.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\inc\coldforce\tls\co_tls_server.h">
+    <ClInclude Include="..\..\..\inc\coldforce\tls\co_tls_tcp_server.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\inc\coldforce\tls\co_tls_log.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\inc\coldforce\tls\co_tls_debug.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\coldforce\tls\co_tls_client.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\coldforce\tls\co_tls_server.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

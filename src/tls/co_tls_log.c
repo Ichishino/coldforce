@@ -16,7 +16,7 @@
 void
 co_tls_log_write_certificate(
     int level,
-    CO_X509_T* x509
+    CO_SSL_T* ssl
 )
 {
 #ifdef CO_USE_OPENSSL_COMPATIBLE
@@ -27,6 +27,9 @@ co_tls_log_write_certificate(
     {
         return;
     }
+
+    X509* x509 =
+        SSL_get_peer_certificate(ssl);
 
     if (x509 == NULL)
     {
@@ -77,11 +80,12 @@ co_tls_log_write_certificate(
 
     co_mem_free(str);
     BIO_free(mem);
+    X509_free(x509);
 
 #else
 
     (void)level;
-    (void)x509;
+    (void)ssl;
 
 #endif // CO_USE_OPENSSL_COMPATIBLE
 }

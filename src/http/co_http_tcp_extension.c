@@ -1,6 +1,6 @@
 #include <coldforce/core/co_std.h>
 
-#include <coldforce/tls/co_tls_client.h>
+#include <coldforce/tls/co_tls_tcp_client.h>
 
 #include <coldforce/http/co_http_tcp_extension.h>
 #include <coldforce/http/co_http_server.h>
@@ -25,11 +25,11 @@ co_tcp_upgrade_to_http_connection(
 {
     if (tcp_client->sock.tls != NULL)
     {
-        conn->module.destroy = co_tls_client_destroy;
+        conn->module.destroy = co_tls_tcp_client_destroy;
         conn->module.close = co_tcp_close;
         conn->module.connect = co_tcp_connect;
-        conn->module.send = co_tls_send;
-        conn->module.receive_all = co_tls_receive_all;
+        conn->module.send = co_tls_tcp_send;
+        conn->module.receive_all = co_tls_tcp_receive_all;
     }
     else
     {

@@ -1,10 +1,11 @@
 #ifndef CO_TLS_CLIENT_H_INCLUDED
 #define CO_TLS_CLIENT_H_INCLUDED
 
-#include <coldforce/core/co_queue.h>
 #include <coldforce/core/co_byte_array.h>
+#include <coldforce/core/co_queue.h>
+#include <coldforce/core/co_thread.h>
 
-#include <coldforce/net/co_tcp_client.h>
+#include <coldforce/net/co_socket.h>
 
 #include <coldforce/tls/co_tls.h>
 
@@ -18,7 +19,7 @@ CO_EXTERN_C_BEGIN
 //---------------------------------------------------------------------------//
 
 typedef void(*co_tls_handshake_fn)(
-    co_thread_t* self, co_tcp_client_t* client, int error_code);
+    co_thread_t* self, co_socket_t* sock, int error_code);
 
 typedef struct
 {
@@ -30,8 +31,7 @@ typedef struct
 {
     co_tls_ctx_st ctx;
     co_tls_callbacks_st callbacks;
-
-    co_tcp_receive_fn on_receive;
+    void* on_receive_origin;
 
     co_byte_array_t* send_data;
     co_queue_t* receive_data_queue;
@@ -41,108 +41,57 @@ typedef struct
 
 } co_tls_client_t;
 
-#define co_tcp_client_get_tls(client) \
-    ((co_tls_client_t*)client->sock.tls)
-
 //---------------------------------------------------------------------------//
 // private
 //---------------------------------------------------------------------------//
 
-void
-co_tls_client_setup(
+#ifdef CO_USE_OPENSSL_COMPATIBLE
+
+bool
+co_tls_client_setup_internal(
     co_tls_client_t* tls,
     co_tls_ctx_st* tls_ctx,
-    co_tcp_client_t* client
+    co_socket_t* sock
+);
+
+void
+co_tls_client_cleanup_internal(
+    co_tls_client_t* tls
+);
+
+bool
+co_tls_client_setup(
+    co_socket_t* sock,
+    co_tls_ctx_st* tls_ctx
 );
 
 void
 co_tls_client_cleanup(
-    co_tls_client_t* tls
+    co_socket_t* sock
 );
 
-//---------------------------------------------------------------------------//
-// public
-//---------------------------------------------------------------------------//
-
-CO_TLS_API
-co_tcp_client_t*
-co_tls_client_create(
-    const co_net_addr_t* local_net_addr,
-    co_tls_ctx_st* tls_ctx
-);
-
-CO_TLS_API
-void
-co_tls_client_destroy(
-    co_tcp_client_t* client
-);
-
-CO_TLS_API
-co_tls_callbacks_st*
-co_tls_get_callbacks(
-    co_tcp_client_t* client
-);
-
-CO_TLS_API
-void
-co_tls_set_host_name(
-    co_tcp_client_t* client,
-    const char* host_name
-);
-
-CO_TLS_API
-void
-co_tls_set_available_protocols(
-    co_tcp_client_t* client,
-    const char* protocols[],
-    size_t count
-);
-
-CO_TLS_API
-bool
-co_tls_get_selected_protocol(
-    const co_tcp_client_t* client,
-    char* buffer,
-    size_t buffer_size
-);
-
-CO_TLS_API
 bool
 co_tls_start_handshake(
-    co_tcp_client_t* client
+    co_socket_t* sock
 );
 
-CO_TLS_API
 bool
-co_tls_send(
-    co_tcp_client_t* client,
-    const void* data,
-    size_t data_size
+co_tls_encrypt_data(
+    co_socket_t* sock,
+    const void* plain_data,
+    size_t plain_data_size,
+    co_byte_array_t* enc_data
 );
 
-CO_TLS_API
-bool
-co_tls_send_async(
-    co_tcp_client_t* client,
-    const void* data,
-    size_t data_size,
-    void* user_data
-);
-
-CO_TLS_API
 ssize_t
-co_tls_receive(
-    co_tcp_client_t* client,
-    void* buffer,
-    size_t buffer_size
+co_tls_decrypt_data(
+    co_socket_t* sock,
+    co_queue_t* enc_data,
+    uint8_t* plain_buffer,
+    size_t plain_buffer_size
 );
 
-CO_TLS_API
-ssize_t
-co_tls_receive_all(
-    co_tcp_client_t* client,
-    co_byte_array_t* byte_array
-);
+#endif // CO_USE_OPENSSL_COMPATIBLE
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

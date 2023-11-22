@@ -1,6 +1,9 @@
 #include <coldforce/core/co_std.h>
 
 #include <coldforce/net/co_net_event.h>
+#include <coldforce/net/co_tcp_client.h>
+#include <coldforce/net/co_tcp_server.h>
+#include <coldforce/net/co_udp.h>
 
 #include <coldforce/tls/co_tls_client.h>
 #include <coldforce/tls/co_tls_log.h>
@@ -17,6 +20,7 @@
 //---------------------------------------------------------------------------//
 
 #ifdef CO_USE_OPENSSL_COMPATIBLE
+
 static void
 co_tls_on_info(
     const SSL* ssl,
@@ -24,57 +28,49 @@ co_tls_on_info(
     int ret
 )
 {
-    co_tcp_client_t* client =
-        (co_tcp_client_t*)SSL_get_ex_data(ssl, 0);
+    co_socket_t* sock =
+        (co_socket_t*)SSL_get_ex_data(ssl, 0);
 
     if (where & SSL_CB_ALERT)
     {
         co_tls_log_warning(
-            &client->sock.local.net_addr, "---", &client->sock.remote.net_addr,
-            "0x%08X-%s %s (%d) %s",
+            &sock->local.net_addr, "---", &sock->remote.net_addr,
+            "0x%04X-%s %s (%d) %s",
             where, SSL_alert_type_string_long(ret), SSL_state_string_long(ssl),
             ret, SSL_alert_desc_string_long(ret));
     }
     else
     {
         co_tls_log_info(
-            &client->sock.local.net_addr, "---", &client->sock.remote.net_addr,
-            "0x%08X %s",
+            &sock->local.net_addr, "---", &sock->remote.net_addr,
+            "0x%04X %s",
             where, SSL_state_string_long(ssl));
     }
 
-    if (where == SSL_CB_HANDSHAKE_DONE)
+    if (where & SSL_CB_HANDSHAKE_DONE)
     {
         co_tls_log_info(
-            &client->sock.local.net_addr, "---", &client->sock.remote.net_addr,
+            &sock->local.net_addr, "---", &sock->remote.net_addr,
             "tls handshake done");
     }
 }
-#endif // CO_USE_OPENSSL_COMPATIBLE
 
-#ifdef CO_USE_OPENSSL_COMPATIBLE
-void
-co_tls_client_setup(
+bool
+co_tls_client_setup_internal(
     co_tls_client_t* tls,
     co_tls_ctx_st* tls_ctx,
-    co_tcp_client_t* client
+    co_socket_t* sock
 )
 {
-    SSL_CTX* ssl_ctx = NULL;
-
     if ((tls_ctx == NULL) || (tls_ctx->ssl_ctx == NULL))
     {
-        ssl_ctx = SSL_CTX_new(TLS_client_method());
+        return false;
     }
-    else
-    {
-        ssl_ctx = tls_ctx->ssl_ctx;
-    }
-
-    tls->ctx.ssl_ctx = ssl_ctx;
+    
+    tls->ctx.ssl_ctx = tls_ctx->ssl_ctx;
     tls->ssl = SSL_new(tls->ctx.ssl_ctx);
 
-    SSL_set_ex_data(tls->ssl, 0, client);
+    SSL_set_ex_data(tls->ssl, 0, sock);
     SSL_CTX_set_info_callback(tls->ctx.ssl_ctx, co_tls_on_info);
 
     BIO* internal_bio = BIO_new(BIO_s_bio());
@@ -84,15 +80,15 @@ co_tls_client_setup(
     SSL_set_bio(tls->ssl, internal_bio, internal_bio);
 
     tls->callbacks.on_handshake = NULL;
-    tls->on_receive = NULL;
+    tls->on_receive_origin = NULL;
     tls->send_data = co_byte_array_create();
     tls->receive_data_queue = co_queue_create(sizeof(uint8_t), NULL);
-}
-#endif // CO_USE_OPENSSL_COMPATIBLE
 
-#ifdef CO_USE_OPENSSL_COMPATIBLE
+    return true;
+}
+
 void
-co_tls_client_cleanup(
+co_tls_client_cleanup_internal(
     co_tls_client_t* tls
 )
 {
@@ -123,12 +119,10 @@ co_tls_client_cleanup(
         }
     }
 }
-#endif // CO_USE_OPENSSL_COMPATIBLE
 
-#ifdef CO_USE_OPENSSL_COMPATIBLE
-static bool
-co_tls_client_install(
-    co_tcp_client_t* client,
+bool
+co_tls_client_setup(
+    co_socket_t* sock,
     co_tls_ctx_st* tls_ctx
 )
 {
@@ -140,28 +134,46 @@ co_tls_client_install(
         return false;
     }
 
-    co_tls_client_setup(tls, tls_ctx, client);
+    if (!co_tls_client_setup_internal(tls, tls_ctx, sock))
+    {
+        co_mem_free(tls);
+
+        return false;
+    }
+    
     SSL_set_connect_state(tls->ssl);
 
-    client->sock.tls = tls;
+    sock->tls = tls;
 
     return true;
 }
-#endif // CO_USE_OPENSSL_COMPATIBLE
 
-#ifdef CO_USE_OPENSSL_COMPATIBLE
+void
+co_tls_client_cleanup(
+    co_socket_t* sock
+)
+{
+    if (sock != NULL && sock->tls != NULL)
+    {
+        co_tls_client_cleanup_internal(sock->tls);
+        co_mem_free(sock->tls);
+
+        sock->tls = NULL;
+    }
+}
+
 static bool
 co_tls_send_handshake(
-    co_tcp_client_t* client
+    co_socket_t* sock
 )
 {
     co_tls_log_info(
-        &client->sock.local.net_addr,
+        &sock->local.net_addr,
         "-->",
-        &client->sock.remote.net_addr,
+        &sock->remote.net_addr,
         "tls handshake send");
 
-    co_tls_client_t* tls = co_tcp_client_get_tls(client);
+    co_tls_client_t* tls = (co_tls_client_t*)sock->tls;
 
     while (BIO_ctrl_pending(tls->network_bio) > 0)
     {
@@ -170,19 +182,31 @@ co_tls_send_handshake(
         int bio_result =
             BIO_read(tls->network_bio, buffer, sizeof(buffer));
 
-        co_socket_handle_set_blocking(client->sock.handle, true);
+        co_socket_handle_set_blocking(sock->handle, true);
 
-        co_tcp_log_debug_hex_dump(
-            &client->sock.local.net_addr,
-            "-->",
-            &client->sock.remote.net_addr,
-            buffer, bio_result,
-            "tcp send %d bytes", bio_result);
+        if (co_socket_type_is_tcp(sock))
+        {
+            co_tcp_log_debug_hex_dump(
+                &sock->local.net_addr,
+                "-->",
+                &sock->remote.net_addr,
+                buffer, bio_result,
+                "tcp send %d bytes", bio_result);
+        }
+        else
+        {
+            co_udp_log_debug_hex_dump(
+                &sock->local.net_addr,
+                "-->",
+                &sock->remote.net_addr,
+                buffer, bio_result,
+                "udp send %d bytes", bio_result);
+        }
 
         ssize_t sent_size = co_socket_handle_send(
-            client->sock.handle, buffer, (size_t)bio_result, 0);
+            sock->handle, buffer, (size_t)bio_result, 0);
 
-        co_socket_handle_set_blocking(client->sock.handle, false);
+        co_socket_handle_set_blocking(sock->handle, false);
 
         if (sent_size <= 0)
         {
@@ -192,24 +216,45 @@ co_tls_send_handshake(
 
     return true;
 }
-#endif // CO_USE_OPENSSL_COMPATIBLE
 
-#ifdef CO_USE_OPENSSL_COMPATIBLE
 static bool
 co_tls_receive_handshake(
-    co_tcp_client_t* client
+    co_socket_t* sock
 )
 {
-    co_tls_client_t* tls = co_tcp_client_get_tls(client);
+    co_tls_client_t* tls = (co_tls_client_t*)sock->tls;
 
 #ifdef CO_OS_WIN
 
     co_queue_push_array(
         tls->receive_data_queue,
-        co_win_socket_get_receive_buffer(&client->sock),
-        co_win_socket_get_receive_data_size(&client->sock));
+        co_win_socket_get_receive_buffer(sock),
+        co_win_socket_get_receive_data_size(sock));
 
-    co_win_socket_clear_receive_buffer(&client->sock);
+    if (co_socket_type_is_tcp(sock))
+    {
+        co_tcp_log_debug_hex_dump(
+            &sock->local.net_addr,
+            "<--",
+            &sock->remote.net_addr,
+            co_win_socket_get_receive_buffer(sock),
+            co_win_socket_get_receive_data_size(sock),
+            "tcp receive %d bytes",
+            co_win_socket_get_receive_data_size(sock));
+    }
+    else
+    {
+        co_udp_log_debug_hex_dump(
+            &sock->local.net_addr,
+            "<--",
+            &sock->remote.net_addr,
+            co_win_socket_get_receive_buffer(sock),
+            co_win_socket_get_receive_data_size(sock),
+            "udp receive %d bytes",
+            co_win_socket_get_receive_data_size(sock));
+    }
+
+    co_win_socket_clear_receive_buffer(sock);
 
 #else
 
@@ -219,19 +264,31 @@ co_tls_receive_handshake(
 
         ssize_t data_size =
             co_socket_handle_receive(
-                client->sock.handle, buffer, sizeof(buffer), 0);
+                sock->handle, buffer, sizeof(buffer), 0);
 
         if (data_size <= 0)
         {
             break;
         }
 
-        co_tcp_log_debug_hex_dump(
-            &client->sock.local.net_addr,
-            "<--",
-            &client->sock.remote.net_addr,
-            buffer, data_size,
-            "tcp receive %d bytes", data_size);
+        if (co_socket_type_is_tcp(sock))
+        {
+            co_tcp_log_debug_hex_dump(
+                &sock->local.net_addr,
+                "<--",
+                &sock->remote.net_addr,
+                buffer, data_size,
+                "tcp receive %d bytes", data_size);
+        }
+        else
+        {
+            co_udp_log_debug_hex_dump(
+                &sock->local.net_addr,
+                "<--",
+                &sock->remote.net_addr,
+                buffer, data_size,
+                "udp receive %d bytes", data_size);
+        }
 
         co_queue_push_array(
             tls->receive_data_queue, buffer, data_size);
@@ -240,9 +297,9 @@ co_tls_receive_handshake(
 #endif
 
     co_tls_log_info(
-        &client->sock.local.net_addr,
+        &sock->local.net_addr,
         "<--",
-        &client->sock.remote.net_addr,
+        &sock->remote.net_addr,
         "tls handshake receive");
 
     while (co_queue_get_count(tls->receive_data_queue) > 0)
@@ -263,22 +320,118 @@ co_tls_receive_handshake(
             return false;
         }
     }
-    
+
     return true;
 }
-#endif // CO_USE_OPENSSL_COMPATIBLE
 
-static bool
+static void
+co_tls_on_receive_handshake(
+    co_thread_t* thread,
+    co_socket_t* sock
+)
+{
+    (void)thread;
+
+    co_tls_client_t* tls = (co_tls_client_t*)sock->tls;
+
+    int error_code = 0;
+
+    if (co_tls_receive_handshake(sock))
+    {
+        int ssl_result = SSL_do_handshake(tls->ssl);
+        int ssl_error = SSL_get_error(tls->ssl, ssl_result);
+
+        if (!SSL_is_init_finished(tls->ssl))
+        {
+            if ((ssl_error == SSL_ERROR_WANT_READ) ||
+                (ssl_error == SSL_ERROR_WANT_WRITE))
+            {
+                co_tls_send_handshake(sock);
+
+                return;
+            }
+            else
+            {
+                co_tls_log_error(
+                    &sock->local.net_addr,
+                    "---",
+                    &sock->remote.net_addr,
+                    "tls handshake error: (%d)",
+                    ssl_error);
+
+                error_code = CO_TLS_ERROR_HANDSHAKE_FAILED;
+            }
+        }
+        else
+        {
+            co_tls_send_handshake(sock);
+        }
+    }
+    else
+    {
+        error_code = CO_TLS_ERROR_HANDSHAKE_FAILED;
+    }
+
+    if (error_code == 0)
+    {
+        co_tls_log_info(
+            &sock->local.net_addr, "---", &sock->remote.net_addr,
+            "%s %s", SSL_get_version(tls->ssl), SSL_get_cipher_name(tls->ssl));
+
+        co_event_id_t event_id;
+
+        if (co_socket_type_is_tcp(sock))
+        {
+            event_id = CO_NET_EVENT_ID_TCP_RECEIVE_READY;
+        }
+        else
+        {
+            event_id = CO_NET_EVENT_ID_UDP_RECEIVE_READY;
+        }
+
+        co_thread_send_event(
+            sock->owner_thread,
+            event_id,
+            (uintptr_t)sock,
+            0);
+    }
+
+    co_tls_log_debug_certificate(tls->ssl);
+
+    co_tls_log_info(
+        &sock->local.net_addr,
+        "<--",
+        &sock->remote.net_addr,
+        "tls handshake finished (%d)", error_code);
+
+    if (co_socket_type_is_tcp(sock))
+    {
+        ((co_tcp_client_t*)sock)->callbacks.on_receive =
+            (co_tcp_receive_fn)tls->on_receive_origin;
+    }
+    else
+    {
+        ((co_udp_t*)sock)->callbacks.on_receive =
+            (co_udp_receive_fn)tls->on_receive_origin;
+    }
+
+    tls->on_receive_origin = NULL;
+
+    if (tls->callbacks.on_handshake != NULL)
+    {
+        tls->callbacks.on_handshake(thread, sock, error_code);
+    }
+}
+
+bool
 co_tls_encrypt_data(
-    co_tcp_client_t* client,
+    co_socket_t* sock,
     const void* plain_data,
     size_t plain_data_size,
     co_byte_array_t* enc_data
 )
 {
-#ifdef CO_USE_OPENSSL_COMPATIBLE
-
-    co_tls_client_t* tls = co_tcp_client_get_tls(client);
+    co_tls_client_t* tls = (co_tls_client_t*)sock->tls;
 
     size_t plain_index = 0;
     size_t enc_index = 0;
@@ -308,7 +461,7 @@ co_tls_encrypt_data(
         {
             break;
         }
-        
+
         int bio_result = BIO_read(tls->network_bio,
             co_byte_array_get_ptr(enc_data, enc_index), (int)pending_size);
 
@@ -319,442 +472,32 @@ co_tls_encrypt_data(
     }
 
     return true;
-
-#else
-
-    (void)client;
-    (void)plain_data;
-    (void)plain_data_size;
-    (void)enc_data;
-
-    return false;
-
-#endif // CO_USE_OPENSSL_COMPATIBLE
-}
-
-#ifdef CO_USE_OPENSSL_COMPATIBLE
-static void
-co_tls_on_receive_handshake(
-    co_thread_t* thread,
-    co_tcp_client_t* client
-)
-{
-    (void)thread;
-
-    co_tls_client_t* tls = co_tcp_client_get_tls(client);
-
-    int error_code = 0;
-
-    if (co_tls_receive_handshake(client))
-    {
-        int ssl_result = SSL_do_handshake(tls->ssl);
-        int ssl_error = SSL_get_error(tls->ssl, ssl_result);
-
-        if (!SSL_is_init_finished(tls->ssl))
-        {
-            if ((ssl_error == SSL_ERROR_WANT_READ) ||
-                (ssl_error == SSL_ERROR_WANT_WRITE))
-            {
-                co_tls_send_handshake(client);
-
-                return;
-            }
-            else
-            {
-                co_tls_log_error(
-                    &client->sock.local.net_addr,
-                    "---",
-                    &client->sock.remote.net_addr,
-                    "tls handshake error: (%d)",
-                    ssl_error);
-
-                error_code = CO_TLS_ERROR_HANDSHAKE_FAILED;
-            }
-        }
-        else
-        {
-            co_tls_send_handshake(client);
-        }
-    }
-    else
-    {
-        error_code = CO_TLS_ERROR_HANDSHAKE_FAILED;
-    }
-
-    if (error_code == 0)
-    {
-        co_tls_log_info(
-            &client->sock.local.net_addr, "---", &client->sock.remote.net_addr,
-            "%s %s", SSL_get_version(tls->ssl), SSL_get_cipher_name(tls->ssl));
-
-        char protocol[64];
-
-        if (co_tls_get_selected_protocol(
-            client, protocol, sizeof(protocol)))
-        {
-            co_tls_log_info(
-                &client->sock.local.net_addr,
-                ((SSL_is_server(tls->ssl) == 1) ? "-->" : "<--"),
-                &client->sock.remote.net_addr,
-                "tls handshake alpn selected (%s)", protocol);
-        }
-        else
-        {
-            co_tls_log_warning(
-                &client->sock.local.net_addr,
-                ((SSL_is_server(tls->ssl) == 1) ? "-->" : "<--"),
-                &client->sock.remote.net_addr,
-                "tls handshake *** alpn unselected ***");
-        }
-
-        co_thread_send_event(
-            client->sock.owner_thread,
-            CO_NET_EVENT_ID_TCP_RECEIVE_READY,
-            (uintptr_t)client,
-            0);
-    }
-
-    X509* x509 =
-        SSL_get_peer_certificate(tls->ssl);
-    co_tls_log_debug_certificate(x509);
-    X509_free(x509);
-
-    co_tls_log_info(
-        &client->sock.local.net_addr,
-        "<--",
-        &client->sock.remote.net_addr,
-        "tls handshake finished (%d)", error_code);
-
-    client->callbacks.on_receive = tls->on_receive;
-    tls->on_receive = NULL;
-
-    if (tls->callbacks.on_handshake != NULL)
-    {
-        tls->callbacks.on_handshake(thread, client, error_code);
-    }
-}
-#endif // CO_USE_OPENSSL_COMPATIBLE
-
-//---------------------------------------------------------------------------//
-// public
-//---------------------------------------------------------------------------//
-
-co_tcp_client_t*
-co_tls_client_create(
-    const co_net_addr_t* local_net_addr,
-    co_tls_ctx_st* tls_ctx
-)
-{
-#ifdef CO_USE_TLS
-
-    co_tcp_client_t* client = co_tcp_client_create(local_net_addr);
-
-    if (client == NULL)
-    {
-        return NULL;
-    }
-
-    if (!co_tls_client_install(client, tls_ctx))
-    {
-        co_tcp_client_destroy(client);
-
-        return NULL;
-    }
-
-    return client;
-
-#else
-
-    (void)local_net_addr;
-    (void)tls_ctx;
-
-    return NULL;
-
-#endif // CO_USE_TLS
-}
-
-void
-co_tls_client_destroy(
-    co_tcp_client_t* client
-)
-{
-#ifdef CO_USE_OPENSSL_COMPATIBLE
-
-    if (client != NULL)
-    {
-        if (client->sock.tls != NULL)
-        {
-            co_tls_client_cleanup(client->sock.tls);
-            co_mem_free(client->sock.tls);
-
-            client->sock.tls = NULL;
-        }
-
-        co_tcp_client_destroy(client);
-    }
-
-#else
-
-    (void)client;
-
-#endif // CO_USE_OPENSSL_COMPATIBLE
-}
-
-co_tls_callbacks_st*
-co_tls_get_callbacks(
-    co_tcp_client_t* client
-)
-{
-    co_tls_client_t* tls = co_tcp_client_get_tls(client);
-
-    if (tls != NULL)
-    {
-        return &tls->callbacks;
-    }
-
-    return NULL;
-}
-
-void
-co_tls_set_host_name(
-    co_tcp_client_t* client,
-    const char* host_name
-)
-{
-#ifdef CO_USE_OPENSSL_COMPATIBLE
-
-    SSL_set_tlsext_host_name(
-        co_tcp_client_get_tls(client)->ssl, host_name);
-
-#else
-
-    (void)client;
-    (void)host_name;
-
-#endif // CO_USE_OPENSSL_COMPATIBLE
-}
-
-void
-co_tls_set_available_protocols(
-    co_tcp_client_t* client,
-    const char* protocols[],
-    size_t count
-)
-{
-#ifdef CO_USE_OPENSSL_COMPATIBLE
-
-    co_byte_array_t* buffer = co_byte_array_create();
-
-    for (size_t index = 0; index < count; ++index)
-    {
-        uint8_t length = (uint8_t)strlen(protocols[index]);
-
-        co_byte_array_add(buffer, &length, 1);
-        co_byte_array_add(buffer, protocols[index], length);
-    }
-
-    SSL_set_alpn_protos(
-        co_tcp_client_get_tls(client)->ssl,
-        co_byte_array_get_ptr(buffer, 0),
-        (unsigned int)co_byte_array_get_count(buffer));
-
-    co_byte_array_destroy(buffer);
-
-#else
-
-    (void)client;
-    (void)protocols;
-    (void)count;
-
-#endif // CO_USE_OPENSSL_COMPATIBLE
-}
-
-bool
-co_tls_get_selected_protocol(
-    const co_tcp_client_t* client,
-    char* buffer,
-    size_t buffer_size
-)
-{
-#ifdef CO_USE_OPENSSL_COMPATIBLE
-
-    const unsigned char* data = NULL;
-    unsigned int length = 0;
-
-    SSL_get0_alpn_selected(
-        co_tcp_client_get_tls(client)->ssl,
-        &data, &length);
-
-    if ((data != NULL) && (length > 0))
-    {
-        length = (unsigned int)co_min(length, (buffer_size - 1));
-
-        memcpy(buffer, data, length);
-        buffer[length] = '\0';
-
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-
-#else
-
-    (void)client;
-    (void)buffer;
-    (void)buffer_size;
-
-    return false;
-
-#endif // CO_USE_OPENSSL_COMPATIBLE
-}
-
-bool
-co_tls_start_handshake(
-    co_tcp_client_t* client
-)
-{
-#ifdef CO_USE_OPENSSL_COMPATIBLE
-
-    co_tls_log_info(
-        &client->sock.local.net_addr,
-        "-->",
-        &client->sock.remote.net_addr,
-        "tls handshake start");
-
-    co_tls_client_t* tls = co_tcp_client_get_tls(client);
-
-    if (tls == NULL)
-    {
-        return false;
-    }
-
-    tls->on_receive = client->callbacks.on_receive;
-    client->callbacks.on_receive =
-        (co_tcp_receive_fn)co_tls_on_receive_handshake;
-
-    int ssl_result = SSL_do_handshake(tls->ssl);
-    int ssl_error = SSL_get_error(tls->ssl, ssl_result);
-
-    if (ssl_error == SSL_ERROR_WANT_READ)
-    {
-        if (SSL_is_server(tls->ssl) == 0)
-        {
-            return co_tls_send_handshake(client);
-        }
-
-        return true;
-    }
-
-    return false;
-
-#else
-
-    (void)client;
-
-    return false;
-
-#endif // CO_USE_OPENSSL_COMPATIBLE
-}
-
-bool
-co_tls_send(
-    co_tcp_client_t* client,
-    const void* data,
-    size_t data_size
-)
-{
-    co_tls_log_debug_hex_dump(
-        &client->sock.local.net_addr,
-        "-->",
-        &client->sock.remote.net_addr,
-        data, data_size,
-        "tls send %zd bytes", data_size);
-
-    co_tls_client_t* tls = co_tcp_client_get_tls(client);
-
-    co_byte_array_clear(tls->send_data);
-
-    bool result = false;
-
-    if (co_tls_encrypt_data(
-        client, data, data_size, tls->send_data))
-    {
-        result = co_tcp_send(client,
-            co_byte_array_get_ptr(tls->send_data, 0),
-            co_byte_array_get_count(tls->send_data));
-    }
-    
-    return result;
-}
-
-bool
-co_tls_send_async(
-    co_tcp_client_t* client,
-    const void* data,
-    size_t data_size,
-    void* user_data
-)
-{
-    co_tls_log_debug_hex_dump(
-        &client->sock.local.net_addr,
-        "-->",
-        &client->sock.remote.net_addr,
-        data, data_size,
-        "tls send async %zd bytes", data_size);
-
-    co_tls_client_t* tls = co_tcp_client_get_tls(client);
-
-    co_byte_array_clear(tls->send_data);
-
-    bool result = false;
-
-    if (co_tls_encrypt_data(
-        client, data, data_size, tls->send_data))
-    {
-        result = co_tcp_send_async(client,
-            co_byte_array_get_ptr(tls->send_data, 0),
-            co_byte_array_get_count(tls->send_data),
-            user_data);
-    }
-
-    return result;
 }
 
 ssize_t
-co_tls_receive(
-    co_tcp_client_t* client,
-    void* buffer,
-    size_t buffer_size
+co_tls_decrypt_data(
+    co_socket_t* sock,
+    co_queue_t* enc_data,
+    uint8_t* plain_buffer,
+    size_t plain_buffer_size
 )
 {
-#ifdef CO_USE_OPENSSL_COMPATIBLE
-
-    co_tls_client_t* tls = co_tcp_client_get_tls(client);
-
-    ssize_t raw_data_size =
-        co_tcp_receive(client, buffer, buffer_size);
-
-    if (raw_data_size > 0)
-    {
-        co_queue_push_array(
-            tls->receive_data_queue, buffer, raw_data_size);
-    }
-
-    while (co_queue_get_count(tls->receive_data_queue) > 0)
+    co_tls_client_t* tls =
+        (co_tls_client_t*)sock->tls;
+    
+    while (co_queue_get_count(enc_data) > 0)
     {
         char temp_buffer[8192];
 
         size_t data_size = co_queue_peek_array(
-            tls->receive_data_queue, temp_buffer, sizeof(temp_buffer));
+            enc_data, temp_buffer, sizeof(temp_buffer));
 
         int bio_result =
             BIO_write(tls->network_bio, temp_buffer, (int)data_size);
 
         if (bio_result > 0)
         {
-            co_queue_remove(tls->receive_data_queue, (size_t)bio_result);
+            co_queue_remove(enc_data, (size_t)bio_result);
         }
         else
         {
@@ -763,73 +506,75 @@ co_tls_receive(
     }
 
     int ssl_result =
-        SSL_read(tls->ssl, buffer, (int)buffer_size);
-
-    if (ssl_result > 0)
-    {
-        co_tls_log_debug_hex_dump(
-            &client->sock.local.net_addr,
-            "<--",
-            &client->sock.remote.net_addr,
-            buffer, ssl_result,
-            "tls receive %d bytes", ssl_result);
-    }
-    else if (raw_data_size > 0)
-    {
-        int ssl_error =
-            SSL_get_error(tls->ssl, ssl_result);
-
-        if (ssl_error == SSL_ERROR_WANT_READ)
-        {
-            return co_tls_receive(client, buffer, buffer_size);
-        }
-        else
-        {
-            co_tls_log_error(
-                &client->sock.local.net_addr,
-                "<--",
-                &client->sock.remote.net_addr,
-                "tls receive error: (%d)", ssl_error);
-        }
-    }
+        SSL_read(tls->ssl, plain_buffer, (int)plain_buffer_size);
 
     return ssl_result;
-
-#else
-
-    (void)client;
-    (void)buffer;
-    (void)buffer_size;
-
-    return -1;
-
-#endif // CO_USE_OPENSSL_COMPATIBLE
 }
 
-ssize_t
-co_tls_receive_all(
-    co_tcp_client_t* client,
-    co_byte_array_t* byte_array
+bool
+co_tls_start_handshake(
+    co_socket_t* sock
 )
 {
-    ssize_t total = 0;
+    co_tls_client_t* tls =
+        (co_tls_client_t*)sock->tls;
 
-    for (;;)
+    if (tls == NULL)
     {
-        char buffer[8192];
-
-        ssize_t size =
-            co_tls_receive(client, buffer, sizeof(buffer));
-
-        if (size <= 0)
-        {
-            break;
-        }
-
-        co_byte_array_add(byte_array, buffer, size);
-
-        total += size;
+        return false;
     }
 
-    return total;
+    if (co_socket_type_is_tcp(sock))
+    {
+        tls->on_receive_origin =
+            (void*)((co_tcp_client_t*)sock)->callbacks.on_receive;
+        ((co_tcp_client_t*)sock)->callbacks.on_receive =
+            (co_tcp_receive_fn)co_tls_on_receive_handshake;
+    }
+    else
+    {
+        tls->on_receive_origin =
+            (void*)((co_udp_t*)sock)->callbacks.on_receive;
+        ((co_udp_t*)sock)->callbacks.on_receive =
+            (co_udp_receive_fn)co_tls_on_receive_handshake;
+    }
+
+    co_tls_log_info(
+        &sock->local.net_addr,
+        "-->",
+        &sock->remote.net_addr,
+        "tls handshake start");
+
+    int ssl_result = SSL_do_handshake(tls->ssl);
+    int ssl_error = SSL_get_error(tls->ssl, ssl_result);
+
+    if (ssl_error == SSL_ERROR_WANT_READ)
+    {
+        if (SSL_is_server(tls->ssl) == 0)
+        {
+            return co_tls_send_handshake(sock);
+        }
+
+        return true;
+    }
+
+    return false;
+}
+
+#endif // CO_USE_OPENSSL_COMPATIBLE
+
+co_tls_callbacks_st*
+co_tls_get_callbacks(
+    co_socket_t* sock
+)
+{
+    co_tls_client_t* tls =
+        (co_tls_client_t*)sock->tls;
+
+    if (tls != NULL)
+    {
+        return &tls->callbacks;
+    }
+
+    return NULL;
 }

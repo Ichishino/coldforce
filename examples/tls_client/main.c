@@ -35,7 +35,7 @@ void on_my_receive(my_app* self, co_tcp_client_t* client)
     {
         char buffer[1024];
 
-        ssize_t size = co_tls_receive(client, buffer, sizeof(buffer));
+        ssize_t size = co_tls_tcp_receive(client, buffer, sizeof(buffer));
 
         if (size <= 0)
         {
@@ -65,13 +65,13 @@ void on_my_handshake(my_app* self, co_tcp_client_t* client, int error_code)
 
         // send
         const char* data = "hello";
-        co_tls_send(client, data, strlen(data) + 1);
+        co_tls_tcp_send(client, data, strlen(data) + 1);
     }
     else
     {
         printf("handshake failed\n");
 
-        co_tls_client_destroy(self->client);
+        co_tls_tcp_client_destroy(self->client);
         self->client = NULL;
 
         // quit app
@@ -85,7 +85,7 @@ void on_my_close(my_app* self, co_tcp_client_t* client)
 
     printf("close\n");
 
-    co_tls_client_destroy(self->client);
+    co_tls_tcp_client_destroy(self->client);
     self->client = NULL;
 
     // quit app
@@ -100,13 +100,13 @@ void on_my_connect(my_app* self, co_tcp_client_t* client, int error_code)
         printf("handshake start\n");
 
         // handshake
-        co_tls_start_handshake(client);
+        co_tls_tcp_start_handshake(client);
     }
     else
     {
         printf("connect failed\n");
 
-        co_tls_client_destroy(self->client);
+        co_tls_tcp_client_destroy(self->client);
         self->client = NULL;
 
         // start retry timer
@@ -132,7 +132,7 @@ bool my_connect(my_app* self)
     tls_ctx.ssl_ctx = ssl_ctx;
 #endif
 
-    self->client = co_tls_client_create(&local_net_addr, &tls_ctx);
+    self->client = co_tls_tcp_client_create(&local_net_addr, &tls_ctx);
 
     if (self->client == NULL)
     {
@@ -146,7 +146,7 @@ bool my_connect(my_app* self)
     tcp_callbacks->on_connect = (co_tcp_connect_fn)on_my_connect;
     tcp_callbacks->on_receive = (co_tcp_receive_fn)on_my_receive;
     tcp_callbacks->on_close = (co_tcp_close_fn)on_my_close;
-    co_tls_callbacks_st* tls_callbacks = co_tls_get_callbacks(self->client);
+    co_tls_tcp_callbacks_st* tls_callbacks = co_tls_tcp_get_callbacks(self->client);
     tls_callbacks->on_handshake = (co_tls_handshake_fn)on_my_handshake;
 
     // connect
@@ -198,7 +198,7 @@ bool on_my_app_create(my_app* self)
 void on_my_app_destroy(my_app* self)
 {
     co_timer_destroy(self->retry_timer);
-    co_tls_client_destroy(self->client);
+    co_tls_tcp_client_destroy(self->client);
 }
 
 int main(int argc, char* argv[])

@@ -47,7 +47,7 @@ void on_my_tls_receive(my_app* self, co_tcp_client_t* client)
     co_byte_array_t* byte_array = co_byte_array_create();
 
     // receive
-    ssize_t data_size = co_tls_receive_all(client, byte_array);
+    ssize_t data_size = co_tls_tcp_receive_all(client, byte_array);
 
     if (data_size > 0)
     {
@@ -56,7 +56,7 @@ void on_my_tls_receive(my_app* self, co_tcp_client_t* client)
         unsigned char* data = co_byte_array_get_ptr(byte_array, 0);
 
         // send (echo)
-        co_tls_send(client, data, data_size);
+        co_tls_tcp_send(client, data, data_size);
     }
 
     co_byte_array_destroy(byte_array);
@@ -119,11 +119,11 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* server, co_tcp_client_t* cl
     tcp_callbacks->on_close = (co_tcp_close_fn)on_my_tls_close;
 
     // tls callback
-    co_tls_callbacks_st* tls_callbacks = co_tls_get_callbacks(client);
+    co_tls_tcp_callbacks_st* tls_callbacks = co_tls_tcp_get_callbacks(client);
     tls_callbacks->on_handshake = (co_tls_handshake_fn)on_my_tls_handshake;
 
     // TLS handshake
-    co_tls_start_handshake(client);
+    co_tls_tcp_start_handshake(client);
 
     co_list_add_tail(self->client_list, client);
 
@@ -149,7 +149,7 @@ bool on_my_app_create(my_app* self)
 
     // client list
     co_list_ctx_st list_ctx = { 0 };
-    list_ctx.destroy_value = (co_item_destroy_fn)co_tls_client_destroy; // auto destroy
+    list_ctx.destroy_value = (co_item_destroy_fn)co_tls_tcp_client_destroy; // auto destroy
     self->client_list = co_list_create(&list_ctx);
 
     // local address
@@ -165,7 +165,7 @@ bool on_my_app_create(my_app* self)
     }
 
     // tls server
-    self->server = co_tls_server_create(&local_net_addr, &tls_ctx);
+    self->server = co_tls_tcp_server_create(&local_net_addr, &tls_ctx);
     if (self->server == NULL)
     {
         printf("Failed to create tls server (maybe SSL library was not found)\n");
@@ -182,7 +182,7 @@ bool on_my_app_create(my_app* self)
     callbacks->on_accept = (co_tcp_accept_fn)on_my_tcp_accept;
 
     // listen start
-    co_tls_server_start(self->server, SOMAXCONN);
+    co_tls_tcp_server_start(self->server, SOMAXCONN);
 
     char local_str[64];
     co_net_addr_to_string(&local_net_addr, local_str, sizeof(local_str));
@@ -194,7 +194,7 @@ bool on_my_app_create(my_app* self)
 void on_my_app_destroy(my_app* self)
 {
     co_list_destroy(self->client_list);
-    co_tls_server_destroy(self->server);
+    co_tls_tcp_server_destroy(self->server);
 }
 
 int main(int argc, char* argv[])

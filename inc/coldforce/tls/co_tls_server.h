@@ -1,7 +1,10 @@
 #ifndef CO_TLS_SERVER_H_INCLUDED
 #define CO_TLS_SERVER_H_INCLUDED
 
-#include <coldforce/net/co_tcp_server.h>
+#include <coldforce/core/co.h>
+#include <coldforce/core/co_thread.h>
+
+#include <coldforce/net/co_socket.h>
 
 #include <coldforce/tls/co_tls.h>
 
@@ -14,6 +17,9 @@ CO_EXTERN_C_BEGIN
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
+typedef void(*co_tls_accept_fn)(
+    co_thread_t* self, co_socket_t* sock_server, co_socket_t* sock_client);
+
 typedef struct
 {
     co_tls_ctx_st ctx;
@@ -21,44 +27,35 @@ typedef struct
     size_t protocols_length;
     uint8_t* protocols;
 
-    co_tcp_accept_fn on_accept;
+    co_tls_accept_fn on_accept;
 
 } co_tls_server_t;
 
-#define co_tcp_server_get_tls(server) \
-    ((co_tls_server_t*)server->sock.tls)
-
 //---------------------------------------------------------------------------//
-// public
+// private
 //---------------------------------------------------------------------------//
 
-CO_TLS_API
-co_tcp_server_t*
-co_tls_server_create(
-    const co_net_addr_t* local_net_addr,
+#ifdef CO_USE_OPENSSL_COMPATIBLE
+
+void
+co_tls_server_on_accept_ready(
+    co_thread_t* thread,
+    co_socket_t* sock_server,
+    co_socket_t* sock_client
+);
+
+bool
+co_tls_server_setup(
+    co_socket_t* sock_server,
     co_tls_ctx_st* tls_ctx
 );
 
-CO_TLS_API
 void
-co_tls_server_destroy(
-    co_tcp_server_t* server
+co_tls_server_cleanup(
+    co_socket_t* sock_server
 );
 
-CO_TLS_API
-void
-co_tls_server_set_available_protocols(
-    co_tcp_server_t* server,
-    const char* protocols[],
-    size_t protocol_count
-);
-
-CO_TLS_API
-bool
-co_tls_server_start(
-    co_tcp_server_t* server,
-    int backlog
-);
+#endif // CO_USE_OPENSSL_COMPATIBLE
 
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//

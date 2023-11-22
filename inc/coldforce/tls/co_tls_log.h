@@ -27,7 +27,7 @@ CO_EXTERN_C_BEGIN
 void
 co_tls_log_write_certificate(
     int level,
-    CO_X509_T* x509
+    CO_SSL_T* ssl
 );
 
 #define co_tls_log_write(level, addr1, text, addr2, format, ...) \
@@ -54,8 +54,8 @@ co_tls_log_write_certificate(
     co_net_log_write_hex_dump(CO_LOG_LEVEL_DEBUG, CO_LOG_CATEGORY_TLS, \
         addr1, text, addr2, data, size, format, ##__VA_ARGS__)
 
-#define co_tls_log_debug_certificate(x509) \
-    co_tls_log_write_certificate(CO_LOG_LEVEL_DEBUG, x509)
+#define co_tls_log_debug_certificate(ssl) \
+    co_tls_log_write_certificate(CO_LOG_LEVEL_DEBUG, ssl)
 
 //---------------------------------------------------------------------------//
 // public

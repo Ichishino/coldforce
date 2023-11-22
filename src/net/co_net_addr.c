@@ -57,6 +57,19 @@ co_net_addr_set_family(
 )
 {
     net_addr->sa.any.ss_family = family;
+
+    if (co_net_is_ipv4(net_addr))
+    {
+#ifdef HAVE_SIN_LEN
+        net_addr->sa.v4.sin_len = sizeof(struct sockaddr_in);
+#endif
+    }
+    else if (co_net_is_ipv6(net_addr))
+    {
+#ifdef HAVE_SIN6_LEN
+        net_addr->sa.v6.sin6_len = sizeof(struct sockaddr_in6);
+#endif
+    }
 }
 
 co_net_addr_family_t

@@ -163,7 +163,7 @@ bool on_my_app_create(my_app* self)
     co_tls_ctx_st tls_ctx = { 0 };
 
 #ifdef CO_USE_TLS
-    if (strcmp(self->url->scheme, "https") == 0)
+    if (strcmp(self->url->scheme, "wss") == 0)
     {
         SSL_CTX* ssl_ctx = SSL_CTX_new(TLS_client_method());
         SSL_CTX_set_default_verify_paths(ssl_ctx);

@@ -1,5 +1,4 @@
 #include <coldforce/core/co_std.h>
-#include <coldforce/core/co_string.h>
 
 #include <coldforce/tls/co_tls_server.h>
 #include <coldforce/tls/co_tls_client.h>
@@ -16,251 +15,83 @@
 //---------------------------------------------------------------------------//
 
 #ifdef CO_USE_OPENSSL_COMPATIBLE
-static void
+
+void
+co_tls_server_on_accept_ready(
+    co_thread_t* thread,
+    co_socket_t* sock_server,
+    co_socket_t* sock_client
+)
+{
+    co_tls_server_t* tls_server =
+        (co_tls_server_t*)sock_server->tls;
+
+    SSL_CTX_up_ref(tls_server->ctx.ssl_ctx);
+
+    co_tls_client_t* tls_client =
+        (co_tls_client_t*)co_mem_alloc(sizeof(co_tls_client_t));
+
+    co_tls_client_setup_internal(
+        tls_client, &tls_server->ctx, sock_client);
+
+    SSL_set_accept_state(tls_client->ssl);
+
+    sock_client->tls = tls_client;
+
+    if (tls_server->on_accept != NULL)
+    {
+        tls_server->on_accept(thread, sock_server, sock_client);
+    }
+}
+
+bool
 co_tls_server_setup(
-    co_tls_server_t* tls,
+    co_socket_t* sock_server,
     co_tls_ctx_st* tls_ctx
 )
 {
     if ((tls_ctx == NULL) || (tls_ctx->ssl_ctx == NULL))
     {
-        tls->ctx.ssl_ctx = SSL_CTX_new(TLS_server_method());
-    }
-    else
-    {
-        tls->ctx.ssl_ctx = tls_ctx->ssl_ctx;
+        return false;
     }
 
-    tls->protocols = NULL;
-    tls->protocols_length = 0;
-
-    tls->on_accept = NULL;
-}
-#endif // CO_USE_OPENSSL_COMPATIBLE
-
-static void
-co_tls_server_cleanup(
-    co_tls_server_t* tls
-)
-{
-#ifdef CO_USE_OPENSSL_COMPATIBLE
-
-    if (tls != NULL)
-    {
-        co_mem_free(tls->protocols);
-        tls->protocols = NULL;
-        tls->protocols_length = 0;
-
-        SSL_CTX_free(tls->ctx.ssl_ctx);
-        tls->ctx.ssl_ctx = NULL;
-    }
-
-#else
-
-    (void)tls;
-
-#endif // CO_USE_OPENSSL_COMPATIBLE
-}
-
-#ifdef CO_USE_OPENSSL_COMPATIBLE
-static void
-co_tls_server_on_accept_ready(
-    co_thread_t* thread,
-    co_tcp_server_t* server,
-    co_tcp_client_t* client
-)
-{
-    co_tls_client_t* client_tls =
-        (co_tls_client_t*)co_mem_alloc(sizeof(co_tls_client_t));
-
-    if (client_tls == NULL)
-    {
-        return;
-    }
-
-    client->sock.tls = client_tls;
-
-    co_tls_server_t* server_tls = co_tcp_server_get_tls(server);
-
-    SSL_CTX_up_ref(server_tls->ctx.ssl_ctx);
-
-    co_tls_client_setup(client_tls, &server_tls->ctx, client);
-    SSL_set_accept_state(client_tls->ssl);
-
-    if (server_tls->on_accept != NULL)
-    {
-        server_tls->on_accept(thread, server, client);
-    }
-}
-#endif // CO_USE_OPENSSL_COMPATIBLE
-
-#ifdef CO_USE_OPENSSL_COMPATIBLE
-static int
-co_tls_server_on_alpn_select(
-    SSL* ssl,
-    const unsigned char** out,
-    unsigned char* outlen,
-    const unsigned char* in,
-    unsigned int inlen,
-    void* arg
-)
-{
-    (void)ssl;
-
-    co_tls_server_t* tls = (co_tls_server_t*)arg;
-
-    const uint8_t* protocols1 = tls->protocols;
-
-    while ((uintptr_t)
-        (protocols1 - tls->protocols) < tls->protocols_length)
-    {
-        uint8_t length1 = *protocols1;
-        ++protocols1;
-
-        const uint8_t* protocols2 = in;
-
-        while ((unsigned int)(protocols2 - in) < inlen)
-        {
-            uint8_t length2 = *protocols2;
-            ++protocols2;
-
-            if ((length1 == length2) &&
-                (memcmp(protocols1, protocols2, length1) == 0))
-            {
-                (*out) = protocols2;
-                (*outlen) = length2;
-
-                return SSL_TLSEXT_ERR_OK;
-            }
-
-            protocols2 += length2;
-        }
-
-        protocols1 += length1;
-    }
-
-    return SSL_TLSEXT_ERR_NOACK;
-}
-#endif // CO_USE_OPENSSL_COMPATIBLE
-
-//---------------------------------------------------------------------------//
-// public
-//---------------------------------------------------------------------------//
-
-co_tcp_server_t*
-co_tls_server_create(
-    const co_net_addr_t* local_net_addr,
-    co_tls_ctx_st* tls_ctx
-)
-{
-#ifdef CO_USE_TLS
-
-    co_tcp_server_t* server = co_tcp_server_create(local_net_addr);
-
-    if (server == NULL)
-    {
-        return NULL;
-    }
-
-    co_tls_server_t* tls =
+    co_tls_server_t* tls_server =
         (co_tls_server_t*)co_mem_alloc(sizeof(co_tls_server_t));
 
-    if (tls == NULL)
+    if (tls_server == NULL)
     {
-        co_tcp_server_destroy(server);
-
-        return NULL;
+        return false;
     }
 
-    co_tls_server_setup(tls, tls_ctx);
+    tls_server->ctx.ssl_ctx = tls_ctx->ssl_ctx;
 
-    server->sock.tls = tls;
+    tls_server->protocols = NULL;
+    tls_server->protocols_length = 0;
 
-    return server;
+    tls_server->on_accept = NULL;
 
-#else
+    sock_server->tls = tls_server;
 
-    (void)local_net_addr;
-    (void)tls_ctx;
-
-    return NULL;
-
-#endif // CO_USE_TLS
+    return true;
 }
 
 void
-co_tls_server_destroy(
-    co_tcp_server_t* server
+co_tls_server_cleanup(
+    co_socket_t* sock_server
 )
 {
-    if (server != NULL)
+    if (sock_server != NULL)
     {
-        co_tls_server_cleanup(server->sock.tls);
-        co_mem_free(server->sock.tls);
+        co_tls_server_t* tls_server =
+            (co_tls_server_t*)sock_server->tls;
 
-        co_tcp_server_destroy(server);
+        co_mem_free(tls_server->protocols);
+        tls_server->protocols = NULL;
+        tls_server->protocols_length = 0;
+
+        SSL_CTX_free(tls_server->ctx.ssl_ctx);
+        tls_server->ctx.ssl_ctx = NULL;
     }
 }
-
-void
-co_tls_server_set_available_protocols(
-    co_tcp_server_t* server,
-    const char* protocols[],
-    size_t count
-)
-{
-#ifdef CO_USE_OPENSSL_COMPATIBLE
-
-    co_byte_array_t* buffer = co_byte_array_create();
-
-    for (size_t index = 0; index < count; ++index)
-    {
-        uint8_t length = (uint8_t)strlen(protocols[index]);
-
-        co_byte_array_add(buffer, &length, 1);
-        co_byte_array_add(buffer, protocols[index], length);
-    }
-
-    co_tls_server_t* tls = co_tcp_server_get_tls(server);
-
-    SSL_CTX_set_alpn_select_cb(
-        tls->ctx.ssl_ctx, co_tls_server_on_alpn_select, tls);
-
-    tls->protocols_length = co_byte_array_get_count(buffer);
-    tls->protocols = co_byte_array_detach(buffer);
-
-    co_byte_array_destroy(buffer);
-
-#else
-
-    (void)server;
-    (void)protocols;
-    (void)count;
 
 #endif // CO_USE_OPENSSL_COMPATIBLE
-}
-
-bool
-co_tls_server_start(
-    co_tcp_server_t* server,
-    int backlog
-)
-{
-#ifdef CO_USE_TLS
-
-    co_tls_server_t* tls = co_tcp_server_get_tls(server);
-
-    tls->on_accept = server->callbacks.on_accept;
-    server->callbacks.on_accept = (co_tcp_accept_fn)co_tls_server_on_accept_ready;
-
-    return co_tcp_server_start(server, backlog);
-
-#else
-
-    (void)server;
-    (void)backlog;
-
-    return false;
-
-#endif // CO_USE_TLS
-}

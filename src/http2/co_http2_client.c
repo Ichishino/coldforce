@@ -4,7 +4,7 @@
 #include <coldforce/net/co_net_addr_resolve.h>
 #include <coldforce/net/co_byte_order.h>
 
-#include <coldforce/tls/co_tls_client.h>
+#include <coldforce/tls/co_tls_tcp_client.h>
 
 #include <coldforce/http/co_base64.h>
 #include <coldforce/http/co_http_server.h>

@@ -29,9 +29,23 @@ typedef enum
     CO_SOCKET_TYPE_TCP_CONNECTOR,
     CO_SOCKET_TYPE_TCP,
     CO_SOCKET_TYPE_UDP,
-    CO_SOCKET_TYPE_UDP_CONNECTED
+    CO_SOCKET_TYPE_UDP_CONNECTED,
+
+    CO_SOCKET_TYPE_MAX,
+
+    CO_SOCKET_TYPE_TCP_FIRST = CO_SOCKET_TYPE_TCP_SERVER,
+    CO_SOCKET_TYPE_TCP_LAST = CO_SOCKET_TYPE_TCP,
+    CO_SOCKET_TYPE_UDP_FIRST = CO_SOCKET_TYPE_UDP,
+    CO_SOCKET_TYPE_UDP_LAST = CO_SOCKET_TYPE_UDP_CONNECTED
 
 } co_socket_type_t;
+
+#define co_socket_type_is_tcp(sock) \
+    (sock->type >= CO_SOCKET_TYPE_TCP_FIRST && \
+        sock->type <= CO_SOCKET_TYPE_TCP_LAST)
+#define co_socket_type_is_udp(sock) \
+    (sock->type >= CO_SOCKET_TYPE_UDP_FIRST && \
+        sock->type <= CO_SOCKET_TYPE_UDP_LAST)
 
 typedef struct co_socket_t
 {
