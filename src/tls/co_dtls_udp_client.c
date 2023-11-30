@@ -144,6 +144,7 @@ co_dtls_udp_start_handshake(
 #else
 
     (void)udp;
+    (void)remote_net_addr;
 
     return false;
 

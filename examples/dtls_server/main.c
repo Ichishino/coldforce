@@ -63,6 +63,7 @@ void on_my_udp_receive(my_app* self, co_udp_t* client)
     }
 }
 
+#ifdef CO_USE_TLS
 int on_my_generate_cookie(SSL* ssl, unsigned char* cookie, unsigned int* cookie_len)
 {
     (void)ssl;
@@ -72,6 +73,7 @@ int on_my_generate_cookie(SSL* ssl, unsigned char* cookie, unsigned int* cookie_
 
     return 1;
 }
+#endif
 
 bool my_tls_setup(co_tls_ctx_st* tls_ctx)
 {
