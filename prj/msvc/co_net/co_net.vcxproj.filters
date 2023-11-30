@@ -74,6 +74,9 @@
     <ClInclude Include="..\..\..\inc\coldforce\net\co_url.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\inc\coldforce\net\co_udp_server.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\net\co_net.c">
@@ -122,6 +125,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\net\co_url.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\net\co_udp_server.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -29,6 +29,15 @@
     <ClCompile Include="..\..\..\src\tls\co_tls_server.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\tls\co_dtls_udp_client.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\tls\co_tls_config.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\tls\co_dtls_udp_server.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\inc\coldforce\tls\co_tls.h">
@@ -53,6 +62,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\inc\coldforce\tls\co_tls_server.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\coldforce\tls\co_dtls_udp_client.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\coldforce\tls\co_tls_config.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\coldforce\tls\co_dtls_udp_server.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -277,8 +277,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\src\tls\co_dtls_udp_client.c" />
+    <ClCompile Include="..\..\..\src\tls\co_dtls_udp_server.c" />
     <ClCompile Include="..\..\..\src\tls\co_tls.c" />
     <ClCompile Include="..\..\..\src\tls\co_tls_client.c" />
+    <ClCompile Include="..\..\..\src\tls\co_tls_config.c" />
     <ClCompile Include="..\..\..\src\tls\co_tls_server.c" />
     <ClCompile Include="..\..\..\src\tls\co_tls_tcp_client.c" />
     <ClCompile Include="..\..\..\src\tls\co_tls_log.c" />
@@ -286,8 +289,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\inc\coldforce\coldforce_tls.h" />
+    <ClInclude Include="..\..\..\inc\coldforce\tls\co_dtls_udp_client.h" />
+    <ClInclude Include="..\..\..\inc\coldforce\tls\co_dtls_udp_server.h" />
     <ClInclude Include="..\..\..\inc\coldforce\tls\co_tls.h" />
     <ClInclude Include="..\..\..\inc\coldforce\tls\co_tls_client.h" />
+    <ClInclude Include="..\..\..\inc\coldforce\tls\co_tls_config.h" />
     <ClInclude Include="..\..\..\inc\coldforce\tls\co_tls_server.h" />
     <ClInclude Include="..\..\..\inc\coldforce\tls\co_tls_tcp_client.h" />
     <ClInclude Include="..\..\..\inc\coldforce\tls\co_tls_debug.h" />

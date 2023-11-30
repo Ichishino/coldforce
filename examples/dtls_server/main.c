@@ -129,7 +129,7 @@ void on_my_udp_accept(my_app* self, co_udp_server_t* server, co_udp_t* client)
     {
         printf("handshake failed\n");
 
-        co_list_remove(self->client_list, client);
+        co_dtls_udp_client_destroy(client);
 
         return;
     }
