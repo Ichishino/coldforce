@@ -29,6 +29,9 @@ typedef void(*co_tcp_send_async_fn)(
 typedef void(*co_tcp_receive_fn)(
     co_thread_t* self, struct co_tcp_client_t* client);
 
+typedef void(*co_tcp_receive_timer_fn)(
+    co_thread_t* self, struct co_tcp_client_t* client);
+
 typedef void(*co_tcp_connect_fn)(
     co_thread_t* self, struct co_tcp_client_t* client, int error_code);
 
@@ -45,6 +48,7 @@ typedef struct
     co_tcp_connect_fn on_connect;
     co_tcp_send_async_fn on_send_async;
     co_tcp_receive_fn on_receive;
+    co_tcp_receive_timer_fn on_receive_timer;
     co_tcp_close_fn on_close;
 
 } co_tcp_callbacks_st;
@@ -195,14 +199,51 @@ co_tcp_receive_all(
 );
 
 CO_NET_API
-bool
-co_tcp_is_open(
+const co_net_addr_t*
+co_tcp_get_remote_net_addr(
     const co_tcp_client_t* client
 );
 
 CO_NET_API
-const co_net_addr_t*
-co_tcp_get_remote_net_addr(
+bool
+co_tcp_create_receive_timer(
+    co_tcp_client_t* client,
+    uint32_t msec
+);
+
+CO_NET_API
+void
+co_tcp_destroy_receive_timer(
+    co_tcp_client_t* client
+);
+
+CO_NET_API
+bool
+co_tcp_start_receive_timer(
+    co_tcp_client_t* client
+);
+
+CO_NET_API
+void
+co_tcp_stop_receive_timer(
+    co_tcp_client_t* client
+);
+
+CO_NET_API
+bool
+co_tcp_restart_receive_timer(
+    co_tcp_client_t* client
+);
+
+CO_NET_API
+bool
+co_tcp_is_running_receive_timer(
+    const co_tcp_client_t* client
+);
+
+CO_NET_API
+bool
+co_tcp_is_open(
     const co_tcp_client_t* client
 );
 

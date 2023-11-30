@@ -11,6 +11,9 @@
 #include <coldforce/tls/co_tls.h>
 #include <coldforce/tls/co_tls_tcp_client.h>
 #include <coldforce/tls/co_tls_tcp_server.h>
+#include <coldforce/tls/co_dtls_udp_client.h>
+#include <coldforce/tls/co_dtls_udp_server.h>
+#include <coldforce/tls/co_tls_config.h>
 #include <coldforce/tls/co_tls_log.h>
 #include <coldforce/tls/co_tls_debug.h>
 

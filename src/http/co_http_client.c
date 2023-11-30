@@ -21,9 +21,9 @@
 //---------------------------------------------------------------------------//
 
 static void
-co_http_client_on_receive_timer(
+co_http_client_on_tcp_receive_timer(
     co_thread_t* thread,
-    co_timer_t* timer
+    co_tcp_client_t* tcp_client
 );
 
 static void
@@ -60,9 +60,12 @@ co_http_client_setup(
     co_http_client_t* client
 )
 {
-    uint32_t msec = co_http_config_get_max_receive_wait_time();
-    client->conn.receive_timer = co_timer_create(
-        msec, (co_timer_fn)co_http_client_on_receive_timer, false, client);
+    client->conn.tcp_client->callbacks.on_receive_timer =
+        co_http_client_on_tcp_receive_timer;
+
+    co_tcp_create_receive_timer(
+        client->conn.tcp_client,
+        co_http_config_get_max_receive_wait_time());
 
     client->callbacks.on_close = NULL;
     client->callbacks.on_connect = NULL;
@@ -120,10 +123,9 @@ co_http_client_on_resopnse(
     }
 
     if ((error_code != 0) ||
-        ((client->conn.receive_timer != NULL) &&
-            (co_list_get_count(client->request_queue) == 0)))
+        (co_list_get_count(client->request_queue) == 0))
     {
-        co_timer_stop(client->conn.receive_timer);
+        co_tcp_stop_receive_timer(client->conn.tcp_client);
     }
 
     if (error_code == 0)
@@ -160,25 +162,6 @@ co_http_client_on_resopnse(
 }
 
 static void
-co_http_client_on_receive_timer(
-    co_thread_t* thread,
-    co_timer_t* timer
-)
-{
-    co_http_client_t* client =
-        (co_http_client_t*)co_timer_get_user_data(timer);
-
-    co_http_log_error(
-        &client->conn.tcp_client->sock.local.net_addr,
-        "<--",
-        &client->conn.tcp_client->sock.remote.net_addr,
-        "receive timeout");
-
-    co_http_client_on_resopnse(
-        thread, client, CO_HTTP_ERROR_RECEIVE_TIMEOUT);
-}
-
-static void
 co_http_client_on_http_connection_connect(
     co_thread_t* thread,
     co_http_connection_t* conn,
@@ -201,7 +184,7 @@ co_http_client_on_http_connection_close(
 {
     co_http_client_t* client = (co_http_client_t*)conn;
 
-    co_timer_stop(client->conn.receive_timer);
+    co_tcp_stop_receive_timer(client->conn.tcp_client);
 
     client->conn.module.close(client->conn.tcp_client);
 
@@ -225,8 +208,7 @@ co_http_client_on_tcp_receive_ready(
             client->conn.tcp_client,
             client->conn.receive_data.ptr);
 
-    co_timer_stop(client->conn.receive_timer);
-    co_timer_start(client->conn.receive_timer);
+    co_tcp_restart_receive_timer(client->conn.tcp_client);
 
     if (receive_result <= 0)
     {
@@ -354,6 +336,25 @@ co_http_client_on_tcp_receive_ready(
         client->conn.receive_data.index = 0;
         co_byte_array_clear(client->conn.receive_data.ptr);
     }
+}
+
+static void
+co_http_client_on_tcp_receive_timer(
+    co_thread_t* thread,
+    co_tcp_client_t* tcp_client
+)
+{
+    co_http_client_t* client =
+        (co_http_client_t*)tcp_client->sock.sub_class;
+
+    co_http_log_error(
+        &client->conn.tcp_client->sock.local.net_addr,
+        "<--",
+        &client->conn.tcp_client->sock.remote.net_addr,
+        "receive timeout");
+
+    co_http_client_on_resopnse(
+        thread, client, CO_HTTP_ERROR_RECEIVE_TIMEOUT);
 }
 
 //---------------------------------------------------------------------------//

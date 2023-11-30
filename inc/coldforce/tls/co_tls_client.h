@@ -31,7 +31,9 @@ typedef struct
 {
     co_tls_ctx_st ctx;
     co_tls_callbacks_st callbacks;
+
     void* on_receive_origin;
+    co_timer_t* handshake_timer;
 
     co_byte_array_t* send_data;
     co_queue_t* receive_data_queue;
@@ -46,6 +48,18 @@ typedef struct
 //---------------------------------------------------------------------------//
 
 #ifdef CO_USE_OPENSSL_COMPATIBLE
+
+void
+co_tls_on_receive_handshake(
+    co_thread_t* thread,
+    co_socket_t* sock
+);
+
+bool
+co_tls_receive_handshake(
+    co_thread_t* thread,
+    co_socket_t* sock
+);
 
 bool
 co_tls_client_setup_internal(
@@ -72,7 +86,8 @@ co_tls_client_cleanup(
 
 bool
 co_tls_start_handshake(
-    co_socket_t* sock
+    co_socket_t* sock,
+    uint32_t timeout_msec
 );
 
 bool

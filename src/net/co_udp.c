@@ -21,7 +21,7 @@
 // private
 //---------------------------------------------------------------------------//
 
-static bool
+bool
 co_udp_setup(
     co_udp_t* udp,
     co_socket_type_t type
@@ -33,6 +33,7 @@ co_udp_setup(
     udp->send_async_queue = NULL;
     udp->callbacks.on_send_async = NULL;
     udp->callbacks.on_receive = NULL;
+    udp->callbacks.on_receive_timer = NULL;
 
 #ifdef CO_OS_WIN
     if (!co_win_net_client_extension_setup(
@@ -59,7 +60,7 @@ co_udp_setup(
     return true;
 }
 
-static void
+void
 co_udp_cleanup(
     co_udp_t* udp
 )
@@ -76,6 +77,7 @@ co_udp_cleanup(
 
     udp->callbacks.on_send_async = NULL;
     udp->callbacks.on_receive = NULL;
+    udp->callbacks.on_receive_timer = NULL;
 
     co_socket_cleanup(&udp->sock);
 }
@@ -219,30 +221,33 @@ co_udp_on_receive_ready(
 #endif
 }
 
-//---------------------------------------------------------------------------//
-// public
-//---------------------------------------------------------------------------//
-
-co_udp_t*
-co_udp_create(
-    const co_net_addr_t* local_net_addr
+static void
+co_udp_on_receive_timer(
+    co_thread_t* thread,
+    co_timer_t* timer
 )
 {
     co_udp_t* udp =
-        (co_udp_t*)co_mem_alloc(sizeof(co_udp_t));
+        (co_udp_t*)co_timer_get_user_data(timer);
 
-    if (udp == NULL)
+    if (udp->callbacks.on_receive_timer != NULL)
     {
-        return NULL;
+        udp->callbacks.on_receive_timer(thread, udp);
     }
+}
 
+bool
+co_udp_setup_new_handle(
+    co_udp_t* udp,
+    const co_net_addr_t* local_net_addr
+)
+{
     if (!co_udp_setup(
         udp, CO_SOCKET_TYPE_UDP))
     {
         co_udp_cleanup(udp);
-        co_mem_free(udp);
 
-        return NULL;
+        return false;
     }
 
     udp->sock.owner_thread = co_thread_get_current();
@@ -260,18 +265,16 @@ co_udp_create(
     if (udp->sock.handle == CO_SOCKET_INVALID_HANDLE)
     {
         co_udp_cleanup(udp);
-        co_mem_free(udp);
 
-        return NULL;
+        return false;
     }
 
     if (!co_net_worker_register_udp(
         co_socket_get_net_worker(&udp->sock), udp))
     {
         co_udp_cleanup(udp);
-        co_mem_free(udp);
 
-        return NULL;
+        return false;
     }
 
 #else
@@ -283,12 +286,39 @@ co_udp_create(
 
     if (udp->sock.handle == CO_SOCKET_INVALID_HANDLE)
     {
+        co_udp_cleanup(udp);
+
+        return false;
+    }
+
+#endif
+
+    return true;
+}
+
+//---------------------------------------------------------------------------//
+// public
+//---------------------------------------------------------------------------//
+
+co_udp_t*
+co_udp_create(
+    const co_net_addr_t* local_net_addr
+)
+{
+    co_udp_t* udp =
+        (co_udp_t*)co_mem_alloc(sizeof(co_udp_t));
+
+    if (udp == NULL)
+    {
+        return NULL;
+    }
+
+    if (!co_udp_setup_new_handle(udp, local_net_addr))
+    {
         co_mem_free(udp);
 
         return NULL;
     }
-
-#endif
 
     return udp;
 }
@@ -788,91 +818,125 @@ co_udp_receive(
     return data_size;
 }
 
-#ifndef CO_OS_WIN
-
-co_udp_t*
-co_udp_create_connection(
-    const co_udp_t* udp,
-    const co_net_addr_t* remote_net_addr
-)
-{
-    co_socket_handle_t handle =
-        co_socket_handle_create(
-            udp->sock.local.net_addr.sa.any.ss_family,
-            SOCK_DGRAM, 0);
-
-    if (handle == CO_SOCKET_INVALID_HANDLE)
-    {
-        return NULL;
-    }
-
-    co_udp_t* udp_conn =
-        (co_udp_t*)co_mem_alloc(sizeof(co_udp_t));
-
-    if (udp_conn == NULL)
-    {
-        return NULL;
-    }
-
-    if (!co_udp_setup(
-        udp_conn, CO_SOCKET_TYPE_UDP))
-    {
-        co_udp_cleanup(udp_conn);
-        co_mem_free(udp_conn);
-
-        return NULL;
-    }
-
-    udp_conn->sock.handle = handle;
-    udp_conn->sock.local.is_open = true;
-
-    memcpy(&udp_conn->sock.local.net_addr,
-        &udp->sock.local.net_addr, sizeof(co_net_addr_t));
-    memcpy(&udp_conn->sock.remote.net_addr,
-        remote_net_addr, sizeof(co_net_addr_t));
-
-    return udp_conn;
-}
-
 bool
-co_udp_accept(
-    co_thread_t* owner_thread,
-    co_udp_t* udp_conn
+co_udp_create_receive_timer(
+    co_udp_t* udp,
+    uint32_t msec
 )
 {
-    if (co_thread_get_current() != owner_thread)
-    {
-        CO_DEBUG_SOCKET_COUNTER_DEC();
-
-        return co_thread_send_event(owner_thread,
-            CO_NET_EVENT_ID_UDP_ACCEPT_ON_THREAD, (uintptr_t)udp_conn, 0);
-    }
-
-    co_udp_log_info(
-        &udp_conn->sock.local.net_addr,
-        "<--",
-        &udp_conn->sock.remote.net_addr,
-        "udp accept");
-
-    udp_conn->sock.owner_thread = owner_thread;
-
-    co_socket_option_set_reuse_addr(&udp_conn->sock, true);
-
-    if (!co_udp_connect(
-        udp_conn, &udp_conn->sock.remote.net_addr))
+    if (co_socket_get_receive_timer(&udp->sock) != NULL)
     {
         return false;
     }
 
-    if (!co_udp_receive_start(udp_conn))
+    co_timer_t* receive_timer =
+        co_timer_create(msec, co_udp_on_receive_timer,
+            false, udp);
+
+    if (receive_timer == NULL)
     {
         return false;
     }
+
+    co_socket_set_receive_timer(
+        &udp->sock, receive_timer);
 
     return true;
 }
 
-#endif // !CO_OS_WIN
+void
+co_udp_destroy_receive_timer(
+    co_udp_t* udp
+)
+{
+    if (udp != NULL)
+    {
+        co_timer_destroy(
+            co_socket_get_receive_timer(
+                &udp->sock));
+
+        co_socket_set_receive_timer(
+            &udp->sock, NULL);
+    }
+}
+
+bool
+co_udp_start_receive_timer(
+    co_udp_t* udp
+)
+{
+    co_timer_t* receive_timer =
+        co_socket_get_receive_timer(&udp->sock);
+
+    if (receive_timer == NULL)
+    {
+        return false;
+    }
+
+    return co_timer_start(receive_timer);
+}
+
+void
+co_udp_stop_receive_timer(
+    co_udp_t* udp
+)
+{
+    if (udp == NULL)
+    {
+        return;
+    }
+
+    co_timer_t* receive_timer =
+        co_socket_get_receive_timer(
+            &udp->sock);
+
+    if (receive_timer == NULL)
+    {
+        return;
+    }
+
+    co_timer_stop(receive_timer);
+}
+
+bool
+co_udp_restart_receive_timer(
+    co_udp_t* udp
+)
+{
+    co_timer_t* receive_timer =
+        co_socket_get_receive_timer(&udp->sock);
+
+    if (receive_timer == NULL)
+    {
+        return false;
+    }
+
+    co_timer_stop(receive_timer);
+
+    return co_timer_start(receive_timer);
+}
+
+bool
+co_udp_is_running_receive_timer(
+    const co_udp_t* udp
+)
+{
+    if (udp == NULL)
+    {
+        return false;
+    }
+
+    co_timer_t* receive_timer =
+        co_socket_get_receive_timer(
+            &udp->sock);
+
+    if (receive_timer == NULL)
+    {
+        return false;
+    }
+
+    return co_timer_is_running(receive_timer);
+}
 
 co_socket_t*
 co_udp_get_socket(

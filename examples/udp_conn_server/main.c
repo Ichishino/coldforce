@@ -12,12 +12,12 @@ typedef struct
     co_app_t base_app;
 
     // my app data
-    co_udp_t* udp_server;
+    co_udp_server_t* udp_server;
     co_list_t* udp_clients;
 
 } my_app;
 
-void on_my_udp_client_receive(my_app* self, co_udp_t* udp_client)
+void on_my_udp_receive(my_app* self, co_udp_t* udp_client)
 {
     for (;;)
     {
@@ -52,44 +52,25 @@ void on_my_udp_client_receive(my_app* self, co_udp_t* udp_client)
     }
 }
 
-void on_my_udp_server_receive(my_app* self, co_udp_t* udp_server)
+void on_my_udp_accept(my_app* self, co_udp_server_t* udp_server, co_udp_t* udp_client)
 {
     (void)self;
 
-    for (;;)
-    {
-        co_net_addr_t remote_net_addr;
-        char buffer[1024];
+    // first received data
+    const uint8_t* data;
+    size_t data_size =
+        co_udp_get_accept_data(udp_client, &data);
 
-        // receive
-        ssize_t size = co_udp_receive_from(
-            udp_server, &remote_net_addr, buffer, sizeof(buffer));
+    // accept
+    co_udp_accept((co_thread_t*)self, udp_client);
 
-        if (size <= 0)
-        {
-            break;
-        }
+    co_udp_callbacks_st* callbacks = co_udp_get_callbacks(udp_client);
+    callbacks->on_receive = (co_udp_receive_fn)on_my_udp_receive;
 
-        char remote_str[64];
-        co_net_addr_to_string(&remote_net_addr, remote_str, sizeof(remote_str));
-        printf("accept %s\n", remote_str);
+    co_list_add_tail(self->udp_clients, udp_client);
 
-        // new client
-        co_udp_t* udp_client =
-            co_udp_create_connection(udp_server, &remote_net_addr);
-
-        // accept
-        co_udp_accept((co_thread_t*)self, udp_client);
-
-        co_udp_callbacks_st* callbacks = co_udp_get_callbacks(udp_client);
-        callbacks->on_receive = (co_udp_receive_fn)on_my_udp_client_receive;
-
-        co_list_add_tail(self->udp_clients, udp_client);
-
-        printf("server receive %zd bytes from %s\n", (size_t)size, remote_str);
-
-        co_udp_send(udp_client, buffer, size);
-    }
+    // echo
+    co_udp_send(udp_client, data, data_size);
 }
 
 bool on_my_app_create(my_app* self)
@@ -116,17 +97,17 @@ bool on_my_app_create(my_app* self)
     co_net_addr_set_family(&local_net_addr, CO_NET_ADDR_FAMILY_IPV4);
     co_net_addr_set_port(&local_net_addr, port);
 
-    self->udp_server = co_udp_create(&local_net_addr);
+    self->udp_server = co_udp_server_create(&local_net_addr);
 
     // socket option
-    co_socket_option_set_reuse_addr(co_udp_get_socket(self->udp_server), true);
+    co_socket_option_set_reuse_addr(co_udp_server_get_socket(self->udp_server), true);
 
     // callback
-    co_udp_callbacks_st* callbacks = co_udp_get_callbacks(self->udp_server);
-    callbacks->on_receive = (co_udp_receive_fn)on_my_udp_server_receive;
+    co_udp_server_callbacks_st* callbacks = co_udp_server_get_callbacks(self->udp_server);
+    callbacks->on_accept = (co_udp_accept_fn)on_my_udp_accept;
 
-    // receive start
-    co_udp_receive_start(self->udp_server);
+    // server start
+    co_udp_server_start(self->udp_server);
 
     char local_str[64];
     co_net_addr_to_string(&local_net_addr, local_str, sizeof(local_str));
@@ -137,7 +118,7 @@ bool on_my_app_create(my_app* self)
 
 void on_my_app_destroy(my_app* self)
 {
-    co_udp_destroy(self->udp_server);
+    co_udp_server_destroy(self->udp_server);
     co_list_destroy(self->udp_clients);
 }
 

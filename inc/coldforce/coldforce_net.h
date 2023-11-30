@@ -17,6 +17,7 @@
 #include <coldforce/net/co_socket_option.h>
 #include <coldforce/net/co_tcp_server.h>
 #include <coldforce/net/co_tcp_client.h>
+#include <coldforce/net/co_udp_server.h>
 #include <coldforce/net/co_udp.h>
 
 //---------------------------------------------------------------------------//

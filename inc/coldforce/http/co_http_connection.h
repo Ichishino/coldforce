@@ -49,8 +49,6 @@ typedef struct co_http_connection_t
 
     } receive_data;
 
-    co_timer_t* receive_timer;
-
 } co_http_connection_t;
 
 //---------------------------------------------------------------------------//

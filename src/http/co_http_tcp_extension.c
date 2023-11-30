@@ -57,7 +57,6 @@ co_tcp_upgrade_to_http_connection(
     conn->url_origin = url;
     conn->receive_data.index = 0;
     conn->receive_data.ptr = co_byte_array_create();
-    conn->receive_timer = NULL;
 
     conn->tcp_client->callbacks.on_connect =
         co_http_connection_on_tcp_connect;

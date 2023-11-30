@@ -29,6 +29,8 @@ co_socket_setup(
     sock->local.is_open = false;
     sock->remote.is_open = false;
 
+    sock->receive_timer = NULL;
+
     sock->sub_class = NULL;
     sock->tls = NULL;
     sock->user_data = NULL;
@@ -49,6 +51,9 @@ co_socket_cleanup(
     co_net_addr_init(&sock->remote.net_addr);
     sock->local.is_open = false;
     sock->remote.is_open = false;
+
+    co_timer_destroy(sock->receive_timer);
+    sock->receive_timer = NULL;
 
     sock->sub_class = NULL;
     sock->tls = NULL;
@@ -97,4 +102,21 @@ co_socket_get_remote_net_addr(
 )
 {
     return &sock->remote.net_addr;
+}
+
+void
+co_socket_set_receive_timer(
+    co_socket_t* sock,
+    co_timer_t* timer
+)
+{
+    sock->receive_timer = timer;
+}
+
+co_timer_t*
+co_socket_get_receive_timer(
+    const co_socket_t* sock
+)
+{
+    return sock->receive_timer;
 }

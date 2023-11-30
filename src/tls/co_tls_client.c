@@ -81,6 +81,7 @@ co_tls_client_setup_internal(
 
     tls->callbacks.on_handshake = NULL;
     tls->on_receive_origin = NULL;
+    tls->handshake_timer = NULL;
     tls->send_data = co_byte_array_create();
     tls->receive_data_queue = co_queue_create(sizeof(uint8_t), NULL);
 
@@ -99,6 +100,9 @@ co_tls_client_cleanup_internal(
 
         co_queue_destroy(tls->receive_data_queue);
         tls->receive_data_queue = NULL;
+
+        co_timer_destroy(tls->handshake_timer);
+        tls->handshake_timer = NULL;
 
         if (tls->network_bio != NULL)
         {
@@ -217,8 +221,146 @@ co_tls_send_handshake(
     return true;
 }
 
-static bool
+static void
+co_tls_finished_handshake(
+    co_thread_t* thread,
+    co_socket_t* sock,
+    int error_code
+)
+{
+    co_tls_client_t* tls = (co_tls_client_t*)sock->tls;
+
+    co_timer_destroy(tls->handshake_timer);
+    tls->handshake_timer = NULL;
+
+    if (error_code == 0)
+    {
+        co_tls_log_info(
+            &sock->local.net_addr, "---", &sock->remote.net_addr,
+            "%s %s", SSL_get_version(tls->ssl), SSL_get_cipher_name(tls->ssl));
+
+        co_event_id_t event_id;
+
+        if (co_socket_type_is_tcp(sock))
+        {
+            event_id = CO_NET_EVENT_ID_TCP_RECEIVE_READY;
+        }
+        else
+        {
+            event_id = CO_NET_EVENT_ID_UDP_RECEIVE_READY;
+        }
+
+        co_thread_send_event(
+            sock->owner_thread,
+            event_id,
+            (uintptr_t)sock,
+            0);
+    }
+
+    co_tls_log_debug_certificate(tls->ssl);
+
+    co_tls_log_info(
+        &sock->local.net_addr,
+        "---",
+        &sock->remote.net_addr,
+        "tls handshake finished (%d)", error_code);
+
+    if (co_socket_type_is_tcp(sock))
+    {
+        ((co_tcp_client_t*)sock)->callbacks.on_receive =
+            (co_tcp_receive_fn)tls->on_receive_origin;
+    }
+    else
+    {
+        ((co_udp_t*)sock)->callbacks.on_receive =
+            (co_udp_receive_fn)tls->on_receive_origin;
+    }
+
+    tls->on_receive_origin = NULL;
+
+    if (thread != NULL && tls->callbacks.on_handshake != NULL)
+    {
+        tls->callbacks.on_handshake(thread, sock, error_code);
+    }
+}
+
+bool
 co_tls_receive_handshake(
+    co_thread_t* thread,
+    co_socket_t* sock
+)
+{
+    co_tls_log_info(
+        &sock->local.net_addr,
+        "<--",
+        &sock->remote.net_addr,
+        "tls handshake receive");
+
+    int error_code = 0;
+
+    co_tls_client_t* tls = (co_tls_client_t*)sock->tls;
+
+    while (co_queue_get_count(tls->receive_data_queue) > 0)
+    {
+        char buffer[8192];
+
+        size_t size = co_queue_peek_array(
+            tls->receive_data_queue, buffer, sizeof(buffer));
+
+        int bio_result = BIO_write(tls->network_bio, buffer, (int)size);
+
+        if (bio_result > 0)
+        {
+            co_queue_remove(tls->receive_data_queue, bio_result);
+        }
+        else
+        {
+            error_code = CO_TLS_ERROR_HANDSHAKE_FAILED;
+
+            break;
+        }
+    }
+
+    if (error_code == 0)
+    {
+        int ssl_result = SSL_do_handshake(tls->ssl);
+        int ssl_error = SSL_get_error(tls->ssl, ssl_result);
+
+        if (!SSL_is_init_finished(tls->ssl))
+        {
+            if ((ssl_error == SSL_ERROR_WANT_READ) ||
+                (ssl_error == SSL_ERROR_WANT_WRITE))
+            {
+                co_tls_send_handshake(sock);
+
+                return false;
+            }
+            else
+            {
+                co_tls_log_error(
+                    &sock->local.net_addr,
+                    "---",
+                    &sock->remote.net_addr,
+                    "tls handshake error: (%d)",
+                    ssl_error);
+
+                error_code = CO_TLS_ERROR_HANDSHAKE_FAILED;
+            }
+        }
+        else
+        {
+            co_tls_send_handshake(sock);
+        }
+    }
+
+    co_tls_finished_handshake(thread, sock, error_code);
+
+    return true;
+}
+
+void
+co_tls_on_receive_handshake(
+    co_thread_t* thread,
     co_socket_t* sock
 )
 {
@@ -296,131 +438,24 @@ co_tls_receive_handshake(
 
 #endif
 
-    co_tls_log_info(
-        &sock->local.net_addr,
-        "<--",
-        &sock->remote.net_addr,
-        "tls handshake receive");
-
-    while (co_queue_get_count(tls->receive_data_queue) > 0)
-    {
-        char buffer[8192];
-
-        size_t size = co_queue_peek_array(
-            tls->receive_data_queue, buffer, sizeof(buffer));
-
-        int bio_result = BIO_write(tls->network_bio, buffer, (int)size);
-
-        if (bio_result > 0)
-        {
-            co_queue_remove(tls->receive_data_queue, bio_result);
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-    return true;
+    co_tls_receive_handshake(thread, sock);
 }
 
 static void
-co_tls_on_receive_handshake(
+co_tls_on_handshake_timer(
     co_thread_t* thread,
-    co_socket_t* sock
+    co_timer_t* timer
 )
 {
-    (void)thread;
+    co_socket_t* sock =
+        (co_socket_t*)co_timer_get_user_data(timer);
 
-    co_tls_client_t* tls = (co_tls_client_t*)sock->tls;
+    co_tls_log_error(
+        &sock->local.net_addr, "<--", &sock->remote.net_addr,
+        "tls handshake timeout");
 
-    int error_code = 0;
-
-    if (co_tls_receive_handshake(sock))
-    {
-        int ssl_result = SSL_do_handshake(tls->ssl);
-        int ssl_error = SSL_get_error(tls->ssl, ssl_result);
-
-        if (!SSL_is_init_finished(tls->ssl))
-        {
-            if ((ssl_error == SSL_ERROR_WANT_READ) ||
-                (ssl_error == SSL_ERROR_WANT_WRITE))
-            {
-                co_tls_send_handshake(sock);
-
-                return;
-            }
-            else
-            {
-                co_tls_log_error(
-                    &sock->local.net_addr,
-                    "---",
-                    &sock->remote.net_addr,
-                    "tls handshake error: (%d)",
-                    ssl_error);
-
-                error_code = CO_TLS_ERROR_HANDSHAKE_FAILED;
-            }
-        }
-        else
-        {
-            co_tls_send_handshake(sock);
-        }
-    }
-    else
-    {
-        error_code = CO_TLS_ERROR_HANDSHAKE_FAILED;
-    }
-
-    if (error_code == 0)
-    {
-        co_tls_log_info(
-            &sock->local.net_addr, "---", &sock->remote.net_addr,
-            "%s %s", SSL_get_version(tls->ssl), SSL_get_cipher_name(tls->ssl));
-
-        co_event_id_t event_id;
-
-        if (co_socket_type_is_tcp(sock))
-        {
-            event_id = CO_NET_EVENT_ID_TCP_RECEIVE_READY;
-        }
-        else
-        {
-            event_id = CO_NET_EVENT_ID_UDP_RECEIVE_READY;
-        }
-
-        co_thread_send_event(
-            sock->owner_thread,
-            event_id,
-            (uintptr_t)sock,
-            0);
-    }
-
-    co_tls_log_debug_certificate(tls->ssl);
-
-    co_tls_log_info(
-        &sock->local.net_addr,
-        "<--",
-        &sock->remote.net_addr,
-        "tls handshake finished (%d)", error_code);
-
-    if (co_socket_type_is_tcp(sock))
-    {
-        ((co_tcp_client_t*)sock)->callbacks.on_receive =
-            (co_tcp_receive_fn)tls->on_receive_origin;
-    }
-    else
-    {
-        ((co_udp_t*)sock)->callbacks.on_receive =
-            (co_udp_receive_fn)tls->on_receive_origin;
-    }
-
-    tls->on_receive_origin = NULL;
-
-    if (tls->callbacks.on_handshake != NULL)
-    {
-        tls->callbacks.on_handshake(thread, sock, error_code);
-    }
+    co_tls_finished_handshake(
+        thread, sock, CO_TLS_ERROR_HANDSHAKE_FAILED);
 }
 
 bool
@@ -513,7 +548,8 @@ co_tls_decrypt_data(
 
 bool
 co_tls_start_handshake(
-    co_socket_t* sock
+    co_socket_t* sock,
+    uint32_t timeout_msec
 )
 {
     co_tls_client_t* tls =
@@ -524,26 +560,16 @@ co_tls_start_handshake(
         return false;
     }
 
-    if (co_socket_type_is_tcp(sock))
-    {
-        tls->on_receive_origin =
-            (void*)((co_tcp_client_t*)sock)->callbacks.on_receive;
-        ((co_tcp_client_t*)sock)->callbacks.on_receive =
-            (co_tcp_receive_fn)co_tls_on_receive_handshake;
-    }
-    else
-    {
-        tls->on_receive_origin =
-            (void*)((co_udp_t*)sock)->callbacks.on_receive;
-        ((co_udp_t*)sock)->callbacks.on_receive =
-            (co_udp_receive_fn)co_tls_on_receive_handshake;
-    }
-
     co_tls_log_info(
         &sock->local.net_addr,
         "-->",
         &sock->remote.net_addr,
         "tls handshake start");
+
+    tls->handshake_timer =
+        co_timer_create(timeout_msec,
+            co_tls_on_handshake_timer, false, sock);
+    co_timer_start(tls->handshake_timer);
 
     int ssl_result = SSL_do_handshake(tls->ssl);
     int ssl_error = SSL_get_error(tls->ssl, ssl_result);

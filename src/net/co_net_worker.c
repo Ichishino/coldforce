@@ -40,6 +40,10 @@ co_net_worker_on_tcp_accept(
         net_worker->callbacks.on_tcp_accept(
             co_thread_get_current(), NULL, client);
     }
+    else
+    {
+        co_tcp_client_destroy(client);
+    }
 }
 
 static void
@@ -54,6 +58,10 @@ co_net_worker_on_udp_accept(
 
         net_worker->callbacks.on_udp_accept(
             co_thread_get_current(), NULL, udp_conn);
+    }
+    else
+    {
+        co_udp_destroy(udp_conn);
     }
 }
 

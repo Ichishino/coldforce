@@ -8,6 +8,7 @@
 #include <coldforce/net/co_net_selector.h>
 #include <coldforce/net/co_tcp_server.h>
 #include <coldforce/net/co_tcp_client.h>
+#include <coldforce/net/co_udp_server.h>
 #include <coldforce/net/co_udp.h>
 
 CO_EXTERN_C_BEGIN

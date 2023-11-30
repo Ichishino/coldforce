@@ -65,7 +65,7 @@ co_tls_tcp_server_on_alpn_select(
 
 #endif // CO_USE_OPENSSL_COMPATIBLE
 
-bool
+static bool
 co_tls_tcp_server_setup(
     co_tcp_server_t* tcp_server,
     co_tls_ctx_st* tls_ctx
@@ -98,7 +98,7 @@ co_tls_tcp_server_setup(
 #endif // CO_USE_TLS
 }
 
-void
+static void
 co_tls_tcp_server_cleanup(
     co_tcp_server_t* tcp_server
 )

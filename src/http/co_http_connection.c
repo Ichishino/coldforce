@@ -172,7 +172,6 @@ co_http_connection_setup(
     conn->url_origin = url_origin;
     conn->receive_data.index = 0;
     conn->receive_data.ptr = co_byte_array_create();
-    conn->receive_timer = NULL;
 
     conn->tcp_client->callbacks.on_connect =
         co_http_connection_on_tcp_connect;
@@ -191,9 +190,6 @@ co_http_connection_cleanup(
     {
         co_byte_array_destroy(conn->receive_data.ptr);
         conn->receive_data.ptr = NULL;
-
-        co_timer_destroy(conn->receive_timer);
-        conn->receive_timer = NULL;
 
         co_url_destroy(conn->url_origin);
         conn->url_origin = NULL;
@@ -215,7 +211,6 @@ co_http_connection_move(
     *to_conn = *from_conn;
 
     to_conn->tcp_client->sock.sub_class = to_conn;
-    to_conn->receive_timer = NULL;
 
     from_conn->tcp_client = NULL;
     from_conn->callbacks.on_connect = NULL;
@@ -260,12 +255,9 @@ co_http_connection_send_request(
 
     if (result)
     {
-        if (conn->receive_timer != NULL)
+        if (!co_tcp_is_running_receive_timer(conn->tcp_client))
         {
-            if (!co_timer_is_running(conn->receive_timer))
-            {
-                co_timer_start(conn->receive_timer);
-            }
+            co_tcp_start_receive_timer(conn->tcp_client);
         }
     }
 
