@@ -85,9 +85,9 @@ bool my_tls_setup(co_tls_ctx_st* tls_ctx)
     const char* private_key_file = "../../../test_file/server.key";
 
 #ifdef CO_USE_WOLFSSL
-    SSL_CTX* ssl_ctx = SSL_CTX_new(wolfDTLS_client_method());
+    SSL_CTX* ssl_ctx = SSL_CTX_new(wolfDTLS_server_method());
 #else
-    SSL_CTX* ssl_ctx = SSL_CTX_new(DTLS_client_method());
+    SSL_CTX* ssl_ctx = SSL_CTX_new(DTLS_server_method());
 #endif
 
     if (SSL_CTX_use_certificate_file(

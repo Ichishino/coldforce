@@ -10,7 +10,7 @@ The currently supported protocols are as follows.
 All of these support clients and servers (multi-client, C10K).
 
 * TCP/UDP (IPv4/IPv6)
-* TLS (OpenSSL or wolfSSL)
+* TLS/DTLS (OpenSSL or wolfSSL) (Sorry, DTLS doesn't work on windows)
 * HTTP/1.1 (http/https, pipelining, basic/digest authentication)
 * HTTP/2 (server push)
 * WebSocket (ws/wss, over http2)
@@ -52,7 +52,7 @@ All of these support clients and servers (multi-client, C10K).
 
 * Coldforce core : `co_core.dll` / `libco_core.a`
 * Network core (TCP,UDP) : `co_net.dll` / `libco_net.a`
-* TLS : `co_tls.dll` / `libco_tls.a`
+* TLS/DTLS : `co_tls.dll` / `libco_tls.a`
 * HTTP/1.1 : `co_http.dll` / `libco_http.a`
 * HTTP/2 : `co_http2.dll` / `libco_http2.a`
 * WebSocket : `co_ws.dll`, `co_ws_http2.dll` / `libco_ws.a`, `libco_ws_http2.a`
