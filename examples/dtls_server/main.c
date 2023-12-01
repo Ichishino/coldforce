@@ -64,6 +64,8 @@ void on_my_udp_receive(my_app* self, co_udp_t* client)
 }
 
 #ifdef CO_USE_TLS
+#ifndef CO_USE_WOLFSSL
+// TODO
 int on_my_generate_cookie(SSL* ssl, unsigned char* cookie, unsigned int* cookie_len)
 {
     (void)ssl;
@@ -74,6 +76,7 @@ int on_my_generate_cookie(SSL* ssl, unsigned char* cookie, unsigned int* cookie_
     return 1;
 }
 #endif
+#endif
 
 bool my_tls_setup(co_tls_ctx_st* tls_ctx)
 {
@@ -81,7 +84,11 @@ bool my_tls_setup(co_tls_ctx_st* tls_ctx)
     const char* certificate_file = "../../../test_file/server.crt";
     const char* private_key_file = "../../../test_file/server.key";
 
-    SSL_CTX* ssl_ctx = SSL_CTX_new(DTLS_server_method());
+#ifdef CO_USE_WOLFSSL
+    SSL_CTX* ssl_ctx = SSL_CTX_new(wolfDTLS_client_method());
+#else
+    SSL_CTX* ssl_ctx = SSL_CTX_new(DTLS_client_method());
+#endif
 
     if (SSL_CTX_use_certificate_file(
         ssl_ctx, certificate_file, SSL_FILETYPE_PEM) != 1)
@@ -103,7 +110,10 @@ bool my_tls_setup(co_tls_ctx_st* tls_ctx)
         return false;
     }
 
+#ifndef CO_USE_WOLFSSL
+    // TODO
     SSL_CTX_set_cookie_generate_cb(ssl_ctx, on_my_generate_cookie);
+#endif
 
     tls_ctx->ssl_ctx = ssl_ctx;
 #endif
@@ -114,6 +124,11 @@ bool my_tls_setup(co_tls_ctx_st* tls_ctx)
 void on_my_udp_accept(my_app* self, co_udp_server_t* server, co_udp_t* client)
 {
     (void)server;
+
+    char remote_str[64];
+    co_net_addr_to_string(
+        co_socket_get_remote_net_addr(co_udp_get_socket(client)), remote_str, sizeof(remote_str));
+    printf("accept %s\n", remote_str);
 
     // accept
     co_udp_accept((co_thread_t*)self, client);
@@ -129,7 +144,7 @@ void on_my_udp_accept(my_app* self, co_udp_server_t* server, co_udp_t* client)
     // dtls handshake
     if (!co_dtls_udp_start_handshake(client, NULL))
     {
-        printf("handshake failed\n");
+        printf("handshake failed %s\n", remote_str);
 
         co_dtls_udp_client_destroy(client);
 
@@ -137,11 +152,6 @@ void on_my_udp_accept(my_app* self, co_udp_server_t* server, co_udp_t* client)
     }
 
     co_list_add_tail(self->client_list, client);
-
-    char remote_str[64];
-    co_net_addr_to_string(
-        co_socket_get_remote_net_addr(co_udp_get_socket(client)), remote_str, sizeof(remote_str));
-    printf("accept %s\n", remote_str);
 }
 
 bool on_my_app_create(my_app* self)

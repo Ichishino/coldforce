@@ -85,12 +85,14 @@ co_tls_server_cleanup(
         co_tls_server_t* tls_server =
             (co_tls_server_t*)sock_server->tls;
 
-        co_mem_free(tls_server->protocols);
-        tls_server->protocols = NULL;
-        tls_server->protocols_length = 0;
+        if (tls_server != NULL)
+        {
+            SSL_CTX_free(tls_server->ctx.ssl_ctx);
+            co_mem_free(tls_server->protocols);
+            co_mem_free(tls_server);
 
-        SSL_CTX_free(tls_server->ctx.ssl_ctx);
-        tls_server->ctx.ssl_ctx = NULL;
+            sock_server->tls = NULL;
+        }
     }
 }
 
