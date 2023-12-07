@@ -50,13 +50,13 @@ typedef struct
 #ifdef CO_USE_OPENSSL_COMPATIBLE
 
 void
-co_tls_on_receive_handshake(
+co_tls_on_handshake_receive(
     co_thread_t* thread,
     co_socket_t* sock
 );
 
 bool
-co_tls_receive_handshake(
+co_tls_handshake_receive(
     co_thread_t* thread,
     co_socket_t* sock
 );
@@ -85,7 +85,7 @@ co_tls_client_cleanup(
 );
 
 bool
-co_tls_start_handshake(
+co_tls_handshake_start(
     co_socket_t* sock,
     uint32_t timeout_msec
 );

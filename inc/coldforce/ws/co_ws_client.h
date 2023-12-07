@@ -112,7 +112,7 @@ co_ws_get_callbacks(
 
 CO_WS_API
 bool
-co_ws_connect(
+co_ws_connect_start(
     co_ws_client_t* client
 );
 

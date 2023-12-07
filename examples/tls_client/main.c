@@ -100,7 +100,7 @@ void on_my_connect(my_app* self, co_tcp_client_t* client, int error_code)
         printf("handshake start\n");
 
         // handshake
-        co_tls_tcp_start_handshake(client);
+        co_tls_tcp_handshake_start(client);
     }
     else
     {
@@ -150,7 +150,7 @@ bool my_connect(my_app* self)
     tls_callbacks->on_handshake = (co_tls_handshake_fn)on_my_handshake;
 
     // connect
-    co_tcp_connect(self->client, &self->remote_net_addr);
+    co_tcp_connect_start(self->client, &self->remote_net_addr);
 
     char remote_str[64];
     co_net_addr_to_string(&self->remote_net_addr, remote_str, sizeof(remote_str));

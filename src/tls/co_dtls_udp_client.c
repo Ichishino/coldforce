@@ -86,7 +86,7 @@ co_dtls_udp_client_destroy(
 }
 
 bool
-co_dtls_udp_start_handshake(
+co_dtls_udp_handshake_start(
     co_udp_t* udp,
     const co_net_addr_t* remote_net_addr
 )
@@ -120,9 +120,9 @@ co_dtls_udp_start_handshake(
     tls->on_receive_origin =
         (void*)udp->callbacks.on_receive;
     udp->callbacks.on_receive =
-        (co_udp_receive_fn)co_tls_on_receive_handshake;
+        (co_udp_receive_fn)co_tls_on_handshake_receive;
 
-    if (!co_tls_start_handshake(
+    if (!co_tls_handshake_start(
         &udp->sock, co_tls_get_config()->handshake_timeout))
     {
         return false;
@@ -133,7 +133,7 @@ co_dtls_udp_start_handshake(
         co_queue_push_array(
             tls->receive_data_queue, data, data_size);
 
-        if (co_tls_receive_handshake(NULL, &udp->sock))
+        if (co_tls_handshake_receive(NULL, &udp->sock))
         {
             return false;
         }

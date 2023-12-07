@@ -192,7 +192,7 @@ bool on_my_app_create(my_app* self)
     callbacks->on_close = (co_ws_close_fn)on_my_ws_close;
 
     // connect
-    co_ws_connect(self->client);
+    co_ws_connect_start(self->client);
 
     return true;
 }

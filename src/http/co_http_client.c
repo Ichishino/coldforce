@@ -428,7 +428,7 @@ co_http_get_callbacks(
 }
 
 bool
-co_http_connect(
+co_http_connect_start(
     co_http_client_t* client
 )
 {

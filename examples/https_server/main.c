@@ -275,7 +275,7 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t
     tls_callbacks->on_handshake = (co_tls_handshake_fn)on_my_tls_handshake;
 
     // TLS handshake
-    co_tls_tcp_start_handshake(tcp_client);
+    co_tls_tcp_handshake_start(tcp_client);
 }
 
 bool on_my_app_create(my_app* self)

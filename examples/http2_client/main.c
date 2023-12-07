@@ -217,7 +217,7 @@ bool on_my_app_create(my_app* self)
     }
 
     // connect 
-    co_http2_connect(self->client);
+    co_http2_connect_start(self->client);
 
     return true;
 }

@@ -476,7 +476,7 @@ co_tcp_client_destroy(
 }
 
 bool
-co_tcp_connect(
+co_tcp_connect_start(
     co_tcp_client_t* client,
     const co_net_addr_t* remote_net_addr
 )

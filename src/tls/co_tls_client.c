@@ -167,7 +167,7 @@ co_tls_client_cleanup(
 }
 
 static bool
-co_tls_send_handshake(
+co_tls_handshake_send(
     co_socket_t* sock
 )
 {
@@ -222,7 +222,7 @@ co_tls_send_handshake(
 }
 
 static void
-co_tls_finished_handshake(
+co_tls_handshake_finished(
     co_thread_t* thread,
     co_socket_t* sock,
     int error_code
@@ -285,7 +285,7 @@ co_tls_finished_handshake(
 }
 
 bool
-co_tls_receive_handshake(
+co_tls_handshake_receive(
     co_thread_t* thread,
     co_socket_t* sock
 )
@@ -331,7 +331,7 @@ co_tls_receive_handshake(
             if ((ssl_error == SSL_ERROR_WANT_READ) ||
                 (ssl_error == SSL_ERROR_WANT_WRITE))
             {
-                co_tls_send_handshake(sock);
+                co_tls_handshake_send(sock);
 
                 return false;
             }
@@ -349,17 +349,17 @@ co_tls_receive_handshake(
         }
         else
         {
-            co_tls_send_handshake(sock);
+            co_tls_handshake_send(sock);
         }
     }
 
-    co_tls_finished_handshake(thread, sock, error_code);
+    co_tls_handshake_finished(thread, sock, error_code);
 
     return true;
 }
 
 void
-co_tls_on_receive_handshake(
+co_tls_on_handshake_receive(
     co_thread_t* thread,
     co_socket_t* sock
 )
@@ -438,7 +438,7 @@ co_tls_on_receive_handshake(
 
 #endif
 
-    co_tls_receive_handshake(thread, sock);
+    co_tls_handshake_receive(thread, sock);
 }
 
 static void
@@ -454,7 +454,7 @@ co_tls_on_handshake_timer(
         &sock->local.net_addr, "<--", &sock->remote.net_addr,
         "tls handshake timeout");
 
-    co_tls_finished_handshake(
+    co_tls_handshake_finished(
         thread, sock, CO_TLS_ERROR_HANDSHAKE_FAILED);
 }
 
@@ -547,7 +547,7 @@ co_tls_decrypt_data(
 }
 
 bool
-co_tls_start_handshake(
+co_tls_handshake_start(
     co_socket_t* sock,
     uint32_t timeout_msec
 )
@@ -578,7 +578,7 @@ co_tls_start_handshake(
     {
         if (SSL_is_server(tls->ssl) == 0)
         {
-            return co_tls_send_handshake(sock);
+            return co_tls_handshake_send(sock);
         }
 
         return true;

@@ -213,7 +213,7 @@ Visual Studio ([prj/msvc/coldforce.sln](https://github.com/Ichishino/coldforce/t
       callbacks->on_receive_frame = (co_ws_receive_frame_fn)on_my_ws_receive_frame;
       callbacks->on_close = (co_ws_close_fn)on_my_ws_close;
 
-      co_ws_connect(self->client);
+      co_ws_connect_start(self->client);
 
       return true;
   }

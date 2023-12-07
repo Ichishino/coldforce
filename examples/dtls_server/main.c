@@ -142,7 +142,7 @@ void on_my_udp_accept(my_app* self, co_udp_server_t* server, co_udp_t* client)
     dtls_callbacks->on_handshake = (co_dtls_udp_handshake_fn)on_my_dtls_handshake;
 
     // dtls handshake
-    if (!co_dtls_udp_start_handshake(client, NULL))
+    if (!co_dtls_udp_handshake_start(client, NULL))
     {
         printf("handshake failed %s\n", remote_str);
 

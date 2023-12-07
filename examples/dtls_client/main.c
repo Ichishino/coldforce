@@ -169,7 +169,7 @@ bool on_my_app_create(my_app* self)
     tls_callbacks->on_handshake = (co_dtls_udp_handshake_fn)on_my_handshake;
 
     // handshake
-    co_dtls_udp_start_handshake(self->client, &self->remote_net_addr);
+    co_dtls_udp_handshake_start(self->client, &self->remote_net_addr);
 
     char remote_str[64];
     co_net_addr_to_string(&self->remote_net_addr, remote_str, sizeof(remote_str));

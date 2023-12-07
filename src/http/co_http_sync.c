@@ -149,7 +149,7 @@ co_http_thread_on_create(
             (co_http_receive_data_fn)co_http_thread_on_receive_data;
     }
 
-    return co_http_connect(self->client);
+    return co_http_connect_start(self->client);
 }
 
 static void

@@ -71,7 +71,7 @@ co_tls_tcp_client_destroy(
 }
 
 bool
-co_tls_tcp_start_handshake(
+co_tls_tcp_handshake_start(
     co_tcp_client_t* tcp_client
 )
 {
@@ -83,9 +83,9 @@ co_tls_tcp_start_handshake(
     tls->on_receive_origin =
         (void*)tcp_client->callbacks.on_receive;
     tcp_client->callbacks.on_receive =
-        (co_tcp_receive_fn)co_tls_on_receive_handshake;
+        (co_tcp_receive_fn)co_tls_on_handshake_receive;
 
-    return co_tls_start_handshake(
+    return co_tls_handshake_start(
         &tcp_client->sock, co_tls_get_config()->handshake_timeout);
 
 #else

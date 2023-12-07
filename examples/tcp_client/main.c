@@ -96,7 +96,7 @@ void my_connect(my_app* self)
     callbacks->on_close = (co_tcp_close_fn)on_my_tcp_close;
 
     // connect
-    co_tcp_connect(self->client, &self->remote_net_addr);
+    co_tcp_connect_start(self->client, &self->remote_net_addr);
 
     char remote_str[64];
     co_net_addr_to_string(&self->remote_net_addr, remote_str, sizeof(remote_str));

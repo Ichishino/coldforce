@@ -381,7 +381,7 @@ co_ws_get_callbacks(
 }
 
 bool
-co_ws_connect(
+co_ws_connect_start(
     co_ws_client_t* client
 )
 {

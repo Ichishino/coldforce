@@ -123,7 +123,7 @@ void on_my_tcp_accept(my_app* self, co_tcp_server_t* server, co_tcp_client_t* cl
     tls_callbacks->on_handshake = (co_tls_handshake_fn)on_my_tls_handshake;
 
     // TLS handshake
-    co_tls_tcp_start_handshake(client);
+    co_tls_tcp_handshake_start(client);
 
     co_list_add_tail(self->client_list, client);
 
