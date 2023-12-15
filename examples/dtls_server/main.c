@@ -75,6 +75,25 @@ app_on_udp_receive(
         // send (echo)
         co_dtls_udp_send(udp_client, buffer, data_size);
     }
+
+    // restart receive timer
+    co_udp_restart_receive_timer(udp_client);
+}
+
+void
+app_on_udp_receive_timer(
+    app_st* self,
+    co_udp_t* udp_client
+)
+{
+    // receive timeout
+
+    char remote_str[64];
+    app_get_remote_address(udp, udp_client, remote_str);
+    printf("receive timeout: %s\n", remote_str);
+
+    // close
+    co_list_remove(self->udp_clients, udp_client);
 }
 
 void
@@ -96,6 +115,7 @@ app_on_udp_accept(
     // callbacks
     co_udp_callbacks_st* udp_callbacks = co_udp_get_callbacks(udp_client);
     udp_callbacks->on_receive = (co_udp_receive_fn)app_on_udp_receive;
+    udp_callbacks->on_receive_timer = (co_udp_receive_timer_fn)app_on_udp_receive_timer;
     co_tls_callbacks_st* tls_callbacks = co_dtls_udp_get_callbacks(udp_client);
     tls_callbacks->on_handshake = (co_tls_handshake_fn)app_on_tls_handshake;
 
@@ -129,6 +149,10 @@ app_on_tls_handshake(
     if (error_code == 0)
     {
         printf("handshake success: %s\n", remote_str);
+
+        // start receive timer
+        co_udp_create_receive_timer(udp_client, 60*1000); // 1min
+        co_udp_start_receive_timer(udp_client);
     }
     else
     {
@@ -152,7 +176,7 @@ app_on_tls_generate_cookie(
     (void)ssl;
 
     memcpy(cookie, "your-cookie", 11);
-    *cookie_len = 8;
+    *cookie_len = 11;
 
     return 1;
 }
