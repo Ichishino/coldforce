@@ -17,9 +17,6 @@ CO_EXTERN_C_BEGIN
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-typedef co_tls_handshake_fn co_dtls_udp_handshake_fn;
-typedef co_tls_callbacks_st co_dtls_udp_callbacks_st;
-
 //---------------------------------------------------------------------------//
 // private
 //---------------------------------------------------------------------------//
@@ -77,7 +74,7 @@ co_dtls_udp_receive_all(
 );
 
 CO_TLS_API
-co_dtls_udp_callbacks_st*
+co_tls_callbacks_st*
 co_dtls_udp_get_callbacks(
     co_udp_t* udp
 );

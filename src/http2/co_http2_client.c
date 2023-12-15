@@ -894,17 +894,8 @@ co_http2_get_remote_settings(
     return &client->remote_settings;
 }
 
-const co_net_addr_t*
-co_http2_get_remote_net_addr(
-    const co_http2_client_t* client
-)
-{
-    return ((client->conn.tcp_client != NULL) ?
-        &client->conn.tcp_client->sock.remote.net_addr : NULL);
-}
-
 co_socket_t*
-co_http2_client_get_socket(
+co_http2_get_socket(
     co_http2_client_t* client
 )
 {

@@ -599,17 +599,8 @@ co_ws_default_handler(
     }
 }
 
-const co_net_addr_t*
-co_ws_get_remote_net_addr(
-    const co_ws_client_t* client
-)
-{
-    return ((client->conn.tcp_client != NULL) ?
-        &client->conn.tcp_client->sock.remote.net_addr : NULL);
-}
-
 co_socket_t*
-co_ws_client_get_socket(
+co_ws_get_socket(
     co_ws_client_t* client
 )
 {

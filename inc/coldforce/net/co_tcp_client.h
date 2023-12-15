@@ -199,12 +199,6 @@ co_tcp_receive_all(
 );
 
 CO_NET_API
-const co_net_addr_t*
-co_tcp_get_remote_net_addr(
-    const co_tcp_client_t* client
-);
-
-CO_NET_API
 bool
 co_tcp_create_receive_timer(
     co_tcp_client_t* client,
@@ -249,7 +243,7 @@ co_tcp_is_open(
 
 CO_NET_API
 co_socket_t*
-co_tcp_client_get_socket(
+co_tcp_get_socket(
     co_tcp_client_t* client
 );
 

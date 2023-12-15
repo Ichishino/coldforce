@@ -3,22 +3,32 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 
-// my app object
+//---------------------------------------------------------------------------//
+// app object
+//---------------------------------------------------------------------------//
+
 typedef struct
 {
     co_app_t base_app;
 
-    // my app data
-    co_tcp_client_t* client;
+    // app data
+    co_tcp_client_t* tcp_client;
     co_net_addr_t remote_net_addr;
     co_timer_t* retry_timer;
 
-} my_app;
+} app_st;
 
-void my_connect(my_app* self);
+//---------------------------------------------------------------------------//
+// tcp callback
+//---------------------------------------------------------------------------//
 
-void on_my_tcp_receive(my_app* self, co_tcp_client_t* client)
+void
+app_on_tcp_receive(
+    app_st* self,
+    co_tcp_client_t* tcp_client
+)
 {
     (void)self;
 
@@ -26,84 +36,113 @@ void on_my_tcp_receive(my_app* self, co_tcp_client_t* client)
 
     for (;;)
     {
-        // receive
-        ssize_t size = co_tcp_receive(client, buffer, sizeof(buffer));
+        // receive data
+        ssize_t size =
+            co_tcp_receive(tcp_client, buffer, sizeof(buffer));
 
         if (size <= 0)
         {
             return;
         }
 
-        printf("receive %zd bytes\n", (size_t)size);
+        printf("tcp received: %zd bytes\n", (size_t)size);
     }
 }
 
-void on_my_tcp_close(my_app* self, co_tcp_client_t* client)
+void
+app_on_tcp_close(
+    app_st* self,
+    co_tcp_client_t* tcp_client
+)
 {
-    (void)client;
+    printf("tcp closed\n");
 
-    printf("close\n");
-
-    co_tcp_client_destroy(self->client);
-    self->client = NULL;
+    co_tcp_client_destroy(tcp_client);
+    self->tcp_client = NULL;
 
     // quit app
     co_app_stop();
 }
 
-void on_my_tcp_connect(my_app* self, co_tcp_client_t* client, int error_code)
+void
+app_on_tcp_connect(
+    app_st* self,
+    co_tcp_client_t* tcp_client,
+    int error_code
+)
 {
     if (error_code == 0)
     {
-        printf("connect success\n");
+        printf("tcp connect success\n");
 
         // send
         const char* data = "hello";
-        co_tcp_send(client, data, strlen(data));
+        co_tcp_send(tcp_client, data, strlen(data));
     }
     else
     {
-        printf("connect failed\n");
+        printf("tcp connect failed\n");
 
-        co_tcp_client_destroy(self->client);
-        self->client = NULL;
+        co_tcp_client_destroy(tcp_client);
+        self->tcp_client = NULL;
 
         // start retry timer
         co_timer_start(self->retry_timer);
     }
 }
 
-void on_my_retry_timer(my_app* self, co_timer_t* timer)
+//---------------------------------------------------------------------------//
+// tcp connect
+//---------------------------------------------------------------------------//
+
+void
+app_tcp_connect(
+    app_st* self
+)
+{
+    // local address
+    co_net_addr_t local_net_addr = { 0 };
+    co_net_addr_set_family(
+        &local_net_addr, co_net_addr_get_family(&self->remote_net_addr));
+
+    // create tcp client
+    self->tcp_client = co_tcp_client_create(&local_net_addr);
+
+    // callbacks
+    co_tcp_callbacks_st* callbacks = co_tcp_get_callbacks(self->tcp_client);
+    callbacks->on_connect = (co_tcp_connect_fn)app_on_tcp_connect;
+    callbacks->on_receive = (co_tcp_receive_fn)app_on_tcp_receive;
+    callbacks->on_close = (co_tcp_close_fn)app_on_tcp_close;
+
+    // start connect
+    co_tcp_connect_start(self->tcp_client, &self->remote_net_addr);
+
+    char remote_str[64];
+    co_net_addr_to_string(
+        &self->remote_net_addr, remote_str, sizeof(remote_str));
+    printf("start connect to %s\n", remote_str);
+}
+
+//---------------------------------------------------------------------------//
+// app callback
+//---------------------------------------------------------------------------//
+
+void
+app_on_retry_timer(
+    app_st* self,
+    co_timer_t* timer
+)
 {
     (void)timer;
 
     // connect retry
-    my_connect(self);
+    app_tcp_connect(self);
 }
 
-void my_connect(my_app* self)
-{
-    // local address
-    co_net_addr_t local_net_addr = { 0 };
-    co_net_addr_set_family(&local_net_addr, co_net_addr_get_family(&self->remote_net_addr));
-
-    self->client = co_tcp_client_create(&local_net_addr);
-
-    // callback
-    co_tcp_callbacks_st* callbacks = co_tcp_get_callbacks(self->client);
-    callbacks->on_connect = (co_tcp_connect_fn)on_my_tcp_connect;
-    callbacks->on_receive = (co_tcp_receive_fn)on_my_tcp_receive;
-    callbacks->on_close = (co_tcp_close_fn)on_my_tcp_close;
-
-    // connect
-    co_tcp_connect_start(self->client, &self->remote_net_addr);
-
-    char remote_str[64];
-    co_net_addr_to_string(&self->remote_net_addr, remote_str, sizeof(remote_str));
-    printf("connect to %s\n", remote_str);
-}
-
-bool on_my_app_create(my_app* self)
+bool
+app_on_create(
+    app_st* self
+)
 {
     const co_args_st* args = co_app_get_args((co_app_t*)self);
 
@@ -118,32 +157,57 @@ bool on_my_app_create(my_app* self)
         return false;
     }
 
-    // connect retry timer
+    // create connect retry timer
     self->retry_timer = co_timer_create(
-        5000, (co_timer_fn)on_my_retry_timer, false, 0);
+        5000, (co_timer_fn)app_on_retry_timer, false, 0);
 
-    // connect
-    my_connect(self);
+    // start connect
+    app_tcp_connect(self);
 
     return true;
 }
 
-void on_my_app_destroy(my_app* self)
+void
+app_on_destroy(
+    app_st* self
+)
 {
+    co_tcp_client_destroy(self->tcp_client);
     co_timer_destroy(self->retry_timer);
-    co_tcp_client_destroy(self->client);
 }
 
-int main(int argc, char* argv[])
+void
+app_on_signal(
+    int sig
+)
 {
+    (void)sig;
+
+    // quit app
+    co_app_stop();
+}
+
+//---------------------------------------------------------------------------//
+// main
+//---------------------------------------------------------------------------//
+
+int
+main(
+    int argc,
+    char* argv[]
+)
+{
+    co_win_debug_crt_set_flags();
+
+    signal(SIGINT, app_on_signal);
+
 //    co_tcp_log_set_level(CO_LOG_LEVEL_MAX);
 
-    my_app app = { 0 };
+    app_st self = { 0 };
 
     return co_net_app_start(
-        (co_app_t*)&app, "my_app",
-        (co_app_create_fn)on_my_app_create,
-        (co_app_destroy_fn)on_my_app_destroy,
+        (co_app_t*)&self, "tcp-client-app",
+        (co_app_create_fn)app_on_create,
+        (co_app_destroy_fn)app_on_destroy,
         argc, argv);
 }
-

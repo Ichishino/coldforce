@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 
 #ifdef _WIN32
 #   ifdef CO_USE_WOLFSSL
@@ -13,21 +14,30 @@
 #   endif
 #endif
 
-// my app object
+//---------------------------------------------------------------------------//
+// app object
+//---------------------------------------------------------------------------//
+
 typedef struct
 {
     co_app_t base_app;
 
-    // my app data
-    co_tcp_client_t* client;
+    // app data
+    co_tcp_client_t* tcp_client;
     co_net_addr_t remote_net_addr;
     co_timer_t* retry_timer;
 
-} my_app;
+} app_st;
 
-bool my_connect(my_app* self);
+//---------------------------------------------------------------------------//
+// tcp callback
+//---------------------------------------------------------------------------//
 
-void on_my_receive(my_app* self, co_tcp_client_t* client)
+void
+app_on_tcp_receive(
+    app_st* self,
+    co_tcp_client_t* tcp_client
+)
 {
     (void)self;
 
@@ -35,7 +45,9 @@ void on_my_receive(my_app* self, co_tcp_client_t* client)
     {
         char buffer[1024];
 
-        ssize_t size = co_tls_tcp_receive(client, buffer, sizeof(buffer));
+        // receive data
+        ssize_t size =
+            co_tls_tcp_receive(tcp_client, buffer, sizeof(buffer));
 
         if (size <= 0)
         {
@@ -46,8 +58,58 @@ void on_my_receive(my_app* self, co_tcp_client_t* client)
     }
 }
 
+void
+app_on_tcp_close(
+    app_st* self,
+    co_tcp_client_t* tcp_client
+)
+{
+    printf("closed\n");
+
+    co_tls_tcp_client_destroy(tcp_client);
+    self->tcp_client = NULL;
+
+    // quit app
+    co_app_stop();
+}
+
+void
+app_on_tcp_connect(
+    app_st* self,
+    co_tcp_client_t* tcp_client,
+    int error_code
+)
+{
+    if (error_code == 0)
+    {
+        printf("connect success\n");
+        printf("start tls handshake\n");
+
+        // start tls handshake
+        co_tls_tcp_handshake_start(tcp_client);
+    }
+    else
+    {
+        printf("connect failed: %d\n", error_code);
+
+        co_tls_tcp_client_destroy(tcp_client);
+        self->tcp_client = NULL;
+
+        // start retry timer
+        co_timer_start(self->retry_timer);
+    }
+}
+
+//---------------------------------------------------------------------------//
+// tls callback
+//---------------------------------------------------------------------------//
+
 #ifdef CO_USE_TLS
-int on_my_verify_peer(int preverify_ok, X509_STORE_CTX* x509_ctx)
+int
+app_on_tls_verify_peer(
+    int preverify_ok,
+    X509_STORE_CTX* x509_ctx
+)
 {
     (void)preverify_ok;
     (void)x509_ctx;
@@ -57,100 +119,81 @@ int on_my_verify_peer(int preverify_ok, X509_STORE_CTX* x509_ctx)
 }
 #endif
 
-void on_my_handshake(my_app* self, co_tcp_client_t* client, int error_code)
+void
+app_on_tls_handshake(
+    app_st* self,
+    co_tcp_client_t* tcp_client,
+    int error_code
+)
 {
     if (error_code == 0)
     {
-        printf("handshake success\n");
+        printf("tls handshake success\n");
 
-        // send
+        // send data
         const char* data = "hello";
-        co_tls_tcp_send(client, data, strlen(data) + 1);
+        co_tls_tcp_send(tcp_client, data, strlen(data) + 1);
     }
     else
     {
-        printf("handshake failed\n");
+        printf("tls handshake failed\n");
 
-        co_tls_tcp_client_destroy(self->client);
-        self->client = NULL;
+        co_tls_tcp_client_destroy(tcp_client);
+        self->tcp_client = NULL;
 
         // quit app
         co_app_stop();
     }
 }
 
-void on_my_close(my_app* self, co_tcp_client_t* client)
-{
-    (void)client;
+//---------------------------------------------------------------------------//
+// tls tcp connect
+//---------------------------------------------------------------------------//
 
-    printf("close\n");
-
-    co_tls_tcp_client_destroy(self->client);
-    self->client = NULL;
-
-    // quit app
-    co_app_stop();
-}
-
-void on_my_connect(my_app* self, co_tcp_client_t* client, int error_code)
-{
-    if (error_code == 0)
-    {
-        printf("connect success\n");
-        printf("handshake start\n");
-
-        // handshake
-        co_tls_tcp_handshake_start(client);
-    }
-    else
-    {
-        printf("connect failed\n");
-
-        co_tls_tcp_client_destroy(self->client);
-        self->client = NULL;
-
-        // start retry timer
-        co_timer_start(self->retry_timer);
-    }
-}
-
-bool my_connect(my_app* self)
+bool
+app_tls_tcp_connect(
+    app_st* self
+)
 {
     // local address
     co_net_addr_t local_net_addr = { 0 };
-    co_net_addr_set_family(&local_net_addr, co_net_addr_get_family(&self->remote_net_addr));
+    co_net_addr_set_family(
+        &local_net_addr, co_net_addr_get_family(&self->remote_net_addr));
 
     co_tls_ctx_st tls_ctx = { 0 };
 
+    // tls setup
 #ifdef CO_USE_TLS
     SSL_CTX* ssl_ctx = SSL_CTX_new(TLS_client_method());
     SSL_CTX_set_default_verify_paths(ssl_ctx);
 #if defined(CO_USE_WOLFSSL) && defined(_WIN32)
     SSL_CTX_set_session_cache_mode(ssl_ctx, SSL_SESS_CACHE_OFF); // TODO
 #endif
-    SSL_CTX_set_verify(ssl_ctx, SSL_VERIFY_PEER, on_my_verify_peer);
+    SSL_CTX_set_verify(ssl_ctx, SSL_VERIFY_PEER, app_on_tls_verify_peer);
     tls_ctx.ssl_ctx = ssl_ctx;
 #endif
 
-    self->client = co_tls_tcp_client_create(&local_net_addr, &tls_ctx);
+    // create tls tcp client
+    self->tcp_client =
+        co_tls_tcp_client_create(&local_net_addr, &tls_ctx);
 
-    if (self->client == NULL)
+    if (self->tcp_client == NULL)
     {
-        printf("Failed to create tls client (maybe SSL library was not found)\n");
+        printf("Failed to create tls client (maybe SSL/TLS library was not found)\n");
 
         return false;
     }
 
-    // callback
-    co_tcp_callbacks_st* tcp_callbacks = co_tcp_get_callbacks(self->client);
-    tcp_callbacks->on_connect = (co_tcp_connect_fn)on_my_connect;
-    tcp_callbacks->on_receive = (co_tcp_receive_fn)on_my_receive;
-    tcp_callbacks->on_close = (co_tcp_close_fn)on_my_close;
-    co_tls_tcp_callbacks_st* tls_callbacks = co_tls_tcp_get_callbacks(self->client);
-    tls_callbacks->on_handshake = (co_tls_handshake_fn)on_my_handshake;
+    // callbacks
+    co_tcp_callbacks_st* tcp_callbacks = co_tcp_get_callbacks(self->tcp_client);
+    tcp_callbacks->on_connect = (co_tcp_connect_fn)app_on_tcp_connect;
+    tcp_callbacks->on_receive = (co_tcp_receive_fn)app_on_tcp_receive;
+    tcp_callbacks->on_close = (co_tcp_close_fn)app_on_tcp_close;
+    co_tls_callbacks_st* tls_callbacks = co_tls_tcp_get_callbacks(self->tcp_client);
+    tls_callbacks->on_handshake = (co_tls_handshake_fn)app_on_tls_handshake;
 
-    // connect
-    co_tcp_connect_start(self->client, &self->remote_net_addr);
+    // start connect
+    co_tcp_connect_start(self->tcp_client, &self->remote_net_addr);
 
     char remote_str[64];
     co_net_addr_to_string(&self->remote_net_addr, remote_str, sizeof(remote_str));
@@ -159,15 +202,30 @@ bool my_connect(my_app* self)
     return true;
 }
 
-void on_my_retry_timer(my_app* self, co_timer_t* timer)
+//---------------------------------------------------------------------------//
+// timer callback
+//---------------------------------------------------------------------------//
+
+void
+app_on_retry_timer(
+    app_st* self,
+    co_timer_t* timer
+)
 {
     (void)timer;
 
     // connect retry
-    my_connect(self);
+    app_tls_tcp_connect(self);
 }
 
-bool on_my_app_create(my_app* self)
+//---------------------------------------------------------------------------//
+// app callback
+//---------------------------------------------------------------------------//
+
+bool
+app_on_create(
+    app_st* self
+)
 {
     const co_args_st* args = co_app_get_args((co_app_t*)self);
 
@@ -182,12 +240,12 @@ bool on_my_app_create(my_app* self)
         return false;
     }
 
-    // connect retry timer
+    // create connect retry timer
     self->retry_timer = co_timer_create(
-        5000, (co_timer_fn)on_my_retry_timer, false, 0);
+        5000, (co_timer_fn)app_on_retry_timer, false, 0);
 
-    // connect
-    if (!my_connect(self))
+    // start connect
+    if (!app_tls_tcp_connect(self))
     {
         return false;
     }
@@ -195,22 +253,50 @@ bool on_my_app_create(my_app* self)
     return true;
 }
 
-void on_my_app_destroy(my_app* self)
+void
+app_on_destroy(
+    app_st* self
+)
 {
+    co_tls_tcp_client_destroy(self->tcp_client);
     co_timer_destroy(self->retry_timer);
-    co_tls_tcp_client_destroy(self->client);
 }
 
-int main(int argc, char* argv[])
+void
+app_on_signal(
+    int sig
+)
 {
+    (void)sig;
+
+    // quit app
+    co_app_stop();
+}
+
+//---------------------------------------------------------------------------//
+// main
+//---------------------------------------------------------------------------//
+
+int
+main(
+    int argc,
+    char* argv[]
+)
+{
+    co_win_debug_crt_set_flags();
+
+    signal(SIGINT, app_on_signal);
+
 //    co_tls_log_set_level(CO_LOG_LEVEL_MAX);
 //    co_tcp_log_set_level(CO_LOG_LEVEL_MAX);
 
-    my_app app = { 0 };
+    // app instance
+    app_st self = { 0 };
 
+    // start app
     return co_net_app_start(
-        (co_app_t*)&app, "my_app",
-        (co_app_create_fn)on_my_app_create,
-        (co_app_destroy_fn)on_my_app_destroy,
+        (co_app_t*)&self, "tls-client-app",
+        (co_app_create_fn)app_on_create,
+        (co_app_destroy_fn)app_on_destroy,
         argc, argv);
 }

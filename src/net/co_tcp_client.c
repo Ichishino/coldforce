@@ -784,14 +784,6 @@ co_tcp_close(
         &client->sock.local.net_addr);
 }
 
-const co_net_addr_t*
-co_tcp_get_remote_net_addr(
-    const co_tcp_client_t* client
-)
-{
-    return &client->sock.remote.net_addr;
-}
-
 bool
 co_tcp_create_receive_timer(
     co_tcp_client_t* client,
@@ -922,7 +914,7 @@ co_tcp_is_open(
 }
 
 co_socket_t*
-co_tcp_client_get_socket(
+co_tcp_get_socket(
     co_tcp_client_t* client
 )
 {

@@ -381,7 +381,7 @@ co_dtls_udp_receive_all(
 #endif // CO_USE_TLS
 }
 
-co_dtls_udp_callbacks_st*
+co_tls_callbacks_st*
 co_dtls_udp_get_callbacks(
     co_udp_t* udp
 )

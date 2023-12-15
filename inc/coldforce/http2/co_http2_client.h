@@ -240,14 +240,8 @@ co_http2_get_remote_settings(
 );
 
 CO_HTTP2_API
-const co_net_addr_t*
-co_http2_get_remote_net_addr(
-    const co_http2_client_t* client
-);
-
-CO_HTTP2_API
 co_socket_t*
-co_http2_client_get_socket(
+co_http2_get_socket(
     co_http2_client_t* client
 );
 

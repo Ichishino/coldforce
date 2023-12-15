@@ -17,9 +17,6 @@ CO_EXTERN_C_BEGIN
 //---------------------------------------------------------------------------//
 //---------------------------------------------------------------------------//
 
-typedef co_tls_handshake_fn co_tls_tcp_handshake_fn;
-typedef co_tls_callbacks_st co_tls_tcp_callbacks_st;
-
 //---------------------------------------------------------------------------//
 // private
 //---------------------------------------------------------------------------//
@@ -99,7 +96,7 @@ co_tls_tcp_receive_all(
 );
 
 CO_TLS_API
-co_tls_tcp_callbacks_st*
+co_tls_callbacks_st*
 co_tls_tcp_get_callbacks(
     co_tcp_client_t* tcp_client
 );

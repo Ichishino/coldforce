@@ -503,17 +503,8 @@ co_http_is_running(
         co_list_get_count(client->request_queue) > 0);
 }
 
-const co_net_addr_t*
-co_http_get_remote_net_addr(
-    const co_http_client_t* client
-)
-{
-    return ((client->conn.tcp_client != NULL) ?
-        &client->conn.tcp_client->sock.remote.net_addr : NULL);
-}
-
 co_socket_t*
-co_http_client_get_socket(
+co_http_get_socket(
     co_http_client_t* client
 )
 {

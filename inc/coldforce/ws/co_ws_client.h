@@ -195,14 +195,8 @@ co_ws_default_handler(
 );
 
 CO_WS_API
-const co_net_addr_t*
-co_ws_get_remote_net_addr(
-    const co_ws_client_t* client
-);
-
-CO_WS_API
 co_socket_t*
-co_ws_client_get_socket(
+co_ws_get_socket(
     co_ws_client_t* client
 );
 

@@ -429,7 +429,7 @@ co_tls_tcp_receive_all(
 #endif // CO_USE_TLS
 }
 
-co_tls_tcp_callbacks_st*
+co_tls_callbacks_st*
 co_tls_tcp_get_callbacks(
     co_tcp_client_t* tcp_client
 )

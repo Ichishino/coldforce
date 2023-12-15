@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 
 #ifdef _WIN32
 #   ifdef CO_USE_WOLFSSL
@@ -17,38 +18,49 @@
 #   endif
 #endif
 
-// my app object
+//---------------------------------------------------------------------------//
+// app object
+//---------------------------------------------------------------------------//
+
 typedef struct
 {
     co_app_t base_app;
 
-    // my app data
-    co_tcp_server_t* server;
+    // app data
+    co_tcp_server_t* tcp_server;
+    co_list_t* tcp_clients;
     co_list_t* http2_clients;
     uint16_t port;
     char authority[256];
 
-} my_app;
+} app_st;
 
-#define my_client_log(protocol, client, str) \
+#define app_get_remote_address(protocol, net_unit, buffer) \
+    co_net_addr_to_string( \
+        co_socket_get_remote_net_addr( \
+            co_##protocol##_get_socket(net_unit)), \
+        buffer, sizeof(buffer));
+
+#define app_client_log(protocol, client, text) \
     do { \
         char remote_str[64]; \
-        co_net_addr_to_string( \
-            co_##protocol##_get_remote_net_addr(client), remote_str, sizeof(remote_str)); \
-        printf("%s: %s\n", str, remote_str); \
+        app_get_remote_address(protocol, client, remote_str); \
+        printf("%s: %s\n", text, remote_str); \
     } while(0)
 
 //---------------------------------------------------------------------------//
-// http/2
+// http2 callback
 //---------------------------------------------------------------------------//
 
-void on_my_http2_stop_app_request(
-    my_app* self, co_http2_client_t* http2_client, co_http2_stream_t* stream)
+void
+app_on_http2_request_stop(
+    app_st* self,
+    co_http2_client_t* http2_client,
+    co_http2_stream_t* stream
+)
 {
     (void)self;
     (void)http2_client;
-
-    my_client_log(http2, http2_client, "=== server stop ===");
 
     co_http2_header_t* response_header = co_http2_header_create_response(200);
 
@@ -58,8 +70,8 @@ void on_my_http2_stop_app_request(
     const char* response_content =
         "<!DOCTYPE html>\n"
         "<html>\n"
-        "<head><title>Server Stop</title></head>\n"
-        "<body>OK</body>\n"
+        "<head><title>Coldforce Http Server</title></head>\n"
+        "<body>Server Stopped</body>\n"
         "</html>\n";
     uint32_t response_content_size = (uint32_t)strlen(response_content);
 
@@ -67,13 +79,18 @@ void on_my_http2_stop_app_request(
     co_http2_stream_send_header(stream, false, response_header);
     co_http2_stream_send_data(stream, true, response_content, response_content_size);
 
-    // quit app
+    // quit app (later)
     co_app_stop();
 }
 
-void on_my_http2_server_push_request(
-    my_app* self, co_http2_client_t* http2_client, co_http2_stream_t* stream,
-    const co_http2_header_t* request_header, const co_http2_data_st* receive_data)
+void
+app_on_http2_request_server_push(
+    app_st* self,
+    co_http2_client_t* http2_client,
+    co_http2_stream_t* stream,
+    const co_http2_header_t* request_header,
+    const co_http2_data_st* receive_data
+)
 {
     (void)request_header;
     (void)receive_data;
@@ -89,23 +106,32 @@ void on_my_http2_server_push_request(
 
         // push request
 
-        co_http2_header_t* request_header_1 = co_http2_header_create_request("GET", "/test.css");
-        co_http2_header_set_authority(request_header_1, self->authority);
+        co_http2_header_t* request_header_1 =
+            co_http2_header_create_request("GET", "/test.css");
+        co_http2_header_set_authority(
+            request_header_1, self->authority);
 
+        // send push request
         co_http2_stream_t* response_stream_1 =
             co_http2_stream_send_server_push_request(stream, request_header_1);
 
         // push response
 
-        co_http2_header_t* response_header_1 = co_http2_header_create_response(200);
-        co_http2_header_add_field(response_header_1, "content-type", "text/css");
-        co_http2_header_add_field(response_header_1, "cache-control", "no-store");
+        co_http2_header_t* response_header_1 =
+            co_http2_header_create_response(200);
+        co_http2_header_add_field(
+            response_header_1, "content-type", "text/css");
+        co_http2_header_add_field(
+            response_header_1, "cache-control", "no-store");
 
         const char* response_content_1 = "h1{ color:blue; }";
         uint32_t response_content_size_1 = (uint32_t)strlen(response_content_1);
 
-        co_http2_stream_send_header(response_stream_1, false, response_header_1);
-        co_http2_stream_send_data(response_stream_1, true, response_content_1, response_content_size_1);
+        // send push response
+        co_http2_stream_send_header(
+            response_stream_1, false, response_header_1);
+        co_http2_stream_send_data(
+            response_stream_1, true, response_content_1, response_content_size_1);
 
         //-----------------------------------------------------------------------//
         // push "/test.js"
@@ -113,40 +139,52 @@ void on_my_http2_server_push_request(
 
         // push request
 
-        co_http2_header_t* request_header_2 = co_http2_header_create_request("GET", "/test.js");
-        co_http2_header_set_authority(request_header_2, self->authority);
+        co_http2_header_t* request_header_2 =
+            co_http2_header_create_request("GET", "/test.js");
+        co_http2_header_set_authority(
+            request_header_2, self->authority);
 
+        // send push request
         co_http2_stream_t* response_stream_2 =
             co_http2_stream_send_server_push_request(stream, request_header_2);
 
         // push response
 
-        co_http2_header_t* response_header_2 = co_http2_header_create_response(200);
-        co_http2_header_add_field(response_header_2, "content-type", "text/javascript");
-        co_http2_header_add_field(response_header_2, "cache-control", "no-store");
+        co_http2_header_t* response_header_2 =
+            co_http2_header_create_response(200);
+        co_http2_header_add_field(
+            response_header_2, "content-type", "text/javascript");
+        co_http2_header_add_field(
+            response_header_2, "cache-control", "no-store");
 
         const char* response_content_2 = "document.write('Hello !!');";
         uint32_t response_content_size_2 = (uint32_t)strlen(response_content_2);
 
-        co_http2_stream_send_header(response_stream_2, false, response_header_2);
-        co_http2_stream_send_data(response_stream_2, true, response_content_2, response_content_size_2);
+        // send push response
+        co_http2_stream_send_header(
+            response_stream_2, false, response_header_2);
+        co_http2_stream_send_data(
+            response_stream_2, true, response_content_2, response_content_size_2);
     }
 
     //-----------------------------------------------------------------------//
     // response "/serverpush"
     //-----------------------------------------------------------------------//
 
-    co_http2_header_t* response_header = co_http2_header_create_response(200);
+    co_http2_header_t* response_header =
+        co_http2_header_create_response(200);
 
-    co_http2_header_add_field(response_header, "content-type", "text/html");
-    co_http2_header_add_field(response_header, "cache-control", "no-store");
+    co_http2_header_add_field(
+        response_header, "content-type", "text/html");
+    co_http2_header_add_field(
+        response_header, "cache-control", "no-store");
 
     char response_content[8192];
     sprintf(response_content,
         "<!DOCTYPE html>\n"
         "<html>\n"
         "<head>\n"
-        "<title>Http2 Server Push Test</title>\n"
+        "<title>Coldforce Http Server</title>\n"
         "<link rel='stylesheet' type='text/css' href='/test.css' />\n"
         "</head>\n"
         "<body>\n"
@@ -157,122 +195,61 @@ void on_my_http2_server_push_request(
     uint32_t response_content_size = (uint32_t)strlen(response_content);
 
     // send response
-    co_http2_stream_send_header(stream, false, response_header);
-    co_http2_stream_send_data(stream, true, response_content, response_content_size);
+    co_http2_stream_send_header(
+        stream, false, response_header);
+    co_http2_stream_send_data(
+        stream, true, response_content, response_content_size);
 }
 
-void on_my_http2_default_request(
-    my_app* self, co_http2_client_t* http2_client, co_http2_stream_t* stream,
-    const co_http2_header_t* request_header, const co_http2_data_st* receive_data)
+void
+app_on_http2_request_default(
+    app_st* self,
+    co_http2_client_t* http2_client,
+    co_http2_stream_t* stream,
+    const co_http2_header_t* request_header,
+    const co_http2_data_st* receive_data
+)
 {
     (void)self;
+    (void)http2_client;
+    (void)request_header;
+    (void)receive_data;
 
-    co_http2_header_t* response_header = co_http2_header_create_response(200);
+    co_http2_header_t* response_header =
+        co_http2_header_create_response(200);
 
-    co_http2_header_add_field(response_header, "content-type", "text/html");
-    co_http2_header_add_field(response_header, "cache-control", "no-store");
+    co_http2_header_add_field(
+        response_header, "content-type", "text/html");
+    co_http2_header_add_field(
+        response_header, "cache-control", "no-store");
 
-    char response_content[8192] = { 0 };
-    char temp[1024];
-
-    strcpy(response_content,
-        "<!DOCTYPE html>\n"
-        "<html>\n"
-        "<head>\n"
-        "<title>Http2 Test</title>\n"
-        "</head>\n"
-        "<body>\n");
-
-    strcat(response_content, "<h2>Client</h2>\n");
-
-    const co_net_addr_t* remote_net_addr =
-        co_http2_get_remote_net_addr(http2_client);
-    char remote_str[256];
-    co_net_addr_to_string(
-        remote_net_addr, remote_str, sizeof(remote_str));
-
-    sprintf(temp, "IP Address: %s<br>\n", remote_str);
-    strcat(response_content, temp);
-
-    strcat(response_content, "<h2>RequestHeader</h2>\n");
-
-    if (request_header->pseudo.authority != NULL)
-    {
-        sprintf(temp, ":authority: %s<br>\n",
-            request_header->pseudo.authority);
-        strcat(response_content, temp);
-    }
-
-    if (request_header->pseudo.method != NULL)
-    {
-        sprintf(temp, ":method: %s<br>\n",
-            request_header->pseudo.method);
-        strcat(response_content, temp);
-    }
-
-    if (request_header->pseudo.url != NULL)
-    {
-        sprintf(temp, ":path: %s<br>\n",
-            request_header->pseudo.url->src);
-        strcat(response_content, temp);
-    }
-
-    if (request_header->pseudo.scheme != NULL)
-    {
-        sprintf(temp, ":scheme: %s<br>\n",
-            request_header->pseudo.scheme);
-        strcat(response_content, temp);
-    }
-
-    if (request_header->pseudo.status_code != 0)
-    {
-        sprintf(temp, ":status: %u<br>\n",
-            request_header->pseudo.status_code);
-        strcat(response_content, temp);
-    }
-
-    const co_list_iterator_t* it =
-        co_list_get_const_head_iterator(request_header->field_list);
-
-    while (it != NULL)
-    {
-        const co_list_data_st* data =
-            co_list_get_const_next(request_header->field_list, &it);
-        const co_http2_header_field_t* field =
-            (const co_http2_header_field_t*)data->value;
-
-        sprintf(temp, "%s: %s<br>\n",
-            field->name, field->value);
-        strcat(response_content, temp);
-    }
-
-    strcat(response_content, "<h2>Contents</h2>\n");
-    sprintf(temp, "size: %zd<br><br>\n", receive_data->size);
-    strcat(response_content, temp);
-
-    if (receive_data->ptr != NULL)
-    {
-        strncat(response_content,
-            (const char*)receive_data->ptr, receive_data->size);
-    }
-
-    strcat(response_content, "</body>\n</html>\n");
+    const char* response_content =
+            "<!DOCTYPE html>\n"
+            "<html>\n"
+            "<head><title>Coldforce Http Server</title></head>\n"
+            "<body>http2 Hello</body>\n"
+            "</html>\n";
 
     uint32_t response_content_size = (uint32_t)strlen(response_content);
 
     // send response
-    co_http2_stream_send_header(stream, false, response_header);
-    co_http2_stream_send_data(stream, true, response_content, response_content_size);
+    co_http2_stream_send_header(
+        stream, false, response_header);
+    co_http2_stream_send_data(
+        stream, true, response_content, response_content_size);
 }
 
-void on_my_http2_request(
-    my_app* self, co_http2_client_t* http2_client, co_http2_stream_t* stream,
-    const co_http2_header_t* request_header, const co_http2_data_st* request_data,
-    int error_code)
+void
+app_on_http2_request(
+    app_st* self,
+    co_http2_client_t* http2_client,
+    co_http2_stream_t* stream,
+    const co_http2_header_t* request_header,
+    const co_http2_data_st* request_data,
+    int error_code
+)
 {
-    (void)self;
-
-    my_client_log(http2, http2_client, "http2 request");
+    app_client_log(http2, http2_client, "http2 request");
 
     if (error_code == 0)
     {
@@ -281,21 +258,19 @@ void on_my_http2_request(
         if (strcmp(url->path, "/stop") == 0)
         {
             // server stop request
-            // http(s)://xxxxxxxxxxx/stop
 
-            on_my_http2_stop_app_request(self, http2_client, stream);
+            app_on_http2_request_stop(self, http2_client, stream);
         }
         else if (strcmp(url->path, "/serverpush") == 0)
         {
             // server push request
-            // http(s)://xxxxxxxxxxx/serverpush
 
-            on_my_http2_server_push_request(
+            app_on_http2_request_server_push(
                 self, http2_client, stream, request_header, request_data);
         }
         else
         {
-            on_my_http2_default_request(
+            app_on_http2_request_default(
                 self, http2_client, stream, request_header, request_data);
         }
     }
@@ -306,28 +281,37 @@ void on_my_http2_request(
     }
 }
 
-void on_my_http2_close(my_app* self, co_http2_client_t* http2_client, int error_code)
+void
+app_on_http2_close(
+    app_st* self,
+    co_http2_client_t* http2_client,
+    int error_code
+)
 {
-    (void)self;
     (void)error_code;
 
-    my_client_log(http2, http2_client, "http2 close");
+    app_client_log(http2, http2_client, "http2 closed");
 
     // close
     co_list_remove(self->http2_clients, http2_client);
 }
 
 //---------------------------------------------------------------------------//
-// tls
+// tls callback
 //---------------------------------------------------------------------------//
 
-void on_my_tls_handshake(my_app* self, co_tcp_client_t* tcp_client, int error_code)
+void
+app_on_tls_handshake(
+    app_st* self,
+    co_tcp_client_t* tcp_client,
+    int error_code
+)
 {
-    (void)self;
+    co_list_remove(self->tcp_clients, tcp_client);
 
     if (error_code == 0)
     {
-        my_client_log(tcp, tcp_client, "TLS handshake success");
+        app_client_log(tcp, tcp_client, "tls handshake success");
 
         // create http2 client
         co_http2_client_t* http2_client = co_tcp_upgrade_to_http2(tcp_client, NULL);
@@ -340,23 +324,30 @@ void on_my_tls_handshake(my_app* self, co_tcp_client_t* tcp_client, int error_co
         params[1].value = 200;
         co_http2_init_settings(http2_client, params, 2);
 
-        // callback
+        // callbacks
         co_http2_callbacks_st* callback = co_http2_get_callbacks(http2_client);
-        callback->on_receive_finish = (co_http2_receive_finish_fn)on_my_http2_request;
-        callback->on_close = (co_http2_close_fn)on_my_http2_close;
+        callback->on_receive_finish = (co_http2_receive_finish_fn)app_on_http2_request;
+        callback->on_close = (co_http2_close_fn)app_on_http2_close;
 
         co_list_add_tail(self->http2_clients, http2_client);
     }
     else
     {
-        my_client_log(tcp, tcp_client, "TLS handshake failed");
+        app_client_log(tcp, tcp_client, "tls handshake failed");
 
         // close
         co_tls_tcp_client_destroy(tcp_client);
     }
 }
 
-bool my_tls_setup(co_tls_ctx_st* tls_ctx)
+//---------------------------------------------------------------------------//
+// tls setup
+//---------------------------------------------------------------------------//
+
+bool
+app_tls_setup(
+    co_tls_ctx_st* tls_ctx
+)
 {
 #ifdef CO_USE_TLS
     const char* certificate_file = "../../../test_file/server.crt";
@@ -391,59 +382,75 @@ bool my_tls_setup(co_tls_ctx_st* tls_ctx)
 }
 
 //---------------------------------------------------------------------------//
-// tcp
+// tcp callback
 //---------------------------------------------------------------------------//
 
-void on_my_tcp_close(my_app* self, co_tcp_client_t* tcp_client)
+void
+app_on_tcp_close(
+    app_st* self,
+    co_tcp_client_t* tcp_client
+)
 {
-    (void)self;
+    app_client_log(tcp, tcp_client, "tcp closed");
 
     co_tls_tcp_client_destroy(tcp_client);
+    co_list_remove(self->tcp_clients, tcp_client);
 }
 
-void on_my_tcp_accept(my_app* self, co_tcp_server_t* tcp_server, co_tcp_client_t* tcp_client)
+void
+app_on_tcp_accept(
+    app_st* self,
+    co_tcp_server_t* tcp_server,
+    co_tcp_client_t* tcp_client
+)
 {
     (void)tcp_server;
 
-    my_client_log(tcp, tcp_client, "accept");
+    app_client_log(tcp, tcp_client, "tcp accept");
 
     // accept
     co_tcp_accept((co_thread_t*)self, tcp_client);
 
-    // callback
+    // callbacks
     co_tcp_callbacks_st* tcp_callbacks = co_tcp_get_callbacks(tcp_client);
-    tcp_callbacks->on_close = (co_tcp_close_fn)on_my_tcp_close;
-    co_tls_tcp_callbacks_st* tls_callbacks = co_tls_tcp_get_callbacks(tcp_client);
-    tls_callbacks->on_handshake = (co_tls_tcp_handshake_fn)on_my_tls_handshake;
+    tcp_callbacks->on_close = (co_tcp_close_fn)app_on_tcp_close;
+    co_tls_callbacks_st* tls_callbacks = co_tls_tcp_get_callbacks(tcp_client);
+    tls_callbacks->on_handshake = (co_tls_handshake_fn)app_on_tls_handshake;
 
-    // TLS handshake
+    // start tls handshake
     co_tls_tcp_handshake_start(tcp_client);
+
+    co_list_add_tail(self->tcp_clients, tcp_client);
 }
 
 //---------------------------------------------------------------------------//
-// app
+// app callback
 //---------------------------------------------------------------------------//
 
-bool on_my_app_create(my_app* self)
+bool
+app_on_create(
+    app_st* self
+)
 {
     const co_args_st* args = co_app_get_args((co_app_t*)self);
 
-    if (args->count <= 2)
+    if (args->count <= 1)
     {
         printf("<Usage>\n");
-        printf("http2_server <hostname> <port_number>\n");
-        printf("ex. http2_server localhost 8080\n");
+        printf("http2_server <port_number>\n");
 
         return false;
     }
 
-    self->port = (uint16_t)atoi(args->values[2]);
+    self->port = (uint16_t)atoi(args->values[1]);
 
-    sprintf(self->authority, "%s:%d", args->values[1], self->port);
+    sprintf(self->authority, "127.0.0.1:%d", self->port);
 
-    // client list
+    // client lists
+    self->tcp_clients = co_list_create(NULL);
     co_list_ctx_st list_ctx = { 0 };
-    list_ctx.destroy_value = (co_item_destroy_fn)co_http2_client_destroy; // auto destroy
+    list_ctx.destroy_value =
+        (co_item_destroy_fn)co_http2_client_destroy; // auto destroy
     self->http2_clients = co_list_create(&list_ctx);
 
     // local address
@@ -451,18 +458,20 @@ bool on_my_app_create(my_app* self)
     co_net_addr_set_family(&local_net_addr, CO_NET_ADDR_FAMILY_IPV4);
     co_net_addr_set_port(&local_net_addr, self->port);
 
-    // tls setting
+    // tls setup
     co_tls_ctx_st tls_ctx = { 0 };
-    if (!my_tls_setup(&tls_ctx))
+    if (!app_tls_setup(&tls_ctx))
     {
         return false;
     }
 
-    // https server
-    self->server = co_tls_tcp_server_create(&local_net_addr, &tls_ctx);
-    if (self->server == NULL)
+    // create tls server
+    self->tcp_server =
+        co_tls_tcp_server_create(&local_net_addr, &tls_ctx);
+
+    if (self->tcp_server == NULL)
     {
-        printf("Failed to create tls server (maybe OpenSSL was not found)\n");
+        printf("Failed to create tls server (maybe SSL/TLS library was not installed)\n");
 
         return false;
     }
@@ -471,42 +480,85 @@ bool on_my_app_create(my_app* self)
     size_t protocol_count = 1;
     const char* protocols[] = { CO_HTTP2_PROTOCOL };
     co_tls_tcp_server_set_available_protocols(
-        self->server, protocols, protocol_count);
+        self->tcp_server, protocols, protocol_count);
 
     // socket option
     co_socket_option_set_reuse_addr(
-        co_tcp_server_get_socket(self->server), true);
+        co_tcp_server_get_socket(self->tcp_server), true);
 
-    // callback
-    co_tcp_server_callbacks_st* callbacks = co_tcp_server_get_callbacks(self->server);
-    callbacks->on_accept = (co_tcp_accept_fn)on_my_tcp_accept;
+    // callbacks
+    co_tcp_server_callbacks_st* callbacks =
+        co_tcp_server_get_callbacks(self->tcp_server);
+    callbacks->on_accept = (co_tcp_accept_fn)app_on_tcp_accept;
 
-    // listen start
-    co_tls_tcp_server_start(self->server, SOMAXCONN);
+    // start listen
+    if (!co_tls_tcp_server_start(self->tcp_server, SOMAXCONN))
+    {
+        return false;
+    }
 
-    printf("https://%s\n", self->authority);
+    printf("start server https://%s\n", self->authority);
 
     return true;
 }
 
-void on_my_app_destroy(my_app* self)
+void
+app_on_destroy(
+    app_st* self
+)
 {
+    co_tls_tcp_server_destroy(self->tcp_server);
+
+    co_list_iterator_t* it =
+        co_list_get_head_iterator(self->tcp_clients);
+    while (it != NULL)
+    {
+        co_list_data_st* data =
+            co_list_get_next(self->tcp_clients, &it);
+        co_tls_tcp_client_destroy((co_tcp_client_t*)data->value);
+    }
+    co_list_destroy(self->tcp_clients);
+
     co_list_destroy(self->http2_clients);
-    co_tls_tcp_server_destroy(self->server);
 }
 
-int main(int argc, char* argv[])
+void
+app_on_signal(
+    int sig
+)
 {
+    (void)sig;
+
+    // quit app
+    co_app_stop();
+}
+
+//---------------------------------------------------------------------------//
+// main
+//---------------------------------------------------------------------------//
+
+int
+main(
+    int argc,
+    char* argv[]
+)
+{
+    co_win_debug_crt_set_flags();
+
+    signal(SIGINT, app_on_signal);
+
 //    co_http_log_set_level(CO_LOG_LEVEL_MAX);
 //    co_http2_log_set_level(CO_LOG_LEVEL_MAX);
 //    co_tls_log_set_level(CO_LOG_LEVEL_MAX);
 //    co_tcp_log_set_level(CO_LOG_LEVEL_MAX);
 
-    my_app app = { 0 };
+    // app instance
+    app_st self = { 0 };
 
+    // start app
     return co_net_app_start(
-        (co_app_t*)&app, "my_app",
-        (co_app_create_fn)on_my_app_create,
-        (co_app_destroy_fn)on_my_app_destroy,
+        (co_app_t*)&self, "http2-server-app",
+        (co_app_create_fn)app_on_create,
+        (co_app_destroy_fn)app_on_destroy,
         argc, argv);
 }

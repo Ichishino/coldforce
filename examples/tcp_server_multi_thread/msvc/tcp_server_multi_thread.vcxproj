@@ -144,12 +144,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\main.c" />
-    <ClCompile Include="..\my_client_thread.c" />
-    <ClCompile Include="..\my_server_app.c" />
+    <ClCompile Include="..\tcp_client_thread.c" />
+    <ClCompile Include="..\tcp_server_app.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\my_client_thread.h" />
-    <ClInclude Include="..\my_server_app.h" />
+    <ClInclude Include="..\tcp_client_thread.h" />
+    <ClInclude Include="..\tcp_server_app.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\prj\msvc\co_core\co_core.vcxproj">

@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 
 #ifdef _WIN32
 #   ifdef CO_USE_WOLFSSL
@@ -13,18 +14,31 @@
 #   endif
 #endif
 
-// my app object
+//---------------------------------------------------------------------------//
+// app object
+//---------------------------------------------------------------------------//
+
 typedef struct
 {
     co_app_t base_app;
 
-    // my app data
-    co_ws_client_t* client;
+    // app data
+    co_ws_client_t* ws_client;
     co_url_st* url;
 
-} my_app;
+} app_st;
 
-void on_my_ws_receive_frame(my_app* self, co_ws_client_t* client, const co_ws_frame_t* frame, int error_code)
+//---------------------------------------------------------------------------//
+// websocket callback
+//---------------------------------------------------------------------------//
+
+void
+app_on_ws_receive_frame(
+    app_st* self,
+    co_ws_client_t* ws_client,
+    const co_ws_frame_t* frame,
+    int error_code
+)
 {
     if (error_code == 0)
     {
@@ -37,25 +51,28 @@ void on_my_ws_receive_frame(my_app* self, co_ws_client_t* client, const co_ws_fr
         {
         case CO_WS_OPCODE_TEXT:
         {
-            printf("receive text(%d): %*.*s\n", fin, (int)data_size, (int)data_size, (char*)data);
+            printf("receive text(%d): %*.*s\n",
+                fin, (int)data_size, (int)data_size, (char*)data);
 
             break;
         }
         case CO_WS_OPCODE_BINARY:
         {
-            printf("receive binary(%d): %zu bytes\n", fin, data_size);
+            printf("receive binary(%d): %zu bytes\n",
+                fin, data_size);
 
             break;
         }
         case CO_WS_OPCODE_CONTINUATION:
         {
-            printf("receive continuation(%d): %zu bytes\n", fin, data_size);
+            printf("receive continuation(%d): %zu bytes\n",
+                fin, data_size);
 
             break;
         }
         default:
         {
-            co_ws_default_handler(client, frame);
+            co_ws_default_handler(ws_client, frame);
 
             break;
         }
@@ -66,26 +83,36 @@ void on_my_ws_receive_frame(my_app* self, co_ws_client_t* client, const co_ws_fr
         printf("receive error: %d\n", error_code);
 
         // close
-        co_ws_client_destroy(client);
-        self->client = NULL;
+        co_ws_client_destroy(ws_client);
+        self->ws_client = NULL;
     }
 }
 
-void on_my_ws_close(my_app* self, co_ws_client_t* client)
+void
+app_on_ws_close(
+    app_st* self,
+    co_ws_client_t* ws_client
+)
 {
-    printf("close\n");
+    printf("closed\n");
 
     // close
-    co_ws_client_destroy(client);
-    self->client = NULL;
+    co_ws_client_destroy(ws_client);
+    self->ws_client = NULL;
 
     // quit app
     co_app_stop();
 }
 
-void on_my_ws_upgrade(my_app* self, co_ws_client_t* client, const co_http_response_t* response, int error_code)
+void
+app_on_ws_upgrade(
+    app_st* self,
+    co_ws_client_t* ws_client,
+    const co_http_response_t* http_response,
+    int error_code
+)
 {
-    (void)response;
+    (void)http_response;
 
     printf("receive upgrade response: %d\n", error_code);
 
@@ -94,7 +121,7 @@ void on_my_ws_upgrade(my_app* self, co_ws_client_t* client, const co_http_respon
         printf("upgrade success\n");
 
         // send
-        co_ws_send_text(client, "hello");
+        co_ws_send_text(ws_client, "hello");
 
         return;
     }
@@ -104,14 +131,19 @@ void on_my_ws_upgrade(my_app* self, co_ws_client_t* client, const co_http_respon
     }
 
     // close
-    co_ws_client_destroy(client);
-    self->client = NULL;
+    co_ws_client_destroy(ws_client);
+    self->ws_client = NULL;
 
     // quit app
     co_app_stop();
 }
 
-void on_my_ws_connect(my_app* self, co_ws_client_t* client, int error_code)
+void
+app_on_ws_connect(
+    app_st* self,
+    co_ws_client_t* ws_client,
+    int error_code
+)
 {
     if (error_code == 0)
     {
@@ -121,19 +153,30 @@ void on_my_ws_connect(my_app* self, co_ws_client_t* client, int error_code)
             co_http_request_create_ws_upgrade(
                 self->url->path_and_query, NULL, NULL);
 
-        co_ws_send_upgrade_request(self->client, request);
+        // send upgrade request
+        co_ws_send_upgrade_request(self->ws_client, request);
     }
     else
     {
         printf("connect error: %d\n", error_code);
 
-        co_ws_client_destroy(client);
-        self->client = NULL;
+        // close
+        co_ws_client_destroy(ws_client);
+        self->ws_client = NULL;
     }
 }
 
+//---------------------------------------------------------------------------//
+// tls callback
+//---------------------------------------------------------------------------//
+
+
 #ifdef CO_USE_TLS
-int on_my_verify_peer(int preverify_ok, X509_STORE_CTX* x509_ctx)
+int
+app_on_tls_verify_peer(
+    int preverify_ok,
+    X509_STORE_CTX* x509_ctx
+)
 {
     (void)preverify_ok;
     (void)x509_ctx;
@@ -143,7 +186,14 @@ int on_my_verify_peer(int preverify_ok, X509_STORE_CTX* x509_ctx)
 }
 #endif
 
-bool on_my_app_create(my_app* self)
+//---------------------------------------------------------------------------//
+// app callback
+//---------------------------------------------------------------------------//
+
+bool
+app_on_create(
+    app_st* self
+)
 {
     const co_args_st* args = co_app_get_args((co_app_t*)self);
 
@@ -155,64 +205,98 @@ bool on_my_app_create(my_app* self)
         return false;
     }
 
+    // server url
     self->url = co_url_create(args->values[1]);
 
+    // local address
     co_net_addr_t local_net_addr = { 0 };
     co_net_addr_set_family(&local_net_addr, CO_NET_ADDR_FAMILY_IPV4);
 
     co_tls_ctx_st tls_ctx = { 0 };
 
+    // tls setting
 #ifdef CO_USE_TLS
     if (strcmp(self->url->scheme, "wss") == 0)
     {
         SSL_CTX* ssl_ctx = SSL_CTX_new(TLS_client_method());
         SSL_CTX_set_default_verify_paths(ssl_ctx);
-#if defined(CO_USE_WOLFSSL) && defined(_WIN32)
+        #if defined(CO_USE_WOLFSSL) && defined(_WIN32)
         SSL_CTX_set_session_cache_mode(ssl_ctx, SSL_SESS_CACHE_OFF); // TODO
-#endif
-        SSL_CTX_set_verify(ssl_ctx, SSL_VERIFY_PEER, on_my_verify_peer);
+        #endif
+        SSL_CTX_set_verify(
+            ssl_ctx, SSL_VERIFY_PEER, app_on_tls_verify_peer);
         tls_ctx.ssl_ctx = ssl_ctx;
     }
 #endif
 
-    self->client = co_ws_client_create(self->url->origin, &local_net_addr, &tls_ctx);
+    // create websocket client
+    self->ws_client =
+        co_ws_client_create(self->url->origin, &local_net_addr, &tls_ctx);
 
-    if (self->client == NULL)
+    if (self->ws_client == NULL)
     {
-        printf("error: faild to resolve hostname or SSL library is not installed\n");
+        printf("error: faild to resolve hostname or SSL/TLS library is not installed\n");
 
         return false;
     }
 
-    // callback
-    co_ws_callbacks_st* callbacks = co_ws_get_callbacks(self->client);
-    callbacks->on_connect = (co_ws_connect_fn)on_my_ws_connect;
-    callbacks->on_upgrade = (co_ws_upgrade_fn)on_my_ws_upgrade;
-    callbacks->on_receive_frame = (co_ws_receive_frame_fn)on_my_ws_receive_frame;
-    callbacks->on_close = (co_ws_close_fn)on_my_ws_close;
+    // callbacks
+    co_ws_callbacks_st* callbacks = co_ws_get_callbacks(self->ws_client);
+    callbacks->on_connect = (co_ws_connect_fn)app_on_ws_connect;
+    callbacks->on_upgrade = (co_ws_upgrade_fn)app_on_ws_upgrade;
+    callbacks->on_receive_frame = (co_ws_receive_frame_fn)app_on_ws_receive_frame;
+    callbacks->on_close = (co_ws_close_fn)app_on_ws_close;
 
-    // connect
-    co_ws_connect_start(self->client);
+    // start connect
+    co_ws_connect_start(self->ws_client);
 
     return true;
 }
 
-void on_my_app_destroy(my_app* self)
+void
+app_on_destroy(
+    app_st* self
+)
 {
-    co_ws_client_destroy(self->client);
+    co_ws_client_destroy(self->ws_client);
     co_url_destroy(self->url);
 }
 
-int main(int argc, char* argv[])
+void
+app_on_signal(
+    int sig
+)
 {
+    (void)sig;
+
+    // quit app
+    co_app_stop();
+}
+
+//---------------------------------------------------------------------------//
+// main
+//---------------------------------------------------------------------------//
+
+int
+main(
+    int argc,
+    char* argv[]
+)
+{
+    co_win_debug_crt_set_flags();
+
+    signal(SIGINT, app_on_signal);
+
 //    co_http_log_set_level(CO_LOG_LEVEL_MAX);
 //    co_ws_log_set_level(CO_LOG_LEVEL_MAX);
 
-    my_app app = { 0 };
+    // app instance
+    app_st self = { 0 };
 
+    // start app
     return co_net_app_start(
-        (co_app_t*)&app, "my_app",
-        (co_app_create_fn)on_my_app_create,
-        (co_app_destroy_fn)on_my_app_destroy,
+        (co_app_t*)&self, "ws-client-app",
+        (co_app_create_fn)app_on_create,
+        (co_app_destroy_fn)app_on_destroy,
         argc, argv);
 }

@@ -1,8 +1,11 @@
-#include "my_server_app.h"
+#include "tcp_server_app.h"
 
 #include <signal.h>
 
-void ctrl_c_handler(int sig)
+void
+on_signal(
+    int sig
+)
 {
     (void)sig;
 
@@ -10,11 +13,21 @@ void ctrl_c_handler(int sig)
     co_app_stop();
 }
 
-int main(int argc, char* argv[])
+//---------------------------------------------------------------------------//
+// main
+//---------------------------------------------------------------------------//
+
+int
+main(
+    int argc,
+    char* argv[]
+)
 {
+    co_win_debug_crt_set_flags();
+
     // for debug
-    signal(SIGINT, ctrl_c_handler);
+    signal(SIGINT, on_signal);
 
     // run
-    return my_server_run(argc, argv);
+    return tcp_server_app_run(argc, argv);
 }

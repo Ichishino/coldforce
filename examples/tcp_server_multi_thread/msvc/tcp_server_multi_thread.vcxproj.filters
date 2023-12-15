@@ -14,18 +14,18 @@
     <ClCompile Include="..\main.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\my_client_thread.c">
+    <ClCompile Include="..\tcp_client_thread.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\my_server_app.c">
+    <ClCompile Include="..\tcp_server_app.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\my_client_thread.h">
+    <ClInclude Include="..\tcp_client_thread.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\my_server_app.h">
+    <ClInclude Include="..\tcp_server_app.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

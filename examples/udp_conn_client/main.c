@@ -3,53 +3,72 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 
-// my app object
+//---------------------------------------------------------------------------//
+// app object
+//---------------------------------------------------------------------------//
+
 typedef struct
 {
     co_app_t base_app;
 
-    // my app data
+    // app data
     co_udp_t* udp;
     co_timer_t* send_timer;
     int send_counter;
     co_net_addr_t remote_net_addr;
 
-} my_app;
+} app_st;
 
-void on_my_udp_receive(my_app* self, co_udp_t* udp)
+//---------------------------------------------------------------------------//
+// udp callback
+//---------------------------------------------------------------------------//
+
+void
+app_on_udp_receive(
+    app_st* self,
+    co_udp_t* udp
+)
 {
-    (void)self;
-
     for (;;)
     {
         char buffer[1024];
 
-        // receive
-        ssize_t size = co_udp_receive(udp, buffer, sizeof(buffer));
+        // receive data
+        ssize_t size =
+            co_udp_receive(udp, buffer, sizeof(buffer));
 
         if (size <= 0)
         {
             break;
         }
 
-        const co_net_addr_t* remote_net_addr =
-            co_socket_get_remote_net_addr(co_udp_get_socket(self->udp));
-
         char remote_str[64];
-        co_net_addr_to_string(remote_net_addr, remote_str, sizeof(remote_str));
-        printf("receive %zd bytes from %s\n", (size_t)size, remote_str);
+        co_net_addr_to_string(
+            co_socket_get_remote_net_addr(co_udp_get_socket(udp)),
+                remote_str, sizeof(remote_str));
+        printf("received: %zd bytes from %s\n", (size_t)size, remote_str);
     }
 }
 
-void on_my_send_timer(my_app* self, co_timer_t* timer)
+//---------------------------------------------------------------------------//
+// timer callback
+//---------------------------------------------------------------------------//
+
+void
+app_on_send_timer(
+    app_st* self,
+    co_timer_t* timer
+)
 {
     // send
     const char* data = "hello";
     co_udp_send(self->udp, data, strlen(data) + 1);
 
     char remote_str[64];
-    co_net_addr_to_string(&self->remote_net_addr, remote_str, sizeof(remote_str));
+    co_net_addr_to_string(
+        &self->remote_net_addr, remote_str, sizeof(remote_str));
     printf("send %s\n", remote_str);
 
     self->send_counter++;
@@ -57,13 +76,19 @@ void on_my_send_timer(my_app* self, co_timer_t* timer)
     // quit app if send 10 times
     if (self->send_counter == 10)
     {
-        co_udp_send(self->udp, "close", 5);
         co_timer_stop(timer);
         co_app_stop();
     }
 }
 
-bool on_my_app_create(my_app* self)
+//---------------------------------------------------------------------------//
+// app callback
+//---------------------------------------------------------------------------//
+
+bool
+app_on_create(
+    app_st* self
+)
 {
     const co_args_st* args = co_app_get_args((co_app_t*)self);
 
@@ -83,39 +108,71 @@ bool on_my_app_create(my_app* self)
     co_net_addr_t local_net_addr = { 0 };
     co_net_addr_set_family(&local_net_addr, CO_NET_ADDR_FAMILY_IPV4);
 
+    // create udp
     self->udp = co_udp_create(&local_net_addr);
 
+    // callbacks
     co_udp_callbacks_st* callbacks = co_udp_get_callbacks(self->udp);
-    callbacks->on_receive = (co_udp_receive_fn)on_my_udp_receive;
+    callbacks->on_receive = (co_udp_receive_fn)app_on_udp_receive;
 
     // connect
     co_udp_connect(self->udp, &self->remote_net_addr);
 
+    // start data receive
     co_udp_receive_start(self->udp);
 
-    // send timer
+    // start send timer for debug
     self->send_counter = 0;
-    self->send_timer = co_timer_create(1000, (co_timer_fn)on_my_send_timer, true, 0);
+    self->send_timer = co_timer_create(
+        1000, (co_timer_fn)app_on_send_timer, true, 0);
     co_timer_start(self->send_timer);
 
     return true;
 }
 
-void on_my_app_destroy(my_app* self)
+void
+app_on_destroy(
+    app_st* self
+)
 {
     co_timer_destroy(self->send_timer);
     co_udp_destroy(self->udp);
 }
 
-int main(int argc, char* argv[])
+void
+app_on_signal(
+    int sig
+)
 {
+    (void)sig;
+
+    // quit app
+    co_app_stop();
+}
+
+//---------------------------------------------------------------------------//
+// main
+//---------------------------------------------------------------------------//
+
+int
+main(
+    int argc,
+    char* argv[]
+)
+{
+    co_win_debug_crt_set_flags();
+
+    signal(SIGINT, app_on_signal);
+
 //    co_udp_log_set_level(CO_LOG_LEVEL_MAX);
 
-    my_app app = { 0 };
+    // app instance
+    app_st self = { 0 };
 
+    // start app
     return co_net_app_start(
-        (co_app_t*)&app, "my_app",
-        (co_app_create_fn)on_my_app_create,
-        (co_app_destroy_fn)on_my_app_destroy,
+        (co_app_t*)&self, "udp-conn-client-app",
+        (co_app_create_fn)app_on_create,
+        (co_app_destroy_fn)app_on_destroy,
         argc, argv);
 }

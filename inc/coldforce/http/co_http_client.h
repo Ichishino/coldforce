@@ -151,14 +151,8 @@ co_http_is_running(
 );
 
 CO_HTTP_API
-const co_net_addr_t*
-co_http_get_remote_net_addr(
-    const co_http_client_t* client
-);
-
-CO_HTTP_API
 co_socket_t*
-co_http_client_get_socket(
+co_http_get_socket(
     co_http_client_t* client
 );
 

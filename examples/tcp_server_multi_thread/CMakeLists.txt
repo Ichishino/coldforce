@@ -5,8 +5,8 @@ project(tcp_server_multithread C)
 add_executable(${PROJECT_NAME}
 
     main.c
-    my_server_app.c
-    my_client_thread.c
+    tcp_server_app.c
+    tcp_client_thread.c
 )
 
 target_compile_options(${PROJECT_NAME} PUBLIC -Wall)
