@@ -111,28 +111,6 @@ app_on_tls_handshake(
 }
 
 #ifdef CO_USE_TLS
-
-#ifndef CO_USE_WOLFSSL
-// TODO
-int
-app_on_tls_verify_cookie(
-    SSL* ssl,
-    const unsigned char* cookie,
-    unsigned int cookie_len
-)
-{
-    (void)ssl;
-    (void)cookie;
-    (void)cookie_len;
-
-    printf("cookie: %*.*s\n",
-        cookie_len, cookie_len, (char*)cookie);
-
-    // ok
-    return 1;
-}
-#endif
-
 int
 app_on_tls_verify_peer(
     int preverify_ok,
@@ -145,7 +123,6 @@ app_on_tls_verify_peer(
     // ok
     return 1;
 }
-
 #endif
 
 
@@ -168,11 +145,6 @@ app_tls_setup(
 
     SSL_CTX_set_verify(
         ssl_ctx, SSL_VERIFY_PEER, app_on_tls_verify_peer);
-
-    #ifndef CO_USE_WOLFSSL
-    // TODO
-    SSL_CTX_set_cookie_verify_cb(ssl_ctx, app_on_tls_verify_cookie);
-    #endif
 
     tls_ctx->ssl_ctx = ssl_ctx;
 

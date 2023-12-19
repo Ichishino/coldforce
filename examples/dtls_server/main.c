@@ -165,6 +165,7 @@ app_on_tls_handshake(
 
 #ifdef CO_USE_TLS
 #ifndef CO_USE_WOLFSSL
+
 // TODO
 int
 app_on_tls_generate_cookie(
@@ -180,6 +181,22 @@ app_on_tls_generate_cookie(
 
     return 1;
 }
+
+// TODO
+int
+app_on_tls_verify_cookie(
+    SSL* ssl,
+    const unsigned char* cookie,
+    unsigned int cookie_len
+)
+{
+    (void)ssl;
+    (void)cookie;
+    (void)cookie_len;
+
+    return 1;
+}
+
 #endif
 #endif
 
@@ -226,6 +243,8 @@ app_tls_setup(
     // TODO
     SSL_CTX_set_cookie_generate_cb(
         ssl_ctx, app_on_tls_generate_cookie);
+    SSL_CTX_set_cookie_verify_cb(
+        ssl_ctx, app_on_tls_verify_cookie);
     #endif
 
     tls_ctx->ssl_ctx = ssl_ctx;
