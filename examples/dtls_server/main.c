@@ -182,7 +182,6 @@ app_on_tls_generate_cookie(
     return 1;
 }
 
-// TODO
 int
 app_on_tls_verify_cookie(
     SSL* ssl,
@@ -191,8 +190,9 @@ app_on_tls_verify_cookie(
 )
 {
     (void)ssl;
-    (void)cookie;
-    (void)cookie_len;
+
+    printf("cookie: %*.*s\n",
+        cookie_len, cookie_len, (char*)cookie);
 
     return 1;
 }
@@ -245,6 +245,8 @@ app_tls_setup(
         ssl_ctx, app_on_tls_generate_cookie);
     SSL_CTX_set_cookie_verify_cb(
         ssl_ctx, app_on_tls_verify_cookie);
+    SSL_CTX_set_options(
+        ssl_ctx, SSL_OP_COOKIE_EXCHANGE);
     #endif
 
     tls_ctx->ssl_ctx = ssl_ctx;
