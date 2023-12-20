@@ -21,6 +21,8 @@
 
 #ifdef CO_USE_OPENSSL_COMPATIBLE
 
+#define CO_TLS_EXDATA_SOCKET   0
+
 static void
 co_tls_on_info(
     const SSL* ssl,
@@ -28,8 +30,7 @@ co_tls_on_info(
     int ret
 )
 {
-    co_socket_t* sock =
-        (co_socket_t*)SSL_get_ex_data(ssl, 0);
+    const co_socket_t* sock = co_tls_get_socket(ssl);
 
     if (where & SSL_CB_ALERT)
     {
@@ -70,7 +71,7 @@ co_tls_client_setup_internal(
     tls->ctx.ssl_ctx = tls_ctx->ssl_ctx;
     tls->ssl = SSL_new(tls->ctx.ssl_ctx);
 
-    SSL_set_ex_data(tls->ssl, 0, sock);
+    SSL_set_ex_data(tls->ssl, CO_TLS_EXDATA_SOCKET, sock);
     SSL_CTX_set_info_callback(tls->ctx.ssl_ctx, co_tls_on_info);
 
     BIO* internal_bio = BIO_new(BIO_s_bio());
@@ -587,20 +588,122 @@ co_tls_handshake_start(
     return false;
 }
 
-#endif // CO_USE_OPENSSL_COMPATIBLE
+//---------------------------------------------------------------------------//
+// public
+//---------------------------------------------------------------------------//
 
-co_tls_callbacks_st*
-co_tls_get_callbacks(
-    co_socket_t* sock
+co_socket_t*
+co_tls_get_socket(
+    const CO_SSL_T* ssl
 )
 {
-    co_tls_client_t* tls =
-        (co_tls_client_t*)sock->tls;
+    return (co_socket_t*)SSL_get_ex_data(ssl, CO_TLS_EXDATA_SOCKET);
+}
 
-    if (tls != NULL)
+co_thread_t*
+co_tls_get_thread(
+    const CO_SSL_T* ssl
+)
+{
+    co_socket_t* sock = co_tls_get_socket(ssl);
+
+    return (sock != NULL) ? sock->owner_thread : NULL;
+}
+
+size_t
+co_tls_genelate_cookie(
+    const CO_SSL_T* ssl,
+    const uint8_t* cookie_secret,
+    size_t cookie_secret_size,
+    uint8_t* buffer,
+    size_t buffer_size
+)
+{
+    const co_socket_t* sock =
+        co_tls_get_socket(ssl);
+    const co_net_addr_t* remote_net_addr =
+        co_socket_get_remote_net_addr(sock);
+
+    size_t client_private_size = 0;
+
+    switch (remote_net_addr->sa.any.ss_family)
     {
-        return &tls->callbacks;
+    case AF_INET:
+    {
+        client_private_size +=
+            sizeof(remote_net_addr->sa.v4.sin_port);
+        client_private_size +=
+            sizeof(remote_net_addr->sa.v4.sin_addr);
+
+        break;
+    }
+    case AF_INET6:
+    {
+        client_private_size +=
+            sizeof(remote_net_addr->sa.v6.sin6_port);
+        client_private_size +=
+            sizeof(remote_net_addr->sa.v6.sin6_addr);
+
+        break;
+    }
+    default:
+        return 0;
     }
 
-    return NULL;
+    uint8_t* client_private =
+        (uint8_t*)co_mem_alloc(client_private_size);
+
+    switch (remote_net_addr->sa.any.ss_family)
+    {
+    case AF_INET:
+    {
+        memcpy(
+            client_private,
+            &remote_net_addr->sa.v4.sin_port,
+            sizeof(remote_net_addr->sa.v4.sin_port));
+        memcpy(
+            &client_private[sizeof(remote_net_addr->sa.v4.sin_port)],
+            &remote_net_addr->sa.v4.sin_addr,
+            sizeof(remote_net_addr->sa.v4.sin_addr));
+
+        break;
+    }
+    case AF_INET6:
+    {
+        memcpy(
+            client_private,
+            &remote_net_addr->sa.v6.sin6_port,
+            sizeof(remote_net_addr->sa.v6.sin6_port));
+        memcpy(
+            &client_private[sizeof(remote_net_addr->sa.v6.sin6_port)],
+            &remote_net_addr->sa.v6.sin6_addr,
+            sizeof(remote_net_addr->sa.v6.sin6_addr));
+
+        break;
+    }
+    default:
+    {
+        co_mem_free(client_private);
+
+        return 0;
+    }
+    }
+
+    uint8_t hmac[CO_TLS_COOKIE_MAX_LENGTH];
+    unsigned int hmac_length = 0;
+
+    HMAC(EVP_sha1(),
+        cookie_secret, (int)cookie_secret_size,
+        client_private, (int)client_private_size,
+        hmac, &hmac_length);
+    co_mem_free(client_private);
+
+    size_t cookie_size =
+        co_min(buffer_size, (size_t)hmac_length);
+
+    memcpy(buffer, hmac, cookie_size);
+
+    return cookie_size;
 }
+
+#endif // CO_USE_OPENSSL_COMPATIBLE

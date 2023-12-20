@@ -43,6 +43,8 @@ typedef struct
 
 } co_tls_client_t;
 
+#define CO_TLS_COOKIE_MAX_LENGTH       255
+
 //---------------------------------------------------------------------------//
 // private
 //---------------------------------------------------------------------------//
@@ -104,6 +106,36 @@ co_tls_decrypt_data(
     co_queue_t* enc_data,
     uint8_t* plain_buffer,
     size_t plain_buffer_size
+);
+
+#endif // CO_USE_OPENSSL_COMPATIBLE
+
+//---------------------------------------------------------------------------//
+// public
+//---------------------------------------------------------------------------//
+
+#ifdef CO_USE_OPENSSL_COMPATIBLE
+
+CO_TLS_API
+co_socket_t*
+co_tls_get_socket(
+    const CO_SSL_T* ssl
+);
+
+CO_TLS_API
+co_thread_t*
+co_tls_get_thread(
+    const CO_SSL_T* ssl
+);
+
+CO_TLS_API
+size_t
+co_tls_genelate_cookie(
+    const CO_SSL_T* ssl,
+    const uint8_t* cookie_secret,
+    size_t cookie_secret_size,
+    uint8_t* buffer,
+    size_t buffer_size
 );
 
 #endif // CO_USE_OPENSSL_COMPATIBLE

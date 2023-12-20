@@ -25,6 +25,7 @@ typedef struct
     // app data
     co_udp_server_t* udp_server;
     co_list_t* udp_clients;
+    uint8_t cookie_secret[32];
 
 } app_st;
 
@@ -163,41 +164,54 @@ app_on_tls_handshake(
     }
 }
 
-#ifdef CO_USE_TLS
-#ifndef CO_USE_WOLFSSL
-
-// TODO
+#if defined(CO_USE_TLS) && !defined(CO_USE_WOLFSSL)
 int
 app_on_tls_generate_cookie(
     SSL* ssl,
     unsigned char* cookie,
-    unsigned int* cookie_len
+    unsigned int* cookie_length
 )
 {
-    (void)ssl;
+    app_st* self = (app_st*)co_tls_get_thread(ssl);
 
-    memcpy(cookie, "your-cookie", 11);
-    *cookie_len = 11;
+    size_t length =
+        co_tls_genelate_cookie(ssl,
+            self->cookie_secret, sizeof(self->cookie_secret),
+            cookie, CO_TLS_COOKIE_MAX_LENGTH);
 
-    return 1;
+    *cookie_length = (unsigned int)length;
+
+    return (int)(length > 0);
 }
 
 int
 app_on_tls_verify_cookie(
     SSL* ssl,
     const unsigned char* cookie,
-    unsigned int cookie_len
+    unsigned int cookie_length
 )
 {
-    (void)ssl;
+    app_st* self = (app_st*)co_tls_get_thread(ssl);
 
-    printf("cookie: %*.*s\n",
-        cookie_len, cookie_len, (char*)cookie);
+    uint8_t verify_cookie[CO_TLS_COOKIE_MAX_LENGTH];
+
+    size_t verify_cookie_length =
+        co_tls_genelate_cookie(ssl,
+            self->cookie_secret, sizeof(self->cookie_secret),
+            verify_cookie, sizeof(verify_cookie));
+
+    if ((verify_cookie_length != cookie_length) ||
+        (memcmp(cookie, verify_cookie, cookie_length) != 0))
+    {
+        printf("verify cookie: error\n");
+
+        return 0;
+    }
+
+    printf("verify cookie: ok\n");
 
     return 1;
 }
-
-#endif
 #endif
 
 //---------------------------------------------------------------------------//
@@ -206,6 +220,7 @@ app_on_tls_verify_cookie(
 
 bool
 app_tls_setup(
+    app_st* self,
     co_tls_ctx_st* tls_ctx
 )
 {
@@ -239,14 +254,18 @@ app_tls_setup(
         return false;
     }
 
+    co_random(
+        self->cookie_secret,
+        sizeof(self->cookie_secret));
+
+    SSL_CTX_set_options(
+        ssl_ctx, SSL_OP_COOKIE_EXCHANGE);
+
     #ifndef CO_USE_WOLFSSL
-    // TODO
     SSL_CTX_set_cookie_generate_cb(
         ssl_ctx, app_on_tls_generate_cookie);
     SSL_CTX_set_cookie_verify_cb(
         ssl_ctx, app_on_tls_verify_cookie);
-    SSL_CTX_set_options(
-        ssl_ctx, SSL_OP_COOKIE_EXCHANGE);
     #endif
 
     tls_ctx->ssl_ctx = ssl_ctx;
@@ -290,7 +309,7 @@ app_on_create(
     
     // tls setup
     co_tls_ctx_st tls_ctx = { 0 };
-    if (!app_tls_setup(&tls_ctx))
+    if (!app_tls_setup(self, &tls_ctx))
     {
         return false;
     }

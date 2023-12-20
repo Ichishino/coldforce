@@ -37,6 +37,8 @@ All of these support clients and servers (multi-client, C10K).
   #define HAVE_ALPN
   #define HAVE_SNI
   #define WOLFSSL_SYS_CA_CERTS
+  #define WOLFSSL_DTLS
+  #define WOLFSSL_DTLS13
 
   mkdir inc/wolfssl
   copy your user_settings.h to inc/wolfssl/.
@@ -45,7 +47,7 @@ All of these support clients and servers (multi-client, C10K).
   ```shellsession
   configure
 
-  --enable-opensslextra --enable-opensslall --enable-alpn --enable-sni --enable-sys-ca-certs
+  --enable-opensslextra --enable-opensslall --enable-alpn --enable-sni --enable-sys-ca-certs --enable-dtls --enable-dtls13
   ```
 
 ## Modules
