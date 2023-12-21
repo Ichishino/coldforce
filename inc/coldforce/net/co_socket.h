@@ -60,7 +60,7 @@ typedef struct co_socket_t
 
     } local, remote;
 
-    co_timer_t* receive_timer;
+    co_timer_t* timer;
 
     void* sub_class;
     void* tls;
@@ -127,14 +127,14 @@ co_socket_get_remote_net_addr(
 
 CO_NET_API
 void
-co_socket_set_receive_timer(
+co_socket_set_timer(
     co_socket_t* sock,
     co_timer_t* timer
 );
 
 CO_NET_API
 co_timer_t*
-co_socket_get_receive_timer(
+co_socket_get_timer(
     const co_socket_t* sock
 );
 

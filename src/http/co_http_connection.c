@@ -255,9 +255,9 @@ co_http_connection_send_request(
 
     if (result)
     {
-        if (!co_tcp_is_running_receive_timer(conn->tcp_client))
+        if (!co_tcp_is_timer_running(conn->tcp_client))
         {
-            co_tcp_start_receive_timer(conn->tcp_client);
+            co_tcp_start_timer(conn->tcp_client);
         }
     }
 

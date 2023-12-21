@@ -59,7 +59,7 @@ app_on_udp_receive(
     }
 
     // restart receive timer
-    co_udp_restart_receive_timer(udp_client);
+    co_udp_restart_timer(udp_client);
 }
 
 void
@@ -102,7 +102,7 @@ app_on_udp_accept(
     // callbacks
     co_udp_callbacks_st* callbacks = co_udp_get_callbacks(udp_client);
     callbacks->on_receive = (co_udp_receive_fn)app_on_udp_receive;
-    callbacks->on_receive_timer = (co_udp_receive_timer_fn)app_on_udp_receive_timer;
+    callbacks->on_timer = (co_udp_timer_fn)app_on_udp_receive_timer;
 
     co_list_add_tail(self->udp_clients, udp_client);
 
@@ -110,8 +110,8 @@ app_on_udp_accept(
     co_udp_send(udp_client, data, data_size);
 
     // start receive timer
-    co_udp_create_receive_timer(udp_client, 60*1000); // 1min
-    co_udp_start_receive_timer(udp_client);
+    co_udp_create_timer(udp_client, 60*1000); // 1min
+    co_udp_start_timer(udp_client);
 }
 
 //---------------------------------------------------------------------------//

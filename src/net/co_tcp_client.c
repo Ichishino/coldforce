@@ -76,7 +76,7 @@ co_tcp_client_setup(
     client->callbacks.on_connect = NULL;
     client->callbacks.on_send_async = NULL;
     client->callbacks.on_receive = NULL;
-    client->callbacks.on_receive_timer = NULL;
+    client->callbacks.on_timer = NULL;
     client->callbacks.on_close = NULL;
 
     client->close_timer = NULL;
@@ -112,6 +112,7 @@ co_tcp_client_cleanup(
     client->callbacks.on_connect = NULL;
     client->callbacks.on_send_async = NULL;
     client->callbacks.on_receive = NULL;
+    client->callbacks.on_timer = NULL;
     client->callbacks.on_close = NULL;
 
     co_socket_cleanup(&client->sock);
@@ -328,7 +329,7 @@ co_tcp_client_on_receive_ready(
 }
 
 static void
-co_tcp_client_on_receive_timer(
+co_tcp_client_on_timer(
     co_thread_t* thread,
     co_timer_t* timer
 )
@@ -336,9 +337,9 @@ co_tcp_client_on_receive_timer(
     co_tcp_client_t* client =
         (co_tcp_client_t*)co_timer_get_user_data(timer);
 
-    if (client->callbacks.on_receive_timer != NULL)
+    if (client->callbacks.on_timer != NULL)
     {
-        client->callbacks.on_receive_timer(thread, client);
+        client->callbacks.on_timer(thread, client);
     }
 }
 
@@ -459,7 +460,7 @@ co_tcp_client_destroy(
         client->callbacks.on_connect = NULL;
         client->callbacks.on_send_async = NULL;
         client->callbacks.on_receive = NULL;
-        client->callbacks.on_receive_timer = NULL;
+        client->callbacks.on_timer = NULL;
         client->callbacks.on_close = NULL;
 
         co_net_worker_close_tcp_client_local(
@@ -771,7 +772,7 @@ co_tcp_close(
     client->callbacks.on_connect = NULL;
     client->callbacks.on_send_async = NULL;
     client->callbacks.on_receive = NULL;
-    client->callbacks.on_receive_timer = NULL;
+    client->callbacks.on_timer = NULL;
     client->callbacks.on_close = NULL;
 
     co_socket_handle_close(client->sock.handle);
@@ -785,65 +786,63 @@ co_tcp_close(
 }
 
 bool
-co_tcp_create_receive_timer(
+co_tcp_create_timer(
     co_tcp_client_t* client,
     uint32_t msec
 )
 {
-    if (co_socket_get_receive_timer(&client->sock) != NULL)
+    if (co_socket_get_timer(&client->sock) != NULL)
     {
         return false;
     }
 
-    co_timer_t* receive_timer =
-        co_timer_create(msec, co_tcp_client_on_receive_timer,
+    co_timer_t* timer =
+        co_timer_create(msec, co_tcp_client_on_timer,
             false, client);
 
-    if (receive_timer == NULL)
+    if (timer == NULL)
     {
         return false;
     }
 
-    co_socket_set_receive_timer(
-        &client->sock, receive_timer);
+    co_socket_set_timer(&client->sock, timer);
 
     return true;
 }
 
 void
-co_tcp_destroy_receive_timer(
+co_tcp_destroy_timer(
     co_tcp_client_t* client
 )
 {
     if (client != NULL)
     {
         co_timer_destroy(
-            co_socket_get_receive_timer(
-                &client->sock));
+            co_socket_get_timer(&client->sock));
 
-        co_socket_set_receive_timer(
+        co_socket_set_timer(
             &client->sock, NULL);
     }
 }
 
 bool
-co_tcp_start_receive_timer(
+co_tcp_start_timer(
     co_tcp_client_t* client
 )
 {
-    co_timer_t* receive_timer =
-        co_socket_get_receive_timer(&client->sock);
+    co_timer_t* timer =
+        co_socket_get_timer(&client->sock);
 
-    if (receive_timer == NULL)
+    if (timer == NULL)
     {
         return false;
     }
 
-    return co_timer_start(receive_timer);
+    return co_timer_start(timer);
 }
 
 void
-co_tcp_stop_receive_timer(
+co_tcp_stop_timer(
     co_tcp_client_t* client
 )
 {
@@ -852,38 +851,37 @@ co_tcp_stop_receive_timer(
         return;
     }
 
-    co_timer_t* receive_timer =
-        co_socket_get_receive_timer(
-            &client->sock);
+    co_timer_t* timer =
+        co_socket_get_timer(&client->sock);
 
-    if (receive_timer == NULL)
+    if (timer == NULL)
     {
         return;
     }
 
-    co_timer_stop(receive_timer);
+    co_timer_stop(timer);
 }
 
 bool
-co_tcp_restart_receive_timer(
+co_tcp_restart_timer(
     co_tcp_client_t* client
 )
 {
-    co_timer_t* receive_timer =
-        co_socket_get_receive_timer(&client->sock);
+    co_timer_t* timer =
+        co_socket_get_timer(&client->sock);
 
-    if (receive_timer == NULL)
+    if (timer == NULL)
     {
         return false;
     }
 
-    co_timer_stop(receive_timer);
+    co_timer_stop(timer);
 
-    return co_timer_start(receive_timer);
+    return co_timer_start(timer);
 }
 
 bool
-co_tcp_is_running_receive_timer(
+co_tcp_is_timer_running(
     const co_tcp_client_t* client
 )
 {
@@ -892,16 +890,15 @@ co_tcp_is_running_receive_timer(
         return false;
     }
 
-    co_timer_t* receive_timer =
-        co_socket_get_receive_timer(
-            &client->sock);
+    co_timer_t* timer =
+        co_socket_get_timer(&client->sock);
 
-    if (receive_timer == NULL)
+    if (timer == NULL)
     {
         return false;
     }
 
-    return co_timer_is_running(receive_timer);
+    return co_timer_is_running(timer);
 }
 
 bool

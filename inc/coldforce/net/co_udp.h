@@ -24,7 +24,7 @@ typedef void(*co_udp_send_async_fn)(
 typedef void (*co_udp_receive_fn)(
     co_thread_t* self, struct co_udp_t* udp);
 
-typedef void(*co_udp_receive_timer_fn)(
+typedef void(*co_udp_timer_fn)(
     co_thread_t* self, struct co_udp_t* udp);
 
 typedef struct
@@ -41,7 +41,7 @@ typedef struct
 {
     co_udp_send_async_fn on_send_async;
     co_udp_receive_fn on_receive;
-    co_udp_receive_timer_fn on_receive_timer;
+    co_udp_timer_fn on_timer;
 
 } co_udp_callbacks_st;
 
@@ -202,38 +202,38 @@ co_udp_receive(
 
 CO_NET_API
 bool
-co_udp_create_receive_timer(
+co_udp_create_timer(
     co_udp_t* udp,
     uint32_t msec
 );
 
 CO_NET_API
 void
-co_udp_destroy_receive_timer(
+co_udp_destroy_timer(
     co_udp_t* udp
 );
 
 CO_NET_API
 bool
-co_udp_start_receive_timer(
+co_udp_start_timer(
     co_udp_t* udp
 );
 
 CO_NET_API
 void
-co_udp_stop_receive_timer(
+co_udp_stop_timer(
     co_udp_t* udp
 );
 
 CO_NET_API
 bool
-co_udp_restart_receive_timer(
+co_udp_restart_timer(
     co_udp_t* udp
 );
 
 CO_NET_API
 bool
-co_udp_is_running_receive_timer(
+co_udp_is_timer_running(
     const co_udp_t* udp
 );
 

@@ -60,10 +60,10 @@ co_http_client_setup(
     co_http_client_t* client
 )
 {
-    client->conn.tcp_client->callbacks.on_receive_timer =
+    client->conn.tcp_client->callbacks.on_timer =
         co_http_client_on_tcp_receive_timer;
 
-    co_tcp_create_receive_timer(
+    co_tcp_create_timer(
         client->conn.tcp_client,
         co_http_config_get_max_receive_wait_time());
 
@@ -125,7 +125,7 @@ co_http_client_on_resopnse(
     if ((error_code != 0) ||
         (co_list_get_count(client->request_queue) == 0))
     {
-        co_tcp_stop_receive_timer(client->conn.tcp_client);
+        co_tcp_stop_timer(client->conn.tcp_client);
     }
 
     if (error_code == 0)
@@ -184,7 +184,7 @@ co_http_client_on_http_connection_close(
 {
     co_http_client_t* client = (co_http_client_t*)conn;
 
-    co_tcp_stop_receive_timer(client->conn.tcp_client);
+    co_tcp_stop_timer(client->conn.tcp_client);
 
     client->conn.module.close(client->conn.tcp_client);
 
@@ -208,7 +208,7 @@ co_http_client_on_tcp_receive_ready(
             client->conn.tcp_client,
             client->conn.receive_data.ptr);
 
-    co_tcp_restart_receive_timer(client->conn.tcp_client);
+    co_tcp_restart_timer(client->conn.tcp_client);
 
     if (receive_result <= 0)
     {

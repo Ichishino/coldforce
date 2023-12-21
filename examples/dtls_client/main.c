@@ -58,7 +58,7 @@ app_on_udp_receive(
     }
 
     // restart receive timer
-    co_udp_restart_receive_timer(udp_client);
+    co_udp_restart_timer(udp_client);
 }
 
 void
@@ -96,7 +96,7 @@ app_on_tls_handshake(
         co_dtls_udp_send(udp_client, data, strlen(data) + 1);
 
         // start receive timer
-        co_udp_start_receive_timer(udp_client);
+        co_udp_start_timer(udp_client);
     }
     else
     {
@@ -196,12 +196,12 @@ app_on_create(
     }
 
     // create receive timer
-    co_udp_create_receive_timer(self->udp_client, 60*1000);
+    co_udp_create_timer(self->udp_client, 60*1000);
 
     // callbacks
     co_udp_callbacks_st* udp_callbacks = co_udp_get_callbacks(self->udp_client);
     udp_callbacks->on_receive = (co_udp_receive_fn)app_on_udp_receive;
-    udp_callbacks->on_receive_timer = (co_udp_receive_timer_fn)app_on_udp_receive_timer;
+    udp_callbacks->on_timer = (co_udp_timer_fn)app_on_udp_receive_timer;
     co_tls_callbacks_st* tls_callbacks = co_dtls_udp_get_callbacks(self->udp_client);
     tls_callbacks->on_handshake = (co_tls_handshake_fn)app_on_tls_handshake;
 

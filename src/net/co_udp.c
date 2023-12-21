@@ -33,7 +33,7 @@ co_udp_setup(
     udp->send_async_queue = NULL;
     udp->callbacks.on_send_async = NULL;
     udp->callbacks.on_receive = NULL;
-    udp->callbacks.on_receive_timer = NULL;
+    udp->callbacks.on_timer = NULL;
 
 #ifdef CO_OS_WIN
     if (!co_win_net_client_extension_setup(
@@ -77,7 +77,7 @@ co_udp_cleanup(
 
     udp->callbacks.on_send_async = NULL;
     udp->callbacks.on_receive = NULL;
-    udp->callbacks.on_receive_timer = NULL;
+    udp->callbacks.on_timer = NULL;
 
     co_socket_cleanup(&udp->sock);
 }
@@ -222,7 +222,7 @@ co_udp_on_receive_ready(
 }
 
 static void
-co_udp_on_receive_timer(
+co_udp_on_timer(
     co_thread_t* thread,
     co_timer_t* timer
 )
@@ -230,9 +230,9 @@ co_udp_on_receive_timer(
     co_udp_t* udp =
         (co_udp_t*)co_timer_get_user_data(timer);
 
-    if (udp->callbacks.on_receive_timer != NULL)
+    if (udp->callbacks.on_timer != NULL)
     {
-        udp->callbacks.on_receive_timer(thread, udp);
+        udp->callbacks.on_timer(thread, udp);
     }
 }
 
@@ -819,65 +819,63 @@ co_udp_receive(
 }
 
 bool
-co_udp_create_receive_timer(
+co_udp_create_timer(
     co_udp_t* udp,
     uint32_t msec
 )
 {
-    if (co_socket_get_receive_timer(&udp->sock) != NULL)
+    if (co_socket_get_timer(&udp->sock) != NULL)
     {
         return false;
     }
 
-    co_timer_t* receive_timer =
-        co_timer_create(msec, co_udp_on_receive_timer,
+    co_timer_t* timer =
+        co_timer_create(msec, co_udp_on_timer,
             false, udp);
 
-    if (receive_timer == NULL)
+    if (timer == NULL)
     {
         return false;
     }
 
-    co_socket_set_receive_timer(
-        &udp->sock, receive_timer);
+    co_socket_set_timer(&udp->sock, timer);
 
     return true;
 }
 
 void
-co_udp_destroy_receive_timer(
+co_udp_destroy_timer(
     co_udp_t* udp
 )
 {
     if (udp != NULL)
     {
         co_timer_destroy(
-            co_socket_get_receive_timer(
-                &udp->sock));
+            co_socket_get_timer(&udp->sock));
 
-        co_socket_set_receive_timer(
+        co_socket_set_timer(
             &udp->sock, NULL);
     }
 }
 
 bool
-co_udp_start_receive_timer(
+co_udp_start_timer(
     co_udp_t* udp
 )
 {
-    co_timer_t* receive_timer =
-        co_socket_get_receive_timer(&udp->sock);
+    co_timer_t* timer =
+        co_socket_get_timer(&udp->sock);
 
-    if (receive_timer == NULL)
+    if (timer == NULL)
     {
         return false;
     }
 
-    return co_timer_start(receive_timer);
+    return co_timer_start(timer);
 }
 
 void
-co_udp_stop_receive_timer(
+co_udp_stop_timer(
     co_udp_t* udp
 )
 {
@@ -886,38 +884,37 @@ co_udp_stop_receive_timer(
         return;
     }
 
-    co_timer_t* receive_timer =
-        co_socket_get_receive_timer(
-            &udp->sock);
+    co_timer_t* timer =
+        co_socket_get_timer(&udp->sock);
 
-    if (receive_timer == NULL)
+    if (timer == NULL)
     {
         return;
     }
 
-    co_timer_stop(receive_timer);
+    co_timer_stop(timer);
 }
 
 bool
-co_udp_restart_receive_timer(
+co_udp_restart_timer(
     co_udp_t* udp
 )
 {
-    co_timer_t* receive_timer =
-        co_socket_get_receive_timer(&udp->sock);
+    co_timer_t* timer =
+        co_socket_get_timer(&udp->sock);
 
-    if (receive_timer == NULL)
+    if (timer == NULL)
     {
         return false;
     }
 
-    co_timer_stop(receive_timer);
+    co_timer_stop(timer);
 
-    return co_timer_start(receive_timer);
+    return co_timer_start(timer);
 }
 
 bool
-co_udp_is_running_receive_timer(
+co_udp_is_timer_running(
     const co_udp_t* udp
 )
 {
@@ -926,16 +923,15 @@ co_udp_is_running_receive_timer(
         return false;
     }
 
-    co_timer_t* receive_timer =
-        co_socket_get_receive_timer(
-            &udp->sock);
+    co_timer_t* timer =
+        co_socket_get_timer(&udp->sock);
 
-    if (receive_timer == NULL)
+    if (timer == NULL)
     {
         return false;
     }
 
-    return co_timer_is_running(receive_timer);
+    return co_timer_is_running(timer);
 }
 
 co_socket_t*
