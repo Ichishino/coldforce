@@ -48,7 +48,7 @@ static void test_tcp_client_stop(test_tcp_thread_st* self, test_tcp_client_st* t
             }
             else
             {
-                co_tcp_half_close(test_tcp_client->tcp_client, 30000);
+                co_tcp_half_close(test_tcp_client->tcp_client);
             }
         }
 
@@ -334,7 +334,7 @@ static bool test_tcp_thread_on_create(test_tcp_thread_st* self)
 
         co_tcp_set_user_data(tcp_client, test_tcp_client);
 
-        if (!co_tcp_connect(tcp_client, &remote_net_addr))
+        if (!co_tcp_connect_start(tcp_client, &remote_net_addr))
         {
             test_error("Failed: co_tcp_connect");
             exit(-1);

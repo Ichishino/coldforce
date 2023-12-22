@@ -58,7 +58,6 @@ typedef struct co_tcp_client_t
     co_socket_t sock;
     co_tcp_callbacks_st callbacks;
 
-    co_timer_t* close_timer;
     co_queue_t* send_async_queue;
 
 } co_tcp_client_t;
@@ -149,8 +148,7 @@ co_tcp_get_callbacks(
 CO_NET_API
 bool
 co_tcp_half_close(
-    co_tcp_client_t* client,
-    uint32_t timeout_msec
+    co_tcp_client_t* client
 );
 
 CO_NET_API

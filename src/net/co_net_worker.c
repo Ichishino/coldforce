@@ -423,13 +423,7 @@ co_net_worker_unregister_tcp_connection(
 
         if (it != NULL)
         {
-            if (client->close_timer != NULL)
-            {
-                co_timer_stop(client->close_timer);
-                co_timer_destroy(client->close_timer);
-
-                client->close_timer = NULL;
-            }
+            co_tcp_destroy_timer(client);
 
             co_list_remove_at(net_worker->tcp_clients, it);
 
@@ -441,12 +435,9 @@ co_net_worker_unregister_tcp_connection(
 void
 co_net_worker_tcp_client_close_timer(
     co_thread_t* thread,
-    co_timer_t* timer
+    co_tcp_client_t* client
 )
 {
-    co_tcp_client_t* client =
-        (co_tcp_client_t*)co_timer_get_user_data(timer);
-
     co_tcp_log_warning(
         &client->sock.local.net_addr,
         "<--",
@@ -486,11 +477,16 @@ co_net_worker_close_tcp_client_local(
         client->sock.handle,
         CO_SOCKET_SHUTDOWN_SEND);
 
-    client->close_timer = co_timer_create(timeout_msec,
-        (co_timer_fn)co_net_worker_tcp_client_close_timer,
-        false, client);
+    if (timeout_msec != CO_INFINITE)
+    {
+        co_tcp_destroy_timer(client);
 
-    co_timer_start(client->close_timer);
+        client->callbacks.on_timer =
+            co_net_worker_tcp_client_close_timer;
+
+        co_tcp_create_timer(client, timeout_msec);
+        co_tcp_start_timer(client);
+    }
 
     return true;
 }

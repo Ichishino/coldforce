@@ -79,8 +79,6 @@ co_tcp_client_setup(
     client->callbacks.on_timer = NULL;
     client->callbacks.on_close = NULL;
 
-    client->close_timer = NULL;
-
 #ifdef CO_OS_WIN
     if (!co_win_net_client_extension_setup(
         &client->sock.win.client, &client->sock,
@@ -734,8 +732,7 @@ co_tcp_get_callbacks(
 
 bool
 co_tcp_half_close(
-    co_tcp_client_t* client,
-    uint32_t timeout_msec
+    co_tcp_client_t* client
 )
 {
     if (client == NULL)
@@ -745,7 +742,7 @@ co_tcp_half_close(
 
     return co_net_worker_close_tcp_client_local(
         co_socket_get_net_worker(&client->sock),
-        client, timeout_msec);
+        client, CO_INFINITE);
 }
 
 void
