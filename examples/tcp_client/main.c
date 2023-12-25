@@ -115,7 +115,7 @@ app_tcp_connect(
     callbacks->on_close = (co_tcp_close_fn)app_on_tcp_close;
 
     // start connect
-    co_tcp_connect_start(self->tcp_client, &self->remote_net_addr);
+    co_tcp_start_connect(self->tcp_client, &self->remote_net_addr);
 
     char remote_str[64];
     co_net_addr_to_string(

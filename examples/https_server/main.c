@@ -245,7 +245,7 @@ app_on_tcp_accept(
     tls_callbacks->on_handshake = (co_tls_handshake_fn)app_on_tls_handshake;
 
     // start tls handshake
-    co_tls_tcp_handshake_start(tcp_client);
+    co_tls_tcp_start_handshake(tcp_client);
 
     co_list_add_tail(self->tcp_clients, tcp_client);
 }

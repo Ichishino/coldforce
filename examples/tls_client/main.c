@@ -86,7 +86,7 @@ app_on_tcp_connect(
         printf("start tls handshake\n");
 
         // start tls handshake
-        co_tls_tcp_handshake_start(tcp_client);
+        co_tls_tcp_start_handshake(tcp_client);
     }
     else
     {
@@ -193,7 +193,7 @@ app_tls_tcp_connect(
     tls_callbacks->on_handshake = (co_tls_handshake_fn)app_on_tls_handshake;
 
     // start connect
-    co_tcp_connect_start(self->tcp_client, &self->remote_net_addr);
+    co_tcp_start_connect(self->tcp_client, &self->remote_net_addr);
 
     char remote_str[64];
     co_net_addr_to_string(&self->remote_net_addr, remote_str, sizeof(remote_str));

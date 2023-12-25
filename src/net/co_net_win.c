@@ -357,7 +357,7 @@ co_win_net_accept_start(
 }
 
 bool
-co_win_net_connect_start(
+co_win_net_start_connect(
     co_socket_t* sock,
     const co_net_addr_t* remote_net_addr
 )

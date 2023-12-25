@@ -36,7 +36,7 @@ co_dtls_udp_client_destroy(
 
 CO_TLS_API
 bool
-co_dtls_udp_handshake_start(
+co_dtls_udp_start_handshake(
     co_udp_t* udp,
     const co_net_addr_t* remote_net_addr
 );

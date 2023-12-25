@@ -27,7 +27,8 @@ typedef void(*co_ws_upgrade_fn)(
     int error_code);
 
 typedef void(*co_ws_receive_frame_fn)(
-    co_thread_t* self, struct co_ws_client_t*, const co_ws_frame_t*, int error_code);
+    co_thread_t* self, struct co_ws_client_t*,
+    const co_ws_frame_t*, int error_code);
 
 typedef void(*co_ws_close_fn)(
     co_thread_t* self, struct co_ws_client_t*);
@@ -112,7 +113,7 @@ co_ws_get_callbacks(
 
 CO_WS_API
 bool
-co_ws_connect_start(
+co_ws_start_connect(
     co_ws_client_t* client
 );
 

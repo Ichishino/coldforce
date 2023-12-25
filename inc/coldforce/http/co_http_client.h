@@ -119,7 +119,7 @@ co_http_get_callbacks(
 
 CO_HTTP_API
 bool
-co_http_connect_start(
+co_http_start_connect(
     co_http_client_t* client
 );
 

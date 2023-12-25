@@ -174,7 +174,7 @@ co_http2_is_running(
 
 CO_HTTP2_API
 bool
-co_http2_connect_start(
+co_http2_start_connect(
     co_http2_client_t* client
 );
 

@@ -475,7 +475,7 @@ co_tcp_client_destroy(
 }
 
 bool
-co_tcp_connect_start(
+co_tcp_start_connect(
     co_tcp_client_t* client,
     const co_net_addr_t* remote_net_addr
 )
@@ -486,7 +486,7 @@ co_tcp_connect_start(
 
 #ifdef CO_OS_WIN
 
-    if (!co_win_net_connect_start(
+    if (!co_win_net_start_connect(
         &client->sock, remote_net_addr))
     {
         return false;

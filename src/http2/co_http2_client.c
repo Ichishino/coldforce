@@ -682,7 +682,7 @@ co_http2_is_running(
 }
 
 bool
-co_http2_connect_start(
+co_http2_start_connect(
     co_http2_client_t* client
 )
 {

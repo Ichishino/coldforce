@@ -255,7 +255,7 @@ app_on_create(
     }
 
     // start connect
-    co_http2_connect_start(self->http2_client);
+    co_http2_start_connect(self->http2_client);
 
     return true;
 }

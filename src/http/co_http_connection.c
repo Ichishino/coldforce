@@ -50,7 +50,7 @@ co_http_connection_on_tcp_connect(
             tls->callbacks.on_handshake =
                 (co_tls_handshake_fn)co_http_connection_on_tls_handshake;
 
-            co_tls_tcp_handshake_start(tcp_client);
+            co_tls_tcp_start_handshake(tcp_client);
 
             return;
         }
@@ -112,7 +112,7 @@ co_http_connection_setup(
     {
         conn->module.destroy = co_tls_tcp_client_destroy;
         conn->module.close = co_tcp_close;
-        conn->module.connect = co_tcp_connect_start;
+        conn->module.connect = co_tcp_start_connect;
         conn->module.send = co_tls_tcp_send;
         conn->module.receive_all = co_tls_tcp_receive_all;
 
@@ -135,7 +135,7 @@ co_http_connection_setup(
     {
         conn->module.destroy = co_tcp_client_destroy;
         conn->module.close = co_tcp_close;
-        conn->module.connect = co_tcp_connect_start;
+        conn->module.connect = co_tcp_start_connect;
         conn->module.send = co_tcp_send;
         conn->module.receive_all = co_tcp_receive_all;
 

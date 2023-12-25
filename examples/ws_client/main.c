@@ -248,7 +248,7 @@ app_on_create(
     callbacks->on_close = (co_ws_close_fn)app_on_ws_close;
 
     // start connect
-    co_ws_connect_start(self->ws_client);
+    co_ws_start_connect(self->ws_client);
 
     return true;
 }

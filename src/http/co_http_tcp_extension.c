@@ -27,7 +27,7 @@ co_tcp_upgrade_to_http_connection(
     {
         conn->module.destroy = co_tls_tcp_client_destroy;
         conn->module.close = co_tcp_close;
-        conn->module.connect = co_tcp_connect_start;
+        conn->module.connect = co_tcp_start_connect;
         conn->module.send = co_tls_tcp_send;
         conn->module.receive_all = co_tls_tcp_receive_all;
     }
@@ -35,7 +35,7 @@ co_tcp_upgrade_to_http_connection(
     {
         conn->module.destroy = co_tcp_client_destroy;
         conn->module.close = co_tcp_close;
-        conn->module.connect = co_tcp_connect_start;
+        conn->module.connect = co_tcp_start_connect;
         conn->module.send = co_tcp_send;
         conn->module.receive_all = co_tcp_receive_all;
     }

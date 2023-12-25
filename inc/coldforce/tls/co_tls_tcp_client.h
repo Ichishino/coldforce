@@ -36,7 +36,7 @@ co_tls_tcp_client_destroy(
 
 CO_TLS_API
 bool
-co_tls_tcp_handshake_start(
+co_tls_tcp_start_handshake(
     co_tcp_client_t* tcp_client
 );
 

@@ -57,7 +57,7 @@ co_http_send_chunked_data(
 
 CO_HTTP_API
 bool
-co_http_end_chunked_response(
+co_http_finish_chunked_response(
     co_http_client_t* client
 );
 

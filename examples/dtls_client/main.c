@@ -206,7 +206,7 @@ app_on_create(
     tls_callbacks->on_handshake = (co_tls_handshake_fn)app_on_tls_handshake;
 
     // start tls handshake
-    co_dtls_udp_handshake_start(self->udp_client, &self->remote_net_addr);
+    co_dtls_udp_start_handshake(self->udp_client, &self->remote_net_addr);
 
     char remote_str[64];
     co_net_addr_to_string(

@@ -281,7 +281,7 @@ app_on_create(
     }
 
     // start connect
-    co_http_connect_start(self->http_client);
+    co_http_start_connect(self->http_client);
 
     return true;
 }

@@ -255,36 +255,41 @@ co_http_send_chunked_data(
     size_t data_length
 )
 {
-    co_byte_array_t* buffer = co_byte_array_create();
+    co_http_log_debug(
+        &client->conn.tcp_client->sock.local.net_addr,
+        "-->",
+        &client->conn.tcp_client->sock.remote.net_addr,
+        "http send chunked data %zd bytes", data_length);
 
     char chunk_size[64];
     sprintf(chunk_size, "%x"CO_HTTP_CRLF, (unsigned int)data_length);
 
-    co_byte_array_add_string(buffer, chunk_size);
-
-    if (data_length > 0)
-    {
-        co_byte_array_add(buffer, data, data_length);
-    }
-
-    co_byte_array_add_string(buffer, CO_HTTP_CRLF);
-
-    co_http_log_debug(NULL, NULL, NULL,
-        "http send chunked data %zd", data_length);
-
     bool result =
         co_http_connection_send_data(
             &client->conn,
-            co_byte_array_get_ptr(buffer, 0),
-            co_byte_array_get_count(buffer));
+            chunk_size, strlen(chunk_size));
 
-    co_byte_array_destroy(buffer);
+    if (result && data_length > 0)
+    {
+        result =
+            co_http_connection_send_data(
+                &client->conn,
+                data, data_length);
+    }
+
+    if (result)
+    {
+        result =
+            co_http_connection_send_data(
+                &client->conn,
+                CO_HTTP_CRLF, strlen(CO_HTTP_CRLF));
+    }
 
     return result;
 }
 
 bool
-co_http_end_chunked_response(
+co_http_finish_chunked_response(
     co_http_client_t* client
 )
 {
