@@ -365,6 +365,11 @@ co_tls_on_handshake_receive(
     co_socket_t* sock
 )
 {
+    if (sock->tls == NULL)
+    {
+        return;
+    }
+
     co_tls_client_t* tls = (co_tls_client_t*)sock->tls;
 
 #ifdef CO_OS_WIN
@@ -450,6 +455,11 @@ co_tls_on_handshake_timer(
 {
     co_socket_t* sock =
         (co_socket_t*)co_timer_get_user_data(timer);
+
+    if (sock->tls == NULL)
+    {
+        return;
+    }
 
     co_tls_log_error(
         &sock->local.net_addr, "<--", &sock->remote.net_addr,

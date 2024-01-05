@@ -124,8 +124,6 @@ app_on_http_close(
     co_http_client_t* http_client
 )
 {
-    (void)self;
-
     app_client_log(http, http_client, "http closed");
 
     co_list_remove(self->http_clients, http_client);
@@ -217,8 +215,6 @@ app_on_tcp_close(
     co_tcp_client_t* tcp_client
 )
 {
-    (void)self;
-
     app_client_log(tcp, tcp_client, "tcp closed");
 
     co_list_remove(self->tcp_clients, tcp_client);
@@ -331,15 +327,20 @@ app_on_destroy(
     app_st* self
 )
 {
-    co_list_iterator_t* it =
-        co_list_get_head_iterator(self->tcp_clients);
-    while (it != NULL)
+    if (self->tcp_clients != NULL)
     {
-        co_list_data_st* data =
-            co_list_get_next(self->tcp_clients, &it);
-        co_tls_tcp_client_destroy((co_tcp_client_t*)data->value);
+        co_list_iterator_t* it =
+            co_list_get_head_iterator(self->tcp_clients);
+
+        while (it != NULL)
+        {
+            co_list_data_st* data =
+                co_list_get_next(self->tcp_clients, &it);
+            co_tls_tcp_client_destroy((co_tcp_client_t*)data->value);
+        }
+
+        co_list_destroy(self->tcp_clients);
     }
-    co_list_destroy(self->tcp_clients);
 
     co_list_destroy(self->http_clients);
 

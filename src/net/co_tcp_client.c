@@ -360,8 +360,6 @@ co_tcp_client_on_close(
         &client->sock.remote.net_addr,
         "tcp closed by peer");
 
-    client->sock.local.is_open = false;
-
     if (client->callbacks.on_close != NULL)
     {
         client->callbacks.on_close(client->sock.owner_thread, client);

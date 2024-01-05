@@ -509,15 +509,20 @@ app_on_destroy(
 {
     co_tls_tcp_server_destroy(self->tcp_server);
 
-    co_list_iterator_t* it =
-        co_list_get_head_iterator(self->tcp_clients);
-    while (it != NULL)
+    if (self->tcp_clients != NULL)
     {
-        co_list_data_st* data =
-            co_list_get_next(self->tcp_clients, &it);
-        co_tls_tcp_client_destroy((co_tcp_client_t*)data->value);
+        co_list_iterator_t* it =
+            co_list_get_head_iterator(self->tcp_clients);
+
+        while (it != NULL)
+        {
+            co_list_data_st* data =
+                co_list_get_next(self->tcp_clients, &it);
+            co_tls_tcp_client_destroy((co_tcp_client_t*)data->value);
+        }
+
+        co_list_destroy(self->tcp_clients);
     }
-    co_list_destroy(self->tcp_clients);
 
     co_list_destroy(self->http2_clients);
 }
