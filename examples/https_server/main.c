@@ -222,6 +222,7 @@ app_on_tcp_close(
     app_client_log(tcp, tcp_client, "tcp closed");
 
     co_list_remove(self->tcp_clients, tcp_client);
+    co_tls_tcp_client_destroy(tcp_client);
 }
 
 void
