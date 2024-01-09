@@ -1,7 +1,11 @@
 #include "test_udp_server.h"
 #include "test_app.h"
 
-static void test_udp_server_on_receive(test_udp_server_thread_st* self, co_udp_t* udp)
+static void
+test_udp_server_on_receive(
+    test_udp_server_thread_st* self,
+    co_udp_t* udp
+)
 {
     (void)self;
 
@@ -10,14 +14,17 @@ static void test_udp_server_on_receive(test_udp_server_thread_st* self, co_udp_t
         char data[2048];
 
         co_net_addr_t remote_net_addr;
-        ssize_t size = co_udp_receive_from(udp, &remote_net_addr, data, sizeof(data));
+        ssize_t size =
+            co_udp_receive_from(
+                udp, &remote_net_addr, data, sizeof(data));
 
         if (size <= 0)
         {
             break;
         }
         
-        if (!co_udp_send_to(udp, &remote_net_addr, data, size))
+        if (!co_udp_send_to(
+            udp, &remote_net_addr, data, size))
         {
             test_error("Failed: test_udp_server_on_receive(co_udp_send_to)");
             exit(-1);
@@ -25,18 +32,23 @@ static void test_udp_server_on_receive(test_udp_server_thread_st* self, co_udp_t
     }
 }
 
-static bool test_udp_server_thread_on_create(test_udp_server_thread_st* self)
+static bool
+test_udp_server_thread_on_create(
+    test_udp_server_thread_st* self
+)
 {
     co_net_addr_t local_net_addr = { 0 };
-    co_net_addr_set_family(&local_net_addr, self->family);
+    co_net_addr_set_family(&local_net_addr, self->thread.ctx.family);
 
-    if (self->family == CO_NET_ADDR_FAMILY_UNIX)
+    if (self->thread.ctx.family == CO_NET_ADDR_FAMILY_UNIX)
     {
-        co_net_addr_set_unix_path(&local_net_addr, self->address);
+        co_net_addr_set_unix_path(
+            &local_net_addr, self->thread.ctx.server_address);
     }
     else
     {
-        co_net_addr_set_port(&local_net_addr, self->port);
+        co_net_addr_set_port(
+            &local_net_addr, self->thread.ctx.server_port);
     }
 
     self->udp_server = co_udp_create(&local_net_addr);
@@ -54,7 +66,10 @@ static bool test_udp_server_thread_on_create(test_udp_server_thread_st* self)
 
     if (!co_udp_receive_start(self->udp_server))
     {
-        test_error("Failed: test_udp_server_thread_on_create(%d, %d)", self->family, self->port);
+        test_error(
+            "Failed: test_udp_server_thread_on_create(%d, %d)",
+            self->thread.ctx.family, self->thread.ctx.server_port);
+
         exit(-1);
     }
 
@@ -65,12 +80,18 @@ static bool test_udp_server_thread_on_create(test_udp_server_thread_st* self)
     return true;
 }
 
-static void test_udp_server_thread_on_destroy(test_udp_server_thread_st* self)
+static void
+test_udp_server_thread_on_destroy(
+    test_udp_server_thread_st* self
+)
 {
     co_udp_destroy(self->udp_server);
 }
 
-void test_udp_server_thread_start(test_udp_server_thread_st* test_udp_server_thread)
+void
+test_udp_server_thread_start(
+    test_udp_server_thread_st* test_udp_server_thread
+)
 {
     co_net_thread_setup(
         (co_thread_t*)test_udp_server_thread, "test_udp_server_thread",
@@ -84,7 +105,10 @@ void test_udp_server_thread_start(test_udp_server_thread_st* test_udp_server_thr
     }
 }
 
-void test_udp_server_thread_stop(test_udp_server_thread_st* test_udp_server_thread)
+void
+test_udp_server_thread_stop(
+    test_udp_server_thread_st* test_udp_server_thread
+)
 {
     co_thread_stop((co_thread_t*)test_udp_server_thread);
     co_thread_join((co_thread_t*)test_udp_server_thread);

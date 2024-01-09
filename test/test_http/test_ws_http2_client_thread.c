@@ -227,7 +227,7 @@ ws_http2_client_on_thread_create(
     callback->on_close =
         (co_http2_close_fn)ws_http2_client_on_close;
 
-    co_http2_connect(self->http2_client);
+    co_http2_start_connect(self->http2_client);
 
     return true;
 }

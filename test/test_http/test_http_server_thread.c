@@ -15,7 +15,7 @@ http_server_on_tls_handshake(
 {
     if (error_code != 0)
     {
-        co_tls_client_destroy(tcp_client);
+        co_tls_tcp_client_destroy(tcp_client);
 
         return;
     }
@@ -23,7 +23,7 @@ http_server_on_tls_handshake(
     char protocol[32];
 
 
-    if (co_tls_get_selected_protocol(
+    if (co_tls_tcp_get_selected_protocol(
         tcp_client, protocol, sizeof(protocol)))
     {
         if (strcmp(protocol, CO_HTTP2_PROTOCOL) == 0)
@@ -36,7 +36,7 @@ http_server_on_tls_handshake(
         else if (strcmp(protocol, CO_HTTP_PROTOCOL) != 0)
         {
             // unknown
-            co_tls_client_destroy(tcp_client);
+            co_tls_tcp_client_destroy(tcp_client);
 
             return;
         }
@@ -58,7 +58,7 @@ http_server_on_tcp_close(
 {
     (void)self;
 
-    co_tls_client_destroy(tcp_client);
+    co_tls_tcp_client_destroy(tcp_client);
 }
 
 static void
@@ -78,11 +78,11 @@ http_server_on_tcp_accept(
         (co_tcp_close_fn)http_server_on_tcp_close;
 
     co_tls_callbacks_st* tls_callbacks =
-        co_tls_get_callbacks(tcp_client);
+        co_tls_tcp_get_callbacks(tcp_client);
     tls_callbacks->on_handshake =
         (co_tls_handshake_fn)http_server_on_tls_handshake;
 
-    co_tls_start_handshake(tcp_client);
+    co_tls_tcp_start_handshake(tcp_client);
 }
 
 //---------------------------------------------------------------------------//
@@ -149,13 +149,13 @@ on_http_server_thread_create(
         return false;
     }
 
-    self->server = co_tls_server_create(&local_net_addr, &tls_ctx);
+    self->server = co_tls_tcp_server_create(&local_net_addr, &tls_ctx);
 
     size_t protocol_count = 2;
     const char* protocols[] = { CO_HTTP2_PROTOCOL, CO_HTTP_PROTOCOL };
 //    size_t protocol_count = 1;
 //    const char* protocols[] = { CO_HTTP_PROTOCOL };
-    co_tls_server_set_available_protocols(
+    co_tls_tcp_server_set_available_protocols(
         self->server, protocols, protocol_count);
 
     co_socket_option_set_reuse_addr(
@@ -166,7 +166,7 @@ on_http_server_thread_create(
     callbacks->on_accept =
         (co_tcp_accept_fn)http_server_on_tcp_accept;
 
-    return co_tls_server_start(self->server, SOMAXCONN);
+    return co_tls_tcp_server_start(self->server, SOMAXCONN);
 }
 
 static void
@@ -174,7 +174,7 @@ on_http_server_thread_destroy(
     http_server_thread* self
 )
 {
-    co_tls_server_destroy(self->server);
+    co_tls_tcp_server_destroy(self->server);
 
     co_list_destroy(self->http_clients);
     co_list_destroy(self->http2_clients);

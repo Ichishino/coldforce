@@ -2,18 +2,21 @@
 
 #include "test_std.h"
 
-typedef struct
+typedef struct test_tcp_server_thread_st
 {
-    co_thread_t base;
+    test_thread_st thread;
 
-    bool close;
-    co_net_addr_family_t family;
-    const char* address;
-    uint16_t port;
     co_tcp_server_t* tcp_server;
-    co_list_t* tcp_clients;
+    bool close;
 
 } test_tcp_server_thread_st;
 
-void test_tcp_server_thread_start(test_tcp_server_thread_st* test_tcp_server_thread);
-void test_tcp_server_thread_stop(test_tcp_server_thread_st* test_tcp_server_thread);
+void
+test_tcp_server_thread_start(
+    test_tcp_server_thread_st* test_tcp_server_thread
+);
+
+void
+test_tcp_server_thread_stop(
+    test_tcp_server_thread_st* test_tcp_server_thread
+);

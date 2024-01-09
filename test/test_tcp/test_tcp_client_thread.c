@@ -197,7 +197,7 @@ try_connect(
     callbacks->on_receive = (co_tcp_receive_fn)on_tcp_receive;
     callbacks->on_close = (co_tcp_close_fn)on_tcp_close;
 
-    bool result = co_tcp_connect(client, &remote_net_addr);
+    bool result = co_tcp_start_connect(client, &remote_net_addr);
     co_assert(result);
 
     if (!result)

@@ -9,7 +9,10 @@ add_executable(${PROJECT_NAME}
     main.c
     test_app.c
     test_tcp.c
+    test_tcp_mt_client.c
+    test_tcp_mt_server.c
     test_tcp_server.c
+    test_tcp_server_comm.c
     test_udp.c
     test_udp_server.c
     test_udp2.c

@@ -121,7 +121,7 @@ http_server_on_http_request(
             co_http_send_chunked_data(http_client, &data[index], 1);
         }
 
-        co_http_end_chunked_response(http_client);
+        co_http_finish_chunked_response(http_client);
     }
     else if (strcmp(url->path, "/stop") == 0)
     {

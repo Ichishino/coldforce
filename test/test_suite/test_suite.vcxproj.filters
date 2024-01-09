@@ -35,6 +35,15 @@
     <ClCompile Include="test_udp2_server.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="test_tcp_mt_server.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test_tcp_mt_client.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test_tcp_server_comm.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="test_app.h">
@@ -59,6 +68,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="test_std.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="test_tcp_mt_server.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="test_tcp_mt_client.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="test_tcp_server_comm.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

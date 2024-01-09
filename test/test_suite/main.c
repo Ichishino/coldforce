@@ -11,7 +11,10 @@
 #   endif
 #endif
 
-void on_signal(int sig)
+void
+on_signal(
+    int sig
+)
 {
     test_info("**** signal: (%d)", sig);
 
@@ -22,7 +25,11 @@ void on_signal(int sig)
 // main
 //---------------------------------------------------------------------------//
 
-int main(int argc, char** argv)
+int
+main(
+    int argc,
+    char** argv
+)
 {
     signal(SIGINT, on_signal);
 
